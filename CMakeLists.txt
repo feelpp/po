@@ -21,4 +21,4 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-feelpp_add_application( po_laplacian_robin SRCS robin.cpp )
+feelpp_add_application( po_laplacian_robin SRCS eigen.cpp )
