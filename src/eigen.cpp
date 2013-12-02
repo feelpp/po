@@ -31,7 +31,7 @@ makeOptions()
 }
 
 template<int Dim>
-class Eigen
+class EigenProblem
 :
 public Simget
 {
@@ -55,7 +55,7 @@ public:
     /**
      * Constructor
      */
-    Eigen()
+    EigenProblem()
         :
         super(),
         M_backend( backend_type::build( this->vm() ) ),
@@ -72,16 +72,16 @@ private:
     std::string shape;
     std::vector<int> flags;
     boost::shared_ptr<SolverEigen<value_type> > eigen;
-}; // Eigen
+}; // EigenProblem
 
-template<int Dim> const uint16_type Eigen<Dim>::Order;
+template<int Dim> const uint16_type EigenProblem<Dim>::Order;
 
 template<int Dim>
 void
-Eigen<Dim>::run()
+EigenProblem<Dim>::run()
 {
     std::cout << "------------------------------------------------------------\n";
-    std::cout << "Execute Eigen<" << Dim << ">\n";
+    std::cout << "Execute EigenProblem<" << Dim << ">\n";
     Environment::changeRepository( boost::format( "po/%1%/%2%D-P%3%/h_%4%/" )
                                   % this->about().appName()
                                   % Dim
@@ -123,8 +123,8 @@ Eigen<Dim>::run()
          _matrixB=b.matrixPtr(),
          _nev=nev,
          _ncv=ncv,
-         _transform=SINVERT,
-         _spectrum=SMALLEST_MAGNITUDE,
+          //_transform=SINVERT,
+          //_spectrum=SMALLEST_MAGNITUDE,
          _verbose = true );
 
     auto femodes = std::vector<decltype( Xh->element() )>( modes.size(), Xh->element() );
@@ -134,32 +134,25 @@ Eigen<Dim>::run()
         LOG(INFO) << "eigenvalue " << 0 << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")\n";
 
         int i = 0;
-        BOOST_FOREACH( auto mode, modes )
+        for( auto const& mode : modes )
         {
             std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ")\n";
             femodes[i++] = *mode.second.get<2>();
         }
     }
 
-    auto exporter =  export_type::New( this->vm(),
-                                      ( boost::format( "%1%-%2%-%3%" )
-                                       % this->about().appName()
-                                       % shape
-                                       % Dim ).str() ) ;
+    auto e =  exporter( _mesh=mesh );
 
-    if ( exporter->doExport() )
+    if ( e->doExport() )
     {
         LOG(INFO) << "exportResults starts\n";
-
-        exporter->step( 0 )->setMesh( mesh );
-
         int i = 0;
-        BOOST_FOREACH( auto mode, femodes )
+        for( auto const& mode: femodes )
         {
-            exporter->step( 0 )->add( ( boost::format( "mode-%1%" ) % i++ ).str(), mode );
+            e->add( ( boost::format( "mode-%1%" ) % i++ ).str(), mode );
         }
 
-        exporter->save();
+        e->save();
         LOG(INFO) << "exportResults done\n";
     }
 
@@ -178,7 +171,7 @@ main( int argc, char** argv )
 
     Application app;
 
-    app.add( new Eigen<2>() );
+    app.add( new EigenProblem<2>() );
     app.run();
 }
 
