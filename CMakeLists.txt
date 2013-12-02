@@ -21,4 +21,5 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-add_directory( src )
+project(po)
+add_subdirectory( src )
