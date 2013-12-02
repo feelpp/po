@@ -22,5 +22,6 @@
 #
 #
 feelpp_add_application( po_laplacian_robin SRCS robin.cpp )
-feelpp_add_application( po_laplacian_eigen SRCS eigen.cpp CFG po_eigen.cfg GEO HM_Cyl_lowRe__5.mesh )
+feelpp_add_application( po_laplacian_eigen SRCS eigen.cpp CFG po_eigen.cfg  )
+feelpp_add_application( po_mode_gen SRCS mode_generator.cpp CFG po_mode_gen.cfg GEO HM_Cyl_lowRe__5.mesh )
 
