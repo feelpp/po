@@ -1,4 +1,4 @@
-\documentclass[a4paper,11pt]{article}   % 11 ou 12pt, article ou report ou book 
+\documentclass[a4paper,11pt]{article}   % 11 ou 12pt, article ou report ou book
 \usepackage[latin1]{inputenc}            % caractÃ¨res accentuÃ©s en UTF8
 \usepackage[T1]{fontenc}               % idem
 \usepackage[francais]{babel}           % franÃ§ais (chapter -> chapitre...)
@@ -16,6 +16,7 @@
 \usepackage{caption}
 \usepackage{subfig}
 \usepackage{animate}
+\usepackage{todonotes}
 \usepackage[colorlinks=true,urlcolor=blue]{hyperref}
 \usepackage{fancyvrb}
 \newcommand{\N}{{\mathbb{N}}}
@@ -54,7 +55,7 @@ tabsize=4}
               \restrictionaux{#1}{#2}}
               {\setbox1\hbox{${\scriptscriptstyle #1}_{\scriptscriptstyle #2}$}
               \restrictionaux{#1}{#2}}}
-\def\restrictionaux#1#2{{#1\,\smash{\vrule height .8\ht1 depth .85\dp1}}_{\,#2}} 
+\def\restrictionaux#1#2{{#1\,\smash{\vrule height .8\ht1 depth .85\dp1}}_{\,#2}}
 
 \title{\includegraphics[scale=0.5]{uds.jpg}\\Résolution d'un problème aux valeurs propres de l'opérateur rotationnel.}
 \author{Romain HILD\\Jérôme SPECHT}
@@ -69,6 +70,7 @@ tabsize=4}
 
 \newpage
 \section{Introduction}
+\todo[inline]{ceci est un commentaire}
 Le but de ce projet est la diminution de temps de calcul permettant la simulation des écoulements d'air sur la carrosserie d'une voiture, et plus précisément sur des pièces appelés "spoilers" ou "vortex generators". Ces pièces sont utilisées pour contrôler le flux d'air autour du véhicule, ce qui amène à une diminution de l'émission de $CO_2$ par la voiture. Cette diminution est très importante car dans les années à venir, il y aura beaucoup de normes à ce sujets, il est donc important pour les constructeurs automobiles de s'y préparer dès maintenant.\\
 Plastic Omnium possède déjà des codes pour des simulations en trois dimensions, cependant ces codes sont utilisés sur des modèles de plusieurs millions d'éléments et donc les calculs prennent plusieurs semaines sur un nombre important de processeurs.\\
 L'idée est de réécrire l'équation de Navier-Stokes en utilisant l'opérateur rotationnel, ce qui permet d'avoir une base de fonctions pour l'espace que l'on peut utiliser à chaque itération en temps et donc diminuer les coûts de calcul.
@@ -90,7 +92,7 @@ Nous cherchons $(v,p)$ solutions de l'équation de Navier-Stokes incompressibles 
 \]
 où $q = \frac{|v|^2}{2}+p$.\\
 
-On cherche les solutions dans l'espace 
+On cherche les solutions dans l'espace
 \[
 D^1(\Omega)^3 = \{v\in W^{1,2}(\Omega) | div\ v=0;v\cdot n\big\rvert_{\partial\Omega}=0; (\nabla^2\times v) \cdot n\big\rvert_{\partial\Omega}=0\}
 \]
@@ -99,7 +101,7 @@ On définit une fonction $a$ dans $W^{1,2}(\Omega)$ tel que :
 \[
 a=\nabla\times\chi_1+\nabla\chi_0
 \]
-Cette fonction possède les propriétés suivantes : 
+Cette fonction possède les propriétés suivantes :
 \[
 div\ a =0\\
 a\cdot n\big\rvert_{\partial\Omega} = \alpha_0
@@ -148,7 +150,7 @@ Ainsi, on peut décomposer $v=a+u$ et le problème est donc de trouver $(u,q)\in Q
 \]
 où $h=f-\frac{\partial a}{\partial t} - (\nabla\times a)\times a$.\\
 
-On peut décomposer $u$ sous la forme : 
+On peut décomposer $u$ sous la forme :
 \[
 u(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)g_i(\cdot)
 \]
@@ -180,7 +182,7 @@ Ainsi en décomposant dans $(S_6)$, $u$ par sa somme, on obtient le problème suiv
 \end{aligned}
 \right.
 \]
-Où 
+Où
 \[
 \begin{aligned}
 &r_{ijk} = \langle g_i\times g_j, g_k\rangle_\Omega,\\
