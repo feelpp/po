@@ -103,13 +103,18 @@ EigenProblem<Dim>::run()
     auto q = V.template element<3>();
 
     auto a = form2( _test=Xh, _trial=Xh);
-    a = integrate( elements( mesh ), dxt(u1)*dx(v1)+dyt(u1)*dy(v1) );
-    a+= integrate( elements( mesh ), dxt(u2)*dx(v2)+dyt(u2)*dy(v2) );
-    a+= integrate( elements( mesh ), dxt(u3)*dx(v3)+dyt(u3)*dy(v3) );
+    a = integrate( elements( mesh ), dxt(u1)*dx(v1)+dyt(u1)*dy(v1)+dzt(u1)*dz(v1) );
+    a+= integrate( elements( mesh ), dxt(u2)*dx(v2)+dyt(u2)*dy(v2)+dzt(u2)*dz(v2) );
+    a+= integrate( elements( mesh ), dxt(u3)*dx(v3)+dyt(u3)*dy(v3)+dzt(u3)*dz(v3) );
+    a+= integrate( elements( mesh ), (dxt(u1)+dyt(u2)+dzt(u3))*q );
+    
+    //a += on(markedfaces(mesh, 1), u1 = 0.); ??
+    //a += on(markedfaces(mesh, 2), u2 = 0);
+    //a += on(boundaryfaces(mesh, 3), u3 = 0.);
 
     auto b = form2( _test=Xh, _trial=Xh);
     b = integrate( elements(mesh), idt( u )*id( v ) );
-
+    b += integrate( elements(mesh), 1e-20 * idt(p)*id(q));
 
     int maxit = option(_name="solvereigen-maxiter").template as<int>();
     int tol = option(_name="solvereigen-tol").template as<double>();

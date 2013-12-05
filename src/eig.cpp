@@ -24,11 +24,40 @@ int main(int argc, char**argv )
     auto a = form2( _trial=Vh, _test=Vh);
     a = integrate(_range=elements(mesh),
                   _expr=gradt(u)*trans(grad(v)) );
-    a+=on(_range=boundaryfaces(mesh), _expr );
     
     auto b = form2(_trial=Vh, _test=Vh);
     b = integrate(_range=elements(mesh), _expr=idt(u)*id(v));
     //# endmarker3 #
+    
+    int nev = 1;
+    int ncv = 3;
+    
+    SolverEigen<double>::eigenmodes_type modes;
+    
+    modes=
+    eigs( _matrixA=a.matrixPtr(),
+         _matrixB=b.matrixPtr(),
+         _nev=nev,
+         _ncv=ncv,
+         _transform=SINVERT,
+         _spectrum=SMALLEST_MAGNITUDE,
+         _verbose = true );
+
+
+    auto femodes = std::vector<decltype( Xh->element() )>( modes.size(), Xh->element() );
+
+    if ( !modes.empty() )
+    {
+        LOG(INFO) << "eigenvalue " << 0 << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")\n";
+        
+        int i = 0;
+        BOOST_FOREACH( auto mode, modes )
+        {
+            std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ")\n";
+            femodes[i++] = *mode.second.get<2>();
+        }
+    }
+
 
     //# marker4 #
     auto e = exporter( _mesh=mesh );
