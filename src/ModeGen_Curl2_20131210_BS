@@ -1,0 +1,57 @@
+/*
+Packages
+*/
+load "msh3"
+
+/*
+3D Meshes
+*/
+mesh3 Th;
+Th=readmesh3("HM_Cyl_lowRe__5.mesh");
+plot(Th,cmm="Mesh");
+
+/*
+FE Spaces
+*/
+fespace Vh1(Th,P1);
+fespace Vh2(Th,P2);
+fespace XVh4(Th,[P2,P2,P2,P1]);
+
+/*
+Curl2 Eigenproblem => lambda_k & g_k
+*/
+int nev=5,j=1;
+real shift=0.;
+real[int] ev(nev);
+Vh1 ph,qh;
+Vh2 uh1,uh2,uh3,vh1,vh2,vh3;
+XVh4[int] [g1,g2,g3,pnev](nev);
+varf aa([uh1,uh2,uh3,ph],[vh1,vh2,vh3,qh])=
+   int3d(Th)((dy(uh3)-dz(uh2))*(dy(vh3)-dz(vh2)))
+   +int3d(Th)((dz(uh1)-dx(uh3))*(dz(vh1)-dx(vh3)))
+   +int3d(Th)((dx(uh2)-dy(uh1))*(dx(vh2)-dy(vh1)))
+   +int3d(Th)(1.e-20*ph*qh)
+   +on(1,2,uh3=0.)
+   +on(3,uh1=0.,uh2=0.);
+varf bb([uh1,uh2,uh3,ph],[vh1,vh2,vh3,qh])=
+   int3d(Th)(uh1*vh1)
+   +int3d(Th)(uh2*vh2)
+   +int3d(Th)(uh3*vh3)
+   +int3d(Th)(0.*ph*qh);
+matrix AA=aa(XVh4,XVh4,solver=UMFPACK,eps=1.e-6);
+matrix BB=bb(XVh4,XVh4,solver=CG,eps=1.e-6);
+int keig=EigenValue(AA,BB,sym=true,sigma=shift,value=ev,vector=g1,tol=1e-10,maxit=0,ncv=0);
+keig=min(nev,keig);
+
+/*
+Results Display
+*/
+for(int i=0;i<keig;i=i+1)
+  {
+   plot(g1[i],cmm="Mode-"+j,wait=1,value=1,ps="Mode-"+j+"___.png");
+   j++;
+  }
+
+/*
+THE END
+*/
