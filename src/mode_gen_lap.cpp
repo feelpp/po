@@ -1,3 +1,4 @@
+
 /* -*- mode: c++; coding: utf-8; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4; show-trailing-whitespace: t -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
  */
 #include <feel/options.hpp>
@@ -51,22 +52,22 @@ public:
     typedef boost::shared_ptr<space_type> space_ptrtype;
     typedef typename space_type::element_type element_type;
     typedef Exporter<mesh_type> export_type;
-
+    
     /**
      * Constructor
      */
     EigenProblem()
-        :
-        super(),
-        M_backend( backend_type::build( this->vm() ) ),
-        meshSize( this->vm()["hsize"].template as<double>() ),
-        eigen( SolverEigen<value_type>::build( this->vm() ) )
-        {
-        }
-
+    :
+    super(),
+    M_backend( backend_type::build( this->vm() ) ),
+    meshSize( this->vm()["hsize"].template as<double>() ),
+    eigen( SolverEigen<value_type>::build( this->vm() ) )
+    {
+    }
+    
     void run();
 private:
-
+    
     backend_ptrtype M_backend;
     double meshSize;
     std::string shape;
@@ -87,9 +88,9 @@ EigenProblem<Dim>::run()
                                   % Dim
                                   % Order
                                   % meshSize );
-
+    
     auto mesh = loadMesh(_mesh = new mesh_type );
-
+    
     auto Xh = space_type::New( mesh );
     auto U = Xh->element();
     auto u1 = U.template element<0>();
@@ -101,53 +102,63 @@ EigenProblem<Dim>::run()
     auto v2 = V.template element<1>();
     auto v3 = V.template element<2>();
     auto q = V.template element<3>();
-
+    
     auto a = form2( _test=Xh, _trial=Xh);
     a = integrate( elements( mesh ), dxt(u1)*dx(v1)+dyt(u1)*dy(v1)+dzt(u1)*dz(v1) );
     a+= integrate( elements( mesh ), dxt(u2)*dx(v2)+dyt(u2)*dy(v2)+dzt(u2)*dz(v2) );
     a+= integrate( elements( mesh ), dxt(u3)*dx(v3)+dyt(u3)*dy(v3)+dzt(u3)*dz(v3) );
-    a+= integrate( elements( mesh ), (dxt(u1)+dyt(u2)+dzt(u3))*q );
+    a+= integrate( elements( mesh ), (dxt(u1)+dyt(u2)+dzt(u3)) * id(q) );
+    a+= integrate( elements( mesh ), (dx(v1)+dy(v2)+dz(v3)) * idt(p) );
+    //a+= integrate( elements( mesh ), (dxt(u2)-dyt(u1))*q );
+    //a+= integrate( elements( mesh ), (dx(v2)-dy(v1))*p );
+    //a+= integrate( elements( mesh ), (dxt(u2)-dyt(u1))*q );
+    //a+= integrate( elements( mesh ), (dx(v2)-dy(v1))*p );
+    //a+= integrate( elements( mesh ), (dyt(u3)-dzt(u2))*q );
+    //a+= integrate( elements( mesh ), (dy(v3)-dz(v2))*p );
+    //a+= integrate( elements( mesh ), (dzt(u1)-dxt(u3))*q );
+    //a+= integrate( elements( mesh ), (dz(v1)-dx(v3))*p );
+    //a += on(markedfaces(mesh, 1), u3 = 0.);
+    //a += on(markedfaces(mesh, 2), u3 = 0);
+    //a += on(boundaryfaces(mesh, 3), u1 = 0, u2=0);
     
-    //a += on(markedfaces(mesh, 1), u1 = 0.); ??
-    //a += on(markedfaces(mesh, 2), u2 = 0);
-    //a += on(boundaryfaces(mesh, 3), u3 = 0.);
-
     auto b = form2( _test=Xh, _trial=Xh);
-    b = integrate( elements(mesh), idt( u )*id( v ) );
+    b = integrate( elements(mesh), idt( u1 )*id( v1 ) );
+    b += integrate( elements( mesh ), idt(u2)*id(v2));
+    b += integrate( elements( mesh ), idt(u3)*id(v3));
     b += integrate( elements(mesh), 1e-20 * idt(p)*id(q));
-
-    int maxit = option(_name="solvereigen-maxiter").template as<int>();
-    int tol = option(_name="solvereigen-tol").template as<double>();
-
-    int nev = option(_name="solvereigen-nev").template as<int>();
-
-    int ncv = option(_name="solvereigen-ncv").template as<int>();;
-
+    
+    //int maxit = option(_name="solvereigen-maxiter").template as<int>();
+    //int tol = option(_name="solvereigen-tol").template as<double>();
+    
+    int nev = option(_name="solvereigen.nev").template as<int>();
+    
+    int ncv = option(_name="solvereigen.ncv").template as<int>();;
+    
     double eigen_real, eigen_imag;
-
+    
     SolverEigen<double>::eigenmodes_type modes;
-
+    
     if ( Environment::worldComm().isMasterRank() )
     {
         std::cout << "nev= " << nev <<std::endl;
         std::cout << "ncv= " << ncv <<std::endl;
     }
-
+    
     modes=
     eigs( _matrixA=a.matrixPtr(),
          _matrixB=b.matrixPtr(),
          _nev=nev,
          _ncv=ncv,
-          //_transform=SINVERT,
-          //_spectrum=SMALLEST_MAGNITUDE,
+         //_transform=SINVERT,
+         //_spectrum=SMALLEST_MAGNITUDE,
          _verbose = true );
-
+    
     auto femodes = std::vector<decltype( Xh->element() )>( modes.size(), Xh->element() );
-
+    
     if ( !modes.empty() )
     {
         LOG(INFO) << "eigenvalue " << 0 << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")\n";
-
+        
         int i = 0;
         for( auto const& mode : modes )
         {
@@ -155,9 +166,9 @@ EigenProblem<Dim>::run()
             femodes[i++] = *mode.second.get<2>();
         }
     }
-
+    
     auto e =  exporter( _mesh=mesh );
-
+    
     if ( e->doExport() )
     {
         LOG(INFO) << "exportResults starts\n";
@@ -166,26 +177,26 @@ EigenProblem<Dim>::run()
         {
             e->add( ( boost::format( "mode-%1%" ) % i++ ).str(), mode );
         }
-
+        
         e->save();
         LOG(INFO) << "exportResults done\n";
     }
-
+    
 }
 
 int
 main( int argc, char** argv )
 {
     using namespace Feel;
-
+    
     Environment env( _argc=argc, _argv=argv,
                     _desc=makeOptions(),
                     _about=about(_name="po_eigen",
                                  _author="",
                                  _email="") );
-
+    
     Application app;
-
+    
     app.add( new EigenProblem<2>() );
     app.run();
 }
