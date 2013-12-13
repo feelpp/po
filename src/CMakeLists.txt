@@ -21,7 +21,5 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-feelpp_add_application( po_laplacian_robin SRCS robin.cpp )
-feelpp_add_application( po_laplacian_eigen SRCS eigen.cpp CFG po_eigen.cfg  )
-feelpp_add_application( po_mode_gen SRCS mode_generator.cpp CFG po_mode_gen.cfg GEO HM_Cyl_lowRe__5.mesh )
-
+feelpp_add_application( po_mode_gen_lap SRCS mode_gen_lap.cpp CFG po_mode_gen.cfg GEO HM_Cyl_lowRe__5.mesh )
+feelpp_add_application( po_mode_gen_curl SRCS mode_gen_curl.cpp CFG po_mode_gen.cfg GEO HM_Cyl_lowRe__5.mesh )
