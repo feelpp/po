@@ -16,20 +16,6 @@ using namespace Feel;
 using namespace Feel::vf;
 
 
-inline
-po::options_description
-makeOptions()
-{
-    po::options_description gridoptions( "Eigen options" );
-    gridoptions.add_options()
-    ( "hsize", po::value<double>()->default_value( 0.1 ), "mesh size" )
-    ( "kappa", po::value<double>()->default_value( 1 ), "coefficient" )
-    ( "shape", Feel::po::value<std::string>()->default_value( "hypercube" ), "shape of the domain (either simplex or hypercube)" )
-    ( "nu", po::value<double>()->default_value( 1 ), "grad.grad coefficient" )
-    ;
-    return gridoptions.add( Feel::feel_options() );
-}
-
 template<int Dim>
 class EigenProblem
 :
@@ -46,32 +32,15 @@ public:
     typedef Simplex<Dim> convex_type;
     typedef Mesh<convex_type> mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
-    typedef bases<Lagrange<Order,Scalar>,Lagrange<Order,Scalar>,Lagrange<Order,Scalar>,Lagrange<Order-1,Scalar> > basis_type;
+    typedef bases<Lagrange<Order,Scalar>,Lagrange<Order,Scalar>,Lagrange<Order,Scalar> > basis_type;
     typedef FunctionSpace<mesh_type, basis_type> space_type;
     typedef boost::shared_ptr<space_type> space_ptrtype;
     typedef typename space_type::element_type element_type;
     typedef Exporter<mesh_type> export_type;
     
-    /**
-     * Constructor
-     */
-    EigenProblem()
-    :
-    super(),
-    M_backend( backend_type::build( this->vm() ) ),
-    meshSize( this->vm()["hsize"].template as<double>() ),
-    eigen( SolverEigen<value_type>::build( this->vm() ) )
-    {
-    }
-    
     void run();
 private:
     
-    backend_ptrtype M_backend;
-    double meshSize;
-    std::string shape;
-    std::vector<int> flags;
-    boost::shared_ptr<SolverEigen<value_type> > eigen;
 }; // EigenProblem
 
 template<int Dim> const uint16_type EigenProblem<Dim>::Order;
@@ -82,11 +51,11 @@ EigenProblem<Dim>::run()
 {
     std::cout << "------------------------------------------------------------\n";
     std::cout << "Execute EigenProblem<" << Dim << ">\n";
-    Environment::changeRepository( boost::format( "po/%1%/%2%D-P%3%/h_%4%/" )
+    
+    Environment::changeRepository( boost::format( "po/%1%/%2%D-P%3%/" )
                                   % this->about().appName()
                                   % Dim
-                                  % Order
-                                  % meshSize );
+                                  % Order );
     
     auto mesh = loadMesh(_mesh = new mesh_type );
     
@@ -95,32 +64,26 @@ EigenProblem<Dim>::run()
     auto u1 = U.template element<0>();
     auto u2 = U.template element<1>();
     auto u3 = U.template element<2>();
-    auto p = U.template element<3>();
     auto V = Xh->element();
     auto v1 = V.template element<0>();
     auto v2 = V.template element<1>();
     auto v3 = V.template element<2>();
-    auto q = V.template element<3>();
     
+    auto l = form1( _test=Xh );
     auto a = form2( _test=Xh, _trial=Xh);
     a = integrate( elements( mesh ), (dyt(u3)-dzt(u2)) * (dy(v3)-dz(v2)) );
     a+= integrate( elements( mesh ), (dzt(u1)-dxt(u3)) * (dz(v1)-dx(v3)) );
     a+= integrate( elements( mesh ), (dxt(u2)-dyt(u1)) * (dx(v2)-dy(v1)) );
-    a+= integrate( elements( mesh ), 1.e-20*idt(p)*id(q) );
     
-    a += on(_range=markedfaces(mesh, 1), _element=u3, _expr=0.);
-    a += on(_range=markedfaces(mesh, 2), _element=u3, _expr=0.);
-    a += on(_range=markedfaces(mesh, 3), _element=u1, _expr=0.);
-    a += on(_range=markedfaces(mesh, 3), _element=u2, _expr=0.);
+    a += on(_range=markedfaces(mesh, 1), _rhs=l, _element=u3, _expr=cst(0.));
+    a += on(_range=markedfaces(mesh, 2), _rhs=l, _element=u3, _expr=cst(0.));
+    a += on(_range=markedfaces(mesh, 3), _rhs=l, _element=u1, _expr=cst(0.));
+    a += on(_range=markedfaces(mesh, 3), _rhs=l, _element=u2, _expr=cst(0.));
     
     auto b = form2( _test=Xh, _trial=Xh);
     b = integrate( elements(mesh), idt( u1 )*id( v1 ) );
     b += integrate( elements(mesh), idt( u2 )*id( v2 ) );
     b += integrate( elements(mesh), idt( u3 )*id( v3 ) );
-    b += integrate( elements(mesh), 1.e-20 * idt(p)*id(q));
-    
-    //int maxit = option(_name="solvereigen-maxiter").template as<int>();
-    //int tol = option(_name="solvereigen-tol").template as<double>();
     
     int nev = option(_name="solvereigen.nev").template as<int>();
     
@@ -182,14 +145,14 @@ main( int argc, char** argv )
     using namespace Feel;
     
     Environment env( _argc=argc, _argv=argv,
-                    _desc=makeOptions(),
-                    _about=about(_name="po_eigen_curl",
+                    _desc=feel_options(),
+                    _about=about(_name="po_mode_gen_curl",
                                  _author="",
                                  _email="") );
     
     Application app;
     
-    app.add( new EigenProblem<2>() );
+    app.add( new EigenProblem<3>() );
     app.run();
 }
 

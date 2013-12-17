@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 2.8)
 ###  TEMPLATE.txt.tpl; coding: utf-8 ---
 
 #  Author(s): Christophe Prud'homme <prudhomme@unistra.fr>
