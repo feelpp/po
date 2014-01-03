@@ -1,10 +1,10 @@
-\documentclass[a4paper,11pt]{article}   % 11 ou 12pt, article ou report ou book
-\usepackage[latin1]{inputenc}            % caractÃ¨res accentuÃ©s en UTF8
-\usepackage[T1]{fontenc}               % idem
-\usepackage[francais]{babel}           % franÃ§ais (chapter -> chapitre...)
-\usepackage{graphicx}                  % graphiques
+\documentclass[a4paper,11pt]{article}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage{graphicx}
 \usepackage{amsmath}
-\usepackage{amsfonts,amssymb} % symboles AMS
+\usepackage{amsfonts,amssymb}
 \usepackage{verbatim}
 \usepackage{listings}
 \usepackage{color}
@@ -15,7 +15,6 @@
 \usepackage{here}
 \usepackage{caption}
 \usepackage{subfig}
-\usepackage{animate}
 \usepackage{todonotes}
 \usepackage[colorlinks=true,urlcolor=blue]{hyperref}
 \usepackage{fancyvrb}
@@ -23,7 +22,9 @@
 \newcommand{\Z}{{\mathbb{Z}}}
 \newcommand{\R}{{\mathbb{R}}}
 \newcommand{\C}{{\mathbb{C}}}
-\geometry{hmargin=2.5cm,vmargin=2.5cm}
+\newcommand{\LL}{{\mathbb{L}}}
+
+%listing
 \lstset{
 language=C++,
 frame=single,
@@ -34,6 +35,9 @@ showstringspaces=false,
 breaklines=true,
 breakatwhitespace=true,
 tabsize=4}
+
+%en tete et pied de page
+\geometry{hmargin=2.5cm,vmargin=2.5cm}
 \fvset{tabsize=4}
 \pagestyle{fancy}
 \renewcommand\headrulewidth{1pt}
@@ -45,17 +49,6 @@ tabsize=4}
 \rfoot{Projet éléments finis\\Plastic Omnium}
 \setlength{\headheight}{15pt}
 \graphicspath{{Images/}}
-
-\def\restriction#1#2{\mathchoice
-              {\setbox1\hbox{${\displaystyle #1}_{\scriptstyle #2}$}
-              \restrictionaux{#1}{#2}}
-              {\setbox1\hbox{${\textstyle #1}_{\scriptstyle #2}$}
-              \restrictionaux{#1}{#2}}
-              {\setbox1\hbox{${\scriptstyle #1}_{\scriptscriptstyle #2}$}
-              \restrictionaux{#1}{#2}}
-              {\setbox1\hbox{${\scriptscriptstyle #1}_{\scriptscriptstyle #2}$}
-              \restrictionaux{#1}{#2}}}
-\def\restrictionaux#1#2{{#1\,\smash{\vrule height .8\ht1 depth .85\dp1}}_{\,#2}}
 
 \title{\includegraphics[scale=0.5]{uds.jpg}\\Résolution d'un problème aux valeurs propres de l'opérateur rotationnel.}
 \author{Romain HILD\\Jérôme SPECHT}
@@ -70,132 +63,283 @@ tabsize=4}
 
 \newpage
 \section{Introduction}
-\todo[inline]{ceci est un commentaire}
-Le but de ce projet est la diminution de temps de calcul permettant la simulation des écoulements d'air sur la carrosserie d'une voiture, et plus précisément sur des pièces appelés "spoilers" ou "vortex generators". Ces pièces sont utilisées pour contrôler le flux d'air autour du véhicule, ce qui amène à une diminution de l'émission de $CO_2$ par la voiture. Cette diminution est très importante car dans les années à venir, il y aura beaucoup de normes à ce sujets, il est donc important pour les constructeurs automobiles de s'y préparer dès maintenant.\\
-Plastic Omnium possède déjà des codes pour des simulations en trois dimensions, cependant ces codes sont utilisés sur des modèles de plusieurs millions d'éléments et donc les calculs prennent plusieurs semaines sur un nombre important de processeurs.\\
-L'idée est de réécrire l'équation de Navier-Stokes en utilisant l'opérateur rotationnel, ce qui permet d'avoir une base de fonctions pour l'espace que l'on peut utiliser à chaque itération en temps et donc diminuer les coûts de calcul.
+
+Le but de ce projet est la diminution de temps de calcul permettant la simulation des \'ecoulements d'air sur la carrosserie d'une voiture, et plus pr\'ecis\'ement sur des pi\`eces appel\'es "spoilers" ou "vortex generators". Ces pi\`eces sont utilis\'ees pour contr\^oler le flux d'air autour du v\'ehicule, ce qui am\`ene \`a une diminution de l'\'emission de $CO_2$ par la voiture. Cette diminution est tr\`es importante car dans les ann\'ees \`a venir, il y aura beaucoup de normes \`a ce sujets, il est donc important pour les constructeurs automobiles de s'y pr\'eparer d\`es maintenant.\\
+Plastic Omnium poss\`ede d\'ej\`a des codes pour des simulations en trois dimensions, cependant ces codes sont utilis\'es sur des mod\`eles de plusieurs millions d'\'el\'ements et donc les calculs prennent plusieurs semaines sur un nombre important de processeurs.\\
+L'id\'ee est de choisir un espace dans lequel résoudre les \'equartions de Navier-Stockes qui est g\'en\'er\'e par  les fonction propres de l'op\'erateur rotationel, ainsi une solution pourra s'\'ecrire comme combinaison lin\'eaire de ces fonctions. Ceci, avec les conditions aux limites de l'espace, permet de séparer les termes de temps et d'espace, et ainsi  réutiliser la base de fonctions et ne faire porter les itérations que sur les coefficients temporels.
 
 \section{Problème}
-Nous cherchons $(v,p)$ solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
-\[
-(S_1)
+Nous cherchons $(v,p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
+\begin{eqnarray}
 \left\{
 \begin{aligned}
-&\frac{\partial v}{\partial t} + (\nabla\times v)\times v + \nabla q -\frac{1}{Re}\nabla^2\times v-f = 0\\
+&\frac{\partial v}{\partial t} + (curl\  v)\times v + \nabla q -\frac{1}{Re}curl^2\  v-f = 0\\
 &div\ v = 0\\
 &v\big\rvert_{t=0} = v_0\\
 &v\cdot n\big\rvert_{\partial\Omega} = \alpha_0\\
-&(\nabla\times v)\cdot n\big\rvert_{\partial\Omega} = \alpha_1\\
-&(\nabla^2\times v)\cdot n\big\rvert_{\partial\Omega} = \alpha_2
+&(curl\  v)\cdot n\big\rvert_{\partial\Omega} = \alpha_1\\
+&(curl^2\  v)\cdot n\big\rvert_{\partial\Omega} = \alpha_2
 \end{aligned}
 \right.
-\]
+\end{eqnarray}
 où $q = \frac{|v|^2}{2}+p$.\\
 
-On cherche les solutions dans l'espace
+On définit l'espace
 \[
-D^1(\Omega)^3 = \{v\in W^{1,2}(\Omega) | div\ v=0;v\cdot n\big\rvert_{\partial\Omega}=0; (\nabla^2\times v) \cdot n\big\rvert_{\partial\Omega}=0\}
+\LL^2_\sigma(\Omega) = \{v \in \LL^2(\Omega) | div\ v = 0\text{ et }v\cdot n\big\rvert_{\partial\Omega} = 0 \}
+\]
+Alors, on cherche les solutions dans l'espace
+\[
+D^1(\Omega) = \{v\in W^{1,2}(\Omega) \cup \LL^2(\Omega) | (curl\ v\cdot n)\big\rvert_{\partial\Omega} = 0  \}
 \]
 
-On définit une fonction $a$ dans $W^{1,2}(\Omega)$ tel que :
+On introduit une fonction $a$ dans $W^{1,2}(\Omega)$ pour relever le problème tel que :
 \[
-a=\nabla\times\chi_1+\nabla\chi_0
+a=curl\ \chi_1+\nabla\chi_0
 \]
 Cette fonction possède les propriétés suivantes :
 \[
-div\ a =0\\
-a\cdot n\big\rvert_{\partial\Omega} = \alpha_0
+\begin{aligned}
+&div\ a =0\\
+&a\cdot n\big\rvert_{\partial\Omega} = \alpha_0
+\end{aligned}
 \]
 avec $\chi_0\in W^{1,2}(\Omega)$ tel que :
-\[
-(S_2)\left\{
+\begin{eqnarray}
+\left\{
 \begin{aligned}
 &\Delta\chi_0 = 0\\
 &\nabla\chi_0\cdot n\big\rvert_{\partial\Omega}=\alpha_0
 \end{aligned}
 \right.
-\]
+\end{eqnarray}
 et $(\chi_1,\underline{P})\in D^1(\Omega)^3\times W^{1,2}(\Omega)$ tel que :
-\[
-(S_3)\left\{
+\begin{eqnarray}
+\left\{
 \begin{aligned}
-&\nabla^2\times\chi_1 + \nabla\underline{P} = 0\\
+&curl^2\ \chi_1 + \nabla\underline{P} = 0\\
 &div\ \chi_1 = 0\\
 &\chi_1\cdot n\big\rvert_{\partial\Omega} = 0\\
-&(\nabla\times\chi_1\cdot n_{\partial\Omega} = 0\\
-&(\nabla^2\times\chi_1\cdot n_{\partial\Omega} = \alpha_1
+&curl\ \chi_1\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl^2\ \chi_1\cdot n\big\rvert_{\partial\Omega} = \alpha_1
 \end{aligned}
 \right.
-\text{ et }
-(S_4)\left\{
+\end{eqnarray}
+avec
+\begin{eqnarray}
+\left\{
 \begin{aligned}
 &\Delta\underline{P} = 0\\
-&\nabla\underline{P}\cdot n_{\partial\Omega} = \alpha_1
+&\nabla\underline{P}\cdot n\big\rvert_{\partial\Omega} = \alpha_1
 \end{aligned}
 \right.
-\]
+\end{eqnarray}
 
 Ainsi, on peut décomposer $v=a+u$ et le problème est donc de trouver $(u,q)\in Q_T$ tel que :
-\[
-(S_5)\left\{
+\begin{eqnarray}
+\left\{
 \begin{aligned}
-&\frac{\partial u}{\partial t} + (\nabla\times u)\times u + (\nabla\times u)\times a +(\nabla\times a)\times u + \nabla q  +\frac{1}{Re}\nabla^2\times u - h = 0\\
+&\frac{\partial u}{\partial t} + (curl\  u)\times u + (curl\  u)\times a +(curl\  a)\times u + \nabla q  +\frac{1}{Re}curl^2\  u - h = 0\\
 &div\ u = 0\\
 &u\big\rvert_{t=0} = v_0 - a(0,\cdot)\\
 &u\cdot n\big\rvert_{\partial\Omega} = 0\\
-&(\nabla\times u)\cdot n\big\rvert_{\partial\Omega} = 0\\
-&(\nabla^2\times u)\cdot n\big\rvert_{\partial\Omega} = \alpha_2
+&(curl\  u)\cdot n\big\rvert_{\partial\Omega} = 0\\
+&(curl^2\  u)\cdot n\big\rvert_{\partial\Omega} = \alpha_2
 \end{aligned}
 \right.
-\]
-où $h=f-\frac{\partial a}{\partial t} - (\nabla\times a)\times a$.\\
+\end{eqnarray}
+où $h=f-\frac{\partial a}{\partial t} - (curl\  a)\times a$.\\
 
-On peut décomposer $u$ sous la forme :
+Comme $u$ appartient à $D^1(\Omega)$, on peut décomposer $u$ sous la forme :
 \[
 u(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)g_i(\cdot)
 \]
-
 On va chercher une valeur approché de $u$ qui se présente sous la forme :
 \[
 u_M(t,\cdot) = \sum_{i=1}^{M} c_i(t)g_i(\cdot)
 \]
 
-Les fonctions $g_i$ forment une base de l'espace $D^1(\Omega)^3 = D(curl_{imperm})$. Cette base est constitué des fonctions propres de l'opérateur rotationnel. Elles sont donc solution du problème suivant :
-\[
-(\lambda_i,g_i)\in\R\times D^1(\Omega)^3\quad (S_6)\left\{
+Les fonctions $g_i$ forment une base de l'espace $D^1(\Omega) = D(curl_{imperm})$. Cette base est constitué des fonctions propres de l'opérateur rotationel. Elles sont donc solution du problème suivant :
+\begin{eqnarray}
+(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
 \begin{aligned}
-&\nabla^2\times g_i = \lambda_i g_i\\
-&div\ g_i = 0\\
+&curl^2\  g_i = \lambda_i g_i\\
 &g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
-&(\nabla\times g_i)\cdot n\big\rvert_{\partial\Omega} = 0
+&curl\  g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0
 \end{aligned}
 \right.
-\]
+\end{eqnarray}
 
 Toutes fonctions dans $D^1(\Omega)^3$ peut s'écrire $g_i=g_i^0+\nabla\psi_i$ avec $g_i^0\big\rvert_{\partial\Omega} = 0$ et $ \nabla\psi_i\cdot n\big\rvert_{\partial\Omega} = 0$.\\
 Ainsi en décomposant dans $(S_6)$, $u$ par sa somme, on obtient le problème suivant où l'on cherche les coefficients $c_i$ :
-\[
-(S_7)_{1\leq k\leq M}\left\{
+\begin{eqnarray}
+\left\{
 \begin{aligned}
-&\frac{dc_k}{dt}+\sum_{i=1}^M\sum_{j=1}^M c_i\lambda_i c_j r_{ijk} + \sum_{i=1}^M c_i \lambda_i r_{ik}^a + \sum_{i=1}^M c_j r_{jk}^{\nabla\times a} + \lambda_k^2 c_k = r_k^h - r_k^{\alpha_2}\\
+&\frac{dc_k}{dt}+\sum_{i=1}^M\sum_{j=1}^M c_i\lambda_i c_j r_{ijk} + \sum_{i=1}^M c_i \lambda_i r_{ik}^a + \sum_{i=1}^M c_j r_{jk}^{curl\  a} + \lambda_k^2 c_k = r_k^h - r_k^{\alpha_2}\\
 &c_k(0)=c_k^0
 \end{aligned}
-\right.
-\]
+\right.\quad
+1\leq k\leq M
+\end{eqnarray}
 Où
 \[
 \begin{aligned}
 &r_{ijk} = \langle g_i\times g_j, g_k\rangle_\Omega,\\
 &r_{ik}^a=\langle g_i\times a, g_k\rangle_\Omega,\\
-&r_{jk}^{\nabla\times a}=\langle (\nabla\times a)\times g_j, g_k\rangle\rangle_\Omega,\\
+&r_{jk}^{curl\  a}=\langle (curl\  a)\times g_j, g_k\rangle\rangle_\Omega,\\
 &r_k^h=\langle h,g_k\rangle_\Omega,\\
 &r_k^{\alpha_2} = \langle \alpha_2,\psi_k\rangle_{\partial\Omega}.
 \end{aligned}
 \]
 
-Pour résumer, on doit d'abord trouver $a$ pour pouvoir décomposer $v$ en $u+a$, pour cela, on résous d'abord l'équation $(S_4)$ afin de résoudre $(S_3)$ pour trouver $\chi_1$ et $(S_2)$ pour trouver $\chi_0$.\\
-Ensuite, on essaye de trouver $u$, on doit donc d'abord calculer les $g_i$ une fois pour toutes au début. On résous donc $(S_6)$ et afin de connaître $g_i^0$ et $\psi_i$ on résout respectivement $\Delta g_i^0=\Delta g_i$ et $ \Delta\psi_i= -div\ g_i^0$.\\
-Cela permet de calculer tous les $r_x^y$, et enfin de résoudre l'équation $(S_7)$ pour $1\leq k\leq M$ afin de trouver les $c_i$ et ainsi de connaitre complètement $u$, et donc $v$.
+Pour résumer, on doit d'abord générer la base $g_i$ des fonctions propres de l'opérateur curl en résolvant l'équation (6), puis on peut trouver $a$ pour pouvoir décomposer $v$ en $u+a$, pour cela, on résous d'abord l'équation (4) afin de résoudre (3) pour trouver $\chi_1$ et (2) pour trouver $\chi_0$.\\
+Ensuite, on est capable de trouver $u$, pour cela on calcul tous les $r_x^y$ et on résous l'équation (7) pour $1\leq k\leq M$ afin de connaitre les $c_i$.\\
+Cela permet de recomposer $u$ et ensuite $v=u+a$, la solution du problème de départ.
+
+\section{Problème aux valeurs propres}
+
+On s'intéresse ici plus particulièrement au problème (6).
+\begin{eqnarray*}
+(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
+\begin{aligned}
+&curl^2\  g_i = \lambda_i g_i\\
+&g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl\  g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0
+\end{aligned}
+\right.
+\end{eqnarray*}
+On note d'abord que tout élément $\phi\in D^1(\Omega)$ peut s'écrire de la manière suivante :
+\[
+\psi = \psi_0 + \nabla\phi\text{ et } \psi\big\rvert_{\partial\Omega} = \nabla\phi
+\]
+
+On va maintenant chercher la formulation variationnelle de ce problème.\\
+Soit $g\in D^1(\Omega)$ solution de (6), alors pour tout $\psi\in D^1(\Omega)$ nous avons :
+\[
+\int_\Omega curl^2\ g\cdot\psi\ dX = \int_\Omega\lambda g\cdot \psi\ dX
+\]
+puis en intégrant par partie :
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_{\partial\Omega} (curl\ g\times \psi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+or sur $\partial\Omega,\quad \psi\big\rvert_{\partial\Omega}=\nabla\phi$, d'où : 
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_{\partial\Omega} (curl\ g\times \nabla\phi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+En utilisant le théorème de flux-divergence aussi appelé théorème de Green-Ostrogradski :
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_\Omega div(curl\ g\times \nabla\phi)\ dX = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+En utilisant la formule $div(F\times G) = G\cdot curl\ F - F\cdot curl\ G$, on a :
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_\Omega \nabla\phi\cdot curl^2\ g\ dX -\int_\Omega curl\ g\cdot curl\ \nabla\phi\ dX  = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+Comme le rotationel d'un gradient est nul, on a :
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_\Omega \nabla\phi\cdot curl^2\ g\ dX  = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+En intégrant le deuxième terme par partie, on obtient : 
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_{\partial\Omega} \phi(curl^2\ g\cdot n)\ d\Gamma - \int_\Omega \phi(div(curl^2\ g))\ dX  = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+Comme $curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0$, le deuxième terme s'annule et comme la divergence d'un rotationel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\phi\in D^1(\Omega)$ :
+\[
+\int_\Omega curl\ g\cdot curl\ \psi\ dX = \lambda\int_\Omega g\cdot \psi\ dX
+\]
+
+\section{Programmation}
+\subsection{Maillage}
+
+Pour résoudre ce problème avec Feel++, on commence par recréer le maillage du cylindre avec le logiciel Gmsh pour pouvoir l'utiliser simplement.\\
+Pour cela, il faut d'abord créer un cercle, que l'on va ensuite étirer pour faire un cylindre. On construit donc le centre de ce cercle et quatre points permettant de faire quatre arcs de cercle formant un cercle entier, car le logiciel ne permet pas de faire un cercle directement.\\
+Chaque point est admet un paramètre définissant la taille du maillage associé.
+
+\lstinputlisting[firstline=3, lastline=13]{../../src/test.geo}
+
+On peut ensuite former une surface avec ces quarts de cercle. On doit déjà former un bord avec ces arcs de cercles et ensuite dire que c'est une surface. Puis on fait de cette surface un élément physique que l'on nommera "entree".
+
+\lstinputlisting[firstline=14, lastline=16]{../../src/test.geo}
+
+On utilise ensuite la commande \texttt{Extrude} pour créer le cylindre à partir de cette surface en le translatant de 0.5 dans la direction z, et en formant 40 couches intermédiaires.\\
+En utilisant l'interface graphique, on récupère les numéros des surfaces composant le tour du cylindre et celui de l'autre bout du cylindre. Enfin, il suffit de créer une volume physique pour l'intérieur du cylindre.
+
+\lstinputlisting[firstline=17, lastline=21]{../../src/test.geo}
+
+On peut maintenant utiliser cette géométrie pour le programme en Feel++.
+
+\subsection{Feel++}
+
+On va utiliser une classe \texttt{EigenProblem} acceptant des problèmes de plusieurs dimensions, dans notre cas le problème est de dimension 3.\\
+Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au programme que l'on utilise des simplexes, et que la maillage devra être fait de cette manière.\\
+Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'order 2 scalaire.\\
+On utilise enfin la base et le type de maillage pour créer l'espace de fonctions.
+
+\lstinputlisting[firstline=33, lastline=36]{../../src/mode_gen_curl.cpp}
+
+On a ensuite plus qu'à créer un espace de fonction de ce type, et récupérer deux éléments de cet espace, puis de prendre les 3 composantes de ces éléments.
+
+\lstinputlisting[firstline=72, lastline=80]{../../src/mode_gen_curl.cpp}
+
+Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. Et traduire $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.\\
+
+\lstinputlisting[firstline=82, lastline=92]{../../src/mode_gen_curl.cpp}
+
+On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
+
+\lstinputlisting[firstline=94, lastline=97]{../../src/mode_gen_curl.cpp}
+
+On lit ensuite le nombre de valeurs propres que l'on veut et le nombre de valeurs propres convergées, qui doit être supérieur au premier, dans le fichier de configuration qui doit être nommé de la même manière que l'application. Dans ce fichier doit se trouver aussi le nom du fichier contenant la géographie utilisée.
+
+\lstinputlisting[firstline=99, lastline=100]{../../src/mode_gen_curl.cpp}
+
+On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les plus petites valeurs propres.
+
+\lstinputlisting[firstline=114, lastline=121]{../../src/mode_gen_curl.cpp}
+
+Enfin, pour visualiser les résultats, on utilise un élément d'un espace vectoriel qui est le projeté du vecteur formé par les composantes de la solution.
+
+\lstinputlisting[firstline=136, lastline=139]{../../src/mode_gen_curl.cpp}
+
+\newpage
+\section{Résultats}
+\subsection{Modes}
+
+Pour mémoire, voici les résultats de différents modes obtenus avec freefem++.\\
+
+\begin{figure}[H]
+\makebox[\textwidth][c]{
+\includegraphics[scale=1]{Exemple_de_modes}}
+\end{figure}
+
+Et voici les résultats avec Feel++.\\
+
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode00]{\includegraphics[scale=0.3]{mode00}}\ 
+		\subfloat[mode19]{\includegraphics[scale=0.3]{mode19}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode57]{\includegraphics[scale=0.3]{mode57}}\ 
+		\subfloat[mode194]{\includegraphics[scale=0.3]{mode194}}
+	}
+	\caption{composant z des fonctions propres}
+\end{figure}
+
+\subsection{Temps de calcul}
+
+Les résultats précédents ont été obtenus avec 200 valeurs propres et 300 valeurs propres convergées en 5536.05 sec, soit environ 1h30.\\
+
+Faute d'installation de freefem++ sur le serveur de l'Irma, je n'ai pas pu effectuer de comparisons directe, mais j'ai lancé plusieurs fois l'application pour trouver 50 modes avec 100 valeurs convergées. J'ai essayé avec 8, 12, 16 et 20 processeurs.\\
+Les résultats sont plutôt étranges. En effet, moins il y a de processeurs, plus l'application est rapide. 
+En effet, avec 8 processeurs, cela prend 1479.53 secondes.\\
+Avec 12 processeurs, cela prend 1776.28 secondes.\\
+Avec 16 processeurs, cela prend 2421.18 secondes.\\
+Avec 20 processeurs, cela prend 3790.03 secondes.
+
+
+
 
 
 

@@ -11,6 +11,7 @@
 #include <feel/feelalg/solvereigen.hpp>
 #include <feel/feelvf/vf.hpp>
 #include <feel/feelfilters/geotool.hpp>
+#include <boost/mpi/timer.hpp>
 /** use Feel namespace */
 using namespace Feel;
 using namespace Feel::vf;
@@ -31,9 +32,9 @@ public:
     typedef typename backend_type::vector_type vector_type;
     typedef Simplex<Dim> convex_type;
     typedef Mesh<convex_type> mesh_type;
-    typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
-    typedef bases<Lagrange<Order,Scalar>,Lagrange<Order,Scalar>,Lagrange<Order,Scalar> > basis_type;
+    typedef bases<Lagrange<Order, Scalar>, Lagrange<Order, Scalar>, Lagrange<Order, Scalar> > basis_type;
     typedef FunctionSpace<mesh_type, basis_type> space_type;
+    typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef boost::shared_ptr<space_type> space_ptrtype;
     typedef typename space_type::element_type element_type;
 
@@ -96,18 +97,19 @@ EigenProblem<Dim>::run()
     b += integrate( elements(mesh), idt( u3 )*id( v3 ) );
 
     int nev = option(_name="solvereigen.nev").template as<int>();
-
     int ncv = option(_name="solvereigen.ncv").template as<int>();
-
-    double eigen_real, eigen_imag;
-
-    SolverEigen<double>::eigenmodes_type modes;
 
     if ( Environment::worldComm().isMasterRank() )
     {
         std::cout << "nev= " << nev <<std::endl;
         std::cout << "ncv= " << ncv <<std::endl;
     }
+    
+    double eigen_real, eigen_imag;
+
+    SolverEigen<double>::eigenmodes_type modes;
+
+    boost::mpi::timer t;
 
     modes=
     eigs( _matrixA=a.matrixPtr(),
@@ -117,13 +119,14 @@ EigenProblem<Dim>::run()
          _transform=SINVERT,
          _spectrum=SMALLEST_MAGNITUDE,
          _verbose = true );
-
+    
     auto e =  exporter( _mesh=mesh );
     auto femodes = std::vector<decltype( Xh->element() )>( modes.size(), Xh->element() );
     auto vfemodes = std::vector<decltype( Vh->element() )>( modes.size(), Vh->element() );
     if ( !modes.empty() )
     {
         LOG(INFO) << "eigenvalue " << 0 << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")\n";
+        LOG(INFO) << "timer " << t.elapsed() << " proc " << Environment::numberOfProcessors() << std::endl;
 
         int i = 0;
         for( auto const& mode : modes )
