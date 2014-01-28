@@ -84,7 +84,7 @@ EigenProblem<Dim>::run()
     a = integrate( elements( mesh ), (dyt(u3)-dzt(u2)) * (dy(v3)-dz(v2)) );
     a+= integrate( elements( mesh ), (dzt(u1)-dxt(u3)) * (dz(v1)-dx(v3)) );
     a+= integrate( elements( mesh ), (dxt(u2)-dyt(u1)) * (dx(v2)-dy(v1)) );
-    a+= integrate( elements( mesh ), (dxt(u1)+dyt(u2)+dzt(u3)) *(dx(u1)+dy(u2)+dz(u3)));
+    a+= integrate( elements( mesh ), (dxt(u1)+dyt(u2)+dzt(u3)) * (dx(u1)+dy(u2)+dz(u3)));
 
     a += on(_range=markedfaces(mesh, 1), _rhs=l, _element=u3, _expr=cst(0.));
     a += on(_range=markedfaces(mesh, 2), _rhs=l, _element=u3, _expr=cst(0.));
@@ -126,18 +126,19 @@ EigenProblem<Dim>::run()
     if ( !modes.empty() )
     {
         LOG(INFO) << "eigenvalue " << 0 << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")\n";
-        LOG(INFO) << "timer " << t.elapsed() << " proc " << Environment::numberOfProcessors() << std::endl;
+        LOG(INFO) << "nev " << nev << "ncv " << ncv << "timer " << t.elapsed() << " proc " << Environment::numberOfProcessors() << std::endl;
 
         int i = 0;
         for( auto const& mode : modes )
         {
-            std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ")\n";
+            std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ") ";
             femodes[i] = *mode.second.get<2>();
             W = vf::project(_space=Vh, _range=elements(mesh),
                             _expr=vec(idv(femodes[i].template element<0>()),
                                       idv(femodes[i].template element<1>()),
                                       idv(femodes[i].template element<2>()) ) );
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), W );
+            std::cout << " div u = " << integrate(elements(mesh), divv(W)).evaluate()(0,0) << std::endl;
             ++i;
         }
         e->save();

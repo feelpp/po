@@ -278,13 +278,21 @@ On utilise enfin la base et le type de maillage pour créer l'espace de fonctions
 
 \lstinputlisting[firstline=33, lastline=36]{../../src/mode_gen_curl.cpp}
 
-On a ensuite plus qu'à créer un espace de fonction de ce type, et récupérer deux éléments de cet espace, puis de prendre les 3 composantes de ces éléments.
+On a ensuite plus qu'à créer un espace de fonction de ce type, et récupérer deux éléments de cet espace, puis prendre les 3 composantes de ces éléments.
 
 \lstinputlisting[firstline=72, lastline=80]{../../src/mode_gen_curl.cpp}
 
-Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. Et traduire $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.\\
+Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. On utilise donc pour cela le fait que $curl\ u = (\partial_y(u_3)-\partial_z(u_2))\vec{i} + (\partial_z(u_1) - \partial_x(u_3))\vec{j} + (\partial_x(u_2)-\partial_y(u_1))\vec{k}$.
 
-\lstinputlisting[firstline=82, lastline=92]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=83, lastline=86]{../../src/mode_gen_curl.cpp}
+
+De plus, on utilise un terme de stabilisation de type $div \times div$. Ce terme ne doit pas jouer de rôle significatif, car la divergence doit tendre vers 0. Il permet seulement d'inverser la matrice A.
+
+\lstinputlisting[firstline=87, lastline=87]{../../src/mode_gen_curl.cpp}
+
+Puis, on traduit $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.
+
+\lstinputlisting[firstline=89, lastline=92]{../../src/mode_gen_curl.cpp}
 
 On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
 
@@ -313,7 +321,7 @@ Pour mémoire, voici les résultats de différents modes obtenus avec freefem++.\\
 \includegraphics[scale=1]{Exemple_de_modes}}
 \end{figure}
 
-Et voici les résultats avec Feel++.\\
+On peut voir les mêmes modes obtenus avec Feel++ dans la figure \ref{resultats}.\\
 
 \begin{figure}[H]
 	\makebox[\textwidth][c]{
@@ -325,22 +333,30 @@ Et voici les résultats avec Feel++.\\
 		\subfloat[mode194]{\includegraphics[scale=0.3]{mode194}}
 	}
 	\caption{composant z des fonctions propres}
+	\label{resultats}
 \end{figure}
 
 \subsection{Temps de calcul}
 
-Les résultats précédents ont été obtenus avec 200 valeurs propres et 300 valeurs propres convergées en 5536.05 sec, soit environ 1h30.\\
+Les résultats précédents ont été obtenus sur 10 processeurs avec 200 valeurs propres et 300 valeurs propres convergées en 5536.05 sec, soit environ 1h30.\\
 
-Faute d'installation de freefem++ sur le serveur de l'Irma, je n'ai pas pu effectuer de comparisons directe, mais j'ai lancé plusieurs fois l'application pour trouver 50 modes avec 100 valeurs convergées. J'ai essayé avec 8, 12, 16 et 20 processeurs.\\
-Les résultats sont plutôt étranges. En effet, moins il y a de processeurs, plus l'application est rapide. 
-En effet, avec 8 processeurs, cela prend 1479.53 secondes.\\
-Avec 12 processeurs, cela prend 1776.28 secondes.\\
-Avec 16 processeurs, cela prend 2421.18 secondes.\\
-Avec 20 processeurs, cela prend 3790.03 secondes.
+Faute d'installation de freefem++ sur le serveur de l'Irma, je n'ai pas pu effectuer de comparisons directe, mais j'ai lancé plusieurs fois l'application pour comparer le temps de calcul avec un même nombre de processeurs pour différents nombre de modes. Les résultats sont présentés dans la figure \ref{temps_proc}.\\
 
+\begin{figure}[H]
+\makebox[\textwidth][c]{
+\includegraphics[scale=0.55]{temps_mode}}
+\caption{Temps de calcul pour 10 processeurs avec 20, 50, 100, 150 et 200 modes}
+\label{temps_proc}
+\end{figure}
 
+J'ai ensuite essayé de calculer le même nombre de modes avec un nombre différent de processeurs. Cette fois-ci, les résultats sont plutôt étranges. En effet, moins il y a de processeurs, plus le calcul est rapide, comme le montre la figure \ref{temps_mode}.
 
-
+\begin{figure}[H]
+\makebox[\textwidth][c]{
+\includegraphics[scale=0.55]{temps_proc}}
+\caption{Temps de calcul pour 50 modes avec 4, 8, 12, 16 et 20 processeurs}
+\label{temps_mode}
+\end{figure}
 
 
 
