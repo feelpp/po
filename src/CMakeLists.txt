@@ -24,3 +24,4 @@
 #feelpp_add_application( po_mode_gen_lap SRCS mode_gen_lap.cpp CFG po_eigen_lap.cfg GEO HM_Cyl_lowRe__5.mesh )
 #feelpp_add_application( po_mode_gen_curl SRCS mode_gen_curl.cpp CFG po_mode_gen_curl.cfg GEO HM_Cyl_lowRe__5.mesh )
 feelpp_add_application( po_mode_gen_curl SRCS mode_gen_curl.cpp CFG po_mode_gen_curl.cfg GEO test.geo )
+feelpp_add_application( po_modeGen SRCS modeGen.cpp CFG po_mode_gen_curl.cfg )
