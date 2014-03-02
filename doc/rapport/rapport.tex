@@ -43,15 +43,15 @@ tabsize=4}
 \renewcommand\footrulewidth{1pt}
 \lhead{\leftmark}
 \rhead{\rightmark}
-\lfoot{Romain HILD\\Jérôme SPECHT}
+\lfoot{Romain HILD\\Stage}
 \cfoot{\thepage/\pageref{LastPage}}
-\rfoot{Projet éléments finis\\Plastic Omnium}
+\rfoot{Christophe Prud'homme\\Plastic Omnium}
 \setlength{\headheight}{15pt}
 
 \graphicspath{{Images/}}
 
-\title{\includegraphics[scale=0.5]{uds.jpg}\\Résolution d'un problème aux valeurs propres de l'opérateur rotationnel.}
-\author{Romain HILD\\Jérôme SPECHT}
+\title{\includegraphics[scale=0.5]{uds.jpg}\\Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
+\author{Romain HILD}
 \date{\today\\ \vspace{\fill}\includegraphics[scale=0.5]{po.jpg}\vspace{\fill}}
 
 \begin{document}
@@ -71,6 +71,7 @@ L'id\'ee est de choisir un espace dans lequel résoudre les \'equartions de Navie
 \section{Problème}
 Nous cherchons $(v,p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
 \begin{eqnarray}
+\label{depart}
 \left\{
 \begin{aligned}
 &\frac{\partial v}{\partial t} + (curl\  v)\times v + \nabla q -\frac{1}{Re}curl^2\  v-f = 0\\
@@ -121,7 +122,7 @@ Pour connaitre $b$, il faut résoudre l'équation :
 \label{curlb}
 \left\{
 \begin{aligned}
-&curl^2\ b + \nabla\psi_1 = 0\\
+&curl^2\ b = \nabla\psi_1\\
 &div\ b = 0\\
 &b\cdot n\big\rvert_{\partial\Omega} = 0\\
 &curl\ b\cdot n\big\rvert_{\partial\Omega} = 0\\
@@ -169,6 +170,7 @@ u_M(t,\cdot) = \sum_{i=1}^{M} c_i(t)g_i(\cdot)
 
 Les fonctions $g_i$ forment une base de l'espace $D^1(\Omega) = D(curl_{imperm})$. Cette base est constitué des fonctions propres de l'opérateur rotationel. Elles sont donc solution du problème suivant :
 \begin{eqnarray}
+\label{curlcurl}
 (\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
 \begin{aligned}
 &curl^2\  g_i = \lambda_i g_i\\
@@ -182,6 +184,7 @@ Les fonctions $g_i$ forment une base de l'espace $D^1(\Omega) = D(curl_{imperm})
 Toutes fonctions dans $D^1(\Omega)^3$ peut s'écrire $g_i=g_i^0+\nabla\psi_i$ avec $g_i^0\big\rvert_{\partial\Omega} = 0$ et $ \nabla\psi_i\cdot n\big\rvert_{\partial\Omega} = 0$.\\
 Ainsi en décomposant dans $(S_6)$, $u$ par sa somme, on obtient le problème suivant où l'on cherche les coefficients $c_i$ :
 \begin{eqnarray}
+\label{cigi}
 \left\{
 \begin{aligned}
 &\frac{dc_k}{dt}+\sum_{i=1}^M\sum_{j=1}^M c_i\lambda_i c_j r_{ijk} + \sum_{i=1}^M c_i \lambda_i r_{ik}^a + \sum_{i=1}^M c_j r_{jk}^{curl\  a} + \lambda_k^2 c_k = r_k^h - r_k^{\alpha_2}\\
@@ -201,9 +204,62 @@ Où
 \end{aligned}
 \]
 
-Pour résumer, on doit d'abord générer la base $g_i$ des fonctions propres de l'opérateur curl en résolvant l'équation (6), puis on peut trouver $a$ pour pouvoir décomposer $v$ en $u+a$, pour cela, on résous d'abord l'équation (4) afin de résoudre (3) pour trouver $\chi_1$ et (2) pour trouver $\chi_0$.\\
-Ensuite, on est capable de trouver $u$, pour cela on calcul tous les $r_x^y$ et on résous l'équation (7) pour $1\leq k\leq M$ afin de connaitre les $c_i$.\\
-Cela permet de recomposer $u$ et ensuite $v=u+a$, la solution du problème de départ.
+Pour résumer, on doit d'abord générer la base $g_i$ des fonctions propres de l'opérateur curl en résolvant l'équation (\ref{curlcurl}), puis on peut trouver $a$ pour pouvoir décomposer $v$ en $u+a$, pour cela, on résous d'abord les équations (\ref{psi0}) et (\ref{psi1}) afin de pouvoir résoudre (\ref{curlb}). Ce qui permet de trouver $a$ grâce à (\ref{aegal}).\\
+Ensuite, on est capable de trouver $u$, pour cela on calcul tous les $r_x^y$ et on résous l'équation (\ref{cigi}) pour $1\leq k\leq M$ afin de connaitre les $c_i$.\\
+Cela permet de recomposer $u$ et ensuite $v=u+a$, la solution du problème (\ref{depart}).
+
+\subsection{Problème aux valeurs propres}
+\label{eigen}
+
+On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
+\begin{eqnarray*}
+(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
+\begin{aligned}
+&curl^2\  g_i = \lambda_i g_i\\
+&g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl\  g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0
+\end{aligned}
+\right.
+\end{eqnarray*}
+On note d'abord que tout élément $\varphi\in D^1(\Omega)$ peut s'écrire de la manière suivante :
+\[
+\varphi = \varphi_0 + \nabla\phi\text{ et } \varphi\big\rvert_{\partial\Omega} = \nabla\phi
+\]
+
+On va maintenant chercher la formulation variationnelle de ce problème.\\
+Soit $g\in D^1(\Omega)$ solution de (6), alors pour tout $\varphi\in D^1(\Omega)$ nous avons :
+\[
+\int_\Omega curl^2\ g\cdot\varphi\ dX = \int_\Omega\lambda g\cdot \varphi\ dX
+\]
+puis en intégrant par partie :
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX + \int_{\partial\Omega} (curl\ g\times \varphi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+or sur $\partial\Omega,\quad \varphi\big\rvert_{\partial\Omega}=\nabla\phi$, d'où : 
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX + \int_{\partial\Omega} (curl\ g\times \nabla\phi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+En utilisant le théorème de flux-divergence aussi appelé théorème de Green-Ostrogradski :
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX + \int_\Omega div(curl\ g\times \nabla\phi)\ dX = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+En utilisant la formule $div(F\times G) = G\cdot curl\ F - F\cdot curl\ G$, on a :
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX + \int_\Omega \nabla\phi\cdot curl^2\ g\ dX -\int_\Omega curl\ g\cdot curl\ \nabla\phi\ dX  = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+Comme le rotationel d'un gradient est nul, on a :
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX + \int_\Omega \nabla\phi\cdot curl^2\ g\ dX  = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+En intégrant le deuxième terme par partie, on obtient : 
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX + \int_{\partial\Omega} \phi(curl^2\ g\cdot n)\ d\Gamma - \int_\Omega \phi(div(curl^2\ g))\ dX  = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+Comme $curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0$, le deuxième terme s'annule et comme la divergence d'un rotationel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\phi\in D^1(\Omega)$ :
+\[
+\int_\Omega curl\ g\cdot curl\ \varphi\ dX = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
 
 \subsection{Relèvement}
 
@@ -215,56 +271,27 @@ Les problèmes (\ref{psi0}) et (\ref{psi1}) sont semblables, pour les résoudres o
 -\int_\Omega \nabla\psi\ \nabla\varphi + \int_{\partial\Omega} \alpha\ \varphi = 0
 \]
 
-\subsection{Problème aux valeurs propres}
-
-On s'intéresse ici plus particulièrement au problème (6).
-\begin{eqnarray*}
-(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
+Cela permet de connaitre $\nabla\psi_0$ et $\nabla\psi_1$. On peut donc résoudre le problème (\ref{curlb}) :
+\begin{eqnarray}
+\left\{
 \begin{aligned}
-&curl^2\  g_i = \lambda_i g_i\\
-&g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
-&curl\  g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
-&curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0
+&curl^2\ b = \nabla\psi_1\\
+&div\ b = 0\\
+&b\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl\ b\cdot n\big\rvert_{\partial\Omega} = 0\\
+&curl^2\ b\cdot n\big\rvert_{\partial\Omega} = \alpha_1
 \end{aligned}
 \right.
-\end{eqnarray*}
-On note d'abord que tout élément $\phi\in D^1(\Omega)$ peut s'écrire de la manière suivante :
-\[
-\psi = \psi_0 + \nabla\phi\text{ et } \psi\big\rvert_{\partial\Omega} = \nabla\phi
-\]
+\end{eqnarray}
 
-On va maintenant chercher la formulation variationnelle de ce problème.\\
-Soit $g\in D^1(\Omega)$ solution de (6), alors pour tout $\psi\in D^1(\Omega)$ nous avons :
+De la même manière que dans le chapitre \ref{eigen}, on peut obtenir la forme variationnelle suivante :
 \[
-\int_\Omega curl^2\ g\cdot\psi\ dX = \int_\Omega\lambda g\cdot \psi\ dX
-\]
-puis en intégrant par partie :
+\int_\Omega curl\ b\cdot curl\ \varphi\ dX + \int_{\partial\Omega} \phi(curl^2\ b\cdot n)\ d\Gamma - \int_\Omega \phi(div(curl^2\ b))\ dX  = \int_\Omega \nabla\psi\cdot\varphi dX
+\] 
+
+La divergence d'un rotationnel est toujours nul mais comme $curl^2\ b\cdot n = \alpha_1$, on obtient :
 \[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_{\partial\Omega} (curl\ g\times \psi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \psi\ dX
-\]
-or sur $\partial\Omega,\quad \psi\big\rvert_{\partial\Omega}=\nabla\phi$, d'où : 
-\[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_{\partial\Omega} (curl\ g\times \nabla\phi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \psi\ dX
-\]
-En utilisant le théorème de flux-divergence aussi appelé théorème de Green-Ostrogradski :
-\[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_\Omega div(curl\ g\times \nabla\phi)\ dX = \lambda\int_\Omega g\cdot \psi\ dX
-\]
-En utilisant la formule $div(F\times G) = G\cdot curl\ F - F\cdot curl\ G$, on a :
-\[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_\Omega \nabla\phi\cdot curl^2\ g\ dX -\int_\Omega curl\ g\cdot curl\ \nabla\phi\ dX  = \lambda\int_\Omega g\cdot \psi\ dX
-\]
-Comme le rotationel d'un gradient est nul, on a :
-\[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_\Omega \nabla\phi\cdot curl^2\ g\ dX  = \lambda\int_\Omega g\cdot \psi\ dX
-\]
-En intégrant le deuxième terme par partie, on obtient : 
-\[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX + \int_{\partial\Omega} \phi(curl^2\ g\cdot n)\ d\Gamma - \int_\Omega \phi(div(curl^2\ g))\ dX  = \lambda\int_\Omega g\cdot \psi\ dX
-\]
-Comme $curl^2\  g_i\cdot n\big\rvert_{\partial\Omega} = 0$, le deuxième terme s'annule et comme la divergence d'un rotationel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\phi\in D^1(\Omega)$ :
-\[
-\int_\Omega curl\ g\cdot curl\ \psi\ dX = \lambda\int_\Omega g\cdot \psi\ dX
+\int_\Omega curl\ b\cdot curl\ \varphi\ dX + \int_{\partial\Omega} \phi\alpha_1 d\Gamma = \int_\Omega \nabla\psi\cdot\varphi dX
 \]
 
 \section{Maillage}
@@ -375,41 +402,37 @@ Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au pro
 Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'order 2 scalaire.\\
 On utilise enfin la base et le type de maillage pour créer l'espace de fonctions.
 
-\lstinputlisting[firstline=33, lastline=36]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=33, lastline=36]{../../src/modeGen.cpp}
 
-On a ensuite plus qu'à créer un espace de fonction de ce type, et récupérer deux éléments de cet espace, puis prendre les 3 composantes de ces éléments.
+On lit ensuite le nombre de valeurs propres que l'on veut et le nombre de valeurs propres convergées, qui doit être supérieur au premier, dans le fichier de configuration qui doit être nommé de la même manière que l'application. Dans ce fichier doit se trouver aussi le nom du fichier contenant la géographie utilisée, ou le maillage récupérer depuis HyperMesh. On importe cette géographie ou ce maillage avec la fonction \texttt{loadMesh}.
 
-\lstinputlisting[firstline=72, lastline=80]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=70, lastline=79]{../../src/modeGen.cpp}
 
-Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. On utilise donc pour cela le fait que $curl\ u = (\partial_y(u_3)-\partial_z(u_2))\vec{i} + (\partial_z(u_1) - \partial_x(u_3))\vec{j} + (\partial_x(u_2)-\partial_y(u_1))\vec{k}$.
+Puis, on a plus qu'à créer un espace de fonction du type précédemment défini, et récupérer deux éléments de cet espace, puis prendre les 3 composantes de ces éléments.
 
-\lstinputlisting[firstline=83, lastline=86]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=88, lastline=96]{../../src/modeGen.cpp}
 
+Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. On utilise donc pour cela le fait que $curl\ u = (\partial_y(u_3)-\partial_z(u_2))\vec{i} + (\partial_z(u_1) - \partial_x(u_3))\vec{j} + (\partial_x(u_2)-\partial_y(u_1))\vec{k}$.\\
 De plus, on utilise un terme de stabilisation de type $div \times div$. Ce terme ne doit pas jouer de rôle significatif, car la divergence doit tendre vers 0. Il permet seulement d'inverser la matrice A.
 
-\lstinputlisting[firstline=87, lastline=87]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=99, lastline=104]{../../src/modeGen.cpp}
 
 Puis, on traduit $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.
 
-\lstinputlisting[firstline=89, lastline=92]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=107, lastline=110]{../../src/modeGen.cpp}
 
 On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
 
-\lstinputlisting[firstline=94, lastline=97]{../../src/mode_gen_curl.cpp}
-
-On lit ensuite le nombre de valeurs propres que l'on veut et le nombre de valeurs propres convergées, qui doit être supérieur au premier, dans le fichier de configuration qui doit être nommé de la même manière que l'application. Dans ce fichier doit se trouver aussi le nom du fichier contenant la géographie utilisée.
-
-\lstinputlisting[firstline=99, lastline=100]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=112, lastline=115]{../../src/modeGen.cpp}
 
 On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les plus petites valeurs propres.
 
-\lstinputlisting[firstline=114, lastline=121]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=124, lastline=130]{../../src/modeGen.cpp}
 
 Enfin, pour visualiser les résultats, on utilise un élément d'un espace vectoriel qui est le projeté du vecteur formé par les composantes de la solution.
 
-\lstinputlisting[firstline=136, lastline=139]{../../src/mode_gen_curl.cpp}
+\lstinputlisting[firstline=144, lastline=148]{../../src/modeGen.cpp}
 
-\newpage
 \section{Résultats}
 \subsection{Modes}
 

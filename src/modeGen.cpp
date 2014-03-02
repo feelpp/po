@@ -121,8 +121,7 @@ EigenProblem<Dim>::run()
 
     SolverEigen<double>::eigenmodes_type modes;
 
-    modes=
-    eigs( _matrixA=a.matrixPtr(),
+    modes= eigs( _matrixA=a.matrixPtr(),
          _matrixB=b.matrixPtr(),
          _nev=nev,
          _ncv=ncv,
