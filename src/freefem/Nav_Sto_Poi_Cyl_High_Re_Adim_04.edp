@@ -1,0 +1,361 @@
+/*
+Chargement des "packages"
+*/
+load "msh3"
+load "medit"
+
+/*
+Import des maillages 2D (triangilaire) & 3D (tétraédrique)
+*/
+//int nlayer=15;
+//int[int] rup=[0,1],rdown=[0,2],rmid=[1,3];
+real ray=0.05;
+//func zmin=0.;func zmax=1.;
+//border C(t=0,2*pi){x=ray*cos(t);y=ray*sin(t);label=1;}
+//mesh Bth=buildmesh(C(20));
+//mesh3 Th=buildlayers(Bth,nlayer,coef=1.,zbound=[zmin,zmax],labelmid=rmid,reffaceup=rup,reffacelow=rdown);
+mesh3 Th;
+Th=readmesh3("HM_Cyl_highRe_2.mesh");
+
+/*
+Définition des espaces
+*/
+fespace Vh1(Th,P1);
+//fespace Vh2(Th,P2);
+fespace XVh4(Th,[P1,P1,P1,P1]);
+
+/*
+Conditions aux limites
+*/
+/*real VMOYin=0.015,nu=1.56e-5,Re=2.*ray*VMOYin/nu;
+//real VMOYin=2.25,nu=1.56e-5,delta=0.004,Vdelta=2.4,Re=2.*ray*VMOYin/nu;
+//real coefa=Vdelta/((ray-delta)^2-ray^2),coefc=-coefa*ray^2;
+func real alpha0(real x1,real x2){return 2*VMOYin*(1.-(x1*x1+x2*x2)/(ray*ray));}
+//func real alpha1(){return 0.;}     
+func real alpha2(){return 4.*VMOYin/(ray*ray);}
+//func real vacu(real x1,real x2){return max(0.,min(coefa*(x1^2+x2^2)+coefc,Vdelta))/100.;}
+
+/*
+Champ total de l'écoulement avec condition aux limites de Dirichlet  =>  fw
+(solution analytique)
+*/
+/*Vh2 fwlRe1=0.,fwlRe2=0.,fwlRe3=alpha0(x,y);
+//Vh2 fwhRe1=0.,fwhRe2=0.,fwhRe3=vacu(x,y);
+plot([fwlRe1,fwlRe2,fwlRe3],cmm="ana_flow",wait=1,value=1);
+//plot([fwhRe1,fwhRe2,fwhRe3],cmm="ana_flow",wait=1,value=1);
+
+/*
+Champ de la partie potentielle de l'écoulement  =>  a
+*/
+/*real diva;
+Vh1 pa,vpa;
+Vh2 a1,a2,a3,va1,va2,va3;
+problem PoissonDivNulle([a1,a2,a3,pa],[va1,va2,va3,vpa],solver=CG)=
+   int3d(Th)(dx(a1)*dx(va1)+dy(a1)*dy(va1)+dz(a1)*dz(va1))
+   +int3d(Th)(dx(a2)*dx(va2)+dy(a2)*dy(va2)+dz(a2)*dz(va2))
+   +int3d(Th)(dx(a3)*dx(va3)+dy(a3)*dy(va3)+dz(a3)*dz(va3))
+   +int3d(Th)(1.e-6*pa*vpa)
+   +int3d(Th)((dx(a1)+dy(a2)+dz(a3))*vpa)
+   +on(3,a1=0.,a2=0.,a3=0.)
+   +on(1,2,a1=0.,a2=0.,a3=alpha0(x,y));
+//   +on(1,2,a1=0.,a2=0.,a3=vacu(x,y));
+PoissonDivNulle;
+plot([a1,a2,a3],cmm="lam_part",wait=1,value=1);
+{
+ ofstream out1("NSPCHRA04___diva.dat");
+ out1 << "Divergence" << endl;
+ cout << "Divergence" << endl;
+ diva=int3d(Th)(dx(a1)+dy(a2)+dz(a3));
+ out1.scientific.showpos << diva << endl;
+ cout.scientific.showpos << diva << endl;
+};
+
+/*
+Champ résultant sans la partie potentielle de l'écoulement  =>  ur
+(uvma = v - a)
+*/
+/*Vh2 ur1=fwlRe1-a1,ur2=fwlRe2-a2,ur3=fwlRe3-a3;
+//Vh2 ur1=fwhRe1-a1,ur2=fwhRe2-a2,ur3=fwhRe3-a3;
+plot([ur1,ur2,ur3],cmm="res_turb_part",wait=1,value=1);
+
+/*
+Résolution du problème aux valeurs propres du curl2  =>  lambda_k & g_k
+*/
+int nev=3;
+real shift=0.,err,div;
+real[int] ev(nev);
+Vh1 ph,qh;
+Vh1 uh1,uh2,uh3,vh1,vh2,vh3,zero=0.;
+XVh4[int] [g1,g2,g3,pnev](nev);
+varf aa([uh1,uh2,uh3,ph],[vh1,vh2,vh3,qh])=
+   int3d(Th)(dx(uh1)*dx(vh1)+dy(uh1)*dy(vh1)+dz(uh1)*dz(vh1)-shift*uh1*vh1)
+   +int3d(Th)(dx(uh2)*dx(vh2)+dy(uh2)*dy(vh2)+dz(uh2)*dz(vh2)-shift*uh2*vh2)
+   +int3d(Th)(dx(uh3)*dx(vh3)+dy(uh3)*dy(vh3)+dz(uh3)*dz(vh3)-shift*uh3*vh3)
+   +int3d(Th)(1.e-6*ph*qh)
+   -int3d(Th)((dx(uh1)+dy(uh2)+dz(uh3))*qh)
+   +on(3,uh1=0.,uh2=0.)
+   +on(1,2,uh3=0.);
+varf bb([uh1,uh2,uh3,ph],[vh1,vh2,vh3,qh])=
+   int3d(Th)(uh1*vh1)
+   +int3d(Th)(uh2*vh2)
+   +int3d(Th)(uh3*vh3)
+   +int3d(Th)(0.*ph*qh);
+//matrix AA=aa(XVh4,XVh4,solver=Crout,factorize=1);
+//matrix AA=aa(XVh4,XVh4,solver=UMFPACK);
+//matrix AA=aa(XVh4,XVh4,solver=LU,factorize=1);
+matrix AA=aa(XVh4,XVh4,solver=CG,eps=1.e-6);
+matrix BB=bb(XVh4,XVh4,solver=CG,eps=1.e-6);
+int keig=EigenValue(AA,BB,sym=true,sigma=shift,value=ev,vector=g1,tol=1e-10,maxit=0,ncv=0);
+keig=min(nev,keig);
+{
+ ofstream out2("NSPCHRA04___lamda_k-g_k.dat");
+ out2 << "Divergence       Error             Eigenvalue         #EigenVector3D" << endl;
+ cout << "Divergence       Error             Eigenvalue         #EigenVector3D" << endl;
+ for(int i=0;i<keig;i++)
+   {
+    err=int3d(Th)(dx(g1[i])*dx(g1[i])+dy(g1[i])*dy(g1[i])+dz(g1[i])*dz(g1[i])-ev[i]*g1[i]*g1[i])
+        +int3d(Th)(dx(g2[i])*dx(g2[i])+dy(g2[i])*dy(g2[i])+dz(g2[i])*dz(g2[i])-ev[i]*g2[i]*g2[i])
+        +int3d(Th)(dx(g3[i])*dx(g3[i])+dy(g3[i])*dy(g3[i])+dz(g3[i])*dz(g3[i])-ev[i]*g3[i]*g3[i]);
+    div=int3d(Th)((dx(g1[i])+dy(g2[i])+dz(g3[i]))*(dx(g1[i])+dy(g2[i])+dz(g3[i])));
+    out2.scientific.showpos << div << "   " << err << "    " << ev[i] << "     " << i << endl;
+    cout.scientific.showpos << div << "   " << err << "    " << ev[i] << "     " << i << endl;
+    plot(g1[i],cmm="gx["+i+"]",wait=1,value=1);
+    plot(g2[i],cmm="gy["+i+"]",wait=1,value=1);
+    plot(g3[i],cmm="gz["+i+"]",wait=1,value=1);
+//    plot([g1[i],zero,zero],cmm="gx["+i+"]",wait=1,value=1);
+//    plot([zero,zero,g3[i]],cmm="gz["+i+"]",wait=1,value=1);
+//    medit("g",Th,[zero,zero,g3[i]],wait=1);
+//    medit("g",Th,g3[i],wait=1);
+   }
+};
+
+{
+ ofstream file("eigenvector_0.dat");
+ for(int i=0;i<XVh4.ndof;i++)
+   {
+    file << g1[0][][i] << endl;
+   }
+};
+
+{
+ ofstream file("eigenvector_0_1.dat");
+ for(int i=0;i<Th.nv;i++)
+   {
+    file << g1[0][][i] << endl;
+   }
+};
+{
+ ofstream file("eigenvector_0_2.dat");
+ for(int i=0;i<Th.nv;i++)
+   {
+    file << g2[0][][i] << endl;
+   }
+};
+{
+ ofstream file("eigenvector_0_3.dat");
+ for(int i=0;i<Th.nv;i++)
+   {
+    file << g3[0][][i] << endl;
+   }
+};
+{
+ ofstream file("eigenvector_0_p.dat");
+ for(int i=0;i<Th.nv;i++)
+   {
+    file << pnev[0][][i] << endl;
+   }
+};
+
+
+/*
+Résolution du problème Graddiv - Laplacien et du problème de Poisson  =>  g^0_k, psi_k & grad(psi_k)
+*/
+/*real vrf;
+Vh1 uw,vw;
+Vh1[int] psi(nev);
+Vh2 ug1,ug2,ug3,vg1,vg2,vg3;
+Vh2[int] g01(nev),g02(nev),g03(nev),gdpsi1(nev),gdpsi2(nev),gdpsi3(nev);
+for(int i=0;i<keig;i++)
+  {
+   problem GradDivlap([ug1,ug2,ug3],[vg1,vg2,vg3],solver=CG)=
+      -int3d(Th)((dx(ug1)+dy(ug2)+dz(ug3))*(dx(vg1)+dy(vg2)+dz(vg3)))
+      +int3d(Th)(dx(ug1)*dx(vg1)+dx(ug2)*dx(vg2)+dx(ug3)*dx(vg3)
+          +dy(ug1)*dy(vg1)+dy(ug2)*dy(vg2)+dy(ug3)*dy(vg3)
+          +dz(ug1)*dz(vg1)+dz(ug2)*dz(vg2)+dz(ug3)*dz(vg3))
+      -int3d(Th)(ev[i]*g1[i]*vg1+ev[i]*g2[i]*vg2+ev[i]*g3[i]*vg3)
+      +on(1,2,3,ug1=0.,ug2=0.,ug3=0.);
+   GradDivlap;
+   g01[i]=ug1;g02[i]=ug2;g03[i]=ug3;
+  }
+for(int i=0;i<keig;i++)
+  {
+   problem Poisson2(uw,vw,solver=CG)=
+      int3d(Th)(dx(uw)*dx(vw)+dy(uw)*dy(vw)+dz(uw)*dz(vw))   
+      -int3d(Th)((dx(g01[i])+dy(g02[i])+dz(g03[i]))*vw);
+   Poisson2;
+   psi[i]=uw;gdpsi1[i]=dx(uw);gdpsi2[i]=dy(uw);gdpsi3[i]=dz(uw);
+  }
+{
+ ofstream out3("NSPCHRA03___g0_k-psi_k.dat");
+ out3 << "Error            #EigenVector3D" << endl;
+ cout << "Error            #EigenVector3D" << endl;
+ for(int i=0;i<keig;i++)
+   {
+    vrf=int3d(Th)((g1[i]-(g01[i]+gdpsi1[i]))*(g1[i]-(g01[i]+gdpsi1[i])))
+        +int3d(Th)((g2[i]-(g02[i]+gdpsi2[i]))*(g2[i]-(g02[i]+gdpsi2[i])))
+        +int3d(Th)((g3[i]-(g03[i]+gdpsi3[i]))*(g3[i]-(g03[i]+gdpsi3[i])));
+    out3.scientific.showpos << vrf << "   " << i << endl;
+    cout.scientific.showpos << vrf << "   " << i << endl;
+  }
+};
+
+/*
+NAVIER-STOKES : Création des coefficients du problème non-linéaire  =>  A_(ijk), B_(ik), D_(jk), F_k(c) & JAC_(kq)(c)
+*/
+
+/*Vh2 fsm1=0.,fsm2=0.,fsm3=0.;
+func real Aijk(int ii,int jj,int kk)
+     {return int3d(Th)(Re*(g2[ii]*g3[jj]-g3[ii]*g2[jj])*g1[kk])
+             +int3d(Th)(Re*(g3[ii]*g1[jj]-g1[ii]*g3[jj])*g2[kk])
+             +int3d(Th)(Re*(g1[ii]*g2[jj]-g2[ii]*g1[jj])*g3[kk]);}
+func real Bik(int ii,int kk)
+     {return int3d(Th)(Re*(g2[ii]*a3-g3[ii]*a2)*g1[kk])
+             +int3d(Th)(Re*(g3[ii]*a1-g1[ii]*a3)*g2[kk])
+             +int3d(Th)(Re*(g1[ii]*a2-g2[ii]*a1)*g3[kk]);}
+func real F(int kk, real[int] & cc)
+     {real resF=ev[kk]*cc[kk]
+                +int2d(Th,1,2,3)(alpha2()*psi[kk])
+                -int3d(Th)(Re/2.*(fsm1*g1[kk]+fsm2*g2[kk]+fsm3*g3[kk]));      
+      for(int i=0;i<nev;i++)
+        {
+         resF+=cc[i]*sqrt(ev[i])*Bik(i,kk);
+         for(int j=0;j<nev;j++)
+           {
+            resF+=cc[i]*sqrt(ev[i])*cc[j]*Aijk(i,j,kk);
+           }
+        }
+      return resF;}
+func real JAC(int kk, int qq, real[int] & cc)
+     {real resJ=0.;
+      if(kk==qq)resJ=ev[kk];
+      if(kk!=qq)
+        {
+         resJ+=sqrt(ev[qq])*Bik(qq,kk);
+         for(int i=0;i<nev;i++)
+           {
+            resJ+=cc[i]*sqrt(ev[i])*Aijk(i,qq,kk);
+            resJ+=cc[i]*sqrt(ev[qq])*Aijk(qq,i,kk);
+           }
+        }
+      return resJ;}
+
+/*
+NAVIER-STOKES : Résolution du problème non-linéaire  =>  c_k
+*/
+
+/*int iflag=0;
+real tim,timbnl,timold,residuJ,residuN=1.,epsres=1.e-6;
+real[int] c(nev),dc(nev),dcp1(nev);
+real[int] fg(nev),dgmat(nev),dgef(nev);
+real[int,int] mat(nev,nev);
+matrix ef;
+timbnl=clock();
+c=1.;
+cout << " Non-linear solver is running... " << endl;
+for(int newton=0;newton<10;newton++)
+  {
+   cout << " --- residuN=" << residuN << " --- " << endl;
+   if(residuN<epsres)cout << "Newton converges" << endl; 
+   if(residuN<epsres)break;    
+   for(int i=0;i<nev;i++)
+     {
+      fg[i]=-F(i,c);
+      for(int j=0;j<nev;j++)
+        {
+         mat(i,j)=-JAC(i,j,c);
+        }
+     }
+   ef=mat;
+   set(ef,solver=GMRES);
+   dgmat=ef.diag;
+   for(int i=0;i<nev;i++)
+     {
+      if(dgmat[i]==0.)iflag=1;
+      if(dgmat[i]==0.)cout << "Singular Jacobian Matrix" << endl;
+      if(dgmat[i]==0.)break;            
+     }
+   if(iflag==1)break;
+   for(int i=0;i<nev;i++)
+     {
+      dgmat[i]=-1./dgmat[i];
+     }
+   dgef=0.;
+   ef.diag=dgef;
+   dc=0.;
+   residuJ=1.;
+   for(int jacobi=0;jacobi<10;jacobi++)
+     {
+      cout << "residuJ=" << residuJ << endl;
+      if(residuJ<epsres)cout << "Jacobi converges" << endl;
+      if(residuJ<epsres)break;
+      dcp1=ef*dc;
+      dcp1=dcp1+fg;
+      for(int i=0;i<nev;i++)
+        {
+         dcp1[i]=dgmat[i]*dcp1[i];
+        }
+      residuJ=0.; 
+      for(int i=0;i<nev;i++)
+        {
+         residuJ+=(dcp1[i]-dc[i])*(dcp1[i]-dc[i]);
+        }
+      residuJ=sqrt(residuJ);
+      dc=dcp1;
+     }
+   if(residuJ>epsres)cout << "Jacobi doesn't converge" << endl;
+   residuN=0.; 
+   for(int i=0;i<nev;i++)
+     {
+      residuN+=dc[i]*dc[i];
+     }
+   residuN=sqrt(residuN);
+   c+=dc;
+   tim=clock()-timbnl;
+   cout << "Elapsed time= " << tim << " s => for this it= "
+        << tim-timold << " s" << endl << c << endl;
+   timold=tim;
+  }
+if(residuN>epsres)cout << "Newton doesn't converge" << endl;
+
+{
+ ofstream out4("NSPCHRA03___c_k.dat");
+ out4 << "c_k" << endl;
+ cout << "c_k" << endl;
+ for(int i=0;i<keig;i++)
+   {  
+    out4.scientific.showpos << c[i] << endl;
+    cout.scientific.showpos << c[i] << endl;
+   }
+};
+
+/*
+Recombinaison de la solution du problème spectral  =>  u  
+*/
+/*Vh2 ups1=0.,ups2=0.,ups3=0.;
+for(int i=0;i<nev;i++)
+  {
+    ups1=ups1+c[i]*g1[i];ups2=ups2+c[i]*g2[i];ups3=ups3+c[i]*g3[i];
+  }
+plot([ups1,ups2,ups3],cmm="sim_turb_part",wait=1,value=1);
+
+/*
+Recombinaison de la solution du problème physique => v  
+*/
+/*Vh2 vpp1=a1+ups1,vpp2=a2+ups2,vpp3=a3+ups3;
+plot([vpp1,vpp2,vpp3],cmm="sim_flow",wait=1,value=1);
+
+/*
+THE END :)
+*/
+
+

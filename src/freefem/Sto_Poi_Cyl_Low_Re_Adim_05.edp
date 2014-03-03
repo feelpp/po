@@ -1,0 +1,307 @@
+/*
+Packages
+*/
+load "msh3"
+load "medit"
+
+/*
+Maillages 2D & 3D
+*/
+mesh3 Th;
+Th=readmesh3("meshes/HM_Cyl_lowRe__2.mesh");
+//Th=readmesh3("meshes/HM_Cyl_lowRe__3.mesh");
+//plot(Th,cmm="Mesh",ShowAxes=0);
+
+/*
+Espace EF
+*/
+fespace Vh1(Th,P1);
+fespace Vh2(Th,P2);
+fespace XVh2(Th,[P2,P1]);
+//fespace XVh4(Th,[P2,P2,P2,P1]);
+
+/*
+Grandeurs adimensionnalisantes
+*/
+real ray=0.05,Vmoy=0.015,Vmax=2.*Vmoy,diam=2.*ray,nu=1.56e-5,Re=diam*Vmoy/nu;
+
+/*
+CL perméabilité généralisée
+*/
+func real alpha0(real x1,real x2){return Vmax*(1.-(x1^2+x2^2)/ray^2);}    
+//func real alpha0(real x1,real x2){return Vmax*x1^2+Vmax*x2^2;}  
+//func real alpha1(){return 0.;}
+func real alpha2(){return 4.*Vmoy/ray^2;}
+
+/*
+Calcul de la fonction de relèvement  =>  a
+*/
+/*Vh1 psi0,psi0h;
+Vh2 az2,az,azh;
+problem relevement0(psi0,psi0h,solver=CG)=
+   int3d(Th)(dx(psi0)*dx(psi0h)+dy(psi0)*dy(psi0h)+dz(psi0)*dz(psi0h))  
+   -int2d(Th,1)(-alpha0(x,y)*psi0h)
+   -int2d(Th,2)(alpha0(x,y)*psi0h);
+relevement0;
+plot(psi0,cmm="psi0",wait=1,value=1,ShowAxes=0);
+
+problem relevement1(az,azh,solver=CG)=
+   int3d(Th)(1.e-20*az*azh)
+   +on(1,2,az=alpha0(x,y));
+relevement1;
+
+
+//func real funcpsi0(){return psi0;}
+
+//az2=funcpsi0();
+//plot(az2,cmm="az2",wait=1,value=1);
+
+
+
+
+//problem relevement0bis(az,azh,solver=Cholesky)=
+//   int3d(Th)(az*azh)
+//   -int3d(Th)(funcpsi0()*azh);
+//   -int3d(Th)(alpha0(x,y)*azh);
+//   -int2d(Th,1)(-alpha0(x,y)*azh)
+//   -int2d(Th,2)(alpha0(x,y)*azh);
+//relevement0bis;
+
+//az2=alpha0(x,y);
+
+//real[int] CPV=[0.700004,1,1.25];
+
+//ax=dx(psi0);
+//ay=dy(psi0);
+//az=dz(psi0);
+//plot(ax,cmm="ax",wait=1,value=1);
+//plot(ay,cmm="ay",wait=1,value=1);
+plot(az,cmm="az",wait=1,value=1,ShowAxes=0);
+//plot(az2,cmm="az2",wait=1,value=1);
+//plot([ax,ay,az],cmm="a",wait=1,value=1);
+
+/*
+Curl2 Eigenproblem  =>  lambda_k & g_k
+*/
+/*int nev=258,keig=nev;
+real shift1=0.,shift2=0.,shift3=0.,div;
+real[int] ev1(nev),ev2(nev),ev3(nev);
+Vh1 ph,qh;
+Vh2 uh1,uh2,uh3,vh1,vh2,vh3;
+XVh2[int] [g1,pn1](nev);
+//XVh2[int] [g2,pn2](nev);
+//XVh2[int] [g3,pn3](nev);
+varf aa1([uh1,ph],[vh1,qh])=
+   int3d(Th)(dx(uh1)*dx(vh1)+dy(uh1)*dy(vh1)+dz(uh1)*dz(vh1)-shift1*uh1*vh1)
+   +int3d(Th)(1.e-20*ph*qh)
+   -int3d(Th)(dx(uh1)*qh)
+   +on(2,ph=0.)
+   +on(1,2,3,uh1=0.);
+varf bb1([uh1,ph],[vh1,qh])=
+   int3d(Th)(uh1*vh1)
+   +int3d(Th)(0.*ph*qh);
+matrix AA1=aa1(XVh2,XVh2,solver=UMFPACK,eps=1.e-20);
+matrix BB1=bb1(XVh2,XVh2,solver=CG,eps=1.e-20);
+/*varf aa2([uh2,ph],[vh2,qh])=
+   int3d(Th)(dx(uh2)*dx(vh2)+dy(uh2)*dy(vh2)+dz(uh2)*dz(vh2)-shift2*uh2*vh2)
+   +int3d(Th)(1.e-20*ph*qh)
+   -int3d(Th)(dy(uh2)*qh)
+   +on(2,ph=0.)
+   +on(3,uh2=0.);
+varf bb2([uh2,ph],[vh2,qh])=
+   int3d(Th)(uh2*vh2)
+   +int3d(Th)(0.*ph*qh);
+matrix AA2=aa2(XVh2,XVh2,solver=UMFPACK,eps=1.e-20);
+matrix BB2=bb2(XVh2,XVh2,solver=CG,eps=1.e-20);
+varf aa3([uh3,ph],[vh3,qh])=
+   int3d(Th)(dx(uh3)*dx(vh3)+dy(uh3)*dy(vh3)+dz(uh3)*dz(vh3)-shift3*uh3*vh3)
+   +int3d(Th)(1.e-20*ph*qh)
+   -int3d(Th)(dz(uh3)*qh)
+   +on(2,ph=0.)
+   +on(1,2,uh3=0.);
+varf bb3([uh3,ph],[vh3,qh])=
+   int3d(Th)(uh3*vh3)
+   +int3d(Th)(0.*ph*qh);
+matrix AA3=aa3(XVh2,XVh2,solver=UMFPACK,eps=1.e-20);
+matrix BB3=bb3(XVh2,XVh2,solver=CG,eps=1.e-20);*/
+/*int keig1=EigenValue(AA1,BB1,sym=true,sigma=shift1,value=ev1,vector=g1,tol=1e-10,maxit=0,ncv=0);
+keig=min(keig1,keig);
+/*int keig2=EigenValue(AA2,BB2,sym=true,sigma=shift2,value=ev2,vector=g2,tol=1e-10,maxit=0,ncv=0);
+keig=min(keig2,keig);
+int keig3=EigenValue(AA3,BB3,sym=true,sigma=shift3,value=ev3,vector=g3,tol=1e-10,maxit=0,ncv=0);
+keig=min(keig3,keig);*/
+/*{
+ ofstream out1("results/SPCLRA02___lamda_k-g_k.dat");
+ out1.scientific.showpos << "Divergence  Eigenvalues X-Y-Z" << endl;
+ for(int i=0;i<keig;i++)
+   {
+//    div=int3d(Th)(dx(g1[i])+dy(g2[i])+dz(g3[i]));
+//    out1.scientific.showpos << div << "  " << ev1[i] << "  " << ev2[i] << "  " << ev3[i] << endl;
+    out1.scientific.showpos << ev1[i] << endl;
+//    plot(g1[i],cmm="XMode-"+i+" ",wait=1,value=1,ShowAxes=0);
+//    plot(g2[i],cmm="YMode-"+i+" ",wait=1,value=1);
+//    plot(g3[i],cmm="ZMode-"+i+" ",wait=1,value=1);
+   }
+};
+
+/*
+Problème Graddiv-Laplacien & Problème Poisson  =>  g^0_k, psi_k & grad(psi_k)
+*/
+/*real vrf;
+Vh2 uw,vw;
+Vh2[int] psi(nev);
+XVh3 [ug1,ug2,ug3],[vg1,vg2,vg3];
+Vh2[int] g01(nev),g02(nev),g03(nev),gdpsi1(nev),gdpsi2(nev),gdpsi3(nev);
+for(int i=0;i<keig;i++)
+  {
+   problem GzeroK([ug1,ug2,ug3],[vg1,vg2,vg3],solver=CG)=
+      -int3d(Th)((dx(ug1)+dy(ug2)+dz(ug3))*(dx(vg1)+dy(vg2)+dz(vg3)))
+      +int3d(Th)(dx(ug1)*dx(vg1)+dx(ug2)*dx(vg2)+dx(ug3)*dx(vg3)
+          +dy(ug1)*dy(vg1)+dy(ug2)*dy(vg2)+dy(ug3)*dy(vg3)
+          +dz(ug1)*dz(vg1)+dz(ug2)*dz(vg2)+dz(ug3)*dz(vg3))
+      -int3d(Th)(ev[i]*g1[i]*vg1+ev[i]*g2[i]*vg2+ev[i]*g3[i]*vg3)
+      +on(1,2,3,ug1=0.,ug2=0.,ug3=0.);
+   GzeroK;
+   g01[i]=ug1;
+   g02[i]=ug2;
+   g03[i]=ug3;
+   problem PsiK(uw,vw,solver=CG)=
+      int3d(Th)(dx(uw)*dx(vw)+dy(uw)*dy(vw)+dz(uw)*dz(vw))   
+      -int3d(Th)((dx(g01[i])+dy(g02[i])+dz(g03[i]))*vw);
+   PsiK;
+   psi[i]=uw;
+   gdpsi1[i]=dx(uw);
+   gdpsi2[i]=dy(uw);
+   gdpsi3[i]=dz(uw);
+  }
+/*{
+ ofstream out2("SPCLRA01___g0_k-psi_k.dat");
+ out2.scientific.showpos << "Error" << endl;
+ for(int i=0;i<keig;i++)
+   {
+    vrf=int3d(Th)((g1[i]-(g01[i]+gdpsi1[i]))*(g1[i]-(g01[i]+gdpsi1[i])))
+        +int3d(Th)((g2[i]-(g02[i]+gdpsi2[i]))*(g2[i]-(g02[i]+gdpsi2[i])))
+        +int3d(Th)((g3[i]-(g03[i]+gdpsi3[i]))*(g3[i]-(g03[i]+gdpsi3[i])));
+    out2.scientific.showpos << vrf << endl;
+  }
+};
+
+/*
+STOKES : problème linéaire  =>  cx_k, cy_k & cz_k
+*/
+/*real[int] alx(nev),aly(nev),alz(nev),alpsx(nev),alpsy(nev),alpsz(nev),ggx(nev),ggy(nev),ggz(nev),cx(nev),cy(nev),cz(nev);
+Vh2 fsm1=0.,fsm2=0.,fsm3=0.;
+{
+ ofstream out3("SPCLRA01___cx_k-cy_k-cz_k.dat");
+ out3 << "cx_k  cy_k  cz_k" << endl;
+ for(int i=0;i<keig;i++)
+   {
+    alx[i]=0.;
+    aly[i]=0.;
+    alz[i]=int2d(Th,1)(-alpha0(x,y)/Vmoy*psi[i]);
+    alpsx[i]=0.;
+    alpsy[i]=0.;
+    alpsz[i]=int2d(Th,1)(-diam^2/Vmoy*alpha2()*psi[i]);
+    ggx[i]=int3d(Th)(Re/2.*fsm1*g1[i]);
+    ggy[i]=int3d(Th)(Re/2.*fsm2*g2[i]);
+    ggz[i]=int3d(Th)(Re/2.*fsm3*g3[i]);
+    cx[i]=-(alpsx[i]-ggx[i]-alx[i])/ev[i];   
+    cy[i]=-(alpsy[i]-ggy[i]-aly[i])/ev[i];   
+    cz[i]=-(alpsz[i]-ggz[i]-alz[i])/ev[i];   
+    out3.scientific.showpos << cx[i] << "  " << cz[i] << "  " << cz[i] << "  " << endl;
+   }
+};
+
+/*
+Solution du problème  =>  u
+*/
+/*Vh2 u1=0.,u2=0.,u3=0.;
+for(int i=0;i<nev;i++)
+  {
+//   u1=u1+cx[i]/ray^2*g1[i]*Vmoy;
+//   u2=u2+cy[i]/ray^2*g2[i]*Vmoy;
+   u3=u3+cz[i]/ray^2*g3[i]*Vmoy;
+  }
+plot(u3,cmm="sim_flow_0",wait=1,value=1);
+
+/*
+Solution analytique : écoulement CL Dirichlet  =>  fw
+*/
+Vh2 fwlRe3=alpha0(x,y);
+plot(fwlRe3,cmm="sim_v",wait=1,value=1,ShowAxes=0);
+
+/*
+Difference
+*/
+/*Vh2 urel;
+urel=fwlRe3-az;
+plot(urel,cmm="ana_flow",wait=1,value=1,ShowAxes=0);
+
+/*
+Champ de pression associé => p
+*/
+/*Vh1 pres,qres;
+Vh2 u3=fwlRe3,u3drvx=dx(u3),u3drvy=dy(u3),u3drvz=dz(u3);
+//Vh2 u3drvx=dx(fwlRe3),u3drvy=dy(fwlRe3),u3drvz=dz(fwlRe3);
+Vh2 u3drvxx=dx(u3drvx),u3drvyy=dy(u3drvy),u3drvzz=dz(u3drvz),u3lap=u3drvxx+u3drvyy+u3drvzz;
+problem Pression(pres,qres,solver=CG)=
+   int3d(Th)(dx(pres)*dx(qres)+dy(pres)*dy(qres)+dz(pres)*dz(qres))
+   -int2d(Th,1)(200*alpha2()/Re*qres)
+//   +int2d(Th,2)(alpha2()/Re*qres);
+   +on(2,pres=0.);
+Pression;
+plot(pres,cmm="sim_p",wait=1,value=1,ShowAxes=0);
+
+/*
+Evolution en temps par méthode Runge-Kutta ordre 2
+*/
+//int iter=T/h;
+/*int iter=10;
+Vh2 u3np12,u3n,u3ndrvx,u3ndrvy,u3ndrvz,u3np12drvx,u3np12drvy,u3np12drvz;
+u3n=u3;
+//u3n=fwlRe3;
+plot(u3n,cmm="sim_flow_0 ",wait=1,value=1);
+for(int i=1;i<iter+1;i++)
+  {
+   u3ndrvx=dx(u3n);u3ndrvy=dy(u3n);u3ndrvz=dz(u3n);
+   u3np12=u3n+h/2*((dx(u3ndrvx)+dy(u3ndrvy)+dz(u3ndrvz))/Re-dz(pres));
+   u3np12drvx=dx(u3np12);u3np12drvy=dy(u3np12);u3np12drvz=dz(u3np12);
+   u3n=u3n+h*((dx(u3np12drvx)+dy(u3np12drvy)+dz(u3np12drvz))/Re-dz(pres));
+   plot(u3n,cmm="sim_flow_"+i+" ",wait=1,value=1);
+  }
+
+/*
+Evolution en temps par méthode Runge-Kutta ordre 4
+*/
+
+
+
+
+
+/*
+Probleme de Stokes avec conditions de Dirichlet
+*/
+
+fespace VVh(Th,[P2,P2,P2,P1]);
+
+macro Grad(u) [dx(u),dy(u),dz(u)]// EOM
+macro div(u1,u2,u3) (dx(u1)+dy(u2)+dz(u3)) //EOM
+
+VVh [uu1,uu2,uu3,pp];
+VVh [vv1,vv2,vv3,qq];
+//func fup = (1-x)*(x)*y*(1-y)*16;
+solve vStokes([uu1,uu2,uu3,pp],[vv1,vv2,vv3,qq]) = 
+  int3d(Th,qforder=3)( Grad(uu1)'*Grad(vv1) +  Grad(uu2)'*Grad(vv2) +  Grad(uu3)'*Grad(vv3) //)';
+		       - div(uu1,uu2,uu3)*qq - div(vv1,vv2,vv3)*pp + 1e-10*qq*pp ) 
+  + on(3,uu1=0,uu2=0,uu3=0)
+  + on(2,uu1=0,uu2=0,uu3=alpha0(x,y),pp=0) 
+  + on(1,uu1=0,uu2=0,uu3=alpha0(x,y)) ;
+
+
+plot(uu3,cmm="classic_v",wait=1,value=1,ShowAxes=0);
+//plot(pp,cmm="classic_p",wait=1,value=1,ShowAxes=0);
+
+
+/*
+THE END :)
+*/
