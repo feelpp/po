@@ -160,7 +160,7 @@ main( int argc, char** argv )
 
     Environment env( _argc=argc, _argv=argv,
                     _desc=feel_options(),
-                    _about=about(_name="po_mode_gen_curl",
+                    _about=about(_name="po_modeGen",
                                  _author="",
                                  _email="") );
 

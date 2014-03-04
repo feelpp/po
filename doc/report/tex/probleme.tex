@@ -1,0 +1,297 @@
+\section{Problème}
+Notation : 
+\begin{eqnarray*}
+divergence(v)=\nabla\cdot v\\
+curl(v)=\nabla\times v\\
+curl(curl(v))=\nabla^2\times v
+\end{eqnarray*}
+
+Nous cherchons $(v,p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
+\begin{eqnarray}
+\label{depart}
+\left\{
+\begin{aligned}
+&\frac{\partial v}{\partial t} + (\nabla\times  v)\times v + \nabla q + \frac{1}{Re}\nabla^2\times  v-f = 0\\
+&\nabla\cdot v = 0\\
+&v\big\rvert_{t=0} = v_0\\
+&v\cdot n\big\rvert_{\partial\Omega} = \alpha_0\\
+&(\nabla\times  v)\cdot n\big\rvert_{\partial\Omega} = \alpha_1\\
+&(\nabla^2\times  v)\cdot n\big\rvert_{\partial\Omega} = \alpha_2
+\end{aligned}
+\right.
+\end{eqnarray}
+où $q = \frac{|v|^2}{2}+p$.\\
+
+On définit l'espace
+\[
+\LL^2_\sigma(\Omega) = \{v \in \LL^2(\Omega)_| \nabla\cdot v = 0\text{ et }v\cdot n\big\rvert_{\partial\Omega} = 0 \}
+\]
+Alors, on cherche les solutions dans l'espace
+\[
+D^1(\Omega) = \{v\in W^{1,2}(\Omega) \cup \LL^2(\Omega) | (\nabla\times v\cdot n)\big\rvert_{\partial\Omega} = 0  \}
+\]
+
+Afin de pouvoir résoudre ce problème, on veut se ramener à un problème où $\alpha_0=\alpha_1=0$. On introduit donc une fonction $a$ dans $W^{1,2}(\Omega)$ pour relever le problème tel que :
+\begin{eqnarray}
+\label{aegal}
+\left\{
+\begin{aligned}
+&a=\nabla\times b+\nabla\psi_0\\
+&\nabla\cdot a =0\\
+&a\cdot n\big\rvert_{\partial\Omega} = \alpha_0\\
+&(\nabla\times a)\cdot n\big\rvert_{\partial\Omega} = \alpha_1
+\end{aligned}
+\right.
+\end{eqnarray}
+Comme $\nabla\cdot a=0$, on obtient l'équation suivante pour $\psi_0\in W^{1,2}(\Omega)$ :
+\begin{eqnarray}
+\label{psi0}
+\left\{
+\begin{aligned}
+&-\Delta\psi_0 = 0\\
+&\nabla\psi_0\cdot n\big\rvert_{\partial\Omega}=\alpha_0
+\end{aligned}
+\right.
+\end{eqnarray}
+
+Pour connaitre $\nabla\times b$, il faut résoudre le problème :
+\begin{eqnarray}
+\label{curlb}
+\left\{
+\begin{aligned}
+&\nabla^2\times b = \nabla\psi_1\\
+&\nabla\cdot b = 0\\
+&b\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla\times b\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla^2\times b\cdot n\big\rvert_{\partial\Omega} = \alpha_1
+\end{aligned}
+\right.
+\end{eqnarray}
+
+Une fois $\psi_0$ et $\nabla\times b$ connus, cela permet de retrouver $a$.\\
+
+Ainsi, on peut décomposer $v=a+u$ et l'équatioin (\ref{depart}) devient :
+\[
+\frac{\partial(u+a)}{\partial t}+(\nabla\times(u+a))\times(u+a) + \nabla q + \frac{1}{Re}\nabla^2\times(u+a) - f = 0
+\]
+Ce qui donne :
+\[
+\frac{\partial u}{\partial t}+\frac{\partial a}{\partial t} + (\nabla\times u+\nabla\times a)\times(u+a) +\frac{1}{Re}(\nabla^2\times u+\nabla^2\times a) - f = 0
+\]
+Comme $\nabla^2\times a = 0$ et en notant $h=f-\frac{\partial a}{\partial t} - (\nabla\times a)\times a$, on obtient le problème suivant où l'objectif est donc de trouver $(u,q)\in Q_T$ tel que :
+\begin{eqnarray}
+\label{uci}
+\left\{
+\begin{aligned}
+&\frac{\partial u}{\partial t} + (\nabla\times u)\times u + (\nabla\times u)\times a +(\nabla\times a)\times u + \nabla q  +\frac{1}{Re}\nabla^2\times  u - h = 0\\
+&\nabla\cdot u = 0\\
+&u\big\rvert_{t=0} = v_0 - a(0,\cdot)\\
+&u\cdot n\big\rvert_{\partial\Omega} = 0\\
+&(\nabla\times u)\cdot n\big\rvert_{\partial\Omega} = 0\\
+&(\nabla^2\times  u)\cdot n\big\rvert_{\partial\Omega} = \alpha_2
+\end{aligned}
+\right.
+\end{eqnarray}
+
+Comme $u$ appartient à $D^1(\Omega)$, on peut décomposer $u$ sous la forme :
+\[
+u(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)g_i(\cdot)
+\]
+On va chercher une valeur approché de $u$ qui se présente sous la forme :
+\[
+u_M(t,\cdot) = \sum_{i=1}^{M} c_i(t)g_i(\cdot)
+\]
+
+Les fonctions $g_i$ forment une base de l'espace $D^1(\Omega) = D(curl_{imperm})$. Cette base est constitué des fonctions propres de l'opérateur rotationnel. Elles sont donc solutions du problème suivant :
+\begin{eqnarray}
+\label{curlcurl}
+(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
+\begin{aligned}
+&\nabla^2\times  g_i = \lambda_i g_i\\
+&g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla\times g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla^2\times  g_i\cdot n\big\rvert_{\partial\Omega} = 0
+\end{aligned}
+\right.
+\end{eqnarray}
+
+Toutes fonctions dans $D^1(\Omega)$ peut s'écrire $g_i=g_i^0+\nabla\psi_i$ avec $g_i^0\big\rvert_{\partial\Omega} = 0$ et $ \nabla\psi_i\cdot n\big\rvert_{\partial\Omega} = 0$.\\
+Ainsi en décomposant dans (\ref{uci}), $u$ par sa somme, on obtient le problème suivant où l'on cherche les coefficients $c_i$ :\\
+\begin{eqnarray}
+\label{cigi}
+\left\{
+\begin{aligned}
+&\frac{dc_k}{dt}+\sum_{i=1}^M\sum_{j=1}^M c_i\lambda_i c_j r_{ijk} + \sum_{i=1}^M c_i\lambda_i r_{ik}^a + \sum_{i=1}^M c_j r_{jk}^{\nabla\times a} + \lambda_k^2 c_k = r_k^h - r_k^{\alpha_2}\\
+&c_k(0)=c_k^0
+\end{aligned}
+\right.\quad
+1\leq k\leq M
+\end{eqnarray}
+Où\\
+\[
+\begin{aligned}
+&r_{ijk} = \langle g_i\times g_j, g_k\rangle_\Omega,\\
+&r_{ik}^a=\langle g_i\times a, g_k\rangle_\Omega,\\
+&r_{jk}^{\nabla\times a}=\langle (\nabla\times a)\times g_j, g_k\rangle_\Omega,\\
+&r_k^h=\langle h,g_k\rangle_\Omega,\\
+&r_k^{\alpha_2} = \langle \alpha_2,\psi_k\rangle_{\partial\Omega}.
+\end{aligned}
+\]
+
+Pour résumer, on doit donc :
+\begin{itemize}
+\item générer la base $g_i$ des fonctions propres de l'opérateur curl en résolvant l'équation (\ref{curlcurl}) comme expliqué dans le chapitre \ref{eigen}.
+\item les décomposer en $g_i=g_i^0+\nabla\psi_i$ comme montré dans \ref{decomp}.
+\item trouver $u$, pour cela on calcul tous les $r_x^y$ et on résous l'équation (\ref{cigi}) pour $1\leq k\leq M$ afin de connaitre les $c_k$, cela est expliqué dans \ref{spectre}.
+\item trouver $a$ pour pouvoir décomposer $v$ en $u+a$, pour cela, on résout les équations (\ref{psi0}) et (\ref{curlb}). Ce qui permet de trouver $a$ grâce à (\ref{aegal}). Cette partie est détaillé dans \ref{relev}.
+\item recomposer $v=u+a$, la solution du problème (\ref{depart}).
+\end{itemize}
+
+\subsection{Problème aux valeurs propres}
+\label{eigen}
+
+On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
+\begin{eqnarray*}
+(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
+\begin{aligned}
+&\nabla^2\times  g_i = \lambda_i g_i\\
+&g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla\times g_i\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla^2\times  g_i\cdot n\big\rvert_{\partial\Omega} = 0
+\end{aligned}
+\right.
+\end{eqnarray*}
+On note d'abord que tout élément $\varphi\in D^1(\Omega)$ peut s'écrire de la manière suivante :
+\[
+\varphi = \varphi_0 + \nabla\phi\text{ et } \varphi\big\rvert_{\partial\Omega} = \nabla\phi
+\]
+
+On va maintenant chercher la formulation variationnelle de ce problème.\\
+Soit $g\in D^1(\Omega)$ solution de (6), alors pour tout $\varphi\in D^1(\Omega)$ nous avons :
+\[
+\int_\Omega \nabla^2\times g\cdot\varphi\ dX = \int_\Omega\lambda g\cdot \varphi\ dX
+\]
+puis en intégrant par partie :
+\[
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX + \int_{\partial\Omega} (\nabla\times g\times \varphi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+or sur $\partial\Omega,\quad \varphi\big\rvert_{\partial\Omega}=\nabla\phi$, d'où : 
+\[
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX + \int_{\partial\Omega} (\nabla\times g\times \nabla\phi)\cdot n\ d\Gamma = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+En utilisant le théorème de flux-divergence aussi appelé théorème de Green-Ostrogradski :
+\[
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX + \int_\Omega \nabla\cdot(\nabla\times g\times \nabla\phi)\ dX = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+En utilisant la formule $div(F\times G) = G\cdot \nabla\times F - F\cdot \nabla\times G$, on a :
+\[
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX + \int_\Omega \nabla\phi\cdot \nabla^2\times g\ dX -\int_\Omega \nabla\times g\cdot \nabla\times\nabla\phi\ dX  = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+Comme le rotationel d'un gradient est nul, on a :
+\[
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX + \int_\Omega \nabla\phi\cdot \nabla^2\times g\ dX  = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+En intégrant le deuxième terme par partie, on obtient : 
+\[
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX + \int_{\partial\Omega} \phi(\nabla^2\times g\cdot n)\ d\Gamma - \int_\Omega \phi(\nabla\cdot(\nabla^2\times g))\ dX  = \lambda\int_\Omega g\cdot \varphi\ dX
+\]
+Comme $\nabla^2\times  g_i\cdot n\big\rvert_{\partial\Omega} = 0$, le deuxième terme s'annule et comme la divergence d'un rotationel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\phi\in D^1(\Omega)$ :
+\begin{eqnarray}
+\label{fveigen}
+\int_\Omega \nabla\times g\cdot \nabla\times\varphi\ dX = \lambda\int_\Omega g\cdot \varphi\ dX
+\end{eqnarray}
+
+\subsection{Décomposition des $g_i$}
+\label{decomp}
+
+Une fois les fonctions propres connues, on a besoin de les décomposer en $g_i=g_i^0+\nabla\psi_i$. On applique donc le rotationnel du rotationnel sur cette relation.\\
+\[
+\nabla^2\times g_i = \nabla^2\times g_i^0 +\nabla^2\times\nabla\psi_i
+\]
+Le dernier terme est nul car c'est le rotationnel d'un gradient. On utilise la formule $\nabla^2\times v=\nabla(\nabla\cdot v)-\Delta v$ sur les deux termes restants :
+\[
+\nabla(\nabla\cdot g_i)-\Delta g_i = \nabla(\nabla\cdot g_i^0)-\Delta g_i^0
+\]
+Comme la divergence des $g_i$ est nul, on obtient :
+\[
+-\Delta g_i = \nabla(\nabla\cdot g_i^0)-\Delta g_i^0
+\]
+D'autre part, on sait que la divergence des $g_i$ est nulle, on a donc :
+\[
+\nabla\cdot (g_i^0+\nabla\psi_i)=0
+\]
+Ce qui nous donne :
+\[
+\nabla\cdot g_i^0=-\Delta\psi_i
+\]
+En réinjectant cette égalité dans l'équation obtenue précédemment, on arrive à :
+\begin{eqnarray*}
+\left\{
+\begin{aligned}
+-\nabla(\Delta\psi_i)-\Delta g_i^0 &= -\Delta g_i\\
+g_i^0\big\rvert_{\partial\Omega} &= 0\\
+\nabla\psi_i\cdot n\big\rvert_{\partial\Omega} &= 0
+\end{aligned}
+\right.
+\end{eqnarray*}
+
+\subsection{Problème spectral}
+\label{spectre}
+
+En partant de l'équation (\ref{uci}), on remplace $u$ par la somme $\sum_{i=1}^Mc_ig_i$ qui tend vers $u$ lorsque $M$ tend vers l'infini.
+\begin{align*}
+\frac{\partial (\sum_{i=1}^Mg_ic_i)}{\partial t} &+ \left(\nabla\times\left(\sum_{i=1}^Mc_ig_i\right)\right)\times\left(\sum_{i=1}^Mc_ig_i\right)  + \left(\nabla\times\left(\sum_{i=1}^Mc_ig_i\right)\right)\times a &\\
+&+ \left(\nabla\times a\right)\times\left(\sum_{i=1}^Mc_ig_i\right) + \nabla q  + \frac{1}{Re}\nabla^2\times\left(\sum_{i=1}^Mc_ig_i\right) - h = 0
+\end{align*}
+En utilisant le fait que $\nabla\times g_i=\lambda_i g_i$, on arrive à :
+\begin{align*}
+\sum_{i=1}^Mg_i\frac{\partial c_i}{\partial t} &+ \left(\sum_{i=1}^M c_i\lambda_i g_i\right)\times\left(\sum_{i=1}^Mc_ig_i\right) + \left(\sum_{i=1}^Mc_i\lambda_ig_i\right)\times a &\\
+&+ \sum_{i=1}^Mc_i\left(\nabla\times a\right)g_i +\nabla q + \frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2g_i - h = 0
+\end{align*}
+en intégrant par chaque $g_k$ de la base de $D^1(\Omega)$, et en intégrant, on obtient :
+\begin{align*}
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}r_{ik} +\sum_{i=1}^M\sum_{j=1}^Mc_ic_j\lambda_ir_{ijk} +\sum_{i=1}^Mc_i\lambda_ir_{ik}^a +\sum_{i=1}^Mc_ir_{ik}^{\nabla\times a} + \frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2r_{ik} = r_k^h
+\end{align*}
+
+\subsection{Relèvement}
+\label{relev}
+
+Le problème (\ref{aegal}) sert à retrouver des conditions aux limites pour lesquels on sait résoudre le problème. Pour trouver $a$, il nous faut d'abord résoudre les problèmes (\ref{psi0}) et (\ref{curlb}).\\
+
+(\ref{psi0}) est un problème de Laplace, pour obtenir sa forme variationnelle, on multiplie par une fonction test et on intègre :
+\[
+\int_\Omega \Delta\psi_0 \varphi = 0
+\]
+On utilise ensuite la formule de Green pour parvenir à :
+\[
+-\int_\Omega \nabla\psi\nabla\varphi + \int_{\partial\Omega} \nabla\psi_0\cdot n\ \varphi = 0
+\]
+Or, $\nabla\psi_0\cdot n = \alpha_0$ sur $\partial\Omega$, on obtient donc la forme variationnelle suivante :
+\begin{eqnarray}
+\label{fvpsi}
+-\int_\Omega \nabla\psi_0\ \nabla\varphi + \int_{\partial\Omega} \alpha_0\ \varphi = 0
+\end{eqnarray}
+Cela permet de connaitre $\nabla\psi_0$.\\
+
+On résout maintenant le problème (\ref{curlb}) :
+\begin{eqnarray*}
+\left\{
+\begin{aligned}
+&\nabla^2\times b = \nabla\psi_1\\
+&\nabla\cdot b = 0\\
+&b\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla\times b\cdot n\big\rvert_{\partial\Omega} = 0\\
+&\nabla^2\times b\cdot n\big\rvert_{\partial\Omega} = \alpha_1
+\end{aligned}
+\right.
+\end{eqnarray*}
+Toujours de la même manière, on multiplie par une fonction test et on intégre :
+\[
+\int_\Omega (\nabla^2\times b) \varphi = \int_\Omega (\nabla\psi_1)\varphi
+\]
+En intégrant par partie le premier terme et en utilisant la formule de Green sur le second, on obtient :
+\begin{eqnarray}
+\label{fvrelev}
+\int_\Omega (\nabla\times b)(\nabla\times\varphi) - \int_{\partial\Omega} (\nabla\times b)(\varphi\cdot n) +\int_\Omega \psi_1(\nabla\cdot\varphi) - \int_{\partial\Omega} \psi_1(\varphi\cdot n) = 0
+\end{eqnarray}
+
