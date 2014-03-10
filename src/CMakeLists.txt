@@ -23,3 +23,4 @@
 #
 feelpp_add_application( po_mode_gen_curl SRCS mode_gen_curl.cpp CFG po_mode_gen_curl.cfg GEO test.geo )
 feelpp_add_application( po_modeGen SRCS modeGen.cpp CFG po_modeGen.cfg )
+feelpp_add_application( po_psi0 SRCS psi0.cpp CFG po_psi0.cfg )

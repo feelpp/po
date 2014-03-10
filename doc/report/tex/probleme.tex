@@ -22,16 +22,29 @@ Nous cherchons $(v,p)$, correspondant respectivement à la vitesse et à la pres
 \end{eqnarray}
 où $q = \frac{|v|^2}{2}+p$.\\
 
-On définit l'espace
+Soit l'espace
 \[
 \LL^2_\sigma(\Omega) = \{v \in \LL^2(\Omega)_| \diverg v = 0\text{ et }v\cdot n\restr = 0 \}
 \]
-Alors, on cherche les solutions dans l'espace
+Alors, on cherche la solution dans l'espace
 \[
 D^1(\Omega) = \{v\in W^{1,2}(\Omega) \cup \LL^2(\Omega) | (\rot v\cdot n)\restr = 0  \}
 \]
 
-Afin de pouvoir résoudre ce problème, on veut se ramener à un problème où $\alpha_0=\alpha_1=0$. On introduit donc une fonction $a$ dans $W^{1,2}(\Omega)$ pour relever le problème tel que :
+\subsection{Problème local}
+
+Afin d'utiliser les travaux de O. Mezureau, J. Neustupa et P. Penel\footnote{\href{http://www.researchgate.net/publication/254219219\_A\_weak\_solvability\_to\_the\_steady\_NavierStokes\_equations\_for\_compressible\_barotropic\_fluid\_with\_generalized\_impermeability\_boundary\_conditions}{A weak solvability to the steady Navier-Stokes equations for compressible barotropic fluid with generalized impermeability boundary conditions}}, on souhaite se ramener à un problème où $\alpha_0=\alpha_1=0$.\\
+On veut donc écrire $v=u+a$ avec $a$ pour relever le problème.
+\[
+\begin{array}{cccccc}
+& v & = & a & + & u\\
+\diverg\star & 0 & & 0 & & 0\\
+\star\cdot n\restr & \alpha_0 & & \alpha_0 & & 0\\
+\rot\star\cdot n\restr & \alpha_1 & & \alpha_1 & & 0\\
+\rott\star\cdot n\restr & \alpha_1 & & 0 & & \alpha_2 
+\end{array}
+\]
+On a donc $a$ tel que :
 \begin{eqnarray}
 \label{aegal}
 \left\{
@@ -43,7 +56,7 @@ Afin de pouvoir résoudre ce problème, on veut se ramener à un problème où $
 \end{aligned}
 \right.
 \end{eqnarray}
-Comme $\diverg a=0$, on obtient l'équation suivante pour $\psi_0\in W^{1,2}(\Omega)$ :
+Alors $\psi_0$ est solution de l'équation :
 \begin{eqnarray}
 \label{psi0}
 \left\{
@@ -53,8 +66,8 @@ Comme $\diverg a=0$, on obtient l'équation suivante pour $\psi_0\in W^{1,2}(\Om
 \end{aligned}
 \right.
 \end{eqnarray}
-
-Pour connaître $\rot b$, il faut résoudre le problème :
+On obtient alors $\psi_0$ à une constante près, cela nous permet néanmoins de calculer $\grad\psi_0$.\\
+Et $b$ est solution du problème mixte :
 \begin{eqnarray}
 \label{curlb}
 \left\{
@@ -63,14 +76,38 @@ Pour connaître $\rot b$, il faut résoudre le problème :
 &\diverg b = 0\\
 &b\cdot n\restr = 0\\
 &\rot b\cdot n\restr = 0\\
-&\rott b\cdot n\restr = \alpha_1
+&\grad\psi_1\cdot n\restr = \alpha_1
 \end{aligned}
 \right.
 \end{eqnarray}
 
-Une fois $\psi_0$ et $\rot b$ connus, cela permet de retrouver $a$.\\
+Une fois $\grad\psi_0$ et $b$ connus, on peut calculer $\rot b$ et donc retrouver $a$.\\
 
-Ainsi, on peut décomposer $v=a+u$ et l'équation (\ref{depart}) devient :
+On cherche donc $u=v-a$, et en utiliant la décomposition de Galerkin généralisée, on a :
+\[
+u(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)g_i(\cdot)
+\]
+Comme $u\in D^1(\Omega)=D(curl_{imperm})$, on peut choisir les fonctions de base $g_i$ comme étant les fonctions propres de l'opérateur rotationnel. Ces fonctions sont les mêmes que celles de l'opérateur rotationnel au carré.\\
+En effet, soit $(\lambda_i,g_i)$ solutions de $\rot g_i = \lambda_ig_i$ et $(\Lambda_i,G_i)$ solutions de $\rott G_i = \Lambda_iG_i$. Alors :
+\[
+\rott g_i = \rot(\rot g_i)=\rot(\lambda_ig_i)=\lambda^2g_i = \Lambda_iG_i
+\]
+On voit donc que $g_i=G_i$ et que $\lambda_i=\pm\sqrt\Lambda_i$. Pour n'avoir que des valeurs propres de multiplicité une, on ne garde que les valeurs propres positives, le signe étant porté par le coefficient $c_i$.
+
+On cherche donc $(\lambda_i,g_i)\in\R\times D^1(\Omega)$ solutions du problème suivant :
+\begin{eqnarray}
+\label{curlcurl}
+\left\{
+\begin{aligned}
+&\rott  g_i = \lambda_i^2 g_i\\
+&g_i\cdot n\restr = 0\\
+&\rot g_i\cdot n\restr = 0\\
+&\rott  g_i\cdot n\restr = 0
+\end{aligned}
+\right.
+\end{eqnarray}
+
+On remplace maintenant $v$ par $u+a$ dans (\ref{depart}) :
 \[
 \frac{\partial(u+a)}{\partial t}+(\rot(u+a))\times(u+a) + \grad (\frac{|u+a|^2}{2}+p) + \frac{1}{Re}\rott(u+a) - f = 0
 \]
@@ -78,7 +115,7 @@ Ce qui donne en notant $\pi_a=\frac{|u+a|^2}{2}+p$ :
 \[
 \frac{\partial u}{\partial t}+\frac{\partial a}{\partial t} + (\rot u+\rot a)\times(u+a) + \grad\pi_a + \frac{1}{Re}(\rott u+\rott a) - f = 0
 \]
-Comme $\rott a = 0$ et en notant $h=f-\frac{\partial a}{\partial t} - (\rot a)\times a$, on obtient le problème suivant où l'objectif est donc de trouver $(u,\pi_a)\in Q_T$ tel que :
+Comme $\rott a = 0$ et en notant $h=f-\frac{\partial a}{\partial t} - (\rot a)\times a$, on a le problème suivant :
 \begin{eqnarray}
 \label{uci}
 \left\{
@@ -93,61 +130,31 @@ Comme $\rott a = 0$ et en notant $h=f-\frac{\partial a}{\partial t} - (\rot a)\t
 \right.
 \end{eqnarray}
 
-Comme $u$ appartient à $D^1(\Omega)$, on peut décomposer $u$ sous la forme :
-\[
-u(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)g_i(\cdot)
-\]
-On va chercher une valeur approché de $u$ qui se présente sous la forme :
-\[
-u_M(t,\cdot) = \sum_{i=1}^{M} c_i(t)g_i(\cdot)
-\]
-
-Les fonctions $g_i$ forment une base de l'espace $D^1(\Omega) = D(curl_{imperm})$. Cette base est constitué des fonctions propres de l'opérateur rotationnel. Elles sont donc solutions du problème suivant :
-\begin{eqnarray}
-\label{curlcurl}
-(\lambda_i,g_i)\in\R\times D^1(\Omega)\quad \left\{
-\begin{aligned}
-&\rott  g_i = \lambda_i g_i\\
-&g_i\cdot n\restr = 0\\
-&\rot g_i\cdot n\restr = 0\\
-&\rott  g_i\cdot n\restr = 0
-\end{aligned}
-\right.
-\end{eqnarray}
-
-Toutes fonctions dans $D^1(\Omega)$ peut s'écrire $g_i=g_i^0+\grad\psi_i$ avec $g_i^0\restr = 0$ et $ \grad\psi_i\cdot n\restr = 0$.\\
-Ainsi en décomposant dans (\ref{uci}), $u$ par sa somme, on obtient le problème suivant où l'on cherche les coefficients $c_i$ :\\
+Pour trouver les coefficients $c_i$, on remplace $u$ par sa décomposition en $\sum_i c_ig_i$. On cherche alors à résoudre le problème suivant :
 \begin{eqnarray}
 \label{cigi}
 \left\{
 \begin{aligned}
-&\frac{dc_k}{dt}+\sum_{i=1}^M\sum_{j=1}^M c_i\lambda_i c_j r_{ijk} + \sum_{i=1}^M c_i\lambda_i r_{ik}^a + \sum_{i=1}^M c_j r_{jk}^{\rot a} + \lambda_k^2 c_k = r_k^h - r_k^{\alpha_2}\\
-&c_k(0)=c_k^0
+&\sum_i g_i\frac{\partial c_i}{\partial t} + \left(\rot\left(\sum_i c_ig_i\right)\right)\times\left(\sum_jc_jg_j\right)+\left(\rot\left(\sum_ic_ig_i\right)\right)\times a&\\
+&+ \left(\rot a\right)\times\left(\sum_ic_ig_i\right) + \grad\pi_a + \frac{1}{Re}\rott\left(\sum_ic_ig_i\right) - h = 0\\
+&\diverg\left(\sum_ic_ig_i\right) = 0\\
+&\left(\sum_ic_ig_i\right)\cdot n\restr = 0\\
+&\rot\left(\sum_ic_ig_i\right)\cdot n\restr = 0\\
+&\rott\left(\sum_ic_ig_i\right)\cdot n\restr = \alpha_2
 \end{aligned}
-\right.\quad
-1\leq k\leq M
+\right.
 \end{eqnarray}
-Où\\
-\[
-\begin{aligned}
-&r_{ijk} = \langle g_i\times g_j, g_k\rangle_\Omega,\\
-&r_{ik}^a=\langle g_i\times a, g_k\rangle_\Omega,\\
-&r_{jk}^{\rot a}=\langle (\rot a)\times g_j, g_k\rangle_\Omega,\\
-&r_k^h=\langle h,g_k\rangle_\Omega,\\
-&r_k^{\alpha_2} = \langle \alpha_2,\psi_k\rangle_{\partial\Omega}.
-\end{aligned}
-\]
 
 Pour résumer, on doit donc :
 \begin{enumerate}
 \item trouver $a$ pour pouvoir décomposer $v$ en $u+a$, pour cela, on résout les équations (\ref{psi0}) et (\ref{curlb}). Ce qui permet de trouver $a$ grâce à (\ref{aegal}). Cette partie est détaillé dans \ref{relev}.
 \item générer la base $g_i$ des fonctions propres de l'opérateur curl en résolvant l'équation (\ref{curlcurl}) comme expliqué dans le chapitre \ref{eigen}.
-\item les décomposer en $g_i=g_i^0+\grad\psi_i$ comme montré dans \ref{decomp}.
-\item trouver $u$, pour cela on calcul tous les $r_x^y$ et on résous l'équation (\ref{cigi}) pour $1\leq k\leq M$ afin de connaître les $c_k$, cela est expliqué dans \ref{spectre}.
+\item résoudre l'équation (\ref{cigi}) pour trouver les coefficients $c_i$. Cela est expliqué dans \ref{spectre}.
 \item recomposer $v=u+a$, et chercher $p$ pour avoir la solution du problème (\ref{depart}). Cette dernière partie est montré dans \ref{pression}.
 \end{enumerate}
 
-\subsection{Relèvement}
+\subsection{Forme variationnelle}
+\subsubsection{Relèvement}
 \label{relev}
 
 Le problème (\ref{aegal}) sert à retrouver des conditions aux limites pour lesquels on sait résoudre le problème. Pour trouver $a$, il nous faut d'abord résoudre les problèmes (\ref{psi0}) et (\ref{curlb}).\\
@@ -175,7 +182,7 @@ On résout maintenant le problème (\ref{curlb}) :
 &\diverg b = 0\\
 &b\cdot n\restr = 0\\
 &\rot b\cdot n\restr = 0\\
-&\rott b\cdot n\restr = \alpha_1
+&\grad\psi_1\cdot n\restr = \alpha_1
 \end{aligned}
 \right.
 \end{eqnarray*}
@@ -189,7 +196,7 @@ En intégrant par partie le premier terme et en utilisant la formule de Green su
 \int_\Omega (\rot b)(\rot\varphi) - \int_{\partial\Omega} (\rot b)(\varphi\cdot n) +\int_\Omega \psi_1(\diverg\varphi) - \int_{\partial\Omega} \psi_1(\varphi\cdot n) = 0
 \end{eqnarray}
 
-\subsection{Problème aux valeurs propres}
+\subsubsection{Problème aux valeurs propres}
 \label{eigen}
 
 On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
@@ -243,7 +250,33 @@ Comme $\rott  g_i\cdot n\restr = 0$, le deuxième terme s'annule et comme la div
 \int_\Omega (\rot g)(\rot\varphi)\ dX = \lambda\int_\Omega g\varphi\ dX
 \end{eqnarray}
 
-\subsection{Décomposition des $g_i$}
+\subsubsection{Problème spectral}
+\label{spectre}
+
+Pour obtenir la forme variationnelle de (\ref{cigi}), on revient au problème équivalent (\ref{uci}) pour plus de clarté. On multiplie donc par une fonction test et on intègre :
+%En partant de l'équation (\ref{uci}), on peut obtenir la forme variationnelle en multipliant par une fonction test et en intégrant :
+\begin{align*}
+\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi + \int_\Omega ((\rot a)\times u)\cdot\varphi \\
+&+ \int_\Omega \grad\pi_a\cdot\varphi + \frac{1}{Re}\int_\Omega (\rott u)\cdot\varphi = \int_\Omega h\cdot\varphi
+\end{align*}
+En utilisant une intégration par partie sur l'avant dernier terme et la même méthode que dans le chapitre \ref{eigen} pour le dernier terme du membre de gauche, on arrive à :
+\begin{align*}
+\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi + \int_\Omega ((\rot a)\times u)\cdot\varphi\\ 
+&+ \int_\Omega \pi_a(\diverg\varphi) + \int_{\partial \Omega} \pi_a(\varphi\cdot n) + \frac{1}{Re}\int_\Omega (\rot u)\cdot(\rot\varphi) -\frac{1}{Re}\int_{\partial\Omega} ((\rott u)\cdot n)\phi = \int_\Omega h\cdot\varphi
+\end{align*}
+Or, $\varphi\in D^1$ donc $\diverg\varphi=0$ et $\varphi\cdot n=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. De plus, $\rott u\cdot n=\alpha_2$ sur $\partial\Omega$. On a donc :
+\begin{eqnarray}
+\label{fvu}
+\begin{aligned}
+\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi \\
+&+ \int_\Omega ((\rot a)\times u)\cdot\varphi + \frac{1}{Re}\int_\Omega (\rot u)\cdot(\rot\varphi) -\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega h\cdot\varphi
+\end{aligned}
+\end{eqnarray}
+
+Où $phi$ provient de la décomposition de la fonction de test en $\varphi=\varphi_0+\grad\psi$. En pratique, on utilise les fonctions propres de l'opérateur rotationnel en tant que fonctions de test.
+On décrit donc la décomposition des fonctions propres $g_i$ dans le prochain chapitre.
+
+\subsubsection{Décomposition des $g_i$}
 \label{decomp}
 
 Une fois les fonctions propres connues, on a besoin de les décomposer en $g_i=g_i^0+\grad\psi_i$ avec $g_i^0\restr = 0$ et $\grad\psi_i\cdot n\restr = 0$. Les problèmes situés dans cette section prennent place dans $H^1_0$, contrairement aux autres problèmes qui sont dans $D^1$.\\
@@ -301,38 +334,7 @@ On a donc la forme variationnelle suivante :
 \int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\diverg g_i^0)\varphi
 \end{eqnarray}
 
-\subsection{Problème spectral}
-\label{spectre}
-
-En partant de l'équation (\ref{uci}), on peut obtenir la forme variationnelle en multipliant par une fonction test et en intégrant :
-\begin{align*}
-\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi + \int_\Omega ((\rot a)\times u)\cdot\varphi \\
-&+ \int_\Omega \grad\pi_a\cdot\varphi + \frac{1}{Re}\int_\Omega (\rott u)\cdot\varphi = \int_\Omega h\cdot\varphi
-\end{align*}
-En utilisant une intégration par partie sur l'avant dernier terme et la même méthode que dans le chapitre \ref{eigen} pour le dernier terme du membre de gauche, on arrive à :
-\begin{align*}
-\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi + \int_\Omega ((\rot a)\times u)\cdot\varphi\\ 
-&+ \int_\Omega \pi_a(\diverg\varphi) + \int_{\partial \Omega} \pi_a(\varphi\cdot n) + \frac{1}{Re}\int_\Omega (\rot u)\cdot(\rot\varphi) -\frac{1}{Re}\int_{\partial\Omega} ((\rott u)\cdot n)\phi = \int_\Omega h\cdot\varphi
-\end{align*}
-Or, $\varphi\in D^1$ donc $\diverg\varphi=0$ et $\varphi\cdot n=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. De plus, $\rott u\cdot n=\alpha_2$ sur $\partial\Omega$.\\
-
-On peut maintenant remplacer $u$ par la somme $\sum_ic_ig_i$. De plus, prendre une fonction de test $\varphi$ dans $D^1$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
-On rappel que $\rot g_i=\lambda_ig_i$. En notant $\int_\Omega f\cdot g=(f,g)$, on a donc :
-\begin{align*}
-\frac{\partial}{\partial t}\sum_i (c_ig_i, g_k) &+ \sum_i\sum_j (c_i\lambda_ic_jg_i\times g_j,g_k) + \sum_i(c_i\lambda_ig_i\times a,g_k)\\
-&+ \sum_i ((\rot a)\times c_ig_i,g_k) + \frac{1}{Re}\sum_i(c_i\lambda_ig_i, \lambda_kg_k) = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
-\end{align*}
-Comme les termes $c_i$ ne porte que sur la dimension temporelle, on peut les sortir des intégrales, tout comme les $\lambda$.\\
-Par ailleurs, la base $(g_i)$ est une base orthogonale, on suppose par la suite qu'elle a été normalisée. On obtient donc :
-\begin{eqnarray}
-\label{fvspec}
-\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) + \sum_i c_i\lambda_i(g_i\times a,g_k)\\
-&+ \sum_i c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
-\end{aligned}
-\end{eqnarray}
- 
-\subsection{Solution $(v,p)$}
+\subsubsection{Pression}
 \label{pression}
 
 Pour retrouver la vitesse $v$, il suffit maintenant d'additionner $a$ et $u$.\\
@@ -369,6 +371,24 @@ On obtient donc au final :
 \int_\Omega \grad q\grad\varphi = \int_\Omega (\diverg((\rot v)\times v) -\diverg f)\varphi + \int_{\partial\Omega} \left(f\cdot n - \frac{\partial\alpha_0}{\partial t} - ((\rot v)\times v)\cdot n - \frac{\alpha_2}{Re}\right)\varphi
 \end{eqnarray}
 
+\subsection{Discrétisation}
+
+On peut maintenant remplacer $u$ par la somme $\sum_ic_ig_i$ dans (\ref{fvu}). De plus, prendre une fonction de test $\varphi$ dans $D^1$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
+On rappel que $\rot g_i=\lambda_ig_i$. En notant $\int_\Omega f\cdot g=(f,g)$, on a donc :
+\begin{align*}
+\frac{\partial}{\partial t}\sum_i (c_ig_i, g_k) &+ \sum_i\sum_j (c_i\lambda_ic_jg_i\times g_j,g_k) + \sum_i(c_i\lambda_ig_i\times a,g_k)\\
+&+ \sum_i ((\rot a)\times c_ig_i,g_k) + \frac{1}{Re}\sum_i(c_i\lambda_ig_i, \lambda_kg_k) = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\end{align*}
+Comme les termes $c_i$ ne porte que sur la dimension temporelle, on peut les sortir des intégrales, tout comme les $\lambda$.\\
+Par ailleurs, on suppose la base $(g_i)$ orthonormale. On obtient donc :
+\begin{eqnarray}
+\label{fvspec}
+\begin{aligned}
+\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) + \sum_i c_i\lambda_i(g_i\times a,g_k)\\
+&+ \sum_i c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\end{aligned}
+\end{eqnarray}
+ 
 \subsection{Conclusion}
 
 On utilise d'abord (\ref{fvpsi}) et $\alpha_0$ pour trouver $\psi_0$ et (\ref{fvrelev}) et $\alpha_1$ pour $\rot b$, en ajoutant ces deux résultats, on trouve $a$.\\

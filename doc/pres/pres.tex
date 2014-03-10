@@ -1,0 +1,278 @@
+\documentclass{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[frenchb]{babel}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{colortbl}
+
+\graphicspath{{Images/}}
+
+\usetheme{Hannover}
+
+\beamertemplatenavigationsymbolsempty
+
+\definecolor{bleufonce}{rgb}{0.1,0.1,0.8}
+\definecolor{grisbleu}{rgb}{0.8,0.8,0.9}
+\definecolor{rougefonce}{rgb}{0.8,0.1,0.1}
+\definecolor{grisrouge}{rgb}{0.9,0.8,0.8}
+\definecolor{vertfonce}{rgb}{0.1,0.8,0.1}
+\definecolor{grisvert}{rgb}{0.8,0.9,0.8}
+\definecolor{bleuunistra}{RGB}{15,80,150}
+\setbeamercolor{palette quaternary}{fg=white,bg=bleuunistra}
+\setbeamercolor{titlelike}{parent=palette quaternary}
+
+\setbeamertemplate{blocks}[rounded][shadow=true] 
+\setbeamercolor{block title}{bg=bleufonce,fg=white}
+\setbeamercolor{block body}{bg=grisbleu}
+\setbeamercolor{block title alerted}{bg=rougefonce,fg=white}
+\setbeamercolor{block body alerted}{bg=grisrouge}
+\setbeamercolor{block title example}{bg=vertfonce,fg=white}
+\setbeamercolor{block body example}{bg=grisvert}
+
+\newcommand{\grad}{{\nabla}}
+\newcommand{\laplace}{{\Delta}}
+\newcommand{\rot}{{\nabla\times}}
+\newcommand{\rott}{{\nabla^2\times}}
+\newcommand{\diverg}{{\nabla\cdot}}
+\newcommand{\restr}{{\big\rvert_{\partial\Omega}}}
+
+\title[Stage]{Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
+\subtitle{Plastic Omnium, M2 CSMI}
+
+\author{Romain HILD}
+\institute{Université de Strasbourg}
+
+\begin{document}
+
+\begin{frame}
+\includegraphics[scale=0.2]{uds.jpg}\includegraphics[scale=0.15]{po.jpg}
+\titlepage
+\end{frame}
+
+\section{Problème}
+\begin{frame}{Problème}
+\begin{block}{On cherche (v,p) solution de :}
+\begin{eqnarray}
+\label{depart}
+\left\{
+\begin{aligned}
+&\frac{\partial v}{\partial t} + (\rot  v)\times v + \grad q + \frac{1}{Re}\rott  v-f = 0\\
+&\diverg v = 0\\
+&v\big\rvert_{t=0} = v_0\\
+&v\cdot n\restr = \alpha_0\\
+&(\rot  v)\cdot n\restr = \alpha_1\\
+&(\rott  v)\cdot n\restr = \alpha_2
+\end{aligned}
+\right.
+\end{eqnarray}
+où $q = \frac{|v|^2}{2}+p$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Enchainement}
+\begin{block}{Enchainement des problèmes}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Variables & Problèmes\\ \hline
+v & a + u \\ \hline
+a & $\grad\psi_0 + \rot b$\\ \hline
+$\psi_0$ & $-\laplace\psi_0 = 0$\\ \hline
+$(b,\psi_1)$ & $\rott b= \grad\psi_1$ \\ \hline
+u & $\sum_i c_ig_i$ \\ \hline
+$(\lambda_i,g_i)$ & $\rott  g_i = \lambda_i^2 g_i$ \\ \hline
+$g_i^0$ & $\grad(\diverg g_i^0) - \laplace g_i^0 = - \laplace g_i$\\ \hline
+$\psi_i$ & $-\laplace \psi_i = 0$\\ \hline
+$c_i$ & $\begin{aligned}
+&\sum g_i\frac{\partial c_i}{\partial t} + (\rot(\sum c_ig_i))\times(\sum c_jg_j)\\
+&+(\rot(\sum c_ig_i))\times a + (\rot a)\times(\sum c_ig_i) \\
+&+ \grad\pi_a + \frac{1}{Re}\rott(\sum c_ig_i) - h = 0
+\end{aligned}$\\ \hline
+\end{tabular}
+\end{center}
+\end{block}
+\end{frame}
+
+\section{Relèvement}
+\begin{frame}{$v=a+u$}
+\begin{block}{Relèvement par $a$ pour utiliser les travaux de P. Penel}
+\begin{center}
+\begin{tabular}{c|ccccc}
+& v & = & a & + & u \\ \hline
+$\diverg\star$ & 0 & & 0 & & 0\\ \hline
+$\star\cdot n\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
+$\rot\star\cdot n\restr$ & $\alpha_1$ & & $\alpha_1$ & & 0\\\hline
+$\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$ 
+\end{tabular}
+\end{center}
+\end{block}
+\end{frame}
+
+\begin{frame}{$a=\grad\psi_0+\rot b$}
+\begin{block}{$\alpha_0$ est porté par $\grad\psi_0$}
+\begin{itemize}
+\item Problème :
+\[\left\{
+\begin{aligned}
+&-\laplace\psi_0 = 0\\
+&\grad\psi_0\cdot n\restr=\alpha_0
+\end{aligned}
+\right.\]
+\item Formulation variationnelle :
+\[
+-\int_\Omega \grad\psi_0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0
+\]
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{$a=\grad\psi_0+\rot b$}
+\begin{block}{$\alpha_1$ est porté par $\rot b$}
+\begin{itemize}
+\item Problème :
+\[\left\{
+\begin{aligned}
+&\rott b = \grad\psi_1\\
+&\diverg b = 0\\
+&b\cdot n\restr = 0\\
+&\rot b\cdot n\restr = 0\\
+&\grad\psi_1\cdot n\restr = \alpha_1
+\end{aligned}
+\right.\]
+\item Formulation variationnelle :
+\begin{align*}
+\int_\Omega (\rot b)(\rot\varphi) &- \int_{\partial\Omega} (\rot b)(\varphi\cdot n) \\
+&+\int_\Omega \psi_1(\diverg\varphi) - \int_{\partial\Omega} \psi_1(\varphi\cdot n) = 0
+\end{align*}
+\end{itemize}
+\end{block}
+\end{frame}
+
+\section{Décomposition}
+\begin{frame}{$u=\sum c_ig_i$}
+\begin{block}{Décomposition de Galerkin généralisée}
+\begin{itemize}
+\item les coefficients $c_i$ portent la dimension temporelle.
+\item les fonctions de base de $D^1$ portent la dimension spatiale.
+\item $D^1$ est engendré par les fonctions propres de l'opérateur rotationnel.
+\item les fonctions propres de $\rot$ sont aussi celles de $\rott$.
+\item les valeurs propres de $\rot$ sont les racines carrées positives de celles de $\rott$.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\subsection{Fonctions propres}
+\begin{frame}{$\rott  g_i = \lambda_i^2 g_i$}
+\begin{block}{Fonctions propres de $\rott$}
+\begin{itemize}
+\item Problème :
+\[
+\left\{
+\begin{aligned}
+&\rott  g_i = \lambda_i^2 g_i\\
+&g_i\cdot n\restr = 0\\
+&\rot g_i\cdot n\restr = 0\\
+&\rott  g_i\cdot n\restr = 0
+\end{aligned}
+\right.
+\]
+\item Formulation variationnelle :
+\[
+\int_\Omega (\rot g)(\rot\varphi)\ dX = \lambda\int_\Omega g\varphi\ dX
+\]
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Décomposition des fonctions propres}
+\begin{block}{$g_i=g_i^0+\grad\psi_i$}
+\begin{itemize}
+\item Problème :
+\[
+\left\{
+\begin{aligned}
+\grad(\diverg g_i^0)-\laplace g_i^0 &= -\laplace g_i\\
+g_i^0\restr &= 0
+\end{aligned}
+\right.
+\]
+\item Formulation variationnelle :
+\[
+-\int_\Omega (\diverg g_i^0)(\diverg\varphi) + \int_\Omega \grad g_i^0\grad\varphi = \int_\Omega \grad g_i\grad\varphi
+\]
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Décomposition des fonctions propres}
+\begin{block}{$g_i=g_i^0+\grad\psi_i$}
+\begin{itemize}
+\item Problème :
+\[
+\left\{
+\begin{aligned}
+-\laplace\psi_i &= \diverg g_i^0\\
+\grad\psi_i\cdot n\restr &= 0
+\end{aligned}
+\right.
+\]
+\item Formulation variationnelle :
+\[
+\int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\diverg g_i^0)\varphi\]
+\end{itemize}
+\end{block}
+\end{frame}
+
+\subsection{Problème spectral}
+\begin{frame}{Problème spectral}
+\begin{block}{Problème}
+\[
+\left\{
+\begin{aligned}
+&\sum g_i\frac{\partial c_i}{\partial t} + \left(\rot\left(\sum c_ig_i\right)\right)\times\left(\sum c_jg_j\right)+\left(\rot\left(\sum c_ig_i\right)\right)\times a&\\
+&+ \left(\rot a\right)\times\left(\sum c_ig_i\right) + \grad\pi_a + \frac{1}{Re}\rott\left(\sum c_ig_i\right) - h = 0\\
+&\diverg\left(\sum c_ig_i\right) = 0\\
+&\left(\sum c_ig_i\right)\cdot n\restr = 0\\
+&\rot\left(\sum c_ig_i\right)\cdot n\restr = 0\\
+&\rott\left(\sum c_ig_i\right)\cdot n\restr = \alpha_2
+\end{aligned}
+\right.
+\]
+\end{block}
+\end{frame}
+
+\begin{frame}{Problème spectral}
+\begin{block}{Forme variationnelle}
+\[
+\begin{aligned}
+\int_\Omega \frac{\partial \sum c_ig_i}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \sum c_ig_i)\times \sum c_ig_i)\cdot \varphi \\
+&+ \int_\Omega ((\rot \sum c_ig_i)\times a)\cdot\varphi \\
+&+ \int_\Omega ((\rot a)\times \sum c_ig_i)\cdot\varphi \\
+&+ \frac{1}{Re}\int_\Omega (\rot \sum c_ig_i)\cdot(\rot\varphi) \\
+&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega h\cdot\varphi
+\end{aligned}
+\]
+\end{block}
+\end{frame}
+
+\begin{frame}{Problème spectral}
+\begin{block}{Discrètisation}
+\[
+\begin{aligned}
+\sum \frac{\partial c_i}{\partial t}(g_i,g_k) &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) \\
+&+ \sum_i c_i\lambda_i(g_i\times a,g_k) + \sum_i c_i((\rot a)\times g_i, g_k) \\
+&+ \frac{1}{Re}\sum c_i\lambda_i\lambda_k(g_i,g_k) = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\end{aligned}
+\]
+Orthonormalisation de la base $(g_i)$ : $(g_i,g_k)=\delta_{ik}$
+\[
+\begin{aligned}
+\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) + \sum_i c_i\lambda_i(g_i\times a,g_k)\\
+&+ \sum_i c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\end{aligned}
+\]
+\end{block}
+\end{frame}
+
+\end{document}
