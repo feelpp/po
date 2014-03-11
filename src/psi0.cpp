@@ -5,6 +5,7 @@
 #include <feel/feeldiscr/pch.hpp>
 
 using namespace Feel;
+using namespace Feel::vf;
 
 inline
 po::options_description
@@ -21,51 +22,48 @@ makeOptions()
 int main(int argc, char**argv )
 {
     // initialize feel++
-    using namespace Feel;
     Environment env( _argc=argc, _argv=argv,
                      _desc=makeOptions(),
                      _about=about(_name="po_psi0",
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com"));
+
+    typedef FunctionSpace<Mesh<Simplex<3> >, bases<Lagrange<1, Scalar>, Lagrange<0, Scalar> > > space_type;
+    typedef FunctionSpace<Mesh<Simplex<3> >, bases<Lagrange<1, Vectorial> > > vspace_type;
+
+    double rayon = option(_name="rayon").template as<double>();
+    double vitesse = option( _name="vitesse").template as<double>();
+
+    auto alpha0 = 2. * vitesse * (1. - (Px() * Px() + Pz() * Pz()) / (rayon * rayon));
+
     // create mesh
     auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
 
-    // function space
-    auto Vh = Pch<1>( mesh );
-    auto u = Vh->element();
-    auto v = Vh->element();
+    auto Vh = space_type::New( mesh );
+    auto U = Vh->element();
+    auto V = Vh->element();
+    auto u = U.template element<0>() ;
+    auto lambda = U.template element<1>() ;
+    auto v = V.template element<0>() ;
+    auto nu = V.template element<1>() ;
 
-    double rayon = option(_name="r").template as<double>();
-    double vitesse = option( _name="v").template as<double>();
-
-    // left hand side
     auto a = form2( _trial=Vh, _test=Vh );
-    a = integrate(_range=elements(mesh),
-                  _expr=gradt(u)*trans(grad(v)) );
+    a = integrate( _range=elements(mesh),
+                   _expr=gradt(u)*trans(grad(v)) + id( v )*idt( lambda ) + idt( u )*id( nu ) );
 
-    // right hand side
     auto l = form1( _test=Vh );
-    l = integrate(_range=elements(mesh),
-                  _expr=id(v) );
+    l = integrate( _range=boundaryfaces(mesh),
+                   _expr=alpha0*id(v) );
 
-    // apply the boundary condition
-    a += on(_range=boundaryfaces(mesh), _rhs=l, _element=u,
-            _expr=constant(0.) );
+    a.solve( _rhs=l, _solution=U );
 
-    //l = integrate(_range=boundaryfaces(mesh),
-                  //_expr=(2. * vitesse * (1. - (Px()*Px() + Pz()*Pz())/(rayon*rayon)))*id(v) );
+    auto Xh = vspace_type::New( mesh );
+    auto gradu = Xh->element();
+    gradu = vf::project( _space=Xh, _range=elements( mesh ),
+                      _expr=trans(gradv( u )) );
 
-
-    //a+=on(_range=boundaryfaces(mesh), _rhs=l, _element=u,
-                  //_expr= 2 * vitesseMoyIn * (1 - (Px()*Px() + Pz()*Pz())/(ray*ray)) );
-
-    // solve the equation a(u,v) = l(v)
-    a.solve(_rhs=l,_solution=u);
-
-    auto gu = gradv(u);
-    // export results
     auto e = exporter( _mesh=mesh );
-    e->add( "u", u );
-    //e->add( "gu", gu );
+    e->add( "u", U.template element<0>() );
+    e->add( "grad_u", gradu );
     e->save();
 }

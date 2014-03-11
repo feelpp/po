@@ -76,19 +76,14 @@ où $q = \frac{|v|^2}{2}+p$.
 \begin{tabular}{|c|c|}
 \hline
 Variables & Problèmes\\ \hline
-v & a + u \\ \hline
-a & $\grad\psi_0 + \rot b$\\ \hline
+$v$ & $a + u$ \\ \hline
+$a$ & $\grad\psi_0 + \rot b$\\ \hline
 $\psi_0$ & $-\laplace\psi_0 = 0$\\ \hline
 $(b,\psi_1)$ & $\rott b= \grad\psi_1$ \\ \hline
 u & $\sum_i c_ig_i$ \\ \hline
 $(\lambda_i,g_i)$ & $\rott  g_i = \lambda_i^2 g_i$ \\ \hline
 $g_i^0$ & $\grad(\diverg g_i^0) - \laplace g_i^0 = - \laplace g_i$\\ \hline
 $\psi_i$ & $-\laplace \psi_i = 0$\\ \hline
-$c_i$ & $\begin{aligned}
-&\sum g_i\frac{\partial c_i}{\partial t} + (\rot(\sum c_ig_i))\times(\sum c_jg_j)\\
-&+(\rot(\sum c_ig_i))\times a + (\rot a)\times(\sum c_ig_i) \\
-&+ \grad\pi_a + \frac{1}{Re}\rott(\sum c_ig_i) - h = 0
-\end{aligned}$\\ \hline
 \end{tabular}
 \end{center}
 \end{block}
@@ -219,7 +214,8 @@ g_i^0\restr &= 0
 \]
 \item Formulation variationnelle :
 \[
-\int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\diverg g_i^0)\varphi\]
+\int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\diverg g_i^0)\varphi
+\]
 \end{itemize}
 \end{block}
 \end{frame}
@@ -230,12 +226,12 @@ g_i^0\restr &= 0
 \[
 \left\{
 \begin{aligned}
-&\sum g_i\frac{\partial c_i}{\partial t} + \left(\rot\left(\sum c_ig_i\right)\right)\times\left(\sum c_jg_j\right)+\left(\rot\left(\sum c_ig_i\right)\right)\times a&\\
-&+ \left(\rot a\right)\times\left(\sum c_ig_i\right) + \grad\pi_a + \frac{1}{Re}\rott\left(\sum c_ig_i\right) - h = 0\\
-&\diverg\left(\sum c_ig_i\right) = 0\\
-&\left(\sum c_ig_i\right)\cdot n\restr = 0\\
-&\rot\left(\sum c_ig_i\right)\cdot n\restr = 0\\
-&\rott\left(\sum c_ig_i\right)\cdot n\restr = \alpha_2
+&\frac{\partial u}{\partial t} + (\rot u)\times u + (\rot u)\times a + \left(\rot a\right)\times u \\
+&+ \grad\pi_a + \frac{1}{Re}\rott u - h = 0\\
+&\diverg u = 0\\
+&u\cdot n\restr = 0\\
+&(\rot u)\cdot n\restr = 0\\
+&(\rott u)\cdot n\restr = \alpha_2
 \end{aligned}
 \right.
 \]
@@ -244,34 +240,27 @@ g_i^0\restr &= 0
 
 \begin{frame}{Problème spectral}
 \begin{block}{Forme variationnelle}
-\[
-\begin{aligned}
-\int_\Omega \frac{\partial \sum c_ig_i}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \sum c_ig_i)\times \sum c_ig_i)\cdot \varphi \\
-&+ \int_\Omega ((\rot \sum c_ig_i)\times a)\cdot\varphi \\
-&+ \int_\Omega ((\rot a)\times \sum c_ig_i)\cdot\varphi \\
-&+ \frac{1}{Re}\int_\Omega (\rot \sum c_ig_i)\cdot(\rot\varphi) \\
+\begin{align*}
+\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi \\
+&+ \int_\Omega ((\rot a)\times u)\cdot\varphi + \frac{1}{Re}\int_\Omega (\rot u)\cdot(\rot\varphi) \\
 &-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega h\cdot\varphi
-\end{aligned}
-\]
+\end{align*}
 \end{block}
 \end{frame}
 
 \begin{frame}{Problème spectral}
 \begin{block}{Discrètisation}
-\[
-\begin{aligned}
+\begin{align*}
 \sum \frac{\partial c_i}{\partial t}(g_i,g_k) &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) \\
-&+ \sum_i c_i\lambda_i(g_i\times a,g_k) + \sum_i c_i((\rot a)\times g_i, g_k) \\
+&+ \sum c_i\lambda_i(g_i\times a,g_k) + \sum c_i((\rot a)\times g_i, g_k) \\
 &+ \frac{1}{Re}\sum c_i\lambda_i\lambda_k(g_i,g_k) = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
-\end{aligned}
-\]
+\end{align*}
 Orthonormalisation de la base $(g_i)$ : $(g_i,g_k)=\delta_{ik}$
-\[
-\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) + \sum_i c_i\lambda_i(g_i\times a,g_k)\\
-&+ \sum_i c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
-\end{aligned}
-\]
+\begin{eqnarray*}
+%\begin{aligned}
+\frac{\partial c_k}{\partial t} + \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) + \sum c_i\lambda_i(g_i\times a,g_k)\\
++ \sum c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\end{eqnarray*}
 \end{block}
 \end{frame}
 

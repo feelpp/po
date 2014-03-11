@@ -6,11 +6,6 @@
 #include <feel/feelalg/solvereigen.hpp>
 #include <feel/feelvf/vf.hpp>
 #include <boost/mpi/timer.hpp>
-//#include <feel/feelalg/backend.hpp>
-//#include <feel/feeldiscr/functionspace.hpp>
-//#include <feel/feeldiscr/region.hpp>
-//#include <feel/feelpoly/im.hpp>
-//#include <feel/feelpoly/polynomialset.hpp>
 
 /** use Feel namespace */
 using namespace Feel;
@@ -35,28 +30,16 @@ public:
     typedef bases<Lagrange<Order,Vectorial>> vbasis_type;
     typedef FunctionSpace<mesh_type, vbasis_type> vspace_type;
     typedef Exporter<mesh_type> export_type;
-    //typedef double value_type;
-    //typedef Backend<value_type> backend_type;
-    //typedef boost::shared_ptr<backend_type> backend_ptrtype;
-    //typedef typename backend_type::sparse_matrix_type sparse_matrix_type;
-    //typedef typename backend_type::vector_type vector_type;
-    //typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
-    //typedef boost::shared_ptr<space_type> space_ptrtype;
-    //typedef typename space_type::element_type element_type;
-    //typedef typename vspace_type::element_type element_type;
 
     void run();
 private:
 
 }; // EigenProblem
 
-//template<int Dim> const uint16_type EigenProblem<Dim>::Order;
 const uint16_type EigenProblem::Order;
 const uint16_type EigenProblem::Dim;
 
-//template<int Dim>
 void
-//EigenProblem<Dim>::run()
 EigenProblem::run()
 {
     if ( Environment::worldComm().isMasterRank() )
@@ -181,7 +164,6 @@ main( int argc, char** argv )
 
     Application app;
 
-    //    app.add( new EigenProblem<3>() );
     app.add( new EigenProblem() );
     app.run();
 }

@@ -7,41 +7,33 @@ Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au pr
 Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'order 2 scalaire.\\
 On utilise enfin la base et le type de maillage pour créer l'espace de fonctions.
 
-%\lstinputlisting[firstline=33, lastline=36]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={typedef}]{../../src/modeGen.cpp}
 
 On lit ensuite le nombre de valeurs propres que l'on veut et le nombre de valeurs propres convergées, qui doit être supérieur au premier, dans le fichier de configuration qui doit être nommé de la même manière que l'application. Dans ce fichier doit se trouver aussi le nom du fichier contenant la géographie utilisée, ou le maillage récupérer depuis HyperMesh. On importe cette géographie ou ce maillage avec la fonction \texttt{loadMesh}.
 
-%\lstinputlisting[firstline=70, lastline=79]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={mesh}]{../../src/modeGen.cpp}
 
 Puis, on a plus qu'à créer un espace de fonction du type précédemment défini, et récupérer deux éléments de cet espace, puis prendre les 3 composantes de ces éléments.
 
-%\lstinputlisting[firstline=88, lastline=96]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={space}]{../../src/modeGen.cpp}
 
 Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. On utilise donc pour cela le fait que $curl\ u = (\partial_y(u_3)-\partial_z(u_2))\vec{i} + (\partial_z(u_1) - \partial_x(u_3))\vec{j} + (\partial_x(u_2)-\partial_y(u_1))\vec{k}$.\\
 De plus, on utilise un terme de stabilisation de type $div \times div$. Ce terme ne doit pas jouer de rôle significatif, car la divergence doit tendre vers 0. Il permet seulement d'inverser la matrice A.
 
-%\lstinputlisting[firstline=99, lastline=104]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={bilinear}]{../../src/modeGen.cpp}
 
 Puis, on traduit $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.
 
-%\lstinputlisting[firstline=107, lastline=110]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={boundary}]{../../src/modeGen.cpp}
 
 On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
 
-%\lstinputlisting[firstline=112, lastline=115]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={rhs}]{../../src/modeGen.cpp}
 
 On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les plus petites valeurs propres.
 
-%\lstinputlisting[firstline=124, lastline=130]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={modes}]{../../src/modeGen.cpp}
 
 Enfin, pour visualiser les résultats, on utilise un élément d'un espace vectoriel qui est le projeté du vecteur formé par les composantes de la solution.
 
-%\lstinputlisting[firstline=144, lastline=148]{../../src/modeGen.cpp}
 \lstinputlisting[linerange={project}]{../../src/modeGen.cpp}
