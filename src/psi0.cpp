@@ -29,7 +29,6 @@ int main(int argc, char**argv )
                                   _email="romain.hild@plasticomnium.com"));
 
     typedef FunctionSpace<Mesh<Simplex<3> >, bases<Lagrange<1, Scalar>, Lagrange<0, Scalar> > > space_type;
-    typedef FunctionSpace<Mesh<Simplex<3> >, bases<Lagrange<1, Vectorial> > > vspace_type;
 
     double rayon = option(_name="rayon").template as<double>();
     double vitesse = option( _name="vitesse").template as<double>();
@@ -52,15 +51,19 @@ int main(int argc, char**argv )
                    _expr=gradt(u)*trans(grad(v)) + id( v )*idt( lambda ) + idt( u )*id( nu ) );
 
     auto l = form1( _test=Vh );
-    l = integrate( _range=boundaryfaces(mesh),
+    l = integrate( _range=markedfaces(mesh, 1), //entree
                    _expr=alpha0*id(v) );
+    l += integrate( _range=markedfaces(mesh, 2), //sortie
+                    _expr=-alpha0*id(v) );
+    l += integrate( _range=markedfaces(mesh, 3), //tour
+                    _expr=cst(0.) );
 
     a.solve( _rhs=l, _solution=U );
 
-    auto Xh = vspace_type::New( mesh );
+    auto Xh = Pchv<1>( mesh );
     auto gradu = Xh->element();
     gradu = vf::project( _space=Xh, _range=elements( mesh ),
-                      _expr=trans(gradv( u )) );
+                         _expr=trans(gradv( U.template element<0>() )) );
 
     auto e = exporter( _mesh=mesh );
     e->add( "u", U.template element<0>() );

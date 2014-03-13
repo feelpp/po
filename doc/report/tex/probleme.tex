@@ -397,3 +397,108 @@ On peut maintenant calculer les valeurs et fonctions propres de l'opérateur rot
 Une fois cela fait, on peut calculer $u$ en utilisant les $g_i$ et leurs valeurs propres $\lambda_i$ ainsi que $a$ et $\alpha_2$ dans (\ref{fvspec}).\\
 Connaissant $a$ et $u$, on peut les additionner pour avoir $v$.\\
 Une fois la vitesse connue, on utilise (\ref{fvsol}) pour trouver la pression. 
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[scale=0.7]
+\node[draw,scale=0.7,fill=green!50] (di) at (15,4) {Données initiales} ;
+\node[draw,scale=0.7,fill=gray!50] (pb) at (15,3) {Problèmes à résoudre} ;
+\node[draw,scale=0.7,fill=blue!50] (si) at (15,2) {Solutions intermédiaires} ;
+\node[draw,scale=0.7,fill=yellow!50] (sim) at (15,1) {Sol. inter. dépendantes du maillage} ;
+\node[draw,scale=0.7,fill=red!50] (sf) at (15,0) {Solutions finales} ;
+
+\node[draw,scale=0.7,fill=green!50] (a0) at (0,0) {$\alpha_0$} ;
+\node[draw,scale=0.7,fill=green!50] (a1) at (4,0) {$\alpha_1$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbpsi0) at (0,-2) 
+{$\begin{aligned}
+-\laplace\psi_0&=0\\
+\grad\psi_0\cdot n\restr &= \alpha_0
+\end{aligned}$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbb) at (4,-3) 
+{$\begin{aligned}
+\rott b &= \grad\psi_0\\
+\diverg b &=0\\ 
+b\cdot n\restr &= 0\\
+\rot b\cdot n\restr &= 0\\
+\rott b\cdot n\restr &= \alpha_1
+\end{aligned}$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbeigen) at (12,-3) 
+{$\begin{aligned}
+\rott g_i = \lambda_i^2g_i\\
+g_i\cdot n\restr = 0\\
+\rot g_i\cdot n\restr = 0\\
+\rott g_i\cdot n\restr = 0
+\end{aligned}$} ;
+\node[draw,scale=0.7,fill=blue!50] (psi0) at (0,-6) {$\grad\psi_0$} ;
+\node[draw,scale=0.7,fill=blue!50] (b) at (4,-6) {$\rot b$} ;
+\node[draw,scale=0.7,fill=yellow!50] (lambda) at (11,-6) {$\lambda_i$} ;
+\node[draw,scale=0.7,fill=yellow!50] (gi) at (13,-6) {$g_i$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbgi0) at (16,-6) 
+{$\begin{aligned}
+\grad(\diverg_i^0)-\laplace g_i^0 = -\laplace g_i\\
+g_i^0\restr = 0
+\end{aligned}$} ;
+\node[draw,scale=0.7,fill=gray!50] (pba) at (2,-8) {$a = \rot b + \grad\psi_0$} ;
+\node[draw,scale=0.7,fill=green!50] (f) at (7,-8) {$f$} ;
+\node[draw,scale=0.7,fill=green!50] (a2) at (8,-8) {$\alpha_2$} ;
+\node[draw,scale=0.7,fill=green!50] (ck0) at (9,-8) {$c_k^0$} ;
+\node[draw,scale=0.7,fill=yellow!50] (gi0) at (16,-8) {$g_i^0$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbpsi) at (16,-10) 
+{$\begin{aligned}
+-\laplace\psi_i = \diverg g_i^0\\
+\grad\psi_i\cdot n\restr = 0
+\end{aligned}$} ;
+\node[draw,scale=0.7,fill=yellow!50] (psi) at (16,-12) {$\psi_i$} ;
+\node[draw,scale=0.85,fill=blue!50] (a) at (2,-12) {$a$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbs) at (9,-12)
+{$\begin{aligned}
+\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) \\
+&+ \sum_i c_i\lambda_i(g_i\times a,g_k) + \sum_i c_i((\rot a)\times g_i, g_k) \\
+&+ \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
+&c_k(0)=c_k^0
+\end{aligned}
+$} ;
+\node[draw,scale=0.7,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbu) at (9,-16) {$u=\sum c_kg_k$} ;
+\node[draw,scale=0.85,fill=blue!50] (u) at (9,-17) {$u$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbv) at (4,-18) {$v=a+u$} ;
+\node[draw,fill=red!50] (v) at (4,-19) {$v$} ;
+\node[draw,scale=0.7,fill=gray!50] (pbq) at (10,-19)
+{$\begin{aligned}
+-\laplace q = \diverg((\rot v)\times v) - \diverg f\\
+\grad q\cdot n\restr =  f\cdot n\restr - \frac{\partial\alpha_0}{\partial t} - ((\rot v)\times v)\cdot n\restr - \frac{\alpha_2}{Re}
+\end{aligned}$} ;
+\node[draw,fill=red!50] (q) at(16,-19) {$q$} ;
+
+\draw[->] (a0) -- (pbpsi0);
+\draw[->] (a1) -- (pbb);
+\draw[->] (pbpsi0) -- (psi0);
+\draw[->] (pbb) -- (b);
+\draw[->] (b) -- (pba);
+\draw[->] (psi0) -- (pba); 
+\draw[->] (pba) -- (a); 
+\draw[->] (pbeigen) -- (lambda);
+\draw[->] (pbeigen) -- (gi);
+\draw[->] (gi) -- (pbgi0);
+\draw[->] (pbgi0) -- (gi0);
+\draw[->] (gi0) -- (pbpsi);
+\draw[->] (pbpsi) -- (psi);
+\draw[->] (a) -- (pbs);
+\draw[->] (f) -- (pbs);
+\draw[->] (a2) -- (pbs);
+\draw[->] (ck0) -- (pbs);
+\draw[->] (lambda) -- (pbs);
+\draw[->] (gi) -- (pbs);
+\draw[->] (psi) -- (pbs);
+\draw[->] (pbs) -- (ck);
+\draw[->] (ck) -- (pbu);
+\draw[->] (pbu) -- (u);
+\draw[->] (u) -- (pbv);
+\draw[->] (a) -- (pbv);
+\draw[->] (pbv) -- (v);
+\draw[->] (v) -- (pbq);
+\draw[->] (pbq) -- (q);
+\end{tikzpicture}
+\caption{Organigramme de synthèse}
+\label{org}
+\end{figure}

@@ -1,8 +1,9 @@
 // HyperMesh to Gmsh
 // Put it in Altair/12.0/templates/feoutput/
-// The components have to be in the same root assembly, not in a subassembly
+// The components have to be in the same assembly, not in a subassembly, and there should be only one assembly
+// The components containing 3D elements, have to contains "fluid" in their name
 
-// Works only with triangle(3 nodes) and tetra(4 nodes)
+// Works only with triangle(3 nodes), prism(6 nodes) and tetra(4 nodes)
 // To add other types, use 
 // http://www.altairhyperworks.com/hwhelp/Altair/hw12.0/help/hwdref/hwdref.aspx?HyperMesh_Reference_Guide.htm
 // to find elements(id, ...)
@@ -52,6 +53,21 @@
     *field(integer,node1.id,0) *string(" ")
     *field(integer,node2.id,0) *string(" ")
     *field(integer,node3.id,0) *end()
+*output()
+
+// penta6
+*elements(206,0,"","")
+  // id mshType nbTag idPhEntity idGeoEntity node1-6
+  *format()
+    *field(integer,id,0) *string(" 6 2 ")
+    *field(integer,collector.id,0) *string(" ")
+    *field(integer,collector.id,0) *string(" ")
+    *field(integer,node1.id,0) *string(" ")
+    *field(integer,node2.id,0) *string(" ")
+    *field(integer,node3.id,0) *string(" ")
+    *field(integer,node4.id,0) *string(" ")
+    *field(integer,node5.id,0) *string(" ")
+    *field(integer,node6.id,0) *end()
 *output()
 
 // tetra4
