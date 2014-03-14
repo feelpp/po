@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{subfig}
 \usepackage{colortbl}
+\usepackage{tikz}
 
 \graphicspath{{Images/}}
 
@@ -36,6 +37,9 @@
 \newcommand{\rott}{{\nabla^2\times}}
 \newcommand{\diverg}{{\nabla\cdot}}
 \newcommand{\restr}{{\big\rvert_{\partial\Omega}}}
+\newcommand{\taille}{0.4}
+\newcommand{\taillem}{0.5}
+\newcommand{\tailleg}{0.7}
 
 \title[Stage]{Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
 \subtitle{Plastic Omnium, M2 CSMI}
@@ -70,8 +74,8 @@ où $q = \frac{|v|^2}{2}+p$.
 \end{block}
 \end{frame}
 
-\begin{frame}{Enchainement}
-\begin{block}{Enchainement des problèmes}
+\begin{frame}{Décomposition}
+\begin{block}{Décomposition des problèmes}
 \begin{center}
 \begin{tabular}{|c|c|}
 \hline
@@ -86,6 +90,7 @@ $g_i^0$ & $\grad(\diverg g_i^0) - \laplace g_i^0 = - \laplace g_i$\\ \hline
 $\psi_i$ & $-\laplace \psi_i = 0$\\ \hline
 \end{tabular}
 \end{center}
+La partie difficile est donc repoussé à trouver les coefficients $c_i$. 
 \end{block}
 \end{frame}
 
@@ -105,6 +110,16 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \end{frame}
 
 \begin{frame}{$a=\grad\psi_0+\rot b$}
+\begin{block}{Décomposition de $a$}
+\begin{center}
+\begin{tabular}{c|ccccc}
+& $a$ & = & $\grad\psi_0$ & + & $\rot b$ \\ \hline
+$\diverg\star$ & 0 & & $\laplace\psi_0$ & & 0\\ \hline
+$\star\cdot n\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
+$\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
+\end{tabular}
+\end{center}
+\end{block}
 \begin{block}{$\alpha_0$ est porté par $\grad\psi_0$}
 \begin{itemize}
 \item Problème :
@@ -144,22 +159,24 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \end{block}
 \end{frame}
 
-\section{Décomposition}
+\section{Galerkin}
 \begin{frame}{$u=\sum c_ig_i$}
 \begin{block}{Décomposition de Galerkin généralisée}
 \begin{itemize}
 \item les coefficients $c_i$ portent la dimension temporelle.
 \item les fonctions de base de $D^1$ portent la dimension spatiale.
 \item $D^1$ est engendré par les fonctions propres de l'opérateur rotationnel.
-\item les fonctions propres de $\rot$ sont aussi celles de $\rott$.
-\item les valeurs propres de $\rot$ sont les racines carrées positives de celles de $\rott$.
+\item les fonctions propres de $\rot\star$ sont aussi celles de $\rott\star$.
+\item les valeurs propres de $\rot\star$ sont les racines carrées de celles de $\rott\star$.
+\item pour ne pas avoir de multiplicité > 1, on ne garde que les positives.
+\item le signe est porté par le coefficient $c_k$.
 \end{itemize}
 \end{block}
 \end{frame}
 
-\subsection{Fonctions propres}
+\section{Fonctions propres}
 \begin{frame}{$\rott  g_i = \lambda_i^2 g_i$}
-\begin{block}{Fonctions propres de $\rott$}
+\begin{block}{Fonctions propres de $\rott\star$}
 \begin{itemize}
 \item Problème :
 \[
@@ -181,6 +198,16 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \end{frame}
 
 \begin{frame}{Décomposition des fonctions propres}
+\begin{block}{Décomposition des $g_i$}
+\begin{center}
+\begin{tabular}{c|ccccc}
+& $g_i$ & = & $g_i^0$ & + & $\grad\psi_i$ \\ \hline
+$\rott\star$ & $-\laplace g_i$ & & $\grad(\diverg g_i^0)-\laplace g_i^0$ & & 0\\ \hline
+$\diverg\star$ & 0 & & $\diverg g_i^0$ & & $\laplace\psi_i$\\ \hline
+$\star\cdot n\restr$ & 0 & & 0 & & 0
+\end{tabular}
+\end{center}
+\end{block}
 \begin{block}{$g_i=g_i^0+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
@@ -220,7 +247,7 @@ g_i^0\restr &= 0
 \end{block}
 \end{frame}
 
-\subsection{Problème spectral}
+\section{Problème spectral}
 \begin{frame}{Problème spectral}
 \begin{block}{Problème}
 \[
@@ -262,6 +289,109 @@ Orthonormalisation de la base $(g_i)$ : $(g_i,g_k)=\delta_{ik}$
 + \sum c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{eqnarray*}
 \end{block}
+\end{frame}
+
+\section{Synthèse}
+\begin{frame}{Organigramme}
+\begin{figure}
+\centering
+\begin{tikzpicture}[scale=\taille]
+\node[draw,scale=\taille,fill=green!50] (a0) at (0,0) {$\alpha_0$} ;
+\node[draw,scale=\taille,fill=green!50] (a1) at (4,0) {$\alpha_1$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-2) 
+{$\begin{aligned}
+-\laplace\psi_0&=0\\
+\grad\psi_0\cdot n\restr &= \alpha_0
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbb) at (4,-3) 
+{$\begin{aligned}
+\rott b &= \grad\psi_0\\
+\diverg b &=0\\ 
+b\cdot n\restr &= 0\\
+\rot b\cdot n\restr &= 0\\
+\rott b\cdot n\restr &= \alpha_1
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbeigen) at (12,-3) 
+{$\begin{aligned}
+\rott g_i = \lambda_i^2g_i\\
+g_i\cdot n\restr = 0\\
+\rot g_i\cdot n\restr = 0\\
+\rott g_i\cdot n\restr = 0
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=blue!50] (psi0) at (0,-6) {$\grad\psi_0$} ;
+\node[draw,scale=\taille,fill=blue!50] (b) at (4,-6) {$\rot b$} ;
+\node[draw,scale=\taille,fill=yellow!50] (lambda) at (11,-6) {$\lambda_i$} ;
+\node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$g_i$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbgi0) at (16,-6) 
+{$\begin{aligned}
+\grad(\diverg_i^0)-\laplace g_i^0 = -\laplace g_i\\
+g_i^0\restr = 0
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-8) {$a = \rot b + \grad\psi_0$} ;
+\node[draw,scale=\taille,fill=green!50] (f) at (7,-8) {$f$} ;
+\node[draw,scale=\taille,fill=green!50] (a2) at (8,-8) {$\alpha_2$} ;
+\node[draw,scale=\taille,fill=green!50] (ck0) at (9,-8) {$c_k^0$} ;
+\node[draw,scale=\taille,fill=yellow!50] (gi0) at (16,-8) {$g_i^0$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbpsi) at (16,-10) 
+{$\begin{aligned}
+-\laplace\psi_i = \diverg g_i^0\\
+\grad\psi_i\cdot n\restr = 0
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=yellow!50] (psi) at (16,-12) {$\psi_i$} ;
+\node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$a$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbs) at (9,-12)
+{$\begin{aligned}
+\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) \\
+&+ \sum_i c_i\lambda_i(g_i\times a,g_k) + \sum_i c_i((\rot a)\times g_i, g_k) \\
+&+ \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
+&c_k(0)=c_k^0
+\end{aligned}
+$} ;
+\node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbu) at (9,-16) {$u=\sum c_kg_k$} ;
+\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$u$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbv) at (4,-18) {$v=a+u$} ;
+\node[draw,scale=\tailleg,fill=red!50] (v) at (4,-19) {$v$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbq) at (10,-19)
+{$\begin{aligned}
+-\laplace q = \diverg((\rot v)\times v) - \diverg f\\
+\grad q\cdot n\restr =  f\cdot n\restr - \frac{\partial\alpha_0}{\partial t} - ((\rot v)\times v)\cdot n\restr - \frac{\alpha_2}{Re}
+\end{aligned}$} ;
+\node[draw,scale=\tailleg,fill=red!50] (q) at(16,-19) {$q$} ;
+
+\draw[->,>=latex] (a0) -- (pbpsi0);
+\draw[->,>=latex] (a1) -- (pbb);
+\draw[->,>=latex] (pbpsi0) -- (psi0);
+\draw[->,>=latex] (pbb) -- (b);
+\draw[->,>=latex] (b) -- (pba);
+\draw[->,>=latex] (psi0) -- (pba); 
+\draw[->,>=latex] (pba) -- (a); 
+\draw[->,>=latex] (pbeigen) -- (lambda);
+\draw[->,>=latex] (pbeigen) -- (gi);
+\draw[->,>=latex] (gi) -- (pbgi0);
+\draw[->,>=latex] (pbgi0) -- (gi0);
+\draw[->,>=latex] (gi0) -- (pbpsi);
+\draw[->,>=latex] (pbpsi) -- (psi);
+\draw[->,>=latex] (a) -- (pbs);
+\draw[->,>=latex] (f) -- (pbs);
+\draw[->,>=latex] (a2) -- (pbs);
+\draw[->,>=latex] (ck0) -- (pbs);
+\draw[->,>=latex] (lambda) -- (pbs);
+\draw[->,>=latex] (gi) -- (pbs);
+\draw[->,>=latex] (psi) -- (pbs);
+\draw[->,>=latex] (pbs) -- (ck);
+\draw[->,>=latex] (ck) -- (pbu);
+\draw[->,>=latex] (pbu) -- (u);
+\draw[->,>=latex] (u) -- (pbv);
+\draw[->,>=latex] (a) -- (pbv);
+\draw[->,>=latex] (pbv) -- (v);
+\draw[->,>=latex] (v) -- (pbq);
+\draw[->,>=latex] (pbq) -- (q);
+\end{tikzpicture}
+\caption{Organigramme de synthèse}
+\label{org}
+\end{figure}
+
 \end{frame}
 
 \end{document}
