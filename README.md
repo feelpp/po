@@ -1,6 +1,8 @@
 PO Project
 ============
 
+[![Build Status](https://magnum.travis-ci.com/feelpp/po.png?token=Bxps8gX6edMDEv345qns&branch=master)](https://magnum.travis-ci.com/feelpp/po)
+
 This is the PO project
 
 ## Branches
