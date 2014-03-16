@@ -1,0 +1,26 @@
+git:
+  submodules: false
+language: cpp
+compiler:
+- clang
+before_install:
+- sudo add-apt-repository -y ppa:feelpp/ppa
+- sudo apt-get -qq update
+- sudo apt-get install -qq libfeel++-dev
+install:
+- if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq clang-3.3; fi
+- if [ "$CXX" = "clang++" ]; then export CXX="/usr/bin/clang++" CC="/usr/bin/clang";
+  fi
+- mkdir opt && cd opt && ../configure -r
+script:
+- make
+branches:
+  only:
+  - master
+cache:
+- apt
+notifications:
+  email:
+    recipients:
+    - po@cemosis.fr
+    on_success: change
