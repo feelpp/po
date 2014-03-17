@@ -66,7 +66,7 @@ int main(int argc, char**argv )
     l += integrate( _range=markedfaces(mesh, 2), //sortie
                     _expr=alpha0*id(v) );
     l += integrate( _range=markedfaces(mesh, 3), //tour
-                    _expr=cst(0.) );
+                    _expr=cst(0.)*id(v) );
     /// [rhs]
 
     a.solve( _rhs=l, _solution=U );
@@ -74,8 +74,13 @@ int main(int argc, char**argv )
     /// [gradpsi0]
     auto Xh = Pchv<1>( mesh );
     auto gradu = Xh->element();
-    gradu = vf::project( _space=Xh, _range=elements( mesh ),
-                         _expr=trans(gradv( U.template element<0>() )) );
+    auto b = form2( _trial=Xh, _test=Xh );
+    b = integrate( _range=elements(mesh), _expr=idt(gradu)*trans(id(gradu)));
+    auto f = form1( _test=Xh );
+    f = integrate( _range=elements(mesh), _expr=gradv( U.template element<0>() )*id(gradu));
+    // gradu is the L2 projection of grad(psi0) over Xh
+    b.solve( _rhs=f, _solution=gradu );
+
     /// [gradpsi0]
 
     auto e = exporter( _mesh=mesh );
