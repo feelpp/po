@@ -1,10 +1,15 @@
 \section{Problème}
-Notation : 
+Notation :
 \begin{eqnarray*}
 divergence(v)=\diverg v\\
 curl(v)=\rot v\\
 curl(curl(v))=\rott v
 \end{eqnarray*}
+\todo[inline]{curl est anglais, rot est francais, il faudrait choisir
+probablement}
+\todo[inline]{serait il possible de mettre les champs vectoriels en gras, et les
+tenseurs de rang 2(matrices) avec une barre au dessus ? ca rendrait la lecture
+plus aisée}
 
 Nous cherchons $(v,p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
 \begin{eqnarray}
@@ -42,7 +47,7 @@ On veut donc écrire $v=u+a$ avec $a$ pour relever le problème.
 \diverg\star & 0 & & 0 & & 0\\ \hline
 \star\cdot n\restr & \alpha_0 & & \alpha_0 & & 0\\ \hline
 \rot\star\cdot n\restr & \alpha_1 & & \alpha_1 & & 0\\ \hline
-\rott\star\cdot n\restr & \alpha_1 & & 0 & & \alpha_2 
+\rott\star\cdot n\restr & \alpha_1 & & 0 & & \alpha_2
 \end{array}
 \end{eqnarray}
 On a donc $a$ tel que :
@@ -65,6 +70,8 @@ $\star\cdot n\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
 $\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{tabular}
 \end{center}
+\todo[inline]{ces tableaux sont intéressants, il faudrait les commenter un petit
+peu}
 Alors $\psi_0$ est solution de l'équation :
 \begin{eqnarray}
 \label{psi0}
@@ -75,7 +82,13 @@ Alors $\psi_0$ est solution de l'équation :
 \end{aligned}
 \right.
 \end{eqnarray}
-On obtient alors $\psi_0$ à une constante près, cela nous permet néanmoins de calculer $\grad\psi_0$.\\
+On obtient alors $\psi_0$ à une constante près, cela nous permet néanmoins de
+calculer $\grad\psi_0$.
+\todo[inline]{ÇP: Certes, ce pose tout de même la résolution de (\ref{psi0}), quelle
+stratégie adopter ?on peut fixer la constante de différentes manières:
+multiplicateur de Lagrange, penalisation, algébrique(solveur itératif avec
+initial guess qui n'est pas dans le noyaux.)}
+
 Et $b$ est solution du problème mixte :
 \begin{eqnarray}
 \label{curlb}
@@ -90,14 +103,21 @@ Et $b$ est solution du problème mixte :
 \right.
 \end{eqnarray}
 
-Une fois $\grad\psi_0$ et $b$ connus, on peut calculer $\rot b$ et donc retrouver $a$.\\
+Une fois $\grad\psi_0$ et $b$ connus, on peut calculer $\rot b$ et donc
+retrouver $a$.
+\todo[inline]{il faudra discuter les différentes alternatives de résolution
+ici. soit on résout le système couplé (\ref{curlb}) ou le système découplé en (\ref{psi0})+~(\ref{curlb})}
 
 On cherche donc $u=v-a$, et en utiliant la décomposition de Galerkin généralisée, on a :
 \begin{eqnarray}
 \label{u}
 u(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)g_i(\cdot)
 \end{eqnarray}
-Comme $u\in D^1(\Omega)=D(curl_{imperm})$, on peut choisir les fonctions de base $g_i$ comme étant les fonctions propres de l'opérateur rotationnel. Ces fonctions sont les mêmes que celles de l'opérateur rotationnel au carré.\\
+Comme $u\in D^1(\Omega)=D(curl_{imperm})$, on peut choisir les fonctions de base
+$g_i$ comme étant les fonctions propres de l'opérateur rotationnel. Ces
+fonctions sont les mêmes que celles de l'opérateur rotationnel au
+carré\todo{attention il faudrait mieux écrire $\rott$ que \emph{au carré}}.
+
 En effet, soit $(\lambda_i,g_i)$ solutions de $\rot g_i = \lambda_ig_i$ et $(\Lambda_i,G_i)$ solutions de $\rott G_i = \Lambda_iG_i$. Alors :
 \[
 \rott g_i = \rot(\rot g_i)=\rot(\lambda_ig_i)=\lambda^2g_i = \Lambda_iG_i
@@ -219,7 +239,7 @@ puis en intégrant par partie :
 \[
 \int_\Omega (\rot g)(\rot\varphi)\ dX + \int_{\partial\Omega} ((\rot g)\times \varphi)\cdot n\ d\Gamma = \lambda\int_\Omega g\varphi\ dX
 \]
-or sur $\partial\Omega,\quad \varphi\restr=\grad\phi$, d'où : 
+or sur $\partial\Omega,\quad \varphi\restr=\grad\phi$, d'où :
 \[
 \int_\Omega (\rot g)(\rot\varphi)\ dX + \int_{\partial\Omega} ((\rot g)\times \grad\phi)\cdot n\ d\Gamma = \lambda\int_\Omega g\varphi\ dX
 \]
@@ -235,7 +255,7 @@ Comme le rotationnel d'un gradient est nul, on a :
 \[
 \int_\Omega (\rot g)(\rot\varphi)\ dX + \int_\Omega \grad\phi\cdot(\rott g)\ dX  = \lambda\int_\Omega g\varphi\ dX
 \]
-En intégrant le deuxième terme par partie, on obtient : 
+En intégrant le deuxième terme par partie, on obtient :
 \[
 \int_\Omega (\rot g)(\rot\varphi)\ dX + \int_{\partial\Omega} \phi((\rott g)\cdot n)\ d\Gamma - \int_\Omega \phi(\diverg(\rott g))\ dX  = \lambda\int_\Omega g\varphi\ dX
 \]
@@ -255,7 +275,7 @@ On veut obtenir la forme variationnelle du problème (\ref{uci}). On multiplie d
 \end{align*}
 En utilisant une intégration par partie sur l'avant dernier terme et la même méthode que dans le chapitre \ref{eigen} pour le dernier terme du membre de gauche, on arrive à :
 \begin{align*}
-\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi + \int_\Omega ((\rot a)\times u)\cdot\varphi\\ 
+\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi + \int_\Omega ((\rot a)\times u)\cdot\varphi\\
 &+ \int_\Omega \pi_a(\diverg\varphi) + \int_{\partial \Omega} \pi_a(\varphi\cdot n) + \frac{1}{Re}\int_\Omega (\rot u)\cdot(\rot\varphi) -\frac{1}{Re}\int_{\partial\Omega} ((\rott u)\cdot n)\phi = \int_\Omega h\cdot\varphi
 \end{align*}
 Or, $\varphi\in D^1$ donc $\diverg\varphi=0$ et $\varphi\cdot n=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. De plus, $\rott u\cdot n=\alpha_2$ sur $\partial\Omega$. On a donc :
@@ -304,7 +324,7 @@ On multiplie donc cette équation par une fonction test de $H^1_0$ et on intègr
 \[
 \int_\Omega \grad(\diverg g_i^0)\varphi - \int_\Omega \laplace g_i^0\varphi = -\int_\Omega \laplace g_i\varphi
 \]
-On utilise ensuite la formule d'intégration par partie $\int_\Omega \grad u\varphi = -\int_\Omega u\diverg\varphi + \int_{\partial\Omega} u\varphi\cdot n$ sur le premier terme : 
+On utilise ensuite la formule d'intégration par partie $\int_\Omega \grad u\varphi = -\int_\Omega u\diverg\varphi + \int_{\partial\Omega} u\varphi\cdot n$ sur le premier terme :
 \[
 -\int_\Omega (\diverg g_i^0)(\diverg\varphi) + \int_{\partial\Omega} (\diverg g_i^0)(\varphi\cdot n) - \int_\Omega \laplace g_i^0\varphi = -\int_\Omega \laplace g_i\varphi
 \]
@@ -342,7 +362,7 @@ On a donc la forme variationnelle suivante :
 \label{pression}
 
 Pour retrouver la vitesse $v$, il suffit maintenant d'additionner $a$ et $u$.\\
-Le terme correspondant à la pression ayant été perdu lors du passage à la forme variationnelle, il faut le recalculer à partir de l'équation (\ref{depart}).\\
+Le terme correspondant à la pression ayant été perdu lors du passage à la forme variationnelle, il faut le recalculer à partir de l'équation (\ref{depart}).
 
 On applique la divergence sur cette équation et cela nous donne :
 \[
@@ -365,11 +385,15 @@ En utilisant les conditions aux bords de $v$, on obtient :
 On cherche maintenant la forme variationnelle du problème :
 \[
 \int_\Omega -\laplace q\varphi = \int_\Omega (\diverg((\rot v)\times v) -\diverg f)\varphi
-\] 
+\]
 En intégrant par partie le terme de gauche, on a :
 \[
 \int_\Omega \grad q\grad\varphi - \int_{\partial\Omega} (\grad q\cdot n)\varphi = \int_\Omega (\diverg((\rot v)\times v) -\diverg f)\varphi
 \]
+
+\todo[inline]{Encore une fois la pression est à une constante près, il faudra
+faire attention!}
+
 On obtient donc au final :
 \begin{eqnarray}
 \label{fvsol}
@@ -384,7 +408,10 @@ On rappel que $\rot g_i=\lambda_ig_i$. En notant $\int_\Omega f\cdot g=(f,g)$, o
 \frac{\partial}{\partial t}\sum_i (c_ig_i, g_k) &+ \sum_i\sum_j (c_i\lambda_ic_jg_i\times g_j,g_k) + \sum_i(c_i\lambda_ig_i\times a,g_k)\\
 &+ \sum_i ((\rot a)\times c_ig_i,g_k) + \frac{1}{Re}\sum_i(c_i\lambda_ig_i, \lambda_kg_k) = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{align*}
-Comme les termes $c_i$ ne porte que sur la dimension temporelle, on peut les sortir des intégrales, tout comme les $\lambda$.\\
+Comme les termes $c_i$ ne porte que sur la dimension temporelle, on peut les
+sortir des intégrales, tout comme les $\lambda$.
+
+
 Par ailleurs, on suppose la base $(g_i)$ orthonormale. On obtient donc :
 \begin{eqnarray}
 \label{fvspec}
@@ -393,7 +420,7 @@ Par ailleurs, on suppose la base $(g_i)$ orthonormale. On obtient donc :
 &+ \sum_i c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{aligned}
 \end{eqnarray}
- 
+
 \subsection{Conclusion}
 
 On utilise d'abord (\ref{fvpsi}) et $\alpha_0$ pour trouver $\psi_0$ et (\ref{fvrelev}) et $\alpha_1$ pour $\rot b$, en ajoutant ces deux résultats, on trouve $a$.\\
@@ -401,7 +428,7 @@ On peut maintenant calculer les valeurs et fonctions propres de l'opérateur rot
 (\ref{fvgi0}) et (\ref{fvpsii}) permettent de décomposer les fonctions propres.\\
 Une fois cela fait, on peut calculer $u$ en utilisant les $g_i$ et leurs valeurs propres $\lambda_i$ ainsi que $a$ et $\alpha_2$ dans (\ref{fvspec}).\\
 Connaissant $a$ et $u$, on peut les additionner pour avoir $v$.\\
-Une fois la vitesse connue, on utilise (\ref{fvsol}) pour trouver la pression. 
+Une fois la vitesse connue, on utilise (\ref{fvsol}) pour trouver la pression.
 
 \begin{figure}
 \centering
@@ -414,20 +441,20 @@ Une fois la vitesse connue, on utilise (\ref{fvsol}) pour trouver la pression.
 
 \node[draw,scale=0.7,fill=green!50] (a0) at (0,0) {$\alpha_0$} ;
 \node[draw,scale=0.7,fill=green!50] (a1) at (4,0) {$\alpha_1$} ;
-\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.0cm](\ref{psi0})}] (pbpsi0) at (0,-2) 
+\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.0cm](\ref{psi0})}] (pbpsi0) at (0,-2)
 {$\begin{aligned}
 -\laplace\psi_0&=0\\
 \grad\psi_0\cdot n\restr &= \alpha_0
 \end{aligned}$} ;
-\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.1cm](\ref{curlb})}] (pbb) at (4,-3) 
+\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.1cm](\ref{curlb})}] (pbb) at (4,-3)
 {$\begin{aligned}
 \rott b &= \grad\psi_0\\
-\diverg b &=0\\ 
+\diverg b &=0\\
 b\cdot n\restr &= 0\\
 \rot b\cdot n\restr &= 0\\
 \rott b\cdot n\restr &= \alpha_1
 \end{aligned}$} ;
-\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.0cm](\ref{curlcurl})}] (pbeigen) at (12,-3) 
+\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.0cm](\ref{curlcurl})}] (pbeigen) at (12,-3)
 {$\begin{aligned}
 \rott g_i = \lambda_i^2g_i\\
 g_i\cdot n\restr = 0\\
@@ -438,7 +465,7 @@ g_i\cdot n\restr = 0\\
 \node[draw,scale=0.7,fill=blue!50] (b) at (4,-6) {$\rot b$} ;
 \node[draw,scale=0.7,fill=yellow!50] (lambda) at (11,-6) {$\lambda_i$} ;
 \node[draw,scale=0.7,fill=yellow!50] (gi) at (13,-6) {$g_i$} ;
-\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.3cm](\ref{gi0})}] (pbgi0) at (16,-6) 
+\node[draw,scale=0.7,fill=gray!50,label={[xshift=1.3cm](\ref{gi0})}] (pbgi0) at (16,-6)
 {$\begin{aligned}
 \grad(\diverg_i^0)-\laplace g_i^0 = -\laplace g_i\\
 g_i^0\restr = 0
@@ -448,7 +475,7 @@ g_i^0\restr = 0
 \node[draw,scale=0.7,fill=green!50] (a2) at (8,-8) {$\alpha_2$} ;
 \node[draw,scale=0.7,fill=green!50] (ck0) at (9,-8) {$c_k^0$} ;
 \node[draw,scale=0.7,fill=yellow!50] (gi0) at (16,-8) {$g_i^0$} ;
-\node[draw,scale=0.7,fill=gray!50,label={[xshift=0.8cm](\ref{psi})}] (pbpsi) at (16,-10) 
+\node[draw,scale=0.7,fill=gray!50,label={[xshift=0.8cm](\ref{psi})}] (pbpsi) at (16,-10)
 {$\begin{aligned}
 -\laplace\psi_i = \diverg g_i^0\\
 \grad\psi_i\cdot n\restr = 0
@@ -480,8 +507,8 @@ $} ;
 \draw[->] (pbpsi0) -- (psi0);
 \draw[->] (pbb) -- (b);
 \draw[->] (b) -- (pba);
-\draw[->] (psi0) -- (pba); 
-\draw[->] (pba) -- (a); 
+\draw[->] (psi0) -- (pba);
+\draw[->] (pba) -- (a);
 \draw[->] (pbeigen) -- (lambda);
 \draw[->] (pbeigen) -- (gi);
 \draw[->] (gi) -- (pbgi0);
@@ -507,3 +534,4 @@ $} ;
 \caption{Organigramme de synthèse}
 \label{org}
 \end{figure}
+\todo[inline]{CP: excellent graphique!}
