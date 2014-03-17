@@ -69,7 +69,7 @@ int main(int argc, char**argv )
                     _expr=cst(0.)*id(v) );
     /// [rhs]
 
-    a.solve( _rhs=l, _solution=U );
+    a.solve( _name="psi0", _rhs=l, _solution=U );
 
     /// [gradpsi0]
     auto Xh = Pchv<1>( mesh );
@@ -79,7 +79,7 @@ int main(int argc, char**argv )
     auto f = form1( _test=Xh );
     f = integrate( _range=elements(mesh), _expr=gradv( U.template element<0>() )*id(gradu));
     // gradu is the L2 projection of grad(psi0) over Xh
-    b.solve( _rhs=f, _solution=gradu );
+    b.solve( _name="gradpsi0", _rhs=f, _solution=gradu );
 
     /// [gradpsi0]
 
