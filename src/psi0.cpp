@@ -75,7 +75,7 @@ int main(int argc, char**argv )
     auto Xh = Pchv<1>( mesh );
     auto gradu = Xh->element();
     auto b = form2( _trial=Xh, _test=Xh );
-    b = integrate( _range=elements(mesh), _expr=idt(gradu)*trans(id(gradu)));
+    b = integrate( _range=elements(mesh), _expr=trans(idt(gradu))*id(gradu));
     auto f = form1( _test=Xh );
     f = integrate( _range=elements(mesh), _expr=gradv( U.template element<0>() )*id(gradu));
     // gradu is the L2 projection of grad(psi0) over Xh
