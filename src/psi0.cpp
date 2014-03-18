@@ -12,12 +12,12 @@ inline
 po::options_description
 makeOptions()
 {
-    po::options_description myappOptions( "My app options" );
+    po::options_description myappOptions( "psi0 options" );
     myappOptions.add_options()
         ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon" )
         ( "vitesse", po::value<double>()->default_value( 0.015 ), "vitesse moyenne d'entree" )
         ;
-    return myappOptions.add( feel_options() ); // Add the default feel options to your list
+    return myappOptions; // Add the default feel options to your list
 }
 /// [option]
 
@@ -26,6 +26,7 @@ int main(int argc, char**argv )
     // initialize feel++
     Environment env( _argc=argc, _argv=argv,
                      _desc=makeOptions(),
+                     _desc_lib=feel_options().add( backend_options( "psi0" ) ).add ( backend_options( "gradpsi0" ) ),
                      _about=about(_name="po_psi0",
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com"));
