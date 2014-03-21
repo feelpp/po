@@ -14,10 +14,10 @@ makeOptions()
 {
     po::options_description myappOptions( "psi0 options" );
     myappOptions.add_options()
-        ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon du cylindre" )
+        ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon" )
         ( "vitesse", po::value<double>()->default_value( 0.015 ), "vitesse moyenne d'entree" )
-        ( "profil", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x * x + y * y) / (rayon * rayon)):x:y:vitesse:rayon" ), "alpha0" );
-    return myappOptions;
+        ;
+    return myappOptions; // Add the default feel options to your list
 }
 /// [option]
 
@@ -38,9 +38,6 @@ int main(int argc, char**argv )
     double rayon = option(_name="rayon").template as<double>();
     double vitesse = option( _name="vitesse").template as<double>();
 
-    //auto alpha0 = expr( option( _name="profil" ).as<std::string>() );
-    //alpha0.setParameterValues( {{"vitesse",vitesse}} );
-    //alpha0.setParameterValues( {{"rayon",rayon}} );
     /// [alpha0]
     auto alpha0 = 2. * vitesse * (1. - (Px() * Px() + Py() * Py()) / (rayon * rayon));
     /// [alpha0]
