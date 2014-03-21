@@ -31,6 +31,9 @@
 \setbeamercolor{block title example}{bg=vertfonce,fg=white}
 \setbeamercolor{block body example}{bg=grisvert}
 
+\newcommand{\LL}{{\mathbb{L}}}
+\newcommand{\HH}{{\mathbb{H}}}
+\newcommand{\DD}{{\mathbb{D}}}
 \newcommand{\grad}{{\nabla}}
 \newcommand{\laplace}{{\Delta}}
 \newcommand{\rot}{{\nabla\times}}
@@ -56,38 +59,38 @@
 
 \section{Problème}
 \begin{frame}{Problème}
-\begin{block}{On cherche (v,p) solution de :}
+\begin{block}{On cherche $(\mathbf{v},p)$ solution de :}
 \begin{eqnarray}
 \label{depart}
 \left\{
 \begin{aligned}
-&\frac{\partial v}{\partial t} + (\rot  v)\times v + \grad q + \frac{1}{Re}\rott  v-f = 0\\
-&\diverg v = 0\\
-&v\big\rvert_{t=0} = v_0\\
-&v\cdot n\restr = \alpha_0\\
-&(\rot  v)\cdot n\restr = \alpha_1\\
-&(\rott  v)\cdot n\restr = \alpha_2
+&\frac{\partial \mathbf{v}}{\partial t} + (\rot  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\rott  \mathbf{v}-\mathbf{f} = 0\\
+&\diverg \mathbf{v} = 0\\
+&\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0\\
+&\mathbf{v}\cdot n\restr = \alpha_0\\
+&(\rot  \mathbf{v})\cdot n\restr = \alpha_1\\
+&(\rott  \mathbf{v})\cdot n\restr = \alpha_2
 \end{aligned}
 \right.
 \end{eqnarray}
-où $q = \frac{|v|^2}{2}+p$.
+où $q = \frac{|\mathbf{v}|^2}{2}+p$.
 \end{block}
 \end{frame}
 
 \begin{frame}{Décomposition}
 \begin{block}{Décomposition des problèmes}
 \begin{center}
-\begin{tabular}{|c|c|}
+\begin{tabular}{|c|c|c|}
 \hline
-Variables & Problèmes\\ \hline
-$v$ & $a + u$ \\ \hline
-$a$ & $\grad\psi_0 + \rot b$\\ \hline
-$\psi_0$ & $-\laplace\psi_0 = 0$\\ \hline
-$(b,\psi_1)$ & $\rott b= \grad\psi_1$ \\ \hline
-u & $\sum_i c_ig_i$ \\ \hline
-$(\lambda_i,g_i)$ & $\rott  g_i = \lambda_i^2 g_i$ \\ \hline
-$g_i^0$ & $\grad(\diverg g_i^0) - \laplace g_i^0 = - \laplace g_i$\\ \hline
-$\psi_i$ & $-\laplace \psi_i = 0$\\ \hline
+Variables & Problèmes & Espaces\\ \hline
+$\mathbf{v}$ & $\mathbf{a} + \mathbf{u}$ & $\LL^2_\sigma$\\ \hline
+$\mathbf{a}$ & $\grad\psi_0 + \rot \mathbf{b}$ & $\LL^2_\sigma$\\ \hline
+$\psi_0$ & $-\laplace\psi_0 = 0$ & $\HH^1/\HH(div)$\\ \hline
+$(\mathbf{b},\psi_1)$ & $\rott \mathbf{b}= \grad\psi_1$ & $\HH(curl)/\DD^1$ \\ \hline
+$\mathbf{u}$ & $\sum_i c_i\mathbf{g_i}$ & $\DD^1$\\ \hline
+$(\lambda_i,\mathbf{g_i})$ & $\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}$ & $\DD^1$ \\ \hline
+$\mathbf{\mathbf{g_i}^0}$ & $\grad(\diverg \mathbf{\mathbf{g_i}^0}) - \laplace \mathbf{\mathbf{g_i}^0} = - \laplace \mathbf{g_i}$ & $\HH^1_0$\\ \hline
+$\psi_i$ & $-\laplace \psi_i = 0$ & $\HH^1$\\ \hline
 \end{tabular}
 \end{center}
 La partie difficile est donc repoussé à trouver les coefficients $c_i$. 
@@ -95,11 +98,11 @@ La partie difficile est donc repoussé à trouver les coefficients $c_i$.
 \end{frame}
 
 \section{Relèvement}
-\begin{frame}{$v=a+u$}
-\begin{block}{Relèvement par $a$ pour utiliser les travaux de P. Penel}
+\begin{frame}{$\mathbf{v}=\mathbf{a}+\mathbf{u}$}
+\begin{block}{Relèvement par $\mathbf{a}$ pour utiliser les travaux de P. Penel}
 \begin{center}
 \begin{tabular}{c|ccccc}
-& v & = & a & + & u \\ \hline
+& $\mathbf{v}$ & = & $\mathbf{a}$ & + & $\mathbf{u}$ \\ \hline
 $\diverg\star$ & 0 & & 0 & & 0\\ \hline
 $\star\cdot n\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
 $\rot\star\cdot n\restr$ & $\alpha_1$ & & $\alpha_1$ & & 0\\\hline
@@ -109,18 +112,53 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \end{block}
 \end{frame}
 
-\begin{frame}{$a=\grad\psi_0+\rot b$}
-\begin{block}{Décomposition de $a$}
+\begin{frame}{$\mathbf{a}=\grad\psi_0+\rot \mathbf{b}$}
+\begin{block}{Décomposition de $\mathbf{a}$}
 \begin{center}
 \begin{tabular}{c|ccccc}
-& $a$ & = & $\grad\psi_0$ & + & $\rot b$ \\ \hline
+& $\mathbf{a}$ & = & $\grad\psi_0$ & + & $\rot \mathbf{b}$ \\ \hline
 $\diverg\star$ & 0 & & $\laplace\psi_0$ & & 0\\ \hline
 $\star\cdot n\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
 $\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{tabular}
 \end{center}
 \end{block}
-\begin{block}{$\alpha_0$ est porté par $\grad\psi_0$}
+\begin{columns}[t]
+\begin{column}{5cm}
+\begin{block}{$\HH^1$}
+\begin{itemize}
+\item Problème :
+\[\left\{
+\begin{aligned}
+&-\laplace\psi_0 = 0\\
+&\grad\psi_0\cdot n\restr=\alpha_0
+\end{aligned}
+\right.\]
+\item[+] Plus simple
+\item[$-$] Régularité sur $\psi_0$
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{5cm}
+\begin{block}{$\HH(div)$}
+\begin{itemize}
+\item Problème :
+\[\left\{
+\begin{aligned}
+u &= \grad \psi_0\\
+\diverg\psi_0 &= 0\\
+u\cdot n\restr &= \alpha_0
+\end{aligned}
+\right.\]
+\item[+] Plus grande régularité sur $\grad \psi_0$
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{$\grad\psi_0$}
+\begin{block}{Problème dans $\HH^1$}
 \begin{itemize}
 \item Problème :
 \[\left\{
@@ -137,22 +175,70 @@ $\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{block}
 \end{frame}
 
-\begin{frame}{$a=\grad\psi_0+\rot b$}
-\begin{block}{$\alpha_1$ est porté par $\rot b$}
+\begin{frame}{$\rot \mathbf{b}$}
+\begin{columns}[t]
+\begin{column}{5cm}
+\begin{block}{$\HH(curl)$}
 \begin{itemize}
 \item Problème :
 \[\left\{
 \begin{aligned}
-&\rott b = \grad\psi_1\\
-&\diverg b = 0\\
-&b\cdot n\restr = 0\\
-&\rot b\cdot n\restr = 0\\
+&\rott \mathbf{b} = \grad\psi_1\\
+&\diverg \mathbf{b} = 0\\
+&\mathbf{b}\cdot n\restr = 0\\
+&\rot \mathbf{b}\cdot n\restr = 0\\
+&\grad\psi_1\cdot n\restr = \alpha_1
+\end{aligned}
+\right.\]
+\item[+] Problème plus simple
+\item[$-$] Problème pas forcément bien posé
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{5cm}
+\begin{block}{$\DD^1$}
+\begin{itemize}
+\item Problème
+\begin{eqnarray*}
+\left\{
+\begin{aligned}
+&\rott \mathbf{b} = \grad\psi_1\\
+&\mathbf{b}\cdot n\restr = 0\\
+&\rot \mathbf{b}\cdot n\restr = 0\\
+&\rott b\cdot n\restr = \alpha_1
+\end{aligned}
+\right.\\
+\left\{
+\begin{aligned}
+&-\laplace\psi_1 = 0\\
+&\grad\psi_1\cdot n\restr=\alpha_1
+\end{aligned}
+\right.
+\end{eqnarray*}
+\item[+] Gain de régularité sur $\rot \mathbf{b}$
+\item[+] Réutilisation de la base $\mathbf{g_i}$ 
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{$\rot \mathbf{b}$}
+\begin{block}{Problème dans $\HH(curl)$}
+\begin{itemize}
+\item Problème :
+\[\left\{
+\begin{aligned}
+&\rott \mathbf{b} = \grad\psi_1\\
+&\diverg \mathbf{b} = 0\\
+&\mathbf{b}\cdot n\restr = 0\\
+&\rot \mathbf{b}\cdot n\restr = 0\\
 &\grad\psi_1\cdot n\restr = \alpha_1
 \end{aligned}
 \right.\]
 \item Formulation variationnelle :
 \begin{align*}
-\int_\Omega (\rot b)(\rot\varphi) &- \int_{\partial\Omega} (\rot b)(\varphi\cdot n) \\
+\int_\Omega (\rot \mathbf{b})(\rot\varphi) &- \int_{\partial\Omega} (\rot \mathbf{b})(\varphi\cdot n) \\
 &+\int_\Omega \psi_1(\diverg\varphi) - \int_{\partial\Omega} \psi_1(\varphi\cdot n) = 0
 \end{align*}
 \end{itemize}
@@ -160,7 +246,7 @@ $\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{frame}
 
 \section{Galerkin}
-\begin{frame}{$u=\sum c_ig_i$}
+\begin{frame}{$\mathbf{u}=\sum c_i\mathbf{g_i}$}
 \begin{block}{Décomposition de Galerkin généralisée}
 \begin{itemize}
 \item les coefficients $c_i$ portent la dimension temporelle.
@@ -175,17 +261,17 @@ $\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{frame}
 
 \section{Fonctions propres}
-\begin{frame}{$\rott  g_i = \lambda_i^2 g_i$}
+\begin{frame}{$\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}$}
 \begin{block}{Fonctions propres de $\rott\star$}
 \begin{itemize}
 \item Problème :
 \[
 \left\{
 \begin{aligned}
-&\rott  g_i = \lambda_i^2 g_i\\
-&g_i\cdot n\restr = 0\\
-&\rot g_i\cdot n\restr = 0\\
-&\rott  g_i\cdot n\restr = 0
+&\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}\\
+&\mathbf{g_i}\cdot n\restr = 0\\
+&\rot \mathbf{g_i}\cdot n\restr = 0\\
+&\rott  \mathbf{g_i}\cdot n\restr = 0
 \end{aligned}
 \right.
 \]
@@ -198,50 +284,50 @@ $\rot\star\cdot n\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{frame}
 
 \begin{frame}{Décomposition des fonctions propres}
-\begin{block}{Décomposition des $g_i$}
+\begin{block}{Décomposition des $\mathbf{g_i}$}
 \begin{center}
 \begin{tabular}{c|ccccc}
-& $g_i$ & = & $g_i^0$ & + & $\grad\psi_i$ \\ \hline
-$\rott\star$ & $-\laplace g_i$ & & $\grad(\diverg g_i^0)-\laplace g_i^0$ & & 0\\ \hline
-$\diverg\star$ & 0 & & $\diverg g_i^0$ & & $\laplace\psi_i$\\ \hline
+& $\mathbf{g_i}$ & = & $\mathbf{\mathbf{g_i}^0}$ & + & $\grad\psi_i$ \\ \hline
+$\rott\star$ & $-\laplace \mathbf{g_i}$ & & $\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0}$ & & 0\\ \hline
+$\diverg\star$ & 0 & & $\diverg \mathbf{\mathbf{g_i}^0}$ & & $\laplace\psi_i$\\ \hline
 $\star\cdot n\restr$ & 0 & & 0 & & 0
 \end{tabular}
 \end{center}
 \end{block}
-\begin{block}{$g_i=g_i^0+\grad\psi_i$}
+\begin{block}{$\mathbf{g_i}=\mathbf{\mathbf{g_i}^0}+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
 \[
 \left\{
 \begin{aligned}
-\grad(\diverg g_i^0)-\laplace g_i^0 &= -\laplace g_i\\
-g_i^0\restr &= 0
+\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= -\laplace \mathbf{g_i}\\
+\mathbf{\mathbf{g_i}^0}\restr &= 0
 \end{aligned}
 \right.
 \]
 \item Formulation variationnelle :
 \[
--\int_\Omega (\diverg g_i^0)(\diverg\varphi) + \int_\Omega \grad g_i^0\grad\varphi = \int_\Omega \grad g_i\grad\varphi
+-\int_\Omega (\diverg \mathbf{\mathbf{g_i}^0})(\diverg\varphi) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\varphi = \int_\Omega \grad \mathbf{g_i}\grad\varphi
 \]
 \end{itemize}
 \end{block}
 \end{frame}
 
 \begin{frame}{Décomposition des fonctions propres}
-\begin{block}{$g_i=g_i^0+\grad\psi_i$}
+\begin{block}{$\mathbf{g_i}=\mathbf{\mathbf{g_i}^0}+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
 \[
 \left\{
 \begin{aligned}
--\laplace\psi_i &= \diverg g_i^0\\
+-\laplace\psi_i &= \diverg \mathbf{\mathbf{g_i}^0}\\
 \grad\psi_i\cdot n\restr &= 0
 \end{aligned}
 \right.
 \]
 \item Formulation variationnelle :
 \[
-\int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\diverg g_i^0)\varphi
+\int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\diverg \mathbf{\mathbf{g_i}^0})\varphi
 \]
 \end{itemize}
 \end{block}
@@ -249,16 +335,16 @@ g_i^0\restr &= 0
 
 \section{Problème spectral}
 \begin{frame}{Problème spectral}
-\begin{block}{Problème}
+\begin{block}{Problème dans $\DD^1$}
 \[
 \left\{
 \begin{aligned}
-&\frac{\partial u}{\partial t} + (\rot u)\times u + (\rot u)\times a + \left(\rot a\right)\times u \\
-&+ \grad\pi_a + \frac{1}{Re}\rott u - h = 0\\
-&\diverg u = 0\\
-&u\cdot n\restr = 0\\
-&(\rot u)\cdot n\restr = 0\\
-&(\rott u)\cdot n\restr = \alpha_2
+&\frac{\partial \mathbf{u}}{\partial t} + (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} + \left(\rot \mathbf{a}\right)\times \mathbf{u} \\
+&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{h_a} = 0\\
+&\diverg \mathbf{u} = 0\\
+&\mathbf{u}\cdot n\restr = 0\\
+&(\rot \mathbf{u})\cdot n\restr = 0\\
+&(\rott \mathbf{u})\cdot n\restr = \alpha_2
 \end{aligned}
 \right.
 \]
@@ -268,25 +354,29 @@ g_i^0\restr &= 0
 \begin{frame}{Problème spectral}
 \begin{block}{Forme variationnelle}
 \begin{align*}
-\int_\Omega \frac{\partial u}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot u)\times u)\cdot \varphi + \int_\Omega ((\rot u)\times a)\cdot\varphi \\
-&+ \int_\Omega ((\rot a)\times u)\cdot\varphi + \frac{1}{Re}\int_\Omega (\rot u)\cdot(\rot\varphi) \\
-&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega h\cdot\varphi
+\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \varphi + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\varphi \\
+&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\varphi + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\varphi) \\
+&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{h_a}\cdot\varphi
 \end{align*}
 \end{block}
+On peut maintenant utiliser la relation 
+\[
+\mathbf{u}\approx\sum_{i=1}^M c_i\mathbf{g_i}
+\]
 \end{frame}
 
 \begin{frame}{Problème spectral}
 \begin{block}{Discrètisation}
 \begin{align*}
-\sum \frac{\partial c_i}{\partial t}(g_i,g_k) &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) \\
-&+ \sum c_i\lambda_i(g_i\times a,g_k) + \sum c_i((\rot a)\times g_i, g_k) \\
-&+ \frac{1}{Re}\sum c_i\lambda_i\lambda_k(g_i,g_k) = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\sum \frac{\partial c_i}{\partial t}(\mathbf{g_i},\mathbf{g_k}) &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \\
+&+ \sum c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) + \sum c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) \\
+&+ \frac{1}{Re}\sum c_i\lambda_i\lambda_k(\mathbf{g_i},\mathbf{g_k}) = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{align*}
-Orthonormalisation de la base $(g_i)$ : $(g_i,g_k)=\delta_{ik}$
+Orthonormalisation de la base $(\mathbf{g_i})$ : $(\mathbf{g_i},\mathbf{g_k})=\delta_{ik}$
 \begin{eqnarray*}
 %\begin{aligned}
-\frac{\partial c_k}{\partial t} + \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) + \sum c_i\lambda_i(g_i\times a,g_k)\\
-+ \sum c_i((\rot a)\times g_i, g_k) + \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\frac{\partial c_k}{\partial t} + \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) + \sum c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
++ \sum c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) + \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{eqnarray*}
 \end{block}
 \end{frame}
@@ -305,57 +395,57 @@ Orthonormalisation de la base $(g_i)$ : $(g_i,g_k)=\delta_{ik}$
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbb) at (4,-3) 
 {$\begin{aligned}
-\rott b &= \grad\psi_0\\
-\diverg b &=0\\ 
-b\cdot n\restr &= 0\\
-\rot b\cdot n\restr &= 0\\
-\rott b\cdot n\restr &= \alpha_1
+\rott \mathbf{b} &= \grad\psi_1\\
+\diverg \mathbf{b} &=0\\ 
+\mathbf{b}\cdot n\restr &= 0\\
+\rot \mathbf{b}\cdot n\restr &= 0\\
+\rott \mathbf{b}\cdot n\restr &= \alpha_1
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbeigen) at (12,-3) 
 {$\begin{aligned}
-\rott g_i = \lambda_i^2g_i\\
-g_i\cdot n\restr = 0\\
-\rot g_i\cdot n\restr = 0\\
-\rott g_i\cdot n\restr = 0
+\rott \mathbf{g_i} = \lambda_i^2\mathbf{g_i}\\
+\mathbf{g_i}\cdot n\restr = 0\\
+\rot \mathbf{g_i}\cdot n\restr = 0\\
+\rott \mathbf{g_i}\cdot n\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=blue!50] (psi0) at (0,-6) {$\grad\psi_0$} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (4,-6) {$\rot b$} ;
+\node[draw,scale=\taille,fill=blue!50] (b) at (4,-6) {$\rot \mathbf{b}$} ;
 \node[draw,scale=\taille,fill=yellow!50] (lambda) at (11,-6) {$\lambda_i$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$g_i$} ;
+\node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (16,-6) 
 {$\begin{aligned}
-\grad(\diverg_i^0)-\laplace g_i^0 = -\laplace g_i\\
-g_i^0\restr = 0
+\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} = -\laplace \mathbf{g_i}\\
+\mathbf{\mathbf{g_i}^0}\restr = 0
 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-8) {$a = \rot b + \grad\psi_0$} ;
+\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-8) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi_0$} ;
 \node[draw,scale=\taille,fill=green!50] (f) at (7,-8) {$f$} ;
 \node[draw,scale=\taille,fill=green!50] (a2) at (8,-8) {$\alpha_2$} ;
 \node[draw,scale=\taille,fill=green!50] (ck0) at (9,-8) {$c_k^0$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi0) at (16,-8) {$g_i^0$} ;
+\node[draw,scale=\taille,fill=yellow!50] (gi0) at (16,-8) {$\mathbf{\mathbf{g_i}^0}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbpsi) at (16,-10) 
 {$\begin{aligned}
--\laplace\psi_i = \diverg g_i^0\\
+-\laplace\psi_i = \diverg \mathbf{\mathbf{g_i}^0}\\
 \grad\psi_i\cdot n\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=yellow!50] (psi) at (16,-12) {$\psi_i$} ;
 \node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$a$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbs) at (9,-12)
 {$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(g_i\times g_j, g_k) \\
-&+ \sum_i c_i\lambda_i(g_i\times a,g_k) + \sum_i c_i((\rot a)\times g_i, g_k) \\
-&+ \frac{1}{Re}c_k\lambda_k^2 = (h,g_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
+\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \\
+&+ \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) + \sum_i c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) \\
+&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
 &c_k(0)=c_k^0
 \end{aligned}
 $} ;
 \node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbu) at (9,-16) {$u=\sum c_kg_k$} ;
-\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$u$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbv) at (4,-18) {$v=a+u$} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (4,-19) {$v$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbu) at (9,-16) {$\mathbf{u}=\sum c_k\mathbf{g_k}$} ;
+\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$\mathbf{u}$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbv) at (4,-18) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
+\node[draw,scale=\tailleg,fill=red!50] (v) at (4,-19) {$\mathbf{v}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbq) at (10,-19)
 {$\begin{aligned}
--\laplace q = \diverg((\rot v)\times v) - \diverg f\\
-\grad q\cdot n\restr =  f\cdot n\restr - \frac{\partial\alpha_0}{\partial t} - ((\rot v)\times v)\cdot n\restr - \frac{\alpha_2}{Re}
+-\laplace q = \diverg((\rot \mathbf{v})\times \mathbf{v}) - \diverg \mathbf{f}\\
+\grad q\cdot n\restr =  \mathbf{f}\cdot n\restr - \frac{\partial\alpha_0}{\partial t} - ((\rot \mathbf{v})\times \mathbf{v})\cdot n\restr - \frac{\alpha_2}{Re}
 \end{aligned}$} ;
 \node[draw,scale=\tailleg,fill=red!50] (q) at(16,-19) {$q$} ;
 

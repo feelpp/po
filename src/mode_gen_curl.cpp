@@ -135,18 +135,18 @@ EigenProblem::run()
 
     auto Vh = Pchv<Order>( mesh );
     auto g = std::vector<decltype( Vh->element() )>( modes.size(), Vh->element() );
+    /*
+    auto g0 = std::vector<decltype( Vh->element() )>( modes.size(), Vh->element() );
+    auto vG0 = Vh->element();
+    auto a2 = form2( _test=Vh, _trial=Vh );
+    auto l2 = form1( _test=Vh );
 
-    //auto g0 = std::vector<decltype( Vh->element() )>( modes.size(), Vh->element() );
-    //auto vG0 = Vh->element();
-    //a2 = form2( _test=Vh, _trial=Vh );
-    //l2 = form1( _trial=Vh );
-
-    //auto MLh = mlspace_type::New( mesh );
-    //auto psi = std::vector<decltype( MLh->element() )>( modes.size(), MLh->element() );
-    //auto VPsi = MLh->element();
-    //auot a3 = form2( _test=MLh, _trial=MLh );
-    //auto l3 = form1( _trial=MLh );
-
+    auto MLh = mlspace_type::New( mesh );
+    auto psi = std::vector<decltype( MLh->element() )>( modes.size(), MLh->element() );
+    auto VPsi = MLh->element();
+    auot a3 = form2( _test=MLh, _trial=MLh );
+    auto l3 = form1( _trial=MLh );
+    */
     if ( !modes.empty() )
     {
         std::cout << "nev " << nev << ", ncv " << ncv << ", proc " << Environment::numberOfProcessors() << ", time " << t.elapsed() << std::endl;
@@ -165,11 +165,18 @@ EigenProblem::run()
 
             std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ") ";
             std::cout << " div u = " << integrate(elements(mesh), divv(g[i])).evaluate()(0,0) << std::endl;
+            //std::cout << "(g" << i << ",g" << i-1 << ") = " << integrate(elements(mesh), trans(idv(g[i]))*idv(g[i-1]) ).evaluate()(0,0) << std::endl;
 
-            //a2 = integrate( elements(mesh), divt(g0[i])*div(vG0) + gradt(g0[i])*grad(vG0) );
-            //l2 = integrate( elements(mesh), gradv(g[i])*grad(vG0) );
-            //a2 += on( _range=boundaryfaces(mesh), _element=g0[i], _rhs=l2, _expr=cst(0.) );
+            //a2 = integrate( _range=elements(mesh),
+            //                _expr=divt(g0[i])*div(vG0) );
+            //a2 +=integrate( _range=elements(mesh),
+            //                _expr=gradt(g0[i])*grad(vG0) );
+            //l2 = integrate( _range=elements(mesh),
+            //                _expr=trans(gradv(g[i]))*grad(vG0) );
+            //a2 += on( _range=boundaryfaces(mesh),
+            //          _element=g0[i], _rhs=l2, _expr=cst(0.) );
             //a2.solve( _rhs=l2, _solution=g0[i] );
+            //e->add( (boost::format("g0-%1%" ) % i ).str(), g0[i] );
 
             //auto uPsi = psi[i].template element<0>();
             //auto lambdaPsi = psi[i].template element<1>();

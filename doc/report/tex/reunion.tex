@@ -13,3 +13,18 @@ Enfin, on a parlé du matèriel disponible à PLASTIC OMNIUM pour lancer les cal
 
 Je dois donc remettre à jour le rapport, en corrigeant les fautes, en ajoutant des détails, et surtout d'écrire l'algorithme du problème, l'enchainement des différents problèmes à résoudre.\\
 Il est important que je sois au point sur la formulation du problème avant que Benjamin soit absent.
+
+\subsection{Lundi 17 mars}
+
+Lors de la réunion, on a revu la décomposition du problème principal en plusieurs problèmes plus simples, notamment les problèmes concernant le relèvement (\ref{psi0}-\ref{curlb}).\\
+La question était de savoir dans quel espace on voulait résoudre les problèmes. Par exemple, pour $\psi_0$, il faudrait être dans $H(div)$ pour assurer la régularité. On utiliserait ainsi un problème mixte, avec des multiplicateurs de Lagrange pour la constante, pour trouver $\psi_0$. Il peut être aussi intéressant de comparer les résultats avec ceux obtenues par une projection sur $L^2$.\\
+
+Pour $\mathbf{b}$, il y a plusieurs approches possibles. On peut simplement calculer $\mathbf{b}$ avec un problème mixte dans $H^1$, et ensuite projeter $\rot\mathbf{a}$ sur l’espace choisit pour discrétiser le problème spectral. Ou bien essayer de changer la formulation faible du problème pour que le $\rot\mathbf{a}$ porte plutôt sur les $\mathbf{g}$, ainsi on aurait pas besoin de la  régularité sur $\rot\mathbf{a}$.\\
+Une autre possibilité est de ne pas utiliser le problème mixte pour trouver $\mathbf{b}$. On calcul $\psi_1$ de la même manière que $\psi_0$, et ensuite on calcul $\mathbf{b}$ dans $H(curl)$.\\
+
+Ainsi, il est très important que je précise les espaces dans lesquelles se situent les problèmes. De même, le rapport serait plus lisible si je différenciais les champs vectoriels des champs scalaires.\\
+Il serait aussi intéressant d’étudier la complexité du problème spectral, en fonction du nombre de fonctions propres calculées, nombre qu’il  faudrait d’ailleurs étudier pour connaitre une limite suffisante et nécessaire.\\
+
+On a aussi mentionné l’intégration de Travis CI au projet, l’efficacité de regrouper les résultats dans un seul fichier ensight, et l’utilité d’utiliser des fonctions propres paramétriques pour pouvoir changer un angle par exemple sur une géométrie et tout de même réutilisé des résultats précédents.\\
+
+Le travail des semaines prochaines portera donc essentiellement sur la définition des problèmes de relèvement, leurs espaces, si on utilise ou non des problèmes mixtes, ainsi que toujours l’amélioration du rapport.

@@ -1,10 +1,12 @@
 \section{Programmation}
-\subsection{FreeFem++}
-\subsection{Feel++}
+
+On programme la résolution de ce problème à l'aide de la bibliothèque Feel++. Pour commencer, on utilise une géomètrie d'un cylindre de rayon 0.05 et de longueur 0.5 (\ref{cylindre}).
+\subsection{Problème aux valeurs propres}
+\subsubsection{Valeurs et fonction propres}
 
 On va utiliser une classe \texttt{EigenProblem} acceptant des problèmes de plusieurs dimensions, dans notre cas le problème est de dimension 3.\\
 Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au programme que l'on utilise des simplexes, et que la maillage devra être fait de cette manière.\\
-Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'order 2 scalaire.\\
+Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'ordre 2 scalaire.\\
 On utilise enfin la base et le type de maillage pour créer l'espace de fonctions.
 
 \lstinputlisting[linerange={typedef}]{../../src/mode_gen_curl.cpp}
@@ -30,10 +32,57 @@ On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
 
 \lstinputlisting[linerange={rhs}]{../../src/mode_gen_curl.cpp}
 
-On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les plus petites valeurs propres.
+On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}, qui va utiliser un algorithme de type Krylov-Schur pour trouver \texttt{nev} valeurs propres, en se servant de \texttt{ncv} vecteurs pour la base du sous-espace de Krylov. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les valeurs propres de plus petite magnitute.
 
 \lstinputlisting[linerange={modes}]{../../src/mode_gen_curl.cpp}
 
 Enfin, pour visualiser les résultats, on utilise un élément d'un espace vectoriel qui est le projeté du vecteur formé par les composantes de la solution.
 
 \lstinputlisting[linerange={project}]{../../src/mode_gen_curl.cpp}
+
+Les résultats sont visibles dans le chapitre \ref{resModes}.
+
+\subsubsection{Décomposition}
+
+\subsection{Relèvement}
+
+Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
+
+\subsubsection{Gradient dans $\HH^1$}
+\label{gradh1}
+
+Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors il faut utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$. Cela se traduit par le changement de formulation variationnelle suivant où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
+\[
+\int_\Omega\grad \psi^0\grad\varphi + \int_\Omega \psi^0\nu + \int_\Omega \lambda\varphi = \int_{\partial\Omega} \alpha_0\varphi
+\]
+On va donc créé un espace de fonction produit correspondant à $\HH^1\times\R$.
+
+\lstinputlisting[linerange={space}]{../../src/psi0.cpp}
+
+On ajoute une fonction permettant de rajouter en option le profil d'entrée en fonction du rayon et de la vitesse. Cela correspond à $\alpha_0$.
+
+\lstinputlisting[linerange={option}]{../../src/psi0.cpp}
+
+Une fois les éléments de l'espace créé, on peut définir la forme bilinéaire de la façon suivante :
+
+\lstinputlisting[linerange={bilinear}]{../../src/psi0.cpp}
+
+Ici, $u$ correspond à $\psi^0$ et $v$ à $\varphi$.\\
+
+On veut que ce qui rentre du cylindre par l'entrée, correspondant à la partie du maillage marquée 1, sorte par l'autre bout du cylindre, marqué 2, et que le tour du cylindre, marqué 3, soit imperméable. Ce qui donne la terme de droite suivant :
+
+\lstinputlisting[linerange={rhs}]{../../src/psi0.cpp}
+
+Une fois le problème résolut, on veut projeter le gradient de $\psi^0$ sur $\LL^2$. Pour cela on résout le problème simple $u=\grad\psi^0$.
+
+\lstinputlisting[linerange={gradpsi0}]{../../src/psi0.cpp}
+
+\subsubsection{Gradient dans $\HH(div)$}
+
+\subsubsection{Rotationnel}
+
+\subsection{Problème spectral}
+
+\subsection{Pression}
+
+
