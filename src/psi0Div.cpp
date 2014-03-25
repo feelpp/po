@@ -1,3 +1,10 @@
+/*
+  u = grad(psi)
+  div(u) = 0
+  u.n = alpha
+
+  -int_O u*v + grad(p)*v + u*grad(q)*u = int_pO alpha*q
+ */
 #include <feel/options.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelfilters/exporter.hpp>
@@ -19,8 +26,9 @@ public:
     typedef double value_type;
     typedef Simplex<3> convex_type;
     typedef Mesh<convex_type> mesh_type;
+
     /// [space]
-    typedef bases<RaviartThomas<1>, Lagrange<1, Scalar> > prod_basis_type;
+    typedef bases<RaviartThomas<0>, Lagrange<1, Scalar> > prod_basis_type;
     typedef FunctionSpace<mesh_type, prod_basis_type> prod_space_type;
     /// [space]
 
@@ -36,7 +44,7 @@ makeOptions()
     myappOptions.add_options()
         ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon du cylindre" )
         ( "vitesse", po::value<double>()->default_value( 0.015 ), "vitesse moyenne d'entree" )
-        ( "profil", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x * x + y * y) / (rayon * rayon)):x:y:vitesse:rayon" ), "alpha0" );
+        ( "profil", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x*x + y*y) / (rayon * rayon))" ), "alpha0" );
     return myappOptions.add( feel_options() );
 }
 /// [option]
@@ -50,9 +58,13 @@ Psi0Div::run()
     /// [mesh]
 
     /// [alpha0]
-    double rayon = option(_name="rayon").template as<double>();
-    double vitesse = option( _name="vitesse").template as<double>();
-    auto alpha0 = 2. * vitesse * (1. - (Px() * Px() + Py() * Py()) / (rayon * rayon));
+    auto alpha0_s = option( _name="profil" ).as<std::string>();
+    auto vars = Symbols{ "x", "y", "vitesse", "rayon" };
+    auto alpha0_e = parse( alpha0_s, vars );
+    auto alpha0 = expr( alpha0_e, vars );
+    alpha0.setParameterValues( {
+            { "rayon", option( _name="rayon" ).template as<double>() },
+                { "vitesse", option( _name="vitesse" ).template as<double>() } } );
     /// [alpha0]
 
     /// [element]
@@ -78,17 +90,17 @@ Psi0Div::run()
 
     /// [bilinear]
     auto a = form2( _test=Xh, _trial=Xh );
-    a += integrate( _range=elements(mesh),
-                    _expr = -trans( idt( u )) * id( v )
-                    + trans(gradt( p )) * id( v )
-                    + trans(idt( u )) * grad( q ) );
+    a = integrate( _range=elements(mesh),
+                   _expr = -trans( idt( u )) * id( v )
+                   _expr = gradt( p ) * id( v )
+                   _expr = grad( q ) * idt( u ) );
 
     a.solve( _rhs=l, _solution=U );
     /// [bilinear]
+
     auto e = exporter( _mesh=mesh );
     e->add( "grad_u", U );
     e->save();
-
 }
 
 int
