@@ -1,3 +1,10 @@
+/*
+  laplace(psi) = 0
+  grad(psi).n = alpha
+
+  int_O grad(u)*grad(v) + u*nu + v*lambda = int_pO alpha*v
+  use of Lagrange multipliers int_0 u = 0
+ */
 #include <feel/options.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelfilters/exporter.hpp>
@@ -16,7 +23,7 @@ makeOptions()
     myappOptions.add_options()
         ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon" )
         ( "vitesse", po::value<double>()->default_value( 0.015 ), "vitesse moyenne d'entree" )
-        ;
+        ( "profil", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x*x + y*y) / (rayon * rayon))" ), "alpha0, depend de x,y,rayon,vitesse" );
     return myappOptions; // Add the default feel options to your list
 }
 /// [option]
@@ -35,11 +42,14 @@ int main(int argc, char**argv )
     typedef FunctionSpace<Mesh<Simplex<3> >, bases<Lagrange<1, Scalar>, Lagrange<0, Scalar> > > space_type;
     /// [space]
 
-    double rayon = option(_name="rayon").template as<double>();
-    double vitesse = option( _name="vitesse").template as<double>();
-
     /// [alpha0]
-    auto alpha0 = 2. * vitesse * (1. - (Px() * Px() + Py() * Py()) / (rayon * rayon));
+    auto alpha0_s = option( _name="profil" ).as<std::string>();
+    auto vars = Symbols{ "x", "y", "vitesse", "rayon" };
+    auto alpha0_e = parse( alpha0_s, vars );
+    auto alpha0 = expr( alpha0_e, vars );
+    alpha0.setParameterValues( {
+            { "rayon", option( _name="rayon" ).template as<double>() },
+                { "vitesse", option( _name="vitesse" ).template as<double>() } } );
     /// [alpha0]
 
     auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
