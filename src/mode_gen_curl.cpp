@@ -46,6 +46,8 @@ public:
     typedef FunctionSpace<mesh_type, basis_type> space_type;
     /// [typedef]
 
+    typedef FunctionSpace<mesh_type, bases<Lagrange<Order, Scalar>, Lagrange<0, Scalar> > > mlSpace_type;
+
     typedef Exporter<mesh_type> export_type;
 
     void run();
@@ -158,17 +160,20 @@ EigenProblem::run()
     auto vG0 = Vh->element();
     auto a2 = form2( _test=Vh, _trial=Vh );
     auto l2 = form1( _test=Vh );
-
+    /*
     auto Yh = Pch<Order>( mesh );
+    */
+    auto Yh = mlSpace_type::New(mesh);
     auto psi = std::vector<decltype( Yh->element() )>( modes.size(), Yh->element() );
-    auto vPsi = Yh->element();
     auto a3 = form2( _test=Yh, _trial=Yh );
     auto l3 = form1( _test=Yh );
+    //auto vPsi = Yh->element();
+    auto VPsi = Yh->element();
+    auto vPsi = VPsi.template element<0>();
+    auto nuPsi = VPsi.template element<1>();
 
     if ( !modes.empty() )
     {
-        std::cout << "nev " << nev << ", ncv " << ncv << ", proc " << Environment::numberOfProcessors() << ", time " << t.elapsed() << std::endl;
-
         int i = 0;
         for( auto const& mode : modes )
         {
@@ -181,12 +186,7 @@ EigenProblem::run()
             /// [project]
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), g[i] );
 
-            std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ") ";
-            std::cout << " div u = " << integrate(elements(mesh), divv(g[i])).evaluate()(0,0);
-            if( i > 0 )
-                std::cout << " (g" << i << ",g" << i-1 << ") = " << integrate(elements(mesh), trans(idv(g[i]))*idv(g[i-1]) ).evaluate()(0,0);
-            std::cout << " (g" << i << ",g" << i << ") = " << integrate(elements(mesh), trans(idv(g[i]))*idv(g[i]) ).evaluate()(0,0);
-            std::cout << std::endl;
+            std::cout << " -- eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ")\n";
 
             // (2)
             /// [lig0]
@@ -213,32 +213,52 @@ EigenProblem::run()
 
             // (3)
             /// [psi]
-            a3 = integrate( _range=elements(mesh), _expr=gradt(psi[i])*trans(grad(vPsi)) );
+            //a3 = integrate( _range=elements(mesh), _expr=gradt(psi[i])*trans(grad(vPsi)) );
+            auto psii = psi[i].template element<0>();
+            auto psil = psi[i].template element<1>();
+            a3 = integrate( _range=elements(mesh), _expr=gradt(psii)*trans(grad(vPsi)) + id(vPsi)*idt(psil) + idt(psii)*id(nuPsi) );
             l3 = integrate( _range=elements(mesh), _expr=divv(g0[i])*id(vPsi) );
             /// [psi]
 
             a3.solve( _name="psi", _rhs=l3, _solution=psi[i] );
+
+            auto gradu = Vh->element();
+            auto c = form2( _trial=Vh, _test=Vh );
+            c = integrate( _range=elements(mesh), _expr=trans(idt(gradu))*id(gradu));
+            auto f = form1( _test=Vh );
+            f = integrate( _range=elements(mesh), _expr=gradv( psi[i].template element<0>() )*id(gradu));
+            // gradu is the L2 projection of grad(psi) over Vh
+            c.solve( _name="gradpsi", _rhs=f, _solution=gradu );
+
+
+            e->add( (boost::format( "psi-%1%" ) % i ).str(), gradu );
 
             if ( Environment::worldComm().isMasterRank() )
             {
                 std::cout << "psi" << i << " = " << t.elapsed() << " sec" << std::endl;
             }
 
-            double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(g0[i])-trans(gradv(psi[i])) );
+            double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(g0[i])-idv(gradu) );
+            double erreurG0 = normL2( elements(mesh), idv(g[i])-idv(g0[i]) );
+            double nG = normL2( elements(mesh), idv(g[i]) );
+            double nG0 = normL2( elements(mesh), idv(g0[i]) );
+            double nPsi = normL2( elements(mesh), idv(gradu) );
             //double erreurH1 = normH1( elements(mesh), idv(g[i])-idv(g0[i])-trans(gradv(psi[i])), gradv(g[i])-gradv(g0[i])-gradv(trans(gradv(psi[i]))) );
             if ( Environment::worldComm().isMasterRank() )
             {
-                std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << std::endl;
+                std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << " ||g-g0||_L2 = " << erreurG0 << " ||g|| = " << nG << " ||g0|| = " << nG0 << " ||psi|| = " << nPsi << std::endl;
                 //std::cout << "||g-(g0+grad(psi)||_H1 = " << erreurH1 << std::endl;
             }
 
             auto gb = vf::project( _space=Vh, _range=elements(mesh),
-                                   _expr=idv(g0[i])+trans(gradv(psi[i])) );
+                                   _expr=idv(g0[i])+idv(gradu) );
             e->add( ( boost::format( "modebis-%1%" ) % i ).str(), gb);
 
             ++i;
         }
         e->save();
+
+        LOG(INFO) << "nev " << nev << ", ncv " << ncv << ", proc " << Environment::numberOfProcessors() << ", time " << t.elapsed() << "\n";
     }
 }
 
@@ -248,7 +268,7 @@ main( int argc, char** argv )
     using namespace Feel;
 
     Environment env( _argc=argc, _argv=argv,
-                     _desc_lib=feel_options().add( backend_options( "gi0" ) ).add ( backend_options( "psi" ) ),
+                     _desc_lib=feel_options().add( backend_options( "gi0" ) ).add ( backend_options( "psi" ) ).add ( backend_options( "gradpsi" ) ),
                      _about=about(_name="po_mode_gen_curl",
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com") );
