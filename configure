@@ -10,6 +10,7 @@ usage()
 $0 [options...]
 Options:
 -d, --debug                         debug mode
+-f, --fast                          fast mode
 -r, --release                       release mode
     --prefix=PATH                   define install path
 -v, --verbose                       enable verbose output
@@ -39,6 +40,7 @@ fi
 
 _WANT_VERBOSE=no
 _WANT_DEBUG=no
+_WANT_FAST=no
 _WANT_OG=no
 _WANT_CHECK=no
 _HAS_CONFIG=no
@@ -101,6 +103,10 @@ while [ -n "$1" ]; do
    --debug|-d)
        _WANT_DEBUG=yes
        _WANT_CHECK=yes
+       ;;
+   --fast|-f)
+       _WANT_FAST=yes
+       _WANT_CHECK=no
        ;;
    --check)
        _WANT_CHECK=yes
@@ -199,16 +205,21 @@ fi
 if [ "X${_DISABLE_RESEARCH}" != "X" ]; then
 echo "option(FEELPP__ENABLE_RESEARCH OFF CACHE PATH \"enable research projects\" FORCE)" >> cmake.configure
 fi
-#if [ "X${_WANT_OG}" != "X" ]; then
-#echo "set( CMAKE_CXX_FLAGS_RELEASE \"-Og -DNDEBUG\" CACHE PATH \"CXX Release Flags \" FORCE)" >> cmake.configure
-#fi
+if [ "X${_WANT_FAST}" != "X" ]; then
+    echo "set( CMAKE_CXX_FLAGS \"-O0 -DNDEBUG\" CACHE PATH \"CXX Flags \" FORCE)" >> cmake.configure
+fi
 
 
 if [ "${_WANT_DEBUG}" = "yes" ]; then
-  echo 'Configuration en mode debug'
+  echo 'Configuring in debug build mode'
   BUILDTYPE=Debug
+elif [ "${_WANT_FAST}" = "yes" ]; then
+    echo 'Configuration: fast mode'
+    BUILDTYPE=None
+    export CXXFLAGS="-O0"
 else
-  BUILDTYPE=Release
+    echo 'Configuring in release build mode'
+    BUILDTYPE=Release
 fi
 
 if [ -f CMakeCache.txt ]; then
