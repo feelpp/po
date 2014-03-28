@@ -191,12 +191,12 @@ EigenProblem::run()
             // (2)
             /// [lig0]
             l2 = integrate( _range=elements(mesh),
-                            _expr=trace(gradv(g[i])*trans(grad(vG0))) );
+                            _expr=mode.second.get<0>()*trans(idv(g[i]))*id(vG0) );
             /// [lig0]
 
             /// [big0]
             a2 = integrate( _range=elements(mesh),
-                            _expr=divt(g0[i])*div(vG0) );
+                            _expr=-divt(g0[i])*div(vG0) );
             a2+= integrate( _range=elements(mesh),
                             _expr=trace(gradt(g0[i])*trans(grad(vG0))) );
             a2+= on( _range=boundaryfaces(mesh),
@@ -258,7 +258,7 @@ EigenProblem::run()
         }
         e->save();
 
-        LOG(INFO) << "nev " << nev << ", ncv " << ncv << ", proc " << Environment::numberOfProcessors() << ", time " << t.elapsed() << "\n";
+        //LOG(INFO) << "nev " << nev << ", ncv " << ncv << ", proc " << Environment::numberOfProcessors() << ", time " << t.elapsed() << "\n";
     }
 }
 
