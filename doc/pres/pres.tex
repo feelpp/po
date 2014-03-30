@@ -6,6 +6,7 @@
 \usepackage{subfig}
 \usepackage{colortbl}
 \usepackage{tikz}
+\usepackage{bm}
 
 \graphicspath{{Images/}}
 
@@ -89,7 +90,7 @@ $\psi_0$ & $-\laplace\psi_0 = 0$ & $\HH^1/\HH(div)$\\ \hline
 $(\mathbf{b},\psi_1)$ & $\rott \mathbf{b}= \grad\psi_1$ & $\HH(curl)/\DD^1$ \\ \hline
 $\mathbf{u}$ & $\sum_i c_i\mathbf{g_i}$ & $\DD^1$\\ \hline
 $(\lambda_i,\mathbf{g_i})$ & $\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}$ & $\DD^1$ \\ \hline
-$\mathbf{\mathbf{g_i}^0}$ & $\grad(\diverg \mathbf{\mathbf{g_i}^0}) - \laplace \mathbf{\mathbf{g_i}^0} = - \laplace \mathbf{g_i}$ & $\HH^1_0$\\ \hline
+$\mathbf{\mathbf{g_i}^0}$ & $\grad(\diverg \mathbf{\mathbf{g_i}^0}) - \laplace \mathbf{\mathbf{g_i}^0} = \lambda_i \mathbf{g_i}$ & $\HH^1_0$\\ \hline
 $\psi_i$ & $-\laplace \psi_i = 0$ & $\HH^1$\\ \hline
 \end{tabular}
 \end{center}
@@ -143,7 +144,7 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \]
 \item Formulation variationnelle :
 \[
-\int_\Omega (\rot g)(\rot\varphi)\ dX = \lambda\int_\Omega g\varphi\ dX
+\int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX
 \]
 \end{itemize}
 \end{block}
@@ -154,7 +155,7 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \begin{center}
 \begin{tabular}{c|ccccc}
 & $\mathbf{g_i}$ & = & $\mathbf{\mathbf{g_i}^0}$ & + & $\grad\psi_i$ \\ \hline
-$\rott\star$ & $-\laplace \mathbf{g_i}$ & & $\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0}$ & & 0\\ \hline
+$\rott\star$ & $\lambda_i \mathbf{g_i}$ & & $\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0}$ & & 0\\ \hline
 $\diverg\star$ & 0 & & $\diverg \mathbf{\mathbf{g_i}^0}$ & & $\laplace\psi_i$\\ \hline
 $\star\cdot n\restr$ & 0 & & 0 & & 0
 \end{tabular}
@@ -166,14 +167,14 @@ $\star\cdot n\restr$ & 0 & & 0 & & 0
 \[
 \left\{
 \begin{aligned}
-\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= -\laplace \mathbf{g_i}\\
+\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= \lambda_i \mathbf{g_i}\\
 \mathbf{\mathbf{g_i}^0}\restr &= 0
 \end{aligned}
 \right.
 \]
 \item Formulation variationnelle :
 \[
--\int_\Omega (\diverg \mathbf{\mathbf{g_i}^0})(\diverg\varphi) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\varphi = \int_\Omega \grad \mathbf{g_i}\grad\varphi
+-\int_\Omega (\diverg \mathbf{\mathbf{g_i}^0})(\diverg\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\bm{\varphi} = \int_\Omega \lambda_i\mathbf{g_i}\bm{\varphi}
 \]
 \end{itemize}
 \end{block}
@@ -283,7 +284,7 @@ u\cdot n\restr &= \alpha_0
 \right.\]
 \item Formulation variationnelle :
 \[
--\int_\Omega \mathbf{l}\cdot\varphi + \int_\Omega \mathbf{l}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\varphi  = \int_{\partial\Omega} \alpha_0\nu
+-\int_\Omega \mathbf{l}\cdot\bm{\varphi} + \int_\Omega \mathbf{l}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi}  = \int_{\partial\Omega} \alpha_0\nu
 \]
 \end{itemize}
 \end{block}
@@ -346,8 +347,8 @@ où $\psi^1$ solution de
 \begin{frame}{$\rot \mathbf{b}$}
 \begin{block}{Formulation variationnelle dans $\HH(curl)$}
 \begin{align*}
-\int_\Omega (\rot \mathbf{b})(\rot\varphi) &- \int_{\partial\Omega} (\rot \mathbf{b})(\varphi\cdot n) \\
-&+\int_\Omega \psi_1(\diverg\varphi) - \int_{\partial\Omega} \psi_1(\varphi\cdot n) = 0
+\int_\Omega (\rot \mathbf{b})(\rot\bm{\varphi}) &- \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot n) \\
+&+\int_\Omega \psi_1(\diverg\bm{\varphi}) - \int_{\partial\Omega} \psi_1(\bm{\varphi}\cdot n) = 0
 \end{align*}
 \end{block}
 \begin{columns}[t]
@@ -373,7 +374,7 @@ où $\psi^1$ solution de
 \begin{itemize}
 \item Formulation faible
 \[
-\int_\Omega (\rot\mathbf{b})\cdot(\rot\varphi) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\varphi
+\int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\bm{\varphi}
 \]
 \item Discrétisation
 \begin{align*}
@@ -421,9 +422,9 @@ d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 \begin{frame}{Problème spectral}
 \begin{block}{Forme variationnelle}
 \begin{align*}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \varphi + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\varphi \\
-&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\varphi + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\varphi) \\
-&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{h_a}\cdot\varphi
+\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
+&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) \\
+&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
 \end{align*}
 \end{block}
 On peut maintenant utiliser la relation 
@@ -441,7 +442,6 @@ On peut maintenant utiliser la relation
 \end{align*}
 Orthonormalisation de la base $(\mathbf{g_i})$ : $(\mathbf{g_i},\mathbf{g_k})=\delta_{ik}$
 \begin{eqnarray*}
-%\begin{aligned}
 \frac{\partial c_k}{\partial t} + \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) + \sum c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
 + \sum c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) + \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{eqnarray*}
@@ -481,7 +481,7 @@ Orthonormalisation de la base $(\mathbf{g_i})$ : $(\mathbf{g_i},\mathbf{g_k})=\d
 \node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (16,-6) 
 {$\begin{aligned}
-\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} = -\laplace \mathbf{g_i}\\
+\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} = \lambda_i \mathbf{g_i}\\
 \mathbf{\mathbf{g_i}^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pba) at (2,-8) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi_0$} ;
@@ -565,7 +565,7 @@ $} ;
 \node[draw,scale=\taille,fill=yellow!50] (gi) at (10,-3) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (14,-3)
 {$\begin{aligned}
-\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = -\laplace \mathbf{g_i}\\
+\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \lambda_i \mathbf{g_i}\\
 \mathbf{g_i^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-3.5)

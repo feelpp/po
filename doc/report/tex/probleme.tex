@@ -4,12 +4,13 @@ Notation :
 divergence(\mathbf{v})&=\diverg \mathbf{v}\\
 rot(\mathbf{v})&=\rot \mathbf{v}\\
 rot(rot(\mathbf{v}))&=\rott \mathbf{v}\\
-\LL^2_\sigma(\Omega) &= \{\mathbf{v} \in \LL^2(\Omega) | \diverg \mathbf{v} = 0\text{ et }\mathbf{v}\cdot n\restr = 0 \}\\
-\HH^1(\Omega) &= \{\mathbf{v} \in \LL^2(\Omega) | \grad \mathbf{v}\in\LL^2(\Omega)\}\\
-\HH^1_0(\Omega) &= \{\mathbf{v} \in \HH^1(\Omega) | \mathbf{v}\restr = 0\}\\
-\HH(div) &= \{\mathbf{v} \in \LL^2(\Omega) | \diverg\mathbf{v} \in \LL^2(\Omega) \}\\
-\HH(curl) &= \{\mathbf{v} \in \LL^2(\Omega) | \rot\mathbf{v} \in \LL^2(\Omega) \}\\
-\DD^1 &= \{\mathbf{v} \in \HH^1(\Omega)\cup \LL^2(\Omega) | (\rot \mathbf{v}\cdot n)\restr = 0  \}
+\LL^2_\sigma(\Omega) &= \{\mathbf{v} \in \LL^2(\Omega)\ |\ \diverg \mathbf{v} = 0\text{ et }\mathbf{v}\cdot n\restr = 0 \}\\
+\HH^1(\Omega) &= \{\mathbf{v} \in \LL^2(\Omega)\ |\ \grad \mathbf{v}\in\LL^2(\Omega)\}\\
+\HH^1_0(\Omega) &= \{\mathbf{v} \in \HH^1(\Omega)\ |\ \mathbf{v}\restr = 0\}\\
+\HH(div) &= \{\mathbf{v} \in \LL^2(\Omega)\ |\ \diverg\mathbf{v} \in \LL^2(\Omega) \}\\
+\HH(curl) &= \{\mathbf{v} \in \LL^2(\Omega)\ |\ \rot\mathbf{v} \in \LL^2(\Omega) \}\\
+\DD^1 &= \{\mathbf{v} \in \HH^1(\Omega)\cup \LL^2(\Omega)\ |\ (\rot \mathbf{v}\cdot n)\restr = 0  \}\\
+&=\{\mathbf{v} \in \HH^1(\Omega)\cup \LL^2(\Omega)\ |\ \mathbf{v}=\mathbf{v_0}+\grad\phi \text{ avec } \mathbf{v_0}\restr = 0,\ \grad\phi\cdot n\restr = 0 \}
 \end{align*}
 
 Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
@@ -34,7 +35,7 @@ On va maintenant expliquer la décomposition du problème en une suite de probl�
 \subsection{Problème local}
 \label{local}
 
-Afin d'utiliser les travaux de O. Mezureau, J. Neustupa et P. Penel\footnote{\href{http://www.researchgate.net/publication/254219219\_A\_weak\_solvability\_to\_the\_steady\_NavierStokes\_equations\_for\_compressible\_barotropic\_fluid\_with\_generalized\_impermeability\_boundary\_conditions}{A weak solvability to the steady Navier-Stokes equations for compressible barotropic fluid with generalized impermeability boundary conditions}} qui ont étudié ce type d'équations dans $\DD^1$, on cherche à écrire $\mathbf{v}=\mathbf{u}+\mathbf{a}$, tel que :\\
+Afin d'utiliser les travaux de J. Neustupa et P. Penel qui ont étudié ce type d'équations dans $\DD^1$, on cherche à écrire $\mathbf{v}=\mathbf{u}+\mathbf{a}$, tel que :\\
 \begin{equation}
 \label{v}
 \begin{array}{c|ccccc}
@@ -80,7 +81,17 @@ En utilisant la première et la deuxième ligne du tableau, on voit que $\psi^0$
 \end{equation}
 Ce problème permet de trouver $\psi^0$ à une constante près, on va donc utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int_\Omega u = 0$, cette constante est sans importance car on cherche le gradient de $\psi^0$.\\
 
-Et $b$ est solution du problème :
+On cherche $\psi^1$ solution de :
+\begin{equation}
+\label{psi1}
+\left\{
+\begin{aligned}
+&-\laplace\psi^1 = 0\\
+&\grad\psi^1\cdot n\restr=\alpha_1
+\end{aligned}
+\right.
+\end{equation}
+Et $b$ tel que :
 \begin{equation}
 \label{curlb}
 \left\{
@@ -93,16 +104,7 @@ Et $b$ est solution du problème :
 \end{aligned}
 \right.
 \end{equation}
-où $\psi^1$ est solution de :
-\begin{equation}
-\label{psi1}
-\left\{
-\begin{aligned}
-&-\laplace\psi^1 = 0\\
-&\grad\psi^1\cdot n\restr=\alpha_1
-\end{aligned}
-\right.
-\end{equation}
+
 Il y a plusieurs manières de résoudre les problèmes (\ref{psi0}-\ref{curlb}-\ref{psi1}), la solution choisie sera discutée plus loin.\\
 
 Une fois $\grad\psi^0$ et $\rot \mathbf{b}$ connus, on peut retrouver $\mathbf{a}$.\\
@@ -118,9 +120,9 @@ fonctions sont les mêmes que celles de l'opérateur $\rott$.
 
 En effet, soit $(\lambda_i,\mathbf{g_i})$ solutions de $\rot \mathbf{g_i} = \lambda_i\mathbf{g_i}$ et $(\Lambda_i,\mathbf{G_i})$ solutions de $\rott \mathbf{G_i} = \Lambda_i\mathbf{G_i}$. Alors :
 \[
-\rott \mathbf{g_i} = \rot(\rot \mathbf{g_i})=\rot(\lambda_i\mathbf{g_i})=\lambda^2\mathbf{g_i} = \Lambda_i\mathbf{G_i}
+\rott \mathbf{g_i} = \rot(\rot \mathbf{g_i})=\rot(\lambda_i\mathbf{g_i})=\lambda^2\mathbf{g_i}
 \]
-On voit donc que $\mathbf{g_i}=\mathbf{G_i}$ et que $\lambda_i=\pm\sqrt\Lambda_i$. Pour n'avoir que des valeurs propres de multiplicité une, on ne garde que les valeurs propres positives, le signe étant porté par le coefficient $c_i$.
+Par identification, on voit que $\mathbf{g_i}=\mathbf{G_i}$ et que $\lambda_i=\pm\sqrt\Lambda_i$. Pour n'avoir que des valeurs propres de multiplicité une, on ne garde que les valeurs propres positives, le signe étant porté par le coefficient $c_i$.
 
 On cherche donc $(\lambda_i,\mathbf{g_i})\in\R\times D^1(\Omega)$ solutions du problème suivant :
 \begin{equation}
@@ -183,47 +185,47 @@ On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
 \end{aligned}
 \right.
 \end{equation}
-On note d'abord que tout élément $\varphi\in \DD^1(\Omega)$ peut s'écrire de la manière suivante :
+On note d'abord que tout élément $\bm{\varphi}\in \DD^1(\Omega)$ peut s'écrire de la manière suivante :
 \[
-\varphi = \varphi_0 + \grad\phi\text{ et } \varphi\restr = \grad\phi
+\bm{\varphi} = \bm{\varphi}_0 + \grad\phi\text{ et } \bm{\varphi}\restr = \grad\phi
 \]
 
 On va maintenant chercher la formulation variationnelle de ce problème.\\
-Soit $\mathbf{g}\in \DD^1(\Omega)$ solution de (6), alors pour tout $\varphi\in \DD^1(\Omega)$ nous avons :
+Soit $\mathbf{g}\in \DD^1(\Omega)$ solution de (6), alors pour tout $\bm{\varphi}\in \DD^1(\Omega)$ nous avons :
 \[
-\int_\Omega (\rott \mathbf{g})\cdot\varphi\ dX = \int_\Omega\lambda \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rott \mathbf{g})\cdot\bm{\varphi}\ dX = \int_\Omega\lambda \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
 puis en intégrant par partie :
 \[
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX + \int_{\partial\Omega} ((\rot \mathbf{g})\times \varphi)\cdot n\ d\Gamma = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_{\partial\Omega} ((\rot \mathbf{g})\times \bm{\varphi})\cdot n\ d\Gamma = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
-or sur $\partial\Omega,\quad \varphi\restr=\grad\phi$, d'où :
+or sur $\partial\Omega,\quad \bm{\varphi}\restr=\grad\phi$, d'où :
 \[
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX + \int_{\partial\Omega} ((\rot \mathbf{g})\times \grad\phi)\cdot n\ d\Gamma = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_{\partial\Omega} ((\rot \mathbf{g})\times \grad\phi)\cdot n\ d\Gamma = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
 En utilisant le théorème de flux-divergence aussi appelé théorème de Green-Ostrogradski :
 \[
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX + \int_\Omega \diverg((\rot \mathbf{g})\times \grad\phi)\ dX = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_\Omega \diverg((\rot \mathbf{g})\times \grad\phi)\ dX = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
-En utilisant la formule $div(F\times G) = G\cdot \rot F - F\cdot \rot G$, on a :
+En utilisant la formule $\diverg(\mathbf{F}\times \mathbf{G}) = \mathbf{G}\cdot \rot \mathbf{F} - \mathbf{F}\cdot \rot \mathbf{G}$, on a :
 \[
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX + \int_\Omega \grad\phi\cdot(\rott \mathbf{g})\ dX -\int_\Omega (\rot \mathbf{g})\cdot (\rot\grad\phi)\ dX  = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_\Omega \grad\phi\cdot(\rott \mathbf{g})\ dX -\int_\Omega (\rot \mathbf{g})\cdot (\rot\grad\phi)\ dX  = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
 Comme le rotationnel d'un gradient est nul, on a :
 \[
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX + \int_\Omega \grad\phi\cdot(\rott \mathbf{g})\ dX  = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_\Omega \grad\phi\cdot(\rott \mathbf{g})\ dX  = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
 En intégrant le deuxième terme par partie, on obtient :
 \[
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX + \int_{\partial\Omega} \phi((\rott \mathbf{g})\cdot n)\ d\Gamma - \int_\Omega \phi(\diverg(\rott \mathbf{g}))\ dX  = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_{\partial\Omega} \phi((\rott \mathbf{g})\cdot n)\ d\Gamma - \int_\Omega \phi(\diverg(\rott \mathbf{g}))\ dX  = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \]
-Comme $\rott  \mathbf{g_i}\cdot n\restr = 0$, le deuxième terme s'annule et comme la divergence d'un rotationnel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\varphi\in D^1(\Omega)$ :
+Comme $\rott  \mathbf{g_i}\cdot n\restr = 0$, le deuxième terme s'annule et comme la divergence d'un rotationnel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\bm{\varphi}\in D^1(\Omega)$ :
 \begin{equation}
 \label{fveigen}
-\int_\Omega (\rot \mathbf{g})\cdot(\rot\varphi)\ dX = \lambda\int_\Omega \mathbf{g}\cdot\varphi\ dX
+\int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX = \lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \end{equation}
 
-On obtient donc $(\lambda_i,g_i)$, où $(g_i)$ forme une base de $\DD^1$. Comme énoncé plus tôt, tout élément de $\DD^1$ peut s'écrire $\varphi = \varphi_0 + \grad\phi$, y compris bien sûr les $g_i$. Comme on va en avoir besoin pour les problèmes suivants, le prochain chapitre explique comment les décomposer.
+On obtient donc $(\lambda_i,\mathbf{g_i})$, où $(\mathbf{g_i})$ forme une base de $\DD^1$. Comme énoncé plus tôt, tout élément de $\DD^1$ peut s'écrire $\bm{\varphi} = \bm{\varphi}_0 + \grad\phi$, y compris bien sûr les $\mathbf{g_i}$. Comme on va en avoir besoin pour les problèmes suivants, le prochain chapitre explique comment les décomposer.
 
 \subsubsection{Décomposition des $\mathbf{g_i}$}
 \label{decomp}
@@ -233,15 +235,15 @@ On applique donc le rotationnel du rotationnel sur cette relation.\\
 \[
 \rott \mathbf{g_i^0} +\rott\grad\psi_i = \rott \mathbf{g_i}
 \]
-Le dernier terme est nul car c'est le rotationnel d'un gradient. On utilise la formule $\rott v=\grad(\diverg v)-\laplace v$ sur les deux termes restants :
+Le dernier terme est nul car c'est le rotationnel d'un gradient. On utilise la formule $\rott \mathbf{v}=\grad(\diverg \mathbf{v})-\laplace \mathbf{v}$ sur le premier terme :
 \[
-\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \grad(\diverg g_i)-\laplace \mathbf{g_i}
+\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \lambda_i \mathbf{g_i}
 \]
-Comme la divergence des $\mathbf{g_i}$ est nul, on obtient le tableau suivant :
+On obtient donc le tableau suivant :
 \begin{center}
 \begin{tabular}{c|ccccc}
 & $\mathbf{g_i}$ & = & $\mathbf{g_i^0}$ & + & $\grad\psi_i$ \\ \hline
-$\rott\star$ & $-\laplace g_i$ & & $\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0}$ & & 0\\ \hline
+$\rott\star$ & $\lambda_i\mathbf{g_i}$ & & $\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0}$ & & 0\\ \hline
 $\diverg\star$ & 0 & & $\diverg \mathbf{g_i^0}$ & & $\laplace\psi_i$\\ \hline
 $\star\cdot n\restr$ & 0 & & 0 & & 0
 \end{tabular}
@@ -251,27 +253,27 @@ En utilisant la première et la dernière ligne on parvient au problème :
 \label{gi0}
 \left\{
 \begin{aligned}
-\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} &= -\laplace \mathbf{g_i}\\
+\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} &= \lambda_i\mathbf{g_i}\\
 \mathbf{g_i^0}\restr &= 0
 \end{aligned}
 \right.
 \end{equation}
-Comme $\rott\mathbf{g_i^0}\not=0$ et $\mathbf{g_i^0}\restr=0$, on cherche $g_i^0$ dans $\HH^1_0$. On multiplie donc cette équation par une fonction test de $\HH^1_0$ et on intègre :
+On cherche $\mathbf{g_i^0}$ dans $\HH^1_0$. On multiplie donc cette équation par une fonction test de $\HH^1_0$ et on intègre :
 \[
-\int_\Omega \grad(\diverg \mathbf{g_i^0})\cdot\varphi - \int_\Omega \laplace \mathbf{g_i^0}\cdot\varphi = -\int_\Omega \laplace \mathbf{g_i}\cdot\varphi
+\int_\Omega \grad(\diverg \mathbf{g_i^0})\cdot\bm{\varphi} - \int_\Omega \laplace \mathbf{g_i^0}\cdot\bm{\varphi} = \int_\Omega \lambda_i\mathbf{g_i}\cdot\bm{\varphi}
 \]
-On utilise ensuite la formule d'intégration par partie $\int_\Omega \grad{\mathbf{u}}\varphi = -\int_\Omega \mathbf{u}\diverg\varphi + \int_{\partial\Omega} \mathbf{u}\varphi\cdot n$ sur le premier terme :
+On utilise ensuite la formule d'intégration par partie $\int_\Omega \grad{\mathbf{u}}\bm{\varphi} = -\int_\Omega \mathbf{u}\diverg\bm{\varphi} + \int_{\partial\Omega} \mathbf{u}\bm{\varphi}\cdot n$ sur le premier terme :
 \[
--\int_\Omega (\diverg \mathbf{g_i^0})(\diverg\varphi) + \int_{\partial\Omega} (\diverg \mathbf{g_i^0})(\varphi\cdot n) - \int_\Omega \laplace \mathbf{g_i^0}\cdot\varphi = -\int_\Omega \laplace \mathbf{g_i}\cdot\varphi
+-\int_\Omega (\diverg \mathbf{g_i^0})(\diverg\bm{\varphi}) + \int_{\partial\Omega} (\diverg \mathbf{g_i^0})(\bm{\varphi}\cdot n) - \int_\Omega \laplace \mathbf{g_i^0}\cdot\bm{\varphi} = \int_\Omega \lambda_i\mathbf{g_i}\cdot\bm{\varphi}
 \]
-Comme $\varphi\in H^1_0$, la seconde intégrale est nul. On intègre par partie les termes en laplacien :
+Comme $\bm{\varphi}\in H^1_0$, la seconde intégrale est nul. On intègre par partie le terme en laplacien :
 \[
--\int_\Omega (\diverg \mathbf{g_i^0})(\diverg\varphi) + \int_\Omega \overline{\grad \mathbf{g_i^0}}\cdot\overline{\grad\varphi} - \int_{\partial\Omega} (\overline{\grad \mathbf{g_i^0}}\cdot n)\cdot\varphi = \int_\Omega \overline{\grad \mathbf{g_i}}\cdot\overline{\grad\varphi} - \int_{\partial\Omega} (\overline{\grad \mathbf{g_i}}\cdot n)\cdot\varphi
+-\int_\Omega (\diverg \mathbf{g_i^0})(\diverg\bm{\varphi}) + \int_\Omega \overline{\grad \mathbf{g_i^0}}\cdot\overline{\grad\bm{\varphi}} - \int_{\partial\Omega} (\overline{\grad \mathbf{g_i^0}}\cdot n)\cdot\bm{\varphi} = \int_\Omega \lambda_i\mathbf{g_i}\cdot\bm{\varphi}
 \]
-Encore une fois, comme $\varphi\in H^1_0$, les termes sur les bords s'annulent. On obtient donc la forme variationnelle suivante :
+Encore une fois, comme $\bm{\varphi}\in H^1_0$, le terme sur les bords s'annule. On obtient donc la forme variationnelle suivante :
 \begin{equation}
 \label{fvgi0}
--\int_\Omega (\diverg \mathbf{g_i^0})(\diverg\varphi) + \int_\Omega \overline{\grad \mathbf{g_i^0}}\cdot\overline{\grad\varphi} = \int_\Omega \overline{\grad \mathbf{g_i}}\cdot\overline{\grad\varphi}
+-\int_\Omega (\diverg \mathbf{g_i^0})(\diverg\bm{\varphi}) + \int_\Omega \overline{\grad \mathbf{g_i^0}}\cdot\overline{\grad\bm{\varphi}} = \int_\Omega \lambda_i\mathbf{g_i}\cdot\bm{\varphi}
 \end{equation}
 
 D'autre part, les deux dernières lignes du tableau nous donnent le problème de Poisson suivant :
@@ -305,9 +307,9 @@ Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord 
 \end{aligned}
 \right.
 \end{equation}
-Pour obtenir la formulation faible du problème, on multiplie par une fonction test $(\varphi,\nu)\in\HH(div)\times\LL^2$ et on intègre les deux premières équations :
+Pour obtenir la formulation faible du problème, on multiplie par une fonction test $(\bm{\varphi},\nu)\in\HH(div)\times\LL^2$ et on intègre les deux premières équations :
 \begin{align*}
-\int_\Omega \mathbf{l}\cdot\varphi &= \int_\Omega \grad\psi^0\cdot\varphi\\
+\int_\Omega \mathbf{l}\cdot\bm{\varphi} &= \int_\Omega \grad\psi^0\cdot\bm{\varphi}\\
 \int_\Omega \diverg \mathbf{l}\ \nu &= 0
 \end{align*}
 On intègre par partie la deuxième équation :
@@ -317,7 +319,7 @@ On intègre par partie la deuxième équation :
 En insérant la condition au bord et la première équation, on obtient la formulation faible :
 \begin{equation}
 \label{fvpsidiv}
--\int_\Omega \mathbf{l}\cdot\varphi + \int_\Omega \mathbf{l}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\varphi  = \int_{\partial\Omega} \alpha_0\nu
+-\int_\Omega \mathbf{l}\cdot\bm{\varphi} + \int_\Omega \mathbf{l}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi}  = \int_{\partial\Omega} \alpha_0\nu
 \end{equation}
 
 L'autre possibilité pour résoudre (\ref{psi0}) est de se placer dans $\HH^1$. 
@@ -363,12 +365,12 @@ Soit de résoudre dans $\HH(curl)$ le problème mixte suivant :
 et en changeant la formulation variationnelle du problème (\ref{pbu}) pour que $\rot a$ n'y apparaisse plus.\\
 Pour avoir la formulation faible, on multiplie par une fonction test de $\HH(curl)$ et on intègre :
 \[
-\int_\Omega (\rott \mathbf{b})\cdot\varphi = \int_\Omega (\grad\psi^1)\cdot\varphi
+\int_\Omega (\rott \mathbf{b})\cdot\bm{\varphi} = \int_\Omega (\grad\psi^1)\cdot\bm{\varphi}
 \]
 En intégrant par partie le premier terme et en utilisant la formule de Green sur le second, on obtient :
 \begin{equation}
 \label{fvbcurl}
-\int_\Omega (\rot \mathbf{b})\cdot(\rot\varphi) - \int_{\partial\Omega} (\rot \mathbf{b})(\varphi\cdot n) + \int_\Omega \psi^1(\diverg\varphi) - \int_{\partial\Omega} \psi^1(\varphi\cdot n) = 0
+\int_\Omega (\rot \mathbf{b})\cdot(\rot\bm{\varphi}) - \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot n) + \int_\Omega \psi^1(\diverg\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot n) = 0
 \end{equation}
 
 Soit résoudre les deux problèmes (\ref{curlb}) et (\ref{psi1}) séparément, en réutilisant la technique de (\ref{psi0}) pour (\ref{psi1}), et en cherchant $\rot b$ dans $\DD^1$, cela permet de réutiliser les fonctions propres de l'opérateur $\rott$, et d'avoir une plus grande régularité de $\rot \mathbf{b}$.\\
@@ -386,43 +388,43 @@ On cherche donc à résoudre :
 \]
 De la même manière que dans le chapitre \ref{eigen}, on obtient la forme variationnelle :
 \[
-\int_\Omega (\rot\mathbf{b})\cdot(\rot\varphi) + \int_{\partial\Omega} \phi((\rott\mathbf{b})\cdot n) - \int_\Omega \phi(\diverg(\rot \mathbf{b}))  = \int_\Omega \grad\psi\cdot\varphi
+\int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi((\rott\mathbf{b})\cdot n) - \int_\Omega \phi(\diverg(\rot \mathbf{b}))  = \int_\Omega \grad\psi\cdot\bm{\varphi}
 \]
 Le troisième terme est toujours nul, tandis que le deuxième peut s'écrire avec la condition aux bords :
 \begin{equation}
 \label{bd1}
-\int_\Omega (\rot\mathbf{b})\cdot(\rot\varphi) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\varphi
+\int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\bm{\varphi}
 \end{equation}
 
 \subsubsection{Problème spectral}
 \label{spectre}
 
-On cherche maintenant $\mathbf{u}\in\DD^1$ solution de (\ref{pbu}), on veut donc obtenir la forme variationnelle du problème, pour cela, on multiplie par une fonction test $\varphi\in\DD^1$ et on intègre :
+On cherche maintenant $\mathbf{u}\in\DD^1$ solution de (\ref{pbu}), on veut donc obtenir la forme variationnelle du problème, pour cela, on multiplie par une fonction test $\bm{\varphi}\in\DD^1$ et on intègre :
 \begin{align*}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \varphi + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\varphi + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\varphi \\
-&+ \int_\Omega \grad\pi_{\mathbf{a}}\cdot\varphi + \frac{1}{Re}\int_\Omega (\rott \mathbf{u})\cdot\varphi = \int_\Omega \mathbf{h_a}\cdot\varphi
+\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} \\
+&+ \int_\Omega \grad\pi_{\mathbf{a}}\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rott \mathbf{u})\cdot\bm{\varphi} = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
 \end{align*}
 En utilisant une intégration par partie sur l'avant dernier terme et la même méthode que dans le chapitre \ref{eigen} pour le dernier terme du membre de gauche, on arrive à :
 \begin{align*}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \varphi + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\varphi + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\varphi\\
-&+ \int_\Omega \pi_{\mathbf{a}}(\diverg\varphi) + \int_{\partial \Omega} \pi_{\mathbf{a}}(\varphi\cdot n) + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\varphi) -\frac{1}{Re}\int_{\partial\Omega} ((\rott \mathbf{u})\cdot n)\phi = \int_\Omega \mathbf{h_a}\cdot\varphi
+\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi}\\
+&+ \int_\Omega \pi_{\mathbf{a}}(\diverg\bm{\varphi}) + \int_{\partial \Omega} \pi_{\mathbf{a}}(\bm{\varphi}\cdot n) + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) -\frac{1}{Re}\int_{\partial\Omega} ((\rott \mathbf{u})\cdot n)\phi = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
 \end{align*}
-Or, $\varphi\in D^1$ donc $\diverg\varphi=0$ et $\varphi\cdot n=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. De plus, $\rott \mathbf{u}\cdot n=\alpha_2$ sur $\partial\Omega$. On a donc :
+Or, $\bm{\varphi}\in D^1$ donc $\diverg\bm{\varphi}=0$ et $\bm{\varphi}\cdot n=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. De plus, $\rott \mathbf{u}\cdot n=\alpha_2$ sur $\partial\Omega$. On a donc :
 \begin{equation}
 \label{fvu}
 \begin{aligned}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \varphi &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \varphi + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\varphi \\
-&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\varphi + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\varphi) -\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{h_a}\cdot\varphi
+\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
+&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) -\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
 \end{aligned}
 \end{equation}
 
-Où $\phi$ provient de la décomposition de la fonction de test en $\varphi=\varphi_0+\grad\psi$.
+Où $\phi$ provient de la décomposition de la fonction de test en $\bm{\varphi}=\bm{\varphi}_0+\grad\phi$.
 
 \subsubsection{Pression}
 \label{pression}
 
 Pour retrouver la vitesse $\mathbf{v}$, il suffit maintenant d'additionner $\mathbf{a}$ et $\mathbf{u}$.\\
-Le terme correspondant à la pression ayant été perdu lors du passage à la forme variationnelle, il faut le recalculer à partir de l'équation (\ref{depart}).
+Le terme correspondant à la pression ayant été relayé en post-traitement de la vitesse, il faut le recalculer à partir de l'équation (\ref{depart}).
 
 On applique la divergence sur cette équation et cela nous donne :
 \[
@@ -463,7 +465,7 @@ On obtient donc au final :
 \subsection{Discrétisation}
 \label{discr}
 
-Dans les problèmes (\ref{bd1}) et (\ref{fvu}), on va chercher à expimer $\mathbf{b}$ et $\mathbf{u}$ dans la base $(\mathbf{g_i})$, c'est-à-dire $\mathbf{b}=\sum_i d_ig_i$ et $\mathbf{u}=\sum_i c_ig_i$. De plus, prendre une fonction de test $\varphi$ dans $D^1$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
+Dans les problèmes (\ref{bd1}) et (\ref{fvu}), on va chercher à expimer $\mathbf{b}$ et $\mathbf{u}$ dans la base $(\mathbf{g_i})$, c'est-à-dire $\mathbf{b}=\sum_i d_ig_i$ et $\mathbf{u}=\sum_i c_ig_i$. De plus, prendre une fonction de test $\bm{\varphi}$ dans $D^1$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
 On rappel que $\rot \mathbf{g_i}=\lambda_i\mathbf{g_i}$. En notant $\int_\Omega \mathbf{f}\mathbf{g}=(f,g)$ et $\int_{\partial\Omega}a\ b=\langle a,b\rangle$, on obtient pour le problème (\ref{fvu}) :
 \begin{align*}
 \frac{\partial}{\partial t}\sum_i (c_i\mathbf{g_i}, \mathbf{g_k}) &+ \sum_i\sum_j (c_i\lambda_ic_j\mathbf{g_i}\times \mathbf{g_j},\mathbf{g_k}) + \sum_i(c_i\lambda_i\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
@@ -540,7 +542,7 @@ Si l'on veut résoudre le problème mixte (\ref{pbbcurl}) pour trouver $\mathbf{
 \node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.3cm](\ref{gi0})}] (pbgi0) at (16,-6)
 {$\begin{aligned}
-\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = -\laplace \mathbf{g_i}\\
+\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \lambda_i\mathbf{g_i}\\
 \mathbf{g_i^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.0cm](\ref{a})}] (pba) at (2,-8) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi^0$} ;
@@ -630,7 +632,7 @@ $} ;
 \node[draw,scale=\taille,fill=yellow!50] (gi) at (10,-3) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.3cm](\ref{gi0})}] (pbgi0) at (14,-3)
 {$\begin{aligned}
-\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = -\laplace \mathbf{g_i}\\
+\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \lambda_i\mathbf{g_i}\\
 \mathbf{g_i^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.0cm](\ref{pbpsidiv})}] (pbpsi0) at (0,-3.5)
