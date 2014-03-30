@@ -16,7 +16,7 @@ Eigen_Curl::Eigen_Curl(bool needEigen, mesh_ptrtype mesh):super()
     }
     else{
         std::cout << "pas needEigen\n";
-        lecture();
+        load_eigens();
     }
     std::cout << "decomposition";
     decomp();
@@ -82,14 +82,14 @@ Eigen_Curl::run()
             std::string path = (boost::format("mode-%1%")%i).str();
             g[i].save(_path=path);
             lambda[i] = mode.second.get<0>();
-            fs << lambda[i]
+            fs << lambda[i];
         }
         fs.close();
     }
 }
 
 void
-Eigen_Curl::lecture()
+Eigen_Curl::load_eigens()
 {
     for(int i=0; i<nev; i++)
     {
