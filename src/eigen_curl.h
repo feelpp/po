@@ -52,7 +52,7 @@ class Eigen_Curl : public Application
 
     Eigen_Curl(bool, mesh_ptrtype);
     void run();
-    void lecture();
+    void load_eigens();
     void decomp();
 
  private:

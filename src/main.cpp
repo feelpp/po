@@ -27,12 +27,8 @@ po::options_description
 makeLibOptions()
 {
     po::options_description libOptions( "Lib options" );
-    libOptions.add_options()
-        ( backend_options( "psi0" ) )
-        ( backend_options( "gradpsi0" ) )
-        ( backend_options( "gi0" ) )
-        ( backend_options( "psi" ) )
-        ( backend_options( "gradpsi" ) );
+    libOptions.add( backend_options( "psi0" ) ).add( backend_options( "gradpsi0" ) ); // Poisson
+    libOptions.add( backend_options( "gi0" ) ).add( backend_options( "psi" ) ).add( backend_options( "gradpsi" ) ); //Eigen_Curl
     return libOptions.add( feel_options() );
 }
 
