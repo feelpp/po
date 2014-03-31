@@ -41,10 +41,12 @@ class Eigen_Curl : public Application
     typedef sSpace_type::element_type sElement_type;
     typedef bases<Lagrange<Order, Scalar>, Lagrange<0, Scalar> > mlBasis_type;
     typedef FunctionSpace<mesh_type, mlBasis_type > mlSpace_type;
+    typedef boost::shared_ptr<mlSpace_type> mlSpace_ptrtype;
     typedef mlSpace_type::element_type mlElement_type;
     typedef bases<Lagrange<Order, Vectorial> > vBasis_type;
     typedef FunctionSpace<mesh_type, vBasis_type > vSpace_type;
     typedef vSpace_type::element_type vElement_type;
+    typedef boost::shared_ptr<vSpace_type> vSpace_ptrtype;
 
     std::vector<vElement_type> g;
     std::vector<double> lambda;
@@ -57,6 +59,8 @@ class Eigen_Curl : public Application
 
  private:
     mesh_ptrtype mesh;
+    vSpace_ptrtype Vh;
+    mlSpace_ptrtype Mlh;
     int nev;
     int ncv;
 };

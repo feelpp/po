@@ -49,7 +49,8 @@ int main(int argc, char**argv )
     auto alpha0 = expr( alpha0_e, vars );
     alpha0.setParameterValues( {
             { "rayon", option( _name="rayon" ).template as<double>() },
-                { "vitesse", option( _name="vitesse" ).template as<double>() } } );
+                { "vitesse", option( _name="vitesse" ).template as<double>() },
+                    {"test", 3} } );
     /// [alpha0]
 
     auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );

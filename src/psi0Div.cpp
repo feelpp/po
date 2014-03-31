@@ -45,7 +45,7 @@ makeOptions()
         ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon du cylindre" )
         ( "vitesse", po::value<double>()->default_value( 0.015 ), "vitesse moyenne d'entree" )
         ( "profil", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x*x + y*y) / (rayon * rayon))" ), "alpha0" );
-    return myappOptions.add( feel_options() );
+    return myappOptions;
 }
 /// [option]
 
@@ -107,12 +107,12 @@ int
 main( int argc, char** argv )
 {
     Environment env( _argc=argc, _argv=argv,
-                    _desc=makeOptions(),
-                    _about=about(_name="po_psi0Div",
+                     _desc=makeOptions(),
+                     _desc_lib=feel_options(),
+                     _about=about(_name="po_psi0Div",
                                  _author="Romain Hild",
                                  _email="romain.hild@plasticomnium.com") );
 
     Psi0Div app;
     app.run();
 }
-

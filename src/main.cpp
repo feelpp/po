@@ -57,5 +57,6 @@ main( int argc, char **argv )
     e->add( "grad_u", p1.gradu );
     e->save();
     */
-    Eigen_Curl eig = Eigen_Curl(true, mesh);
+    Eigen_Curl eig = Eigen_Curl(option(_name="needEigen").as<bool>(), mesh);
+    std::cout << "finiii" << std::endl;
 }

@@ -6,25 +6,32 @@
 
 Eigen_Curl::Eigen_Curl(bool needEigen, mesh_ptrtype mesh):super()
 {
-    this->mesh = mesh;
     this->nev = option(_name="solvereigen.nev").template as<int>();
     this->ncv = option(_name="solvereigen.ncv").template as<int>();
+    this->mesh = mesh;
+    this->Vh = vSpace_type::New( mesh );
+    this->Mlh = mlSpace_type::New( mesh );
+    this->g = std::vector<vElement_type>(nev, Vh->element() );
+    this->psi = std::vector<mlElement_type>(nev, Mlh->element() );
+    this->lambda = std::vector<double>(nev, 0 );
 
-    if(needEigen){
-        std::cout << "needEigen\n";
+    if(needEigen)
         run();
-    }
-    else{
-        std::cout << "pas needEigen\n";
+    else
         load_eigens();
-    }
-    std::cout << "decomposition";
     decomp();
+    std::cout << "End Eigen" << std::endl;
 }
 
 void
 Eigen_Curl::run()
 {
+    if ( Environment::worldComm().isMasterRank() ){
+        std::cout << "----Eigen Problem----" << std::endl;
+        std::cout << "number of eigenvalues computed= " << nev <<std::endl;
+        std::cout << "number of eigenvalues for convergence= " << ncv <<std::endl;
+    }
+
     auto Xh = sSpace_type::New( mesh );
     auto U = Xh->element();
     auto u1 = U.template element<0>();
@@ -63,15 +70,13 @@ Eigen_Curl::run()
                   _verbose = true );
 
     auto modeTmp = Xh->element();
-    auto Vh = vSpace_type::New( mesh );
-    g = std::vector<vElement_type>(modes.size(), Vh->element() );
-    lambda = std::vector<double>(modes.size(), 0 );
 
     if ( !modes.empty() )
     {
         int i = 0;
-        std::fstream fs;
-        fs.open ("lambda", std::fstream::out | std::fstream::app);
+        std::fstream s;
+        if ( Environment::worldComm().isMasterRank() )
+            s.open ("lambda", std::fstream::out);
         for( auto const& mode : modes )
         {
             modeTmp = *mode.second.get<2>();
@@ -82,32 +87,55 @@ Eigen_Curl::run()
             std::string path = (boost::format("mode-%1%")%i).str();
             g[i].save(_path=path);
             lambda[i] = mode.second.get<0>();
-            fs << lambda[i];
+            if ( Environment::worldComm().isMasterRank() )
+                s << lambda[i] << std::endl;
+            i++;
+            if(i>=nev)
+                break;
         }
-        fs.close();
+        if ( Environment::worldComm().isMasterRank() )
+            s.close();
     }
 }
 
 void
 Eigen_Curl::load_eigens()
 {
-    for(int i=0; i<nev; i++)
-    {
+    if ( Environment::worldComm().isMasterRank() ){
+        std::cout << "----Load Eigen----" << std::endl;
+        std::cout << "number of eigenvalues = " << nev <<std::endl;
+    }
+
+    std::fstream s;
+    s.open ("lambda", std::fstream::in);
+    if( !s.is_open() ){
+        std::cout << "Eigen values not found\ntry to launch with --needEigen=true" << std::endl;
+        exit(0);
+    }
+
+    int i;
+    for( i=0; i<nev && s.good(); i++ ){
         std::string path = (boost::format("mode-%1%")%i).str();
         g[i].load(_path=path);
+        s >> lambda[i];
+    }
+
+    s.close();
+
+    if ( i != nev ){
+        std::cout << "Number of eigenvalues different from nev !" << std::endl;
+        exit(0);
     }
 }
 
 void
 Eigen_Curl::decomp()
 {
-    auto Vh = vSpace_type::New( mesh );
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "----Decomposition----" << std::endl;
 
     auto a2 = form2( _test=Vh, _trial=Vh );
     auto l2 = form1( _test=Vh );
-
-    auto Mlh = mlSpace_type::New( mesh );
-    psi = std::vector<mlElement_type>(nev, Mlh->element() );
 
     auto a3 = form2( _test=Mlh, _trial=Mlh );
     auto l3 = form1( _test=Mlh );
@@ -118,12 +146,14 @@ Eigen_Curl::decomp()
         e->add( (boost::format("mode-%1%")%i).str(), g[i] );
 
         auto g0 = Vh->element();
+        auto vg0 = Vh->element();
         l2 = integrate( _range=elements(mesh),
-                        _expr=lambda[i]*trans(idv(g[i]))*id(g0) );
+                        //_expr=lambda[i]*trans(idv(g[i]))*id(vg0) );
+                        _expr=trace(gradv(g[i])*trans(grad(vg0))) );
         a2 = integrate( _range=elements(mesh),
-                        _expr=-divt(g0)*div(g0) );
+                        _expr=divt(g0)*div(vg0) );
         a2+= integrate( _range=elements(mesh),
-                        _expr=trace(gradt(g0)*trans(grad(g0))) );
+                        _expr=trace(gradt(g0)*trans(grad(vg0))) );
         a2+= on( _range=boundaryfaces(mesh),
                  _element=g0, _rhs=l2, _expr=cst(0.) );
         a2.solve( _name="gi0", _rhs=l2, _solution=g0 );
@@ -151,12 +181,11 @@ Eigen_Curl::decomp()
         e->add( ( boost::format( "modebis-%1%" ) % i ).str(), gb);
 
         double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(gb) );
-        double erreurL22 = normL2( elements(mesh), idv(g[i])-idv(g0)-idv(gradu) );
-        double erreurG0 = normL2( elements(mesh), idv(g[i])-idv(g0) );
         double nG = normL2( elements(mesh), idv(g[i]) );
         double nG0 = normL2( elements(mesh), idv(g0) );
         double nPsi = normL2( elements(mesh), idv(gradu) );
         if ( Environment::worldComm().isMasterRank() )
-            std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << " ||g-modebis|| = " << erreurL22 << " ||g-g0||_L2 = " << erreurG0 << " ||g|| = " << nG << " ||g0|| = " << nG0 << " ||psi|| = " << nPsi << std::endl;
+            std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << " ||g|| = " << nG << " ||g0|| = " << nG0 << " ||psi|| = " << nPsi << std::endl;
     }
+    e->save();
 }

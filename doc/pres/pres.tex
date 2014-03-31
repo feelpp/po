@@ -89,8 +89,8 @@ $\mathbf{a}$ & $\grad\psi_0 + \rot \mathbf{b}$ & $\LL^2_\sigma$\\ \hline
 $\psi_0$ & $-\laplace\psi_0 = 0$ & $\HH^1/\HH(div)$\\ \hline
 $(\mathbf{b},\psi_1)$ & $\rott \mathbf{b}= \grad\psi_1$ & $\HH(curl)/\DD^1$ \\ \hline
 $\mathbf{u}$ & $\sum_i c_i\mathbf{g_i}$ & $\DD^1$\\ \hline
-$(\lambda_i,\mathbf{g_i})$ & $\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}$ & $\DD^1$ \\ \hline
-$\mathbf{\mathbf{g_i}^0}$ & $\grad(\diverg \mathbf{\mathbf{g_i}^0}) - \laplace \mathbf{\mathbf{g_i}^0} = \lambda_i \mathbf{g_i}$ & $\HH^1_0$\\ \hline
+$(\lambda_i,\mathbf{g_i})$ & $\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}$ & $\DD^1$ \\ \hline
+$\mathbf{\mathbf{g_i}^0}$ & $\grad(\diverg \mathbf{\mathbf{g_i}^0}) - \laplace \mathbf{\mathbf{g_i}^0} = \Lambda_i \mathbf{g_i}$ & $\HH^1_0$\\ \hline
 $\psi_i$ & $-\laplace \psi_i = 0$ & $\HH^1$\\ \hline
 \end{tabular}
 \end{center}
@@ -121,21 +121,21 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \item $D^1$ est engendré par les fonctions propres de l'opérateur rotationnel.
 \item les fonctions propres de $\rot\star$ sont aussi celles de $\rott\star$.
 \item les valeurs propres de $\rot\star$ sont les racines carrées de celles de $\rott\star$.
-\item pour ne pas avoir de multiplicité > 1, on ne garde que les positives.
+\item pour ne pas avoir de multiplicité > 1, on ne garde que les positives : $\lambda_i=\sqrt{\Lambda_i}$
 \item le signe est porté par le coefficient $c_k$.
 \end{itemize}
 \end{block}
 \end{frame}
 
 \section{Fonctions propres}
-\begin{frame}{$\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}$}
+\begin{frame}{$\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}$}
 \begin{block}{Fonctions propres de $\rott\star$}
 \begin{itemize}
 \item Problème :
 \[
 \left\{
 \begin{aligned}
-&\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}\\
+&\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}\\
 &\mathbf{g_i}\cdot n\restr = 0\\
 &\rot \mathbf{g_i}\cdot n\restr = 0\\
 &\rott  \mathbf{g_i}\cdot n\restr = 0
@@ -144,7 +144,7 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \]
 \item Formulation variationnelle :
 \[
-\int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX
+\int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \Lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX
 \]
 \end{itemize}
 \end{block}
@@ -155,7 +155,7 @@ $\rott\star\cdot n\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \begin{center}
 \begin{tabular}{c|ccccc}
 & $\mathbf{g_i}$ & = & $\mathbf{\mathbf{g_i}^0}$ & + & $\grad\psi_i$ \\ \hline
-$\rott\star$ & $\lambda_i \mathbf{g_i}$ & & $\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0}$ & & 0\\ \hline
+$\rott\star$ & $\Lambda_i \mathbf{g_i}$ & & $\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0}$ & & 0\\ \hline
 $\diverg\star$ & 0 & & $\diverg \mathbf{\mathbf{g_i}^0}$ & & $\laplace\psi_i$\\ \hline
 $\star\cdot n\restr$ & 0 & & 0 & & 0
 \end{tabular}
@@ -167,14 +167,14 @@ $\star\cdot n\restr$ & 0 & & 0 & & 0
 \[
 \left\{
 \begin{aligned}
-\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= \lambda_i \mathbf{g_i}\\
+\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= \Lambda_i \mathbf{g_i}\\
 \mathbf{\mathbf{g_i}^0}\restr &= 0
 \end{aligned}
 \right.
 \]
 \item Formulation variationnelle :
 \[
--\int_\Omega (\diverg \mathbf{\mathbf{g_i}^0})(\diverg\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\bm{\varphi} = \int_\Omega \lambda_i\mathbf{g_i}\bm{\varphi}
+-\int_\Omega (\diverg \mathbf{\mathbf{g_i}^0})(\diverg\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\bm{\varphi} = \int_\Omega \Lambda_i\mathbf{g_i}\bm{\varphi}
 \]
 \end{itemize}
 \end{block}
@@ -299,8 +299,8 @@ u\cdot n\restr &= \alpha_0
 \begin{column}{5cm}
 \begin{alertblock}{Inconvénients}
 \begin{itemize}
-\item[$-$] Problème plus complexe
 \item[$-$] Utilisation des éléments de Raviert-Thomas en 3D
+\item[$-$] Problème bien posé ?
 \end{itemize}
 \end{alertblock}
 \end{column}
@@ -470,18 +470,18 @@ Orthonormalisation de la base $(\mathbf{g_i})$ : $(\mathbf{g_i},\mathbf{g_k})=\d
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbeigen) at (12,-3) 
 {$\begin{aligned}
-\rott \mathbf{g_i} = \lambda_i^2\mathbf{g_i}\\
+\rott \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
 \mathbf{g_i}\cdot n\restr = 0\\
 \rot \mathbf{g_i}\cdot n\restr = 0\\
 \rott \mathbf{g_i}\cdot n\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=blue!50] (psi0) at (0,-6) {$\grad\psi_0$} ;
 \node[draw,scale=\taille,fill=blue!50] (b) at (4,-6) {$\rot \mathbf{b}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambda) at (11,-6) {$\lambda_i$} ;
+\node[draw,scale=\taille,fill=yellow!50] (lambda) at (11,-6) {$\Lambda_i$} ;
 \node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (16,-6) 
 {$\begin{aligned}
-\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} = \lambda_i \mathbf{g_i}\\
+\grad(\diverg \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} = \Lambda_i \mathbf{g_i}\\
 \mathbf{\mathbf{g_i}^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pba) at (2,-8) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi_0$} ;
@@ -554,18 +554,18 @@ $} ;
 \begin{tikzpicture}[scale=0.4] 
 \node[draw,scale=\taille,fill=gray!50] (pbeigen) at (9,-0.5)
 {$\begin{aligned}
-\rott \mathbf{g_i} = \lambda_i^2\mathbf{g_i}\\
+\rott \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
 \mathbf{g_i}\cdot n\restr = 0\\
 \rot \mathbf{g_i}\cdot n\restr = 0\\
 \rott \mathbf{g_i}\cdot n\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=green!50] (a0) at (0,-1.5) {$\alpha_0$} ;
 \node[draw,scale=\taille,fill=green!50] (a1) at (4,-1.5) {$\alpha_1$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambda) at (8,-3) {$\lambda_i$} ;
+\node[draw,scale=\taille,fill=yellow!50] (lambda) at (8,-3) {$\Lambda_i$} ;
 \node[draw,scale=\taille,fill=yellow!50] (gi) at (10,-3) {$\mathbf{g_i}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (14,-3)
 {$\begin{aligned}
-\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \lambda_i \mathbf{g_i}\\
+\grad(\diverg \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \Lambda_i \mathbf{g_i}\\
 \mathbf{g_i^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-3.5)
