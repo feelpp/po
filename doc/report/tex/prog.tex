@@ -1,8 +1,8 @@
-\section{Programmation}
+\chapter{Programmation}
 
 On programme la résolution de ce problème à l'aide de la bibliothèque Feel++. Pour commencer, on utilise une géomètrie d'un cylindre de rayon 0.05 et de longueur 0.5 (\ref{cylindre}).
-\subsection{Problème aux valeurs propres}
-\subsubsection{Valeurs et fonction propres}
+\section{Problème aux valeurs propres}
+\subsection{Valeurs et fonction propres}
 
 On va utiliser une classe \texttt{EigenProblem} acceptant des problèmes de plusieurs dimensions, dans notre cas le problème est de dimension 3.\\
 Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au programme que l'on utilise des simplexes, et que la maillage devra être fait de cette manière.\\
@@ -42,13 +42,13 @@ Enfin, pour visualiser les résultats, on utilise un élément d'un espace vecto
 
 Les résultats sont visibles dans le chapitre \ref{resModes}.
 
-\subsubsection{Décomposition}
+\subsection{Décomposition}
 
-\subsection{Relèvement}
+\section{Relèvement}
 
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
 
-\subsubsection{Gradient dans $\HH^1$}
+\subsection{Gradient dans $\HH^1$}
 \label{gradh1}
 
 Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors il faut utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$. Cela se traduit par le changement de formulation variationnelle suivant où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
@@ -77,12 +77,12 @@ Une fois le problème résolut, on veut projeter le gradient de $\psi^0$ sur $\L
 
 \lstinputlisting[linerange={gradpsi0}]{../../src/psi0.cpp}
 
-\subsubsection{Gradient dans $\HH(div)$}
+\subsection{Gradient dans $\HH(div)$}
 
-\subsubsection{Rotationnel}
+\subsection{Rotationnel}
 
-\subsection{Problème spectral}
+\section{Problème spectral}
 
-\subsection{Pression}
+\section{Pression}
 
 
