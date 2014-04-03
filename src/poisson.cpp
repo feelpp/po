@@ -7,6 +7,10 @@ Poisson::Poisson(mesh_ptrtype mesh, std::string f_s, std::string g_s):super()
     this->mesh = mesh;
     this->f_s = f_s;
     this->g_s = g_s;
+    if ( Environment::worldComm().isMasterRank() ){
+        std::cout << "-----Poisson-----" << std::endl;
+        std::cout << g_s << std::endl;
+    }
 }
 
 void
