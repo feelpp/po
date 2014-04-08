@@ -1,6 +1,5 @@
 #include <feel/feelalg/solvereigen.hpp>
 #include <feel/feelvf/vf.hpp>
-#include <feel/feelfilters/exporter.hpp>
 
 #include "eigen_curl.h"
 
@@ -15,11 +14,15 @@ Eigen_Curl::Eigen_Curl(bool needEigen, mesh_ptrtype mesh):super()
     this->psi = std::vector<mlElement_type>(nev, Mlh->element() );
     this->lambda = std::vector<double>(nev, 0 );
 
+    this->g0 = std::vector<vElement_type>(nev, Vh->element() );
+    this->gradu = std::vector<vElement_type>(nev, Vh->element() );
+    this->modebis = std::vector<vElement_type>(nev, Vh->element() );
+
     if(needEigen)
         run();
     else
         load_eigens();
-    decomp();
+    //decomp();
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "-----End Eigen-----" << std::endl;
 }
@@ -93,7 +96,20 @@ Eigen_Curl::run()
 
             double ag = a(modeTmp,modeTmp);
             double bg = b(modeTmp,modeTmp);
-            std::cout << ag << " " << bg << " " << ag/bg << std::endl;
+            if ( Environment::worldComm().isMasterRank() )
+                std::cout << ag << " " << bg << " " << ag/bg << std::endl;
+            double erreurEig = normL2(_range=elements(mesh),
+                                      _expr=curlv(g[i])-sqrt(lambda[i])*idv(g[i]) );
+            double di = integrate(elements(mesh), abs(divv(g[i]))).evaluate()(0,0);
+            /*auto cg = project(_space=Vh, _range=elements(mesh),
+              _expr=curlv(g[i]) );
+              double erreurEig5 = normL2(_range=elements(mesh),
+              _expr=curlv(curlv(cg))-lambda[i]*idv(g[i]) );
+            */
+
+            if ( Environment::worldComm().isMasterRank() )
+                std::cout << "curl-sqrt = " << erreurEig << " div = " << di << std::endl;
+
             i++;
             if(i>=nev)
                 break;
@@ -145,64 +161,42 @@ Eigen_Curl::decomp()
     auto a3 = form2( _test=Mlh, _trial=Mlh );
     auto l3 = form1( _test=Mlh );
 
-    //auto e = exporter(mesh);
-
     for(int i=0; i<nev; i++){
-        //e->add( (boost::format("mode-%1%")%i).str(), g[i] );
-
-        double erreurEig = normL2(_range=elements(mesh),
-                                  _expr=curlv(g[i])-sqrt(lambda[i])*idv(g[i]) );
-        double di = integrate(elements(mesh), abs(divv(g[i]))).evaluate()(0,0);
-        /*auto cg = project(_space=Vh, _range=elements(mesh),
-                          _expr=curlv(g[i]) );
-        double erreurEig5 = normL2(_range=elements(mesh),
-                                  _expr=curlv(curlv(cg))-lambda[i]*idv(g[i]) );
-        */
-
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "curl-sqrt = " << erreurEig << " div = " << di << std::endl;
-
-        auto g0 = Vh->element();
         auto vg0 = Vh->element();
         l2 = integrate( _range=elements(mesh),
-                        //_expr=lambda[i]*trans(idv(g[i]))*id(vg0) );
-                        _expr=trace(gradv(g[i])*trans(grad(vg0))) );
+                        //_expr=lambda[i]*inner(idv(g[i])),id(vg0)) );
+                        _expr=inner(gradv(g[i]), grad(vg0) ) );
         a2 = integrate( _range=elements(mesh),
-                        _expr=divt(g0)*div(vg0) );
+                        _expr=divt(g0[i])*div(vg0) );
         a2+= integrate( _range=elements(mesh),
-                        _expr=trace(gradt(g0)*trans(grad(vg0))) );
+                        _expr=inner(gradt(g0[i]), grad(vg0) ) );
         a2+= on( _range=boundaryfaces(mesh),
-                 _element=g0, _rhs=l2, _expr=cst(0.) );
-        a2.solve( _name="gi0", _rhs=l2, _solution=g0 );
-        //e->add( (boost::format("g0-%1%" ) % i ).str(), g0 );
+                 _element=g0[i], _rhs=l2, _expr=cst(0.) );
+        a2.solve( _name="gi0", _rhs=l2, _solution=g0[i] );
 
 
         auto psii = psi[i].template element<0>();
         auto psil = psi[i].template element<1>();
-        a3 = integrate( _range=elements(mesh), _expr=gradt(psii)*trans(grad(psii)) + id(psii)*idt(psil) + idt(psii)*id(psil) );
-        l3 = integrate( _range=elements(mesh), _expr=divv(g0)*id(psii) );
+        a3 = integrate( _range=elements(mesh), _expr=inner(gradt(psii),grad(psii)) + id(psii)*idt(psil) + idt(psii)*id(psil) );
+        l3 = integrate( _range=elements(mesh), _expr=divv(g0[i])*id(psii) );
         a3.solve( _name="psi", _rhs=l3, _solution=psi[i] );
-        //e->add( (boost::format("psi-%1%" )%i ).str(), psi[i]);
 
 
-        auto gradu = Vh->element();
+        auto gv = Vh->element();
         auto c = form2( _trial=Vh, _test=Vh );
-        c = integrate( _range=elements(mesh), _expr=trans(idt(gradu))*id(gradu));
+        c = integrate( _range=elements(mesh), _expr=inner(idt(gradu[i]),id(gv)) );
         auto f = form1( _test=Vh );
-        f = integrate( _range=elements(mesh), _expr=gradv( psi[i].template element<0>() )*id(gradu));
-        c.solve( _name="gradpsi", _rhs=f, _solution=gradu );
-        //e->add( (boost::format( "gradpsi-%1%" ) % i ).str(), gradu );
+        f = integrate( _range=elements(mesh), _expr=gradv( psi[i].template element<0>() )*id(gv));
+        c.solve( _name="gradpsi", _rhs=f, _solution=gradu[i] );
 
-        auto gb = vf::project( _space=Vh, _range=elements(mesh),
-                               _expr=idv(g0)+idv(gradu) );
-        //e->add( ( boost::format( "modebis-%1%" ) % i ).str(), gb);
+        modebis[i] = vf::project( _space=Vh, _range=elements(mesh),
+                               _expr=idv(g0[i])+idv(gradu[i]) );
 
-        double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(gb) );
+        double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(modebis[i]) );
         double nG = normL2( elements(mesh), idv(g[i]) );
-        double nG0 = normL2( elements(mesh), idv(g0) );
-        double nPsi = normL2( elements(mesh), idv(gradu) );
+        double nG0 = normL2( elements(mesh), idv(g0[i]) );
+        double nPsi = normL2( elements(mesh), idv(gradu[i]) );
         if ( Environment::worldComm().isMasterRank() )
             std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << " ||g|| = " << nG << " ||g0|| = " << nG0 << " ||psi|| = " << nPsi << std::endl;
     }
-    // e->save();
 }

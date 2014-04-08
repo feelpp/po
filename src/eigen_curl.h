@@ -52,6 +52,10 @@ class Eigen_Curl : public Application
     std::vector<double> lambda;
     std::vector<mlElement_type> psi;
 
+    std::vector<vElement_type> g0;
+    std::vector<vElement_type> gradu;
+    std::vector<vElement_type> modebis;
+
     Eigen_Curl(bool, mesh_ptrtype);
     void run();
     void load_eigens();

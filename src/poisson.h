@@ -1,8 +1,8 @@
 /*
-  -laplace(u) = f
+  -laplace(u) = 0
   grad(u).n = g
 
-  int_O grad(u)*grad(v) + u*nu + v*lambda = int_O f*v + int_pO g*v
+  int_O grad(u)*grad(v) + u*nu + v*lambda = int_pO g*v
   use of Lagrange multipliers int_0 u = 0
  */
 #ifndef __POISSON_H
@@ -31,12 +31,11 @@ class Poisson : public Application
     mlElement_type U;
     element_type gradu;
 
-    Poisson(mesh_ptrtype, std::string, std::string);
+    Poisson(mesh_ptrtype, std::string);
     void run();
 
  private:
     mesh_ptrtype mesh;
-    std::string f_s;
     std::string g_s;
 };
 

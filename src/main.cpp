@@ -7,6 +7,7 @@
 #include "poisson.h"
 #include "eigen_curl.h"
 #include "darcy.h"
+#include "spectralproblem.h"
 
 using namespace Feel;
 
@@ -16,12 +17,12 @@ makeOptions()
 {
     po::options_description myappOptions( "PlasticOmnium options" );
     myappOptions.add_options()
-        ( "rayon", po::value<double>()->default_value( 0.05 ), "rayon" )
-        ( "vitesse", po::value<double>()->default_value( 0.015 ), "vitesse moyenne d'entree" )
-        ( "alpha0", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x*x + y*y) / (rayon * rayon))" ), "alpha0, depend de x,y,rayon,vitesse" )
+        ( "radius", po::value<double>()->default_value( 0.05 ), "cylinder's radius" )
+        ( "speed", po::value<double>()->default_value( 0.015 ), "average speed" )
+        ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends of x,y,radius,speed" )
         ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
-        ( "needEigen", po::value<bool>()->default_value( false ), "le besoin de recalculer les fonctions propres" )
-        ( "nbApp", po::value<int>()->default_value( 0 ), "numero de l'app a lancer" );
+        ( "needEigen", po::value<bool>()->default_value( true ), "need to compute the eigen modes or to load them" )
+        ( "nbApp", po::value<int>()->default_value( 0 ), "app to launch (0:Poisson, 1:Eigen problem, 2:Darcy)" );
     return myappOptions;
 }
 
@@ -38,7 +39,7 @@ makeLibOptions()
 AboutData
 makeAbout()
 {
-    Feel::AboutData about( "po_app","po_app" );
+    Feel::AboutData about( "po_app", "po_app" );
     about.addAuthor( "Romain Hild", "", "romain.hild@plasticomnium.com", "" );
     return about;
 }
@@ -51,29 +52,53 @@ main( int argc, char **argv )
                      _desc_lib=makeLibOptions(),
                      _about=makeAbout() );
 
-    auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
+    fs::path mypath(option( _name="gmsh.filename" ).as<std::string>());
+    std::string meshPartName = ( boost::format( "%1%/%2%_part%3%.msh" )
+                                 %Environment::localGeoRepository()
+                                 %mypath.stem().string()
+                                 %Environment::numberOfProcessors() ).str();
+
+    boost::shared_ptr<Mesh<Simplex<3> > > mesh;
+    if(option(_name="needEigen").as<bool>())
+        mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
+                         _rebuild_partitions=true,
+                         _rebuild_partitions_filename=meshPartName );
+    else
+        mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
+                         _filename=meshPartName );
+
+    //auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
     auto e = exporter( _mesh=mesh );
 
     switch(option(_name="nbApp").as<int>()){
     case 0:{
-        Poisson p1 = Poisson(mesh, "0.", option(_name="alpha0").as<std::string>() );
-        p1.run();
-        e->add( "grad_u", p1.gradu );
-        e->save();
-        break;
+      Poisson p1 = Poisson(mesh, option(_name="alpha0").as<std::string>() );
+      p1.run();
+      e->add( "grad_u", p1.gradu );
+      e->save();
+      break;
     }
     case 1:{
-        Eigen_Curl eig = Eigen_Curl(option(_name="needEigen").as<bool>(), mesh);
-        break;
+      Eigen_Curl eig = Eigen_Curl(option(_name="needEigen").as<bool>(), mesh);
+      for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+        e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig.g[i] );
+        e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig.g0[i] );
+        e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig.gradu[i] );
+        e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig.modebis[i] );
+      }
+      e->save();
+      break;
     }
     case 2:{
-        Darcy d = Darcy(mesh,  option(_name="alpha0").as<std::string>() );
-        d.run();
-        e->add( "psiDiv", d.U );
-        e->save();
+      Darcy d = Darcy(mesh,  option(_name="alpha0").as<std::string>() );
+      d.run();
+      e->add( "psiDiv", d.U );
+      e->save();
+      break;
+    }
+    default:
         break;
     }
-    }
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "-----End-----" << std::endl;
+      std::cout << "-----End-----" << std::endl;
 }
