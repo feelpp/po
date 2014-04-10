@@ -6,16 +6,16 @@ Darcy::Darcy(mesh_ptrtype mesh, std::string g_s):super()
 {
     this->mesh = mesh;
     this->g_s = g_s;
-    if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "-----Darcy-----" << std::endl;
-        std::cout << g_s << std::endl;
-    }
-
 }
 
 void
 Darcy::run()
 {
+    if ( Environment::worldComm().isMasterRank() ){
+        std::cout << "-----Darcy-----" << std::endl;
+        std::cout << g_s << std::endl;
+    }
+
     auto vars = Symbols{ "x", "y", "radius", "speed" };
     auto g_e = parse( this->g_s, vars );
     auto g = expr( g_e, vars );

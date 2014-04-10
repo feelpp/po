@@ -10,6 +10,7 @@
 #include "spectralproblem.h"
 
 using namespace Feel;
+using namespace Eigen;
 
 inline
 po::options_description
@@ -19,8 +20,12 @@ makeOptions()
     myappOptions.add_options()
         ( "radius", po::value<double>()->default_value( 0.05 ), "cylinder's radius" )
         ( "speed", po::value<double>()->default_value( 0.015 ), "average speed" )
+        ( "nu", po::value<double>()->default_value( 1.56e-5 ), "nu" )
+        ( "Re", po::value<double>()->default_value( 1 ), "Reynolds" )
         ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends of x,y,radius,speed" )
         ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
+        ( "alpha2", po::value<std::string>()->default_value( "0." ), "alpha2, (0.)" )
+        ( "f", po::value<std::string>()->default_value( "0." ), "f" )
         ( "needEigen", po::value<bool>()->default_value( true ), "need to compute the eigen modes or to load them" )
         ( "nbApp", po::value<int>()->default_value( 0 ), "app to launch (0:Poisson, 1:Eigen problem, 2:Darcy)" );
     return myappOptions;
@@ -67,38 +72,48 @@ main( int argc, char **argv )
         mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
                          _filename=meshPartName );
 
-    //auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
+    Poisson p0 = Poisson( mesh, option( _name="alpha0" ).as<std::string>() );
+    Eigen_Curl eig = Eigen_Curl( mesh );
+    Darcy d = Darcy( mesh, option( _name="alpha0" ).as<std::string>() );
+    SpectralProblem sp = SpectralProblem( mesh );
+
     auto e = exporter( _mesh=mesh );
 
     switch(option(_name="nbApp").as<int>()){
     case 0:{
-      Poisson p1 = Poisson(mesh, option(_name="alpha0").as<std::string>() );
-      p1.run();
-      e->add( "grad_u", p1.gradu );
-      e->save();
-      break;
+        p0.run();
+        e->add( "grad_u", p0.gradu );
+        e->save();
+        break;
     }
     case 1:{
-      Eigen_Curl eig = Eigen_Curl(option(_name="needEigen").as<bool>(), mesh);
-      for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
-        e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig.g[i] );
-        e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig.g0[i] );
-        e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig.gradu[i] );
-        e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig.modebis[i] );
-      }
-      e->save();
-      break;
+        eig.run();
+        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig.g[i] );
+            e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig.g0[i] );
+            e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig.psi[i] );
+            e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig.gradu[i] );
+            e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig.modebis[i] );
+        }
+        e->save();
+        break;
     }
     case 2:{
-      Darcy d = Darcy(mesh,  option(_name="alpha0").as<std::string>() );
-      d.run();
-      e->add( "psiDiv", d.U );
-      e->save();
-      break;
+        d.run();
+        e->add( "psiDiv", d.U );
+        e->save();
+        break;
+    }
+    case 3:{
+        p0.run();
+        eig.run();
+        sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
+        sp.run();
+        break;
     }
     default:
         break;
     }
     if ( Environment::worldComm().isMasterRank() )
-      std::cout << "-----End-----" << std::endl;
+        std::cout << "-----End-----" << std::endl;
 }

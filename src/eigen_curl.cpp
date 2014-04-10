@@ -3,7 +3,7 @@
 
 #include "eigen_curl.h"
 
-Eigen_Curl::Eigen_Curl(bool needEigen, mesh_ptrtype mesh):super()
+Eigen_Curl::Eigen_Curl( mesh_ptrtype mesh ):super()
 {
     this->nev = option(_name="solvereigen.nev").template as<int>();
     this->ncv = option(_name="solvereigen.ncv").template as<int>();
@@ -18,17 +18,22 @@ Eigen_Curl::Eigen_Curl(bool needEigen, mesh_ptrtype mesh):super()
     this->gradu = std::vector<vElement_type>(nev, Vh->element() );
     this->modebis = std::vector<vElement_type>(nev, Vh->element() );
 
-    if(needEigen)
-        run();
+}
+
+void
+Eigen_Curl::run()
+{
+    if( option( _name="needEigen").as<bool>() )
+        compute_eigens();
     else
         load_eigens();
-    //decomp();
+    decomp();
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "-----End Eigen-----" << std::endl;
 }
 
 void
-Eigen_Curl::run()
+Eigen_Curl::compute_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
         std::cout << "-----Eigen Problem-----" << std::endl;

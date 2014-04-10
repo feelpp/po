@@ -1,51 +1,108 @@
+#include <feel/feelvf/vf.hpp>
+
 #include "spectralproblem.h"
 
-SpectralProblem::SpectralProblem(mesh_ptrtype mesh):super(),M_backend( backend_type::build( this->vm() ) )
+using namespace Eigen;
+
+SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
 {
     this->mesh = mesh;
-    n = option(_name="nev").as<int>();
-    c = vector_1_double( n, 0);
-    m = vector_2_double( n, vector_1_double(n, 0));
-    lambda = vector_1_double( n, 0);
-    // auto g = std::vector<element_type>(n, element);
-    Riak = vector_2_double(n, vector_1_double(n, 0));
-    Rijk = vector_3_double(n, vector_2_double(n, vector_1_double(n, 0) ) );
-    // M_backend->nlSolver()->residual =
-    //     boost::bind( &self_type::updateResidual, boost::ref( *this ), _1, _2 );
-    // M_backend->nlSolver()->jacobian =
-    //     boost::bind( &self_type::updateJacobian, boost::ref( *this ), _1, _2 );
+    Vh = space_vtype::New( mesh );
+    Sh = space_stype::New( mesh );
+
+    M = option( _name="solvereigen.nev" ).as<int>();
+    j = MatrixXd(M,M);
+    f = VectorXd(M);
+    c = VectorXd(M);
+
+    fa = Vh->element();
+    alpha2 = option( _name="alpha2" ).as<std::string>();
+    Re = option( _name="Re" ).as<double>(); // 2.*radius*speed/nu
+
 }
 
-void SpectralProblem::updateResidual( const vector_ptrtype& X, vector_ptrtype& R )
+void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> L, element_vtype A )
 {
+    for(int i = 0; i < M; i++)
+        lambda(i) = L[i];
+    g = G;
+    psi = P;
+    a = A;
+
+    initRiak();
+    initRijk();
+    initRfk();
+    initRpk();
+
+    c = VectorXd::Ones(M);
 }
-void SpectralProblem::updateJacobian( const vector_ptrtype& X, sparse_matrix_ptrtype& J)
+
+void SpectralProblem::initRiak()
 {
+    Riak(M,M);
+    for(int i = 0; i< M ; i++)
+        for(int k = 0; k < M; k++)
+            Riak(i,k) = integrate( _range=elements( mesh ),
+                                   _expr=inner(cross( idv(g[i]), idv(a) ), idv(g[k]) ) ).evaluate()(0,0)*lambda[i];
+
+}
+
+void SpectralProblem::initRijk()
+{
+    Rijk(M,1);
+    for(int k = 0; k < M; k++){
+        Rijk(k) = MatrixXd(M,M);
+        for(int i = 0; i < M; i++)
+            for(int j = 0; j < M; j++)
+                Rijk(k)(i,j) = integrate( _range=elements( mesh ),
+                                           _expr=inner(cross( idv(g[i]), idv(g[j]) ), idv(g[k]) ) ).evaluate()(0,0)*lambda[i];
+    }
+}
+
+void SpectralProblem::initRfk()
+{
+    // f as an expression, h = project(Vh, f-idv(a)) ?
+    Rfk = VectorXd(M);
+    for(int k = 0; k < M; k++)
+        Rfk(k) = integrate( _range=elements( mesh ),
+                            _expr=inner( idv(fa), idv(g[k]) ) ).evaluate()(0,0);
+}
+
+void SpectralProblem::initRpk()
+{
+    auto vars = Symbols{ "x", "y", "z" };
+    auto alpha_e = parse( this->alpha2, vars );
+    auto alpha = expr( alpha_e, vars );
+
+    Rpk = VectorXd(M);
+    for(int k = 0; k < M; k++)
+        Rpk(k) = integrate( _range=elements( mesh ),
+                            _expr=alpha*idv(psi[k].template element<0>()) ).evaluate()(0,0);
 }
 
 void SpectralProblem::run()
 {
-    auto Jacobian = [=](const vector_ptrtype& X, sparse_matrix_ptrtype& J){
-        double res;
-        for(int k=0; k < n; k++){
-            for(int i=0; i < n; i++){
-                res = 0;
-                if(i==k)
-                    res += lambda[i];
-                res += lambda[i]*Riak[i][k];
-                for(int j=0; j < n; j++){
-                    res += lambda[i]*c[j]*Rijk[i][j][k];
-                    res += c[j]*lambda[j]*Rijk[j][i][k];
-                }
-                m[k][i]=res;
-            }
-        }
-    };
+    VectorXd dc = VectorXd::Ones(M);
+    double tol = 1.e-6;
+    HouseholderQR<MatrixXd> qr(M,M);
 
-    auto Residual = [=](const vector_ptrtype& X, vector_ptrtype& R){
-    };
+    int i;
+    for(i = 0; i < 10 && dc.norm() > tol; i++){
+        std::cout << "iteration : " << i << std::endl;
+        f = c.cwiseProduct(lambda)/Re + c*Riak  - Rfk - Rpk/Re;
+        for (int k = 0; k < M; k++)
+            f(k) += c.transpose()*Rijk(k)*c;
 
-    backend()->nlSolver()->residual =Residual;
-    backend()->nlSolver()->jacobian =Jacobian;
+        for (int k = 0; k < M; k++)
+            j.row(k) = Riak.row(k) + c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
+        j += lambda.asDiagonal();
+
+        qr.compute(j);
+        dc = qr.solve(-f);
+        c += dc;
+    }
+
+    if(i==10)
+        std::cout << "Newton does not converge\n";
 
 }

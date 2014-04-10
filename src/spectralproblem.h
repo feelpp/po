@@ -9,37 +9,65 @@
 
 #include <feel/feelcore/application.hpp>
 #include <feel/feeldiscr/functionspace.hpp>
-#include <feel/feelalg/backend.hpp>
+#include <contrib/eigen/Eigen/Dense>
 
 using namespace Feel;
 using namespace Feel::vf;
+using namespace Eigen;
 
 class SpectralProblem : public Application
 {
     typedef Application super;
 
-    typedef Backend<double> backend_type;
-    typedef boost::shared_ptr<backend_type> backend_ptrtype;
     typedef Simplex<3> convex_type;
     typedef Mesh<convex_type> mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
-    typedef std::vector<double> vector_1_double;
-    typedef std::vector<std::vector<double> > vector_2_double;
-    typedef std::vector<std::vector<std::vector<double> > > vector_3_double;
 
-    backend_ptrtype M_backend;
+    typedef bases<Lagrange<2, Vectorial> > basis_vtype;
+    typedef FunctionSpace<mesh_type, basis_vtype > space_vtype;
+    typedef boost::shared_ptr<space_vtype> space_ptrvtype;
+    typedef space_vtype::element_type element_vtype;
+
+    typedef bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > basis_stype; // ML
+    typedef FunctionSpace<mesh_type, basis_stype > space_stype;
+    typedef boost::shared_ptr<space_stype> space_ptrstype;
+    typedef space_stype::element_type element_stype;
+
+    typedef std::vector<element_vtype> vector_vtype;
+    typedef std::vector<element_stype> vector_stype;
+
     mesh_ptrtype mesh;
-    vector_1_double c;
-    vector_2_double m;
-    vector_1_double lambda;
-    vector_2_double Riak;
-    vector_3_double Rijk;
-    int n;
+    space_ptrvtype Vh;
+    space_ptrstype Sh;
 
-    SpectralProblem(mesh_ptrtype);
-    void updateResidual( const vector_ptrtype& X, vector_ptrtype& R );
-    void updateJacobian( const vector_ptrtype& X, sparse_matrix_ptrtype& J);
+    int M;
+    MatrixXd j;
+    VectorXd f;
+
+    vector_vtype g;
+    VectorXd lambda;
+    vector_stype psi;
+    element_vtype a;
+    element_vtype fa;
+    std::string alpha2;
+    double Re;
+
+    MatrixXd Riak;
+    Matrix<MatrixXd, Dynamic, 1 > Rijk;
+    VectorXd Rfk;
+    VectorXd Rpk;
+
+    void initRiak();
+    void initRijk();
+    void initRfk();
+    void initRpk();
+
+ public:
+    SpectralProblem( mesh_ptrtype );
+    void init( vector_vtype, vector_stype, std::vector<double>, element_vtype );
     void run();
+
+    VectorXd c;
 };
 
 #endif

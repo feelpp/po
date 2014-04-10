@@ -56,8 +56,9 @@ class Eigen_Curl : public Application
     std::vector<vElement_type> gradu;
     std::vector<vElement_type> modebis;
 
-    Eigen_Curl(bool, mesh_ptrtype);
+    Eigen_Curl( mesh_ptrtype );
     void run();
+    void compute_eigens();
     void load_eigens();
     void decomp();
 
