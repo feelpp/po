@@ -9,7 +9,7 @@
 
 #include <feel/feelcore/application.hpp>
 #include <feel/feeldiscr/functionspace.hpp>
-#include <contrib/eigen/Eigen/Dense>
+#include <Eigen/Dense>
 
 using namespace Feel;
 using namespace Feel::vf;
@@ -68,6 +68,8 @@ class SpectralProblem : public Application
     void run();
 
     VectorXd c;
+    element_vtype u;
+    element_vtype v;
 };
 
 #endif
