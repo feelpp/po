@@ -1,0 +1,214 @@
+/*
+Packages
+*/
+load "msh3"
+
+/*
+Maillages 2D & 3D
+*/
+mesh3 Th;
+Th=readmesh3("HM_Cyl_lowRe__2.mesh");
+//Th=readmesh3("HM_Cyl_highRe_7.mesh");
+
+/*
+Espace EF
+*/
+fespace Vh1(Th,P1);
+fespace Vh2(Th,P2);
+fespace XVh4(Th,[P2,P1]);
+
+/*
+Curl2 Eigenproblem =>  lambda_k & g_k
+*/
+int nev=20,j=0;
+real shift=0.,div;
+real[int] ev(nev);
+Vh1 ph,qh;
+Vh2 uh3,vh3,tmp,res;
+XVh4[int] [g3,pnev](nev);
+varf aa([uh3,ph],[vh3,qh])=
+   int3d(Th)(dx(uh3)*dx(vh3)+dy(uh3)*dy(vh3)+dz(uh3)*dz(vh3)-shift*uh3*vh3)
+   +int3d(Th)(1.e-20*ph*qh)
+//   -int3d(Th)(dz(uh3)*qh)
+//   -int2d(Th,3)((dx(uh3)+dy(uh3))*vh3)
+//   +int3d(Th)((dx(uh3)+dy(uh3)+dz(uh3))*qh)         
+//   +int3d(Th)((dx(vh3)+dy(vh3)+dz(vh3))*ph)
+   +on(2,ph=0.)
+    +on(1,2,3,uh3=0.);
+varf bb([uh3,ph],[vh3,qh])=
+   int3d(Th)(uh3*vh3)
+   +int3d(Th)(0.*ph*qh);
+matrix AA=aa(XVh4,XVh4,solver=UMFPACK,eps=1.e-20);
+matrix BB=bb(XVh4,XVh4,solver=CG,eps=1.e-20);
+int keig=EigenValue(AA,BB,sym=true,sigma=shift,value=ev,vector=g3,tol=1e-10,maxit=0,ncv=0);
+keig=min(nev,keig);
+
+{
+ ofstream out1("SPCLRALe___lamda_k-g_k.dat");
+ out1.scientific.showpos << "Divergence  Eigenvalue" << endl;
+ for(int i=0;i<keig;i++)
+   {
+    div=sqrt(int3d(Th)(dz(g3[i])*dz(g3[i])));
+    cout << div << "  " << ev[i] << endl;
+    plot(g3[i],cmm="Mode-"+j+" ",wait=1,value=1,ps="Mode-0"+j+"___.png",ShowAxes=0,CutPlane=0);    
+    j++;
+   }
+};
+
+/* /\* */
+/* Problème Graddiv-Laplacien & Problème Poisson  =>  g^0_k, psi_k & grad(psi_k) */
+/* *\/ */
+/* /\*real vrf; */
+/* Vh2 uw,vw,ug3,vg3; */
+/* Vh2[int] psi(nev),g03(nev),gdpsi3(nev); */
+/* for(int i=0;i<keig;i++) */
+/*   { */
+/*    problem GzeroK(ug3,vg3,solver=CG)= */
+/*       -int3d(Th)(dz(ug3)*dz(vg3)) */
+/*       +int3d(Th)(dx(ug3)*dx(vg3)+dy(ug3)*dy(vg3)+dz(ug3)*dz(vg3)) */
+/*       -int3d(Th)(ev[i]*g3[i]*vg3)       */
+/*       +on(1,2,3,ug3=0.); */
+/*    GzeroK; */
+/*    g03[i]=ug3; */
+/*    problem PsiK(uw,vw,solver=CG)= */
+/*       int3d(Th)(dx(uw)*dx(vw)+dy(uw)*dy(vw)+dz(uw)*dz(vw))    */
+/*       -int3d(Th)(dz(g03[i])*vw); */
+/*    PsiK; */
+/*    psi[i]=uw; */
+/*    gdpsi3[i]=dz(uw); */
+/*   } */
+/* /\*{ */
+/*  ofstream out2("SPCLRALd___g0_k-psi_k.dat"); */
+/*  out2.scientific.showpos << "Error" << endl; */
+/*  for(int i=0;i<keig;i++) */
+/*    { */
+/*     vrf=int3d(Th)((g3[i]-(g03[i]+gdpsi3[i]))*(g3[i]-(g03[i]+gdpsi3[i]))); */
+/*     out2.scientific.showpos << vrf << endl; */
+/*   } */
+/* }; */
+
+/* /\* */
+/* STOKES : problème linéaire  =>  cz_k */
+/* *\/ */
+/* /\*real[int] alz(nev),alpsz(nev),ggz(nev),cz(nev); */
+/* Vh2 fsm3=0.; */
+/* { */
+/*  ofstream out3("SPCLRALd___cz_k_turb.dat"); */
+/*  out3 << "cz_k" << endl; */
+/*  for(int i=0;i<keig;i++) */
+/*    { */
+/* //    alz[i]=int2d(Th,1)(-alpha0(x,y)/Vmax*psi[i])+int2d(Th,2)(alpha0(x,y)/Vmax*psi[i]); */
+/*     alz[i]=int2d(Th,1)(-turb0(x,y)/Vmax*psi[i])+int2d(Th,2)(turb0(x,y)/Vmax*psi[i]); */
+/* //    alpsz[i]=int2d(Th,1)(-diam^2/Vmax*alpha2()*psi[i])+int2d(Th,2)(diam^2/Vmax*alpha2()*psi[i]); */
+/*     alpsz[i]=int2d(Th,1)(-diam^2/Vmax*turb2(x,y)*psi[i])+int2d(Th,2)(diam^2/Vmax*turb2(x,y)*psi[i]); */
+/*     ggz[i]=int3d(Th)(Re/2.*fsm3*g3[i]);    */
+/*     cz[i]=-(alpsz[i]-ggz[i]-alz[i])/ev[i];    */
+/*     out3.scientific.showpos << i << "  " << cz[i] << "  " << endl; */
+/*    } */
+/* }; */
+
+/* /\* */
+/* Solution du problème  =>  u */
+/* *\/ */
+/* /\*Vh2 u3=0.; */
+/* for(int i=0;i<nev;i++) */
+/*   { */
+/*    u3=u3+cz[i]/ray^2*g3[i]*Vmoy; */
+/*   } */
+/* //plot(u3,cmm="sim_flow_0",wait=1,value=1); */
+/* plot(u3,cmm="Velocity magnitude",wait=1,value=1,ShowAxes=0,CutPlane=1); */
+
+/* /\* */
+/* Champ de pression associé => p */
+/* *\/ */
+/* /\*Vh1 pres,qres; */
+/* problem Pression(pres,qres,solver=CG)= */
+/*    int3d(Th)(dx(pres)*dx(qres)+dy(pres)*dy(qres)+dz(pres)*dz(qres)) */
+/*    -int2d(Th,1)(alpha2()/Re*qres) */
+/*    +on(2,pres=0.); */
+/* Pression; */
+/* //plot(pres,cmm="sim_pres",wait=1,value=1); */
+/* plot(pres,cmm="Pressure",wait=1,value=1,ShowAxes=0,CutPlane=0); */
+
+/* /\* */
+/* Test */
+/* *\/ */
+/* /\*Vh1 sqv=fwlRe3*fwlRe3; */
+/* Vh2 gsqv1,gsqv2,gsqv3,gsqvh1,gsqvh2,gsqvh3; */
+/* problem GradSQV1(gsqv1,gsqvh1,solver=CG)= */
+/*    int3d(Th)(gsqv1*gsqvh1) */
+/*    -int3d(Th)(dx(sqv)*gsqvh1); */
+/* GradSQV1; */
+/* problem GradSQV2(gsqv2,gsqvh2,solver=CG)= */
+/*    int3d(Th)(gsqv2*gsqvh2) */
+/*    -int3d(Th)(dy(sqv)*gsqvh2); */
+/* GradSQV2; */
+/* problem GradSQV3(gsqv3,gsqvh3,solver=CG)= */
+/*    int3d(Th)(gsqv3*gsqvh3) */
+/*    -int3d(Th)(dz(sqv)*gsqvh3); */
+/* GradSQV3; */
+/* Vh1 press,pressh; */
+/* problem PoissonP(press,pressh,solver=CG)= */
+/*    int3d(Th)(dx(press)*dx(pressh)+dy(press)*dy(pressh)+dz(press)*dz(pressh)) */
+/*    +int3d(Th)((Re/2.)*(dx(gsqv1)+dy(gsqv2)+dz(gsqv3))*pressh) */
+/*    +on(2,press=0.); */
+/* PoissonP; */
+
+/* press=press/2039.8*2.949; */
+/* plot(press,cmm="Pressure",wait=1,value=1,ShowAxes=0,CutPlane=0); */
+
+/* /\* */
+/* Solution initiale */
+/* *\/ */
+/* /\*Vh2 u3=dirac(z); */
+
+/* /\* */
+/* Evolution en temps par méthode Runge-Kutta ordre 2 */
+/* *\/ */
+/* //int iter=T/h; */
+/* /\*int iter=50; */
+/* Vh2 u3np12,u3n,u3ndrvz,u3np12drvz; */
+/* u3n=u3; */
+/* plot(u3n,cmm="sim_flow_0 ",wait=1,value=1); */
+/* for(int i=1;i<iter+1;i++) */
+/*   { */
+/*    u3ndrvz=dz(u3n); */
+/*    u3np12=u3n+h/2*(dz(u3ndrvz)/Re-dz(pres)); */
+/*    u3np12drvz=dz(u3np12); */
+/*    u3n=u3n+h*(dz(u3np12drvz)/Re-dz(pres)); */
+/*    plot(u3n,cmm="sim_flow_"+i+" ",wait=1,value=1); */
+/*   } */
+
+/* /\* */
+/* Evolution en temps par méthode Runge-Kutta ordre 4 */
+/* *\/ */
+/* //int iter=T/h; */
+/* /\*int iter=5; */
+/* Vh2 ik1,ik2,ik3,ik4,k1,k2,k3,k4,u3n; */
+/* u3n=u3; */
+/* plot(u3n,cmm="sim_flow_0 ",wait=1,value=1); */
+/* for(int i=1;i<iter+1;i++) */
+/*   { */
+/*    ik1=dz(u3n); */
+/*    k1=dz(ik1)/Re-dz(pres); */
+/*    ik2=dz(u3n)+h/2*dz(k1); */
+/*    k2=dz(ik2)/Re-dz(pres); */
+/*    ik3=dz(u3n)+h/2*dz(k2); */
+/*    k3=dz(ik3)/Re-dz(pres); */
+/*    ik4=dz(u3n)+h*dz(k3); */
+/*    k4=dz(ik4)/Re-dz(pres); */
+/*    u3n=u3n+h/6*(k1+2*k2+2*k3+k4); */
+/* //   u3n=u3n+h/6*((dz(ik1)/Re-dz(pres))+2*k2+2*k3+k4); */
+/* //   plot(u3n,cmm="sim_flow_"+i+" ",wait=1,value=1); */
+/*   } */
+/* plot(u3n,cmm="sim_flow_"+iter+" ",wait=1,value=1); */
+
+
+
+/* ************************************************************************\/ */
+
+
+
+/* /\* */
+/* THE END :) */
+/* *\/ */
