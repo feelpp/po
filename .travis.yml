@@ -13,7 +13,6 @@ before_install:
   imagemagick libtbb-dev libann-dev libglpk-dev
 - sudo apt-get install libfeel++-dev
 install:
-- if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq clang-3.3; fi
 - if [ "$CXX" = "clang++" ]; then export CXX="/usr/bin/clang++" CC="/usr/bin/clang";
   fi
 - mkdir opt && cd opt && ../configure -f
