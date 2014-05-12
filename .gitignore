@@ -22,3 +22,17 @@
 /doc/Presentation/*.snm
 /doc/Presentation/*.nav
 *~
+/doc/rapport/rapport.aux
+/doc/rapport/rapport.log
+/doc/rapport/rapport.out
+/doc/rapport/rapport.pdf
+/doc/rapport/rapport.toc
+/doc/report/auto/mystyle.el
+/doc/report/auto/note.el
+/doc/report/auto/ref.el
+/doc/report/auto/report.el
+/doc/report/tex/auto/note.el
+/doc/report/tex/auto/probleme.el
+/doc/report/tex/note.log
+/doc/report/tex/note.pdf
+/doc/report/tex/probleme.log
