@@ -101,8 +101,10 @@ La partie difficile est donc repoussé à trouver les coefficients $c_i$.
 \begin{tikzpicture}[scale=\taille]
 \node[draw,scale=\taille,fill=green!50] (a0) at (0,0) {$\alpha_0$} ;
 \node[draw,scale=\taille,fill=green!50] (a1) at (4,0) {$\alpha_1$} ;
+\node[scale=\taille] at(0,-2) {\ref{psi0}} ;
 \node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-2) 
-{$\begin{aligned}
+{$
+\begin{aligned}
 -\laplace\psi_0&=0\\
 \grad\psi_0\cdot \mathbf{n}\restr &= \alpha_0
 \end{aligned}$} ;
@@ -298,6 +300,7 @@ $\star\cdot \mathbf{n}\restr$ & 0 & & 0 & & 0
 
 \section{Relèvement}
 \begin{frame}{$\mathbf{a}=\grad\psi_0+\rot \mathbf{b}$}
+\label{psi0}
 \begin{block}{Décomposition de $\mathbf{a}$}
 \begin{center}
 \begin{tabular}{c|ccccc}
