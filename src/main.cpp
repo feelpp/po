@@ -6,8 +6,10 @@
 
 #include "poisson.h"
 #include "eigen_curl.h"
+#include "eigenlap.h"
 #include "darcy.h"
 #include "spectralproblem.h"
+#include "eigenlapZ.h"
 
 using namespace Feel;
 using namespace Eigen;
@@ -20,14 +22,19 @@ makeOptions()
     myappOptions.add_options()
         ( "radius", po::value<double>()->default_value( 0.05 ), "cylinder's radius" )
         ( "speed", po::value<double>()->default_value( 0.015 ), "average speed" )
-        ( "nu", po::value<double>()->default_value( 1.56e-5 ), "nu" )
-        ( "Re", po::value<double>()->default_value( 1 ), "Reynolds" )
-        ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends of x,y,radius,speed" )
+        ( "nu", po::value<double>()->default_value( 1.56e-5 ), "viscosity" )
+        ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
         ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
-        ( "alpha2", po::value<std::string>()->default_value( "0." ), "alpha2, (0.)" )
-        ( "f", po::value<std::string>()->default_value( "0." ), "f" )
+        ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
+        ( "penal", po::value<double>()->default_value( 1e-6 ), "penalization" )
+        ( "bc", po::value<double>()->default_value( 0. ), "boundary condition for eigenlapZ" )
         ( "needEigen", po::value<bool>()->default_value( true ), "need to compute the eigen modes or to load them" )
-        ( "nbApp", po::value<int>()->default_value( 0 ), "app to launch (0:Poisson, 1:Eigen problem, 2:Darcy)" );
+        ( "needDecomp", po::value<bool>()->default_value( false ), "need to decompose the eigen modes" )
+        ( "testBessel", po::value<bool>()->default_value( false ), "test the third composante using Bessel functions" )
+        ( "k", po::value<double>()->default_value( 0.0 ), "k-th Bessel function" )
+        ( "j", po::value<int>()->default_value( 1 ), "j-th Bessel's root" )
+        ( "m", po::value<int>()->default_value( 1 ), "m-th triple index" )
+        ( "nbApp", po::value<int>()->default_value( 0 ), "app to launch (0:Poisson, 1:eigencurl, 2:darcy 3:spectral problem, 4:eigenlap 5:eigenlapZ)" );
     return myappOptions;
 }
 
@@ -36,7 +43,7 @@ makeLibOptions()
 {
     po::options_description libOptions( "Lib options" );
     libOptions.add( backend_options( "psi0" ) ).add( backend_options( "gradpsi0" ) ); // Poisson
-    libOptions.add( backend_options( "gi0" ) ).add( backend_options( "psi" ) ).add( backend_options( "gradpsi" ) ); // Eigen_Curl
+    libOptions.add( backend_options( "gi0" ) ).add( backend_options( "psi" ) ).add( backend_options( "gradpsi" ) ).add( backend_options( "curl" ) ); // Eigen_Curl
     libOptions.add( backend_options( "psi0Div" ) ); // Darcy
     return libOptions.add( feel_options() );
 }
@@ -74,6 +81,8 @@ main( int argc, char **argv )
 
     Poisson p0 = Poisson( mesh, option( _name="alpha0" ).as<std::string>() );
     Eigen_Curl eig = Eigen_Curl( mesh );
+    EigenLap eig2 = EigenLap( mesh );
+    EigenLapZ eig3 = EigenLapZ( mesh );
     Darcy d = Darcy( mesh, option( _name="alpha0" ).as<std::string>() );
     SpectralProblem sp = SpectralProblem( mesh );
 
@@ -106,9 +115,38 @@ main( int argc, char **argv )
     }
     case 3:{
         p0.run();
-        eig.run();
-        sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
+        eig3.run();
+        sp.init( eig3.g, eig3.psi, eig3.lambda, p0.gradu );
         sp.run();
+        e->add( "u", sp.u );
+        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++)
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig3.g[i] );
+        e->add( "a", p0.gradu );
+        e->save();
+        break;
+    }
+    case 4:{
+        eig2.run();
+        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig2.g[i] );
+            e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig2.g0[i] );
+            e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig2.psi[i] );
+            e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig2.gradu[i] );
+            e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig2.modebis[i] );
+        }
+        e->save();
+        break;
+    }
+    case 5:{
+        eig3.run();
+        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig3.g[i] );
+            e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig3.g0[i] );
+            e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig3.psi[i] );
+            e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig3.gradu[i] );
+            e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig3.modebis[i] );
+        }
+        e->save();
         break;
     }
     default:

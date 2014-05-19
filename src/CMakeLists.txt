@@ -25,5 +25,5 @@
 #feelpp_add_application( po_psi0 SRCS psi0.cpp CFG po_psi0.cfg )
 #feelpp_add_application( po_mode_gen_curl SRCS mode_gen_curl.cpp CFG po_mode_gen_curl.cfg )
 #feelpp_add_application( po_psi0Div SRCS psi0Div.cpp CFG po_psi0Div.cfg )
-feelpp_add_application( po_app SRCS main.cpp poisson.h poisson.cpp eigen_curl.h eigen_curl.cpp eigenlap.h eigenlap.cpp darcy.h darcy.cpp spectralproblem.h spectralproblem.cpp CFG po_app.cfg )
+feelpp_add_application( po_app SRCS main.cpp poisson.h poisson.cpp eigen_curl.h eigen_curl.cpp eigenlap.h eigenlap.cpp eigenlapZ.h eigenlapZ.cpp darcy.h darcy.cpp spectralproblem.h spectralproblem.cpp CFG po_app.cfg )
 feelpp_add_application( po_stokes SRCS eigenstokes.cpp CFG po_stokes.cfg )

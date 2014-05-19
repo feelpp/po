@@ -15,9 +15,12 @@ SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
     f = VectorXd::Matrix(M);
     c = VectorXd::Matrix(M);
 
-    fa = Vh->element();
+    //fa_s = option( _name="function.f" ).as<std::string>();
     alpha2 = option( _name="alpha2" ).as<std::string>();
-    Re = option( _name="Re" ).as<double>(); // 2.*radius*speed/nu
+    double r = option( _name="radius" ).as<double>();
+    double s = option( _name="speed" ).as<double>();
+    double n = option( _name="nu" ).as<double>();
+    Re = 2*r*s/n;
 
 }
 
@@ -29,12 +32,13 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
     lambda = VectorXd::Matrix(M);
     for(int i = 0; i < M; i++)
         lambda(i) = L[i];
+
     g = G;
     psi = P;
     a = A;
 
-    initRiak();
-    initRijk();
+    // initRiak();
+    // initRijk();
     initRfk();
     initRpk();
 
@@ -49,7 +53,7 @@ void SpectralProblem::initRiak()
     for(int i = 0; i< M ; i++)
         for(int k = 0; k < M; k++){
             Riak(k,i) = integrate( _range=elements( mesh ),
-                                   _expr=inner(cross(idv(g[i]), idv(a)),idv(g[k])) ).evaluate()(0,0)*sqrt(lambda[i]);
+                                   _expr=inner(cross(idv(g[i]), idv(a)),idv(g[k])) ).evaluate()(0,0)*sqrt(lambda(i));
             if ( Environment::worldComm().isMasterRank() )
                 std::cout << "Rki(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
         }
@@ -77,72 +81,100 @@ void SpectralProblem::initRfk()
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Rfk -----" << std::endl;
-    // f as an expression, h = project(Vh, f-idv(a)) ?
+
+    // auto vars = Symbols{ "x", "y", "z" };
+    // auto fa_e = parse( this->fa_s, vars );
+    // auto fa = expr<3,1>( fa_e, vars );
+
+    auto ff = Vh->element();
+    ff = vf::project(_space=Vh, _range=elements(mesh),
+                     _expr=vec(cst(0.),cst(0.),cst(-9.81)) );
     Rfk = VectorXd::Matrix(M);
-    for(int k = 0; k < M; k++)
+    for(int k = 0; k < M; k++){
         Rfk(k) = integrate( _range=elements( mesh ),
-                            _expr=inner( idv(fa), idv(g[k]) ) ).evaluate()(0,0);
+                            _expr=inner( idv(ff), idv(g[k]) ) ).evaluate()(0,0);
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
+    }
 }
 
 void SpectralProblem::initRpk()
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Rpk -----" << std::endl;
-    auto vars = Symbols{ "x", "y", "z" };
-    auto alpha_e = parse( this->alpha2, vars );
-    auto alpha = expr( alpha_e, vars );
+
+    auto vars = Symbols{ "radius", "speed" };
+    auto a2_e = parse( this->alpha2, vars );
+    auto a2 = expr( a2_e, vars );
+    a2.setParameterValues( {
+            { "speed", option( _name="speed" ).template as<double>() },
+                { "radius", option( _name="radius" ).template as<double>() } } );
 
     Rpk = VectorXd::Matrix(M);
-    for(int k = 0; k < M; k++)
-        Rpk(k) = 0;
-        // Rpk(k) = integrate( _range=elements( mesh ),
-        //                     _expr=alpha*idv(psi[k].template element<0>()) ).evaluate()(0,0);
+    for(int k = 0; k < M; k++){
+        Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
+                            _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+        Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
+                             _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+                            //_expr=a2*idv(psi[k].template element<0>()) ).evaluate()(0,0);
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
+    }
 }
 
 void SpectralProblem::run()
 {
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "----- Start Spectral Problem -----" << std::endl;    
-    
-    VectorXd dc = VectorXd::Matrix(M);
-    double tol = 1.e-6;
-    HouseholderQR<MatrixXd> qr(M,M);
+        std::cout << "----- Start Spectral Problem -----" << std::endl;
 
-    int i=0;
-    do{
-        f = c.cwiseProduct(lambda)/Re + Riak*c - Rfk - Rpk/Re;
-        for (int k = 0; k < M; k++)
-            f(k) += c.transpose()*Rijk(k)*c;
+    // VectorXd dc = VectorXd::Matrix(M);
+    // double tol = 1.e-6;
+    // HouseholderQR<MatrixXd> qr(M,M);
 
-        for (int k = 0; k < M; k++)
-            j.row(k) = Riak.row(k) + c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
-        j += lambda.asDiagonal();
+    // int i=0;
+    // do{
+    //     f = c.cwiseProduct(lambda)/Re + Riak*c - Rfk - Rpk/Re;
+    //     for (int k = 0; k < M; k++)
+    //         f(k) += c.transpose()*Rijk(k)*c;
 
+    //     for (int k = 0; k < M; k++)
+    //         j.row(k) = Riak.row(k) + c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
+    //     j += lambda.asDiagonal();
+
+    //     if ( Environment::worldComm().isMasterRank() )
+    //         std::cout << "j = " << j << std::endl << "f = " << f << std::endl;
+
+    //     qr.compute(j);
+    //     dc = qr.solve(-f);
+    //     c += dc;
+
+    //     if ( Environment::worldComm().isMasterRank() )
+    //         std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
+
+    //     if ( Environment::worldComm().isMasterRank() )
+    //         std::cout << c << std::endl;
+
+    //     i++;
+    // } while(i < 10 && dc.norm() > tol);
+
+    // if(i==10)
+    //     std::cout << "Newton does not converge\n";
+    // else{
+    //     u = Vh->element();
+    //     for( i = 0; i < M; i++){
+    //         u += vf::project( _space=Vh, _range=elements(mesh),
+    //                           _expr = c(i)*idv(g[i]) );
+    //     }
+    //     u += a;
+    // }
+    u = Vh->element();
+    for(int i=0; i<M; i++){
+        c(i) = (Rpk(i)+Re*Rfk(i))/lambda(i);
         if ( Environment::worldComm().isMasterRank() )
-            std::cout << "j = " << j << std::endl << "f = " << f << std::endl;
-
-        qr.compute(j);
-        dc = qr.solve(-f);
-        c += dc;
-
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
-
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << c << std::endl;
-
-        i++;
-    } while(i < 10 && dc.norm() > tol);
-
-    if(i==10)
-        std::cout << "Newton does not converge\n";
-    else{
-        u = Vh->element();
-        for( i = 0; i < M; i++){
-            u += vf::project( _space=Vh, _range=elements(mesh),
-                              _expr = c(i)*idv(g[i]) );
-        }
-        u += a;
+            std::cout << "c(" << i << ") = " << c(i) << std::endl;
+        u += vf::project( _space=Vh, _range=elements(mesh),
+                          _expr = c(i)*idv(g[i]) );
     }
-
+    // u += vf::project( _space=Vh, _range=elements(mesh),
+    //                   _expr = a );
 }

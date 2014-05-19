@@ -28,7 +28,8 @@ class SpectralProblem : public Application
     typedef boost::shared_ptr<space_vtype> space_ptrvtype;
     typedef space_vtype::element_type element_vtype;
 
-    typedef bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > basis_stype; // ML
+    //typedef bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > basis_stype; // ML
+    typedef bases<Lagrange<2, Scalar> > basis_stype;
     typedef FunctionSpace<mesh_type, basis_stype > space_stype;
     typedef boost::shared_ptr<space_stype> space_ptrstype;
     typedef space_stype::element_type element_stype;
@@ -48,7 +49,7 @@ class SpectralProblem : public Application
     VectorXd lambda;
     vector_stype psi;
     element_vtype a;
-    element_vtype fa;
+    std::string fa_s;
     std::string alpha2;
     double Re;
 
