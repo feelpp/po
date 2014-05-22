@@ -10,26 +10,26 @@ using namespace Feel::vf;
 class EigenLapZ : public Application
 {
     typedef Application super;
-    static const uint16_type Order = 2;
-    static const uint16_type Dim = 3;
 
  public:
-    typedef Simplex<Dim> convex_type;
+    typedef Simplex<3> convex_type;
     typedef Mesh<convex_type> mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-    typedef bases<Lagrange<Order, Scalar> > sBasis_type;
+    typedef bases<Lagrange<2, Scalar> > sBasis_type;
     typedef FunctionSpace<mesh_type, sBasis_type> sSpace_type;
     typedef sSpace_type::element_type sElement_type;
     typedef boost::shared_ptr<sSpace_type> sSpace_ptrtype;
 
-    typedef bases<Lagrange<Order, Vectorial> > vBasis_type;
+    typedef bases<Lagrange<2, Vectorial> > vBasis_type;
     typedef FunctionSpace<mesh_type, vBasis_type > vSpace_type;
     typedef vSpace_type::element_type vElement_type;
     typedef boost::shared_ptr<vSpace_type> vSpace_ptrtype;
 
-    typedef bases<Lagrange<Order, Scalar>, Lagrange<1, Scalar> > mlBasis_type;
+    // [typedef]
+    typedef bases<Lagrange<2, Scalar>, Lagrange<1, Scalar> > mlBasis_type;
     typedef FunctionSpace<mesh_type, mlBasis_type> mlSpace_type;
+    // [typedef]
 
     std::vector<vElement_type> g;
     std::vector<double> lambda;

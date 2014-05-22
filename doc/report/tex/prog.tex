@@ -1,6 +1,39 @@
-\chapter{Programmation}
+\chapter{Implémentation}
 
-On programme la résolution de ce problème à l'aide de la bibliothèque Feel++. Pour commencer, on utilise une géomètrie d'un cylindre de rayon 0.05 et de longueur 0.5 orienté dans la direction $z$ (\ref{cylindre}).
+On programme la résolution de ce problème à l'aide de la bibliothèque Feel++. Pour commencer, on utilise une géomètrie d'un cylindre de rayon 0.05 et de longueur 0.5 orienté dans la direction $z$.
+\begin{center}
+\begin{tikzpicture}
+\begin{scope}[x={(.7cm,-.3cm)}]
+\path (1,0,0);
+\pgfgetlastxy{\cylxx}{\cylxy}
+\path (0,1,0);
+\pgfgetlastxy{\cylyx}{\cylyy}
+\path (0,0,1);
+\pgfgetlastxy{\cylzx}{\cylzy}
+\pgfmathsetmacro{\cylt}{(\cylzy * \cylyx - \cylzx * \cylyy)/ (\cylzy * \cylxx - \cylzx * \cylxy)}
+\pgfmathsetmacro{\ang}{atan(\cylt)}
+\pgfmathsetmacro{\ct}{1/sqrt(1 + (\cylt)^2)}
+\pgfmathsetmacro{\st}{\cylt * \ct}
+\begin{scope}[every path/.style={ultra thick}]
+\draw (0,0,0) circle[radius=1];
+\draw[->] (-1,3,1) -- (0,3,1);
+\draw (0,3,1) node [right] {$x$};
+\draw[->] (-1,3,1) -- (-1,4,1);
+\draw (-1,4,1) node [right] {$y$};
+\draw[->] (-1,3,1) -- (-1,3,-1);
+\draw (-1,3,-1) node [right] {$z$};
+\draw (\ct,\st,0) -- ++(0,0,-8);
+\draw (-\ct,-\st,0) -- ++(0,0,-8);
+\draw (\ct,\st,-8) arc[start angle=\ang,delta angle=180,radius=1];
+\draw[dashed] (\ct,\st,-8) arc[start angle=\ang,delta angle=-180,radius=1];
+\draw (0,0,0) node {$\Gamma_1$};
+\draw (0,0,-8) node {$\Gamma_2$};
+\draw (1,0,-4) node {$\Gamma_3$};
+\end{scope}
+\end{scope}
+\end{tikzpicture}
+\end{center}
+
 \section{FreeFem++}
 Dans ce chapitre, on va détailler les différentes méthodes employées par Benjamin pour résoudre le problème dans un cylindre.\\
 Tout d'abord, la relation $\rott \mathbf{g} = \grad(\div \mathbf{g}) - \laplace \mathbf{g}$ permet de remplacer, dans $D^1$ où la divergence est nulle, le rotationnel du rotationnel par l'opérateur laplacien.\\
@@ -44,6 +77,9 @@ De même sur le tour du cylindre, $\bm{n}=(n_1,n_2,0)$, et la condition $\rot\bm
 Une manière de remplir cette condition est de prendre $\delta_x(g_3)=\delta_y(g_3)=0$, d'où $g_3$ est une constante sur le tour du cylindre.\\
 On peut donc prendre $\bm{g}=0$ sur les bords du cylindre.
 
+Comme $\bm{g_i}=(0,0,g_{i,3})$, on a que $\bm{g_i}\times\bm{g_j}=(0,0,0)$ et donc le terme non linéaire dans (\ref{fvspec}) est nul.\\
+De même, si on note $\bm{a}=(a_1,a_2,a_3)$, alors $\bm{a}\times\bm{g_i}=(-g_{i,3}a_2, g_{i,3}a_1, 0)$ et $(\bm{a}\times\bm{g_i})\cdot\bm{g_k}=0$
+
 \subsection{Composantes $(x,y,z)$}
 Si l'on ne suppose pas $\bm{g}=(0,0,g_3)$, on a : 
 \[
@@ -70,24 +106,53 @@ La condition $\rot\bm{g}\cdot\bm{n}=0$, sur l'entrée et la sortie se lit $\delt
 
 Comme toutes ces contraintes s'expriment par le fait que $\bm{g}$ doit être une constante, on peut choisir cette constante, par exemple, $\bm{g}=0$.
 
-\subsection{Valeurs analytiques de $\lambda$}
+\section{composante $z$}
+\label{compZ}
+\subsection{Problème aux valeurs propres}
 
-D'après la publication de R. Saks\footnote{\url{http://ejde.math.txstate.edu/conf-proc/13/s1/saks.pdf}}, on a, pour un cylindre de longueur $l$ et de rayon $R$ :
-\[
-\lambda_\mathcal{K} = \sqrt{\frac{\rho_{k,j}^2}{R^2} + \frac{m^2\pi^2}{l^2}}
-\]
-où $\mathcal{K}=(k,j,m)$ est un multi-index et $\rho_{k,j}$ représente le j-ième zéro de la k-ième fonction de Bessel.\\
-Dans notre cas, $l=0,5$ et $R=0,05$, d'où :
+Dans cette section, on se positionne dans le cas du cylindre et on a donc que $\bm{v}=(0,0,v_z)$.\\
+De plus on suppose $\bm{v}=\sum_i d_i\bm{h_i}$ avec $\bm{h_i}=(0,0,h_i^z)$ et :
 \begin{align*}
-\lambda_{(0,1,1)} &\simeq 2352,70 & \lambda_{(0,1,2)} &\simeq 2471,14\\
-\lambda_{(0,1,3)} &\simeq 2668,53 & \lambda_{(0,1,4)} &\simeq 2944,88\\
-\lambda_{(0,1,5)} &\simeq 3300,19 & \lambda_{(0,1,6)} &\simeq 3734,45\\
-\lambda_{(0,1,7)} &\simeq 4247,67 & \lambda_{(0,1,8)} &\simeq 4839,84\\
-\lambda_{(0,1,9)} &\simeq 5510,98 & \lambda_{(1,1,1)} &\simeq 5912,25\\
-\lambda_{(1,1,2)} &\simeq 6030,68 & \lambda_{(1,1,3)} &\simeq 6228,08\\
-\lambda_{(0,1,10)} &\simeq 6261,07 & \lambda_{(1,1,4)} &\simeq 6504,42\\
-&\;\;\vdots & &\;\;\vdots
+-\laplace\bm{h_i} &= \lambda^2_i \bm{h_i}\\
+\div \bm{h_i} &= 0\\
+\rot\bm{h_i}\cdot\bm{n}\restr &= 0
 \end{align*}
+Le problème devient : trouver $(h_i^z,p)\in H^1(\Omega)\times H^1(\Omega)$ tel que, $\forall (\varphi,q)\in H^1(\Omega)\times H^1(\Omega)$ :
+\[
+\int_\Omega \partial_x h_i^z \partial_x\varphi + \partial_y h_i^z \partial_y\varphi + \partial_z h_i^z \partial_z\varphi + \varphi\grad p + h_i^z\grad q = \lambda_i^2 \int_\Omega h_i^z\varphi
+\]
+avec $h_i^z = 0$ sur $\Gamma_3$.
+
+On utilise donc des éléments de Lagrange d'ordre 2 pour $h_i^z$ et des éléments de Lagrange d'ordre 1 pour $p$.
+\lstinputlisting[linerange={typedef}]{../../src/eigenlapZ.h}
+
+On obtient le terme de gauche avec ces lignes de codes :
+\lstinputlisting[linerange={formA}]{../../src/eigenlapZ.cpp}
+
+Et le terme de droite :
+\lstinputlisting[linerange={formB}]{../../src/eigenlapZ.cpp}
+
+\subsection{Décomposition}
+Afin de décomposer $\bm{h_i}$, on utilise la même formulation que pour $\bm{g_i^0}$ et $\psi_i$. Ce qui donne :
+\lstinputlisting[linerange={gi0}]{../../src/eigenlapZ.cpp}
+\lstinputlisting[linerange={psi}]{../../src/eigenlapZ.cpp}
+
+\subsection{Problème spectral}
+On obtient donc les fonctions de bases pour $\bm{v}$. Comme celles-ci sont de la forme $\bm{h_i}=(0,0,h_i^z)$, on a que $\bm{h_i}\times\bm{h_i}=0$, ainsi, pour trouver les coefficients $d_i$, il n'y a qu'à calculer les coefficients suivants :
+\[
+d_k = \frac{Re\times (\bm{f},\bm{h_k})+\langle \alpha_2,\psi_k\rangle}{\lambda_k^2}
+\]
+
+Pour cela on calcule d'abord tous les coefficients $(\bm{f},\bm{h_k})\ \forall k=0,\dots,M$
+\lstinputlisting[linerange={rfk}]{../../src/spectralproblem.cpp}
+
+Puis les coefficients $\langle\alpha_2,\psi_k\rangle\ \forall k=0,\dots,M$
+\lstinputlisting[linerange={rpk}]{../../src/spectralproblem.cpp}
+
+Ainsi, il ne reste plus qu'à calculer les $d_k\ \forall k=0,\dots,M$
+\lstinputlisting[linerange={spz}]{../../src/spectralproblem.cpp}
+
+\iffalse
 
 \section{Problème aux valeurs propres}
 \subsection{Valeurs et fonction propres}
@@ -132,6 +197,8 @@ Les résultats sont visibles dans le chapitre \ref{resModes}.
 
 \subsection{Décomposition}
 
+\fi
+
 \section{Relèvement}
 
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
@@ -164,6 +231,8 @@ On veut que ce qui rentre du cylindre par l'entrée, correspondant à la partie 
 Une fois le problème résolut, on veut projeter le gradient de $\psi^0$ sur $\LL^2$. Pour cela on résout le problème simple $u=\grad\psi^0$.
 
 \lstinputlisting[linerange={gradpsi0}]{../../src/psi0.cpp}
+
+Le résultat est visible dans la section (\ref{respsih1}).
 
 \subsection{Gradient dans $\HH(div)$}
 
@@ -228,3 +297,7 @@ r_l^{(i)} = J(c^{(l)})\delta c^{(l,i)} + F(c^{(l)})
 \section{Pression}
 
 
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% End:

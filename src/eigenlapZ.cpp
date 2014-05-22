@@ -62,15 +62,19 @@ EigenLapZ::compute_eigens()
     auto l = form1( _test=MLh );
 
     auto a = form2( _test=MLh, _trial=MLh);
+    // [formA]
     a = integrate( _range=elements( mesh ),
                    _expr= dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3)
                    + dzt(u3)*id(xi) + dz(v3)*idt(pi) );
 
     a += on(_range=markedfaces(mesh, 3), _rhs=l, _element=u3, _expr=cst(bc));
+    // [formA]
 
+    // [formB]
     auto b = form2( _test=MLh, _trial=MLh);
     b = integrate( _range=elements(mesh),
                    _expr=idt( u3 )*id( v3 ) + 0*idt(pi)*id(xi) );
+    // [formB]
 
     auto modes = veigs( _formA=a, _formB=b );
 
@@ -108,22 +112,26 @@ EigenLapZ::compute_eigens()
             std::cout << "Lambda_" << i << " = " <<  mode.first << "\tDivergence = " << div << "\t||Div|| = " << normL2Div << "\n";
 
         if( option(_name="needDecomp").as<bool>() ){
+            // [gi0]
             l2 = integrate( _range=elements(mesh),
                             _expr=mode.first*idv(u3)*id(gd) );
             a2 = integrate( _range=elements(mesh),
                             _expr=-dzt(gd)*dz(gd)
                             + dxt(gd)*dx(gd) + dyt(gd)*dy(gd) + dzt(gd)*dz(gd) );
             a2 += on(_range=boundaryfaces(mesh), _rhs=l2, _element=gd, _expr=cst(0.) );
+            // [gi0]
             a2.solve(_name="gi0", _rhs=l2, _solution=gd);
             g0[i] = vf::project(_space=Vh, _range=elements(mesh),
                                 _expr=vec(cst(0.),
                                           cst(0.),
                                           idv(gd) ) );
 
+            // [psi]
             l3 = integrate(_range=elements(mesh),
                            _expr=dzv(gd)*id(gd) );
             a3 = integrate(_range=elements(mesh),
-                           _expr=dxt(psi[i])*dx(psi[i])+dyt(psi[i])*dy(psi[i])+dzt(psi[i])*dz(psi[i]) );
+                           _expr=dxt(psi[i])*dx(psi[i]) + dyt(psi[i])*dy(psi[i]) + dzt(psi[i])*dz(psi[i]) );
+            // [psi]
             a3.solve(_name="psi", _rhs=l3, _solution=psi[i]);
 
             auto gv = Vh->element();

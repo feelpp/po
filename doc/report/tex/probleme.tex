@@ -314,7 +314,7 @@ J(u) = \min_{v\in V} J(v) - \lambda b(v)
 Soit, en ajoutant l'équation de la contrainte multipliée par le multiplicateur de Lagrange correspondant à $\varphi$, on doit trouver $(\psi_i,\lambda)\in H^1(\Omega)\times L^2(\Omega)$ tel que $\forall (\varphi,\mu)$ :
 \begin{align}
 \label{fvpsiml}
-a(\psi_i,\varphi) + \lambda b(v) + \nu b(u) &= l(\varphi) \notag \\
+a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) \notag \\
 \int_\Omega \grad\psi_i\cdot\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega \psi_i\mu &= \int_\Omega (\div \mathbf{g_i^0})\varphi
 \end{align}
 
@@ -516,7 +516,7 @@ Toujours de même manière, on va trouver la pression à une constante près, on
 \label{discr}
 
 Dans les problèmes (\ref{bd1}) et (\ref{fvu}), on va chercher à exprimer $\mathbf{b}$ et $\mathbf{u}$ dans la base $(\mathbf{g_i})$, c'est-à-dire $\mathbf{b}=\sum_i d_ig_i$ et $\mathbf{u}=\sum_i c_ig_i$. De plus, prendre une fonction de test $\bm{\varphi}$ dans $[D^1(\Omega)]^3$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
-On rappelle que $\rot \mathbf{g_i}=\lambda_i\mathbf{g_i}$. En notant $\int_\Omega \mathbf{f}\mathbf{g}=(f,g)$ et $\int_{\partial\Omega}a\ b=\langle a,b\rangle$, on obtient pour le problème (\ref{fvu}) :
+On rappelle que $\rot \mathbf{g_i}=\lambda_i\mathbf{g_i}$. En notant $\int_\Omega \mathbf{f}\cdot\mathbf{g}=(f,g)$ et $\int_{\partial\Omega}a\ b=\langle a,b\rangle$, on obtient pour le problème (\ref{fvu}) :
 \begin{align*}
 \frac{\partial}{\partial t}\sum_i (c_i\mathbf{g_i}, \mathbf{g_k}) &+ \sum_i\sum_j (c_i\lambda_ic_j\mathbf{g_i}\times \mathbf{g_j},\mathbf{g_k}) + \sum_i(c_i\lambda_i\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
 &+ \sum_i ((\rot \mathbf{a})\times c_i\mathbf{g_i},\mathbf{g_k}) + \frac{1}{Re}\sum_i(c_i\lambda_i\mathbf{g_i}, \lambda_k\mathbf{g_k}) = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
@@ -948,3 +948,6 @@ $} ;
 \end{figure}
 
 
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% End:

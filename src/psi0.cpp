@@ -14,7 +14,7 @@
 using namespace Feel;
 using namespace Feel::vf;
 
-/// [option]
+// [option]
 inline
 po::options_description
 makeOptions()
@@ -26,7 +26,7 @@ makeOptions()
         ( "profil", po::value<std::string>()->default_value( "2. * vitesse * (1. - (x*x + y*y) / (rayon * rayon))" ), "alpha0, depend de x,y,rayon,vitesse" );
     return myappOptions; // Add the default feel options to your list
 }
-/// [option]
+// [option]
 
 int main(int argc, char**argv )
 {
@@ -38,11 +38,11 @@ int main(int argc, char**argv )
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com"));
 
-    /// [space]
+    // [space]
     typedef FunctionSpace<Mesh<Simplex<3> >, bases<Lagrange<1, Scalar>, Lagrange<0, Scalar> > > space_type;
-    /// [space]
+    // [space]
 
-    /// [alpha0]
+    // [alpha0]
     auto alpha0_s = option( _name="profil" ).as<std::string>();
     auto vars = Symbols{ "x", "y", "vitesse", "rayon" };
     auto alpha0_e = parse( alpha0_s, vars );
@@ -51,11 +51,11 @@ int main(int argc, char**argv )
             { "rayon", option( _name="rayon" ).template as<double>() },
                 { "vitesse", option( _name="vitesse" ).template as<double>() },
                     {"test", 3} } );
-    /// [alpha0]
+    // [alpha0]
 
     auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
 
-    /// [element]
+    // [element]
     auto Vh = space_type::New( mesh );
     auto U = Vh->element();
     auto V = Vh->element();
@@ -63,15 +63,15 @@ int main(int argc, char**argv )
     auto lambda = U.template element<1>() ;
     auto v = V.template element<0>() ;
     auto nu = V.template element<1>() ;
-    /// [element]
+    // [element]
 
-    /// [bilinear]
+    // [bilinear]
     auto a = form2( _trial=Vh, _test=Vh );
     a = integrate( _range=elements(mesh),
                    _expr=gradt(u)*trans(grad(v)) + id( v )*idt( lambda ) + idt( u )*id( nu ) );
-    /// [bilinear]
+    // [bilinear]
 
-    /// [rhs]
+    // [rhs]
     auto l = form1( _test=Vh );
     l = integrate( _range=markedfaces(mesh, 1), //entree
                    _expr=-alpha0*id(v) );
@@ -79,11 +79,11 @@ int main(int argc, char**argv )
                     _expr=alpha0*id(v) );
     l += integrate( _range=markedfaces(mesh, 3), //tour
                     _expr=cst(0.)*id(v) );
-    /// [rhs]
+    // [rhs]
 
     a.solve( _name="psi0", _rhs=l, _solution=U );
 
-    /// [gradpsi0]
+    // [gradpsi0]
     auto Xh = Pchv<1>( mesh );
     auto gradu = Xh->element();
     auto b = form2( _trial=Xh, _test=Xh );
@@ -93,7 +93,7 @@ int main(int argc, char**argv )
     // gradu is the L2 projection of grad(psi0) over Xh
     b.solve( _name="gradpsi0", _rhs=f, _solution=gradu );
 
-    /// [gradpsi0]
+    // [gradpsi0]
 
     auto e = exporter( _mesh=mesh );
     e->add( "u", U.template element<0>() );

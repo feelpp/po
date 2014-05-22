@@ -41,9 +41,27 @@ Comme toujours, il faudra que je corrige mon rapport, revois certaines notations
 \section{Mardi 29/04}
 
 Lors de la réunion, nous avons discuté du problème aux valeurs propres, et des différentes manières de le résoudre. Il a été convenu que je décrive la méthode implémentée par Benjamin en Freefem++, puis l'adapte pour Feel++ et enfin compare les différents résultats afin de valider les autres étapes.\\
-Dans le même temps, Christophe Prud'homme va utiliser les travaux de V. Girault\footnote{V. Girault, Curl-conforming finite element methods for Navier-Stokes equations with non-standard boundary conditions in $\R^3$, 1990} pour mettre au point une autre méthode utilisant des espaces approchant de manière plus précises l'espace $D^1$.\\
+Dans le même temps, Christophe Prud'homme va utiliser les travaux de V. Girault \cite{girault90-1} pour mettre au point une autre méthode utilisant des espaces approchant de manière plus précises l'espace $D^1$.\\
 Le but sera au final de comparer ces deux méthodes, pour cela il faudra projeter les modes issues d'une des méthodes sur l'espace utilisé par l'autre.\\
 
 Ainsi, mon travail va être de comprendre et de décrire les méthodes utilisées par Benjamin, la résolution du laplacien en 3D avec pénalisation ou tri, ou la résolution, dans chaque dimension, du laplacien puis le tri des solutions.\\
 Puis en implémenter au moins une avec Feel++ et donc pouvoir comparer les résultats avec FreeFem++. Pour le moment, je vais donc commencer par la méthode sans pénalisation, et trier les résultats en fonction de la condition aux bords.\\
 Il a aussi été question du nombre de modes propres nécessaires et du temps de calculs séquentiels ainsi généré, de la préparation d'un projet PEPS 2 et de ma participation aux web-conférences regroupant les utilisateurs de Feel++.
+
+\section{Mercredi 14/05}
+
+Lors de la réunion de ce matin, nous avons discuté des avancés effectués pour le projet.\\
+D’une part,  l’implémentation des espaces $H(div)$ et $H(rot)$ dans Feel++, ainsi que la possibilité d’exporter les résultats dans un seul fichier pour tous les processeurs.\\
+D’autre part, j’ai expliqué la méthode consistant à n’utiliser qu’une seule composante pour les modes propres. Cette méthode a encore des problèmes, notamment concernant la divergence, que rien ne force à être nulle.\\
+
+Ainsi, il faudrait que je projette la divergence des modes propres sur $P_0$ discontinue afin de voir sa forme.\\
+Afin de la forcer à être nulle, je pourrai essayer d’ajouter cette contrainte de manière faible, en posant $\div\bm{g} = \partial_z \bm{g_z} = 0$.\\
+Ou je pourrai utiliser un multiplicateur de Lagrange afin d’ajouter cette contrainte, ce qui reviendrait à un problème de type Stokes avec des champs scalaires.\\
+De plus, en utilisant la publication de R. Saks \cite{Saks2005}, je pourrai comparer les vecteurs propres trouvés numériquement, avec leur valeur analytique, en utilisant une bibliothèque de Boost. Je peux aussi comparer avec les résultats obtenus par Benjamin en utilisant FreeFem.\\
+Il faut aussi que j’ajoute dans la documentation les explications à ces différentes méthodes.\\
+Aussi, il est prévu d’avoir une réunion avec les gens du LNCMI, afin de faire un point sur le projet.
+
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% End:
