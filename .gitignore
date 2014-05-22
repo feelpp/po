@@ -17,3 +17,6 @@
 /doc/report/auto/report.el
 /doc/report/tex/auto/note.el
 /doc/report/tex/auto/probleme.el
+/src/freefem/Stokes-curlcurl-eigen-nh.edp
+/src/freefem/Stokes-curlcurl-eigen.edp
+/src/freefem/Stokes-eigen.edp
