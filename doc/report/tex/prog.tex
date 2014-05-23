@@ -108,7 +108,7 @@ Comme toutes ces contraintes s'expriment par le fait que $\bm{g}$ doit être une
 
 \section{composante $z$}
 \label{compZ}
-\subsection{Problème aux valeurs propres}
+ \subsection{Problème aux valeurs propres}
 
 Dans cette section, on se positionne dans le cas du cylindre et on a donc que $\bm{v}=(0,0,v_z)$.\\
 De plus on suppose $\bm{v}=\sum_i d_i\bm{h_i}$ avec $\bm{h_i}=(0,0,h_i^z)$ et :
@@ -117,6 +117,7 @@ De plus on suppose $\bm{v}=\sum_i d_i\bm{h_i}$ avec $\bm{h_i}=(0,0,h_i^z)$ et :
 \div \bm{h_i} &= 0\\
 \rot\bm{h_i}\cdot\bm{n}\restr &= 0
 \end{align*}
+Afin de contraindre la divergence nulle, on ajoute un multiplicateur de Lagrange qui est équivalent à une pression.\\
 Le problème devient : trouver $(h_i^z,p)\in H^1(\Omega)\times H^1(\Omega)$ tel que, $\forall (\varphi,q)\in H^1(\Omega)\times H^1(\Omega)$ :
 \[
 \int_\Omega \partial_x h_i^z \partial_x\varphi + \partial_y h_i^z \partial_y\varphi + \partial_z h_i^z \partial_z\varphi + \varphi\grad p + h_i^z\grad q = \lambda_i^2 \int_\Omega h_i^z\varphi
@@ -136,6 +137,7 @@ Et le terme de droite :
 Afin de décomposer $\bm{h_i}$, on utilise la même formulation que pour $\bm{g_i^0}$ et $\psi_i$. Ce qui donne :
 \lstinputlisting[linerange={gi0}]{../../src/eigenlapZ.cpp}
 \lstinputlisting[linerange={psi}]{../../src/eigenlapZ.cpp}
+Cette partie est assez délicate, car les conditions aux bords ne sont pas les mêmes pour $\bm{h_i}$ et $\bm{g_i}$.
 
 \subsection{Problème spectral}
 On obtient donc les fonctions de bases pour $\bm{v}$. Comme celles-ci sont de la forme $\bm{h_i}=(0,0,h_i^z)$, on a que $\bm{h_i}\times\bm{h_i}=0$, ainsi, pour trouver les coefficients $d_i$, il n'y a qu'à calculer les coefficients suivants :

@@ -1,8 +1,6 @@
 \chapter{Résultats}
-\section{Modes}
-\label{resModes}
 
-\subsection{Valeurs analytiques de $\lambda$}
+\section{Expression analytique}
 
 D'après \cite{Saks2005}, on a, pour un cylindre de longueur $l$ et de rayon $R$ :
 \[
@@ -73,34 +71,35 @@ On peut voir les mêmes modes obtenus avec Feel++ dans la figure \ref{modes}.\\
 
 \fi
 
-\subsection{Composante z}
+\section{Composante z}
 
-En utilisant l'implèmentation présenté dans la section \ref{compZ}, on obtient les valeurs propres suivantes, où l'on voit que les valeurs propres ne correspondant pas à la fonction 0 de Bessel, apparaissent deux fois, cela est dû à la symétrie du cylindre.\\
-D'autre part, on voit qu'à partir d'un certain moment, les valeurs propres ne correspondent plus aux valeurs analytiques et que leur divergence explosent.\\
+On va ici utiliser l'implémentation présenté dans la section \ref{compZ}.
 
+\subsection{Modes propres}
+
+On obtient les valeurs propres suivantes, où l'on voit que les valeurs propres ne correspondant pas à la fonction 0 de Bessel, apparaissent deux fois, cela est dû à la symétrie du cylindre.\\
+D'autre part, on voit qu'à partir d'un certain moment, les valeurs propres ne correspondent plus aux valeurs analytiques et leur divergence explose.\\
 \begin{align*}
-\bm{\lambda^2_{0,1,1}=\Lambda_0} &\bf{= 2329.47}	&\int\div\bm{g} &= 1.94208e-17	&||\div\bm{g}|| &= 0.0983456\\
-\lambda^2_{1,1,1}=\Lambda_1 &= 5917.22	&\int\div\bm{g} &= 3.17129e-18	&||\div\bm{g}|| &= 0.296662\\
-\lambda^2_{1,1,1}=\Lambda_2 &= 5917.43	&\int\div\bm{g} &= -3.4708e-17	&||\div\bm{g}|| &= 0.299039\\
-\lambda^2_{2,1,1}=\Lambda_3 &= 10644.7	&\int\div\bm{g} &= 2.20627e-17	&||\div\bm{g}|| &= 0.683934\\
-\lambda^2_{2,1,1}=\Lambda_4 &= 10647.4	&\int\div\bm{g} &= 2.89804e-17	&||\div\bm{g}|| &= 0.688444\\
-\bm{\lambda^2_{0,2,1}=\Lambda_5} &\bf{= 12312.1}	&\int\div\bm{g} &= -1.04863e-16	&||\div\bm{g}|| &= 0.954444\\
-\lambda^2_{3,1,1}=\Lambda_6 &= 16473	&\int\div\bm{g} &= -1.28681e-17	&||\div\bm{g}|| &= 1.23079\\
-\lambda^2_{3,1,1}=\Lambda_7 &= 16474.4	&\int\div\bm{g} &= -2.9924e-17	&||\div\bm{g}|| &= 1.22237\\
-\lambda^2_{1,2,1}=\Lambda_8 &= 19976.6	&\int\div\bm{g} &= -5.4515e-17	&||\div\bm{g}|| &= 1.8095\\
+\bm{\lambda^2_{0,1,1}=\Lambda_0} &\bf{= 2329.47}	&\int\div\bm{h} &= 1.94208e-17	&||\div\bm{h}|| &= 0.0983456\\
+\lambda^2_{1,1,1}=\Lambda_1 &= 5917.22	&\int\div\bm{h} &= 3.17129e-18	&||\div\bm{h}|| &= 0.296662\\
+\lambda^2_{1,1,1}=\Lambda_2 &= 5917.43	&\int\div\bm{h} &= -3.4708e-17	&||\div\bm{h}|| &= 0.299039\\
+\lambda^2_{2,1,1}=\Lambda_3 &= 10644.7	&\int\div\bm{h} &= 2.20627e-17	&||\div\bm{h}|| &= 0.683934\\
+\lambda^2_{2,1,1}=\Lambda_4 &= 10647.4	&\int\div\bm{h} &= 2.89804e-17	&||\div\bm{h}|| &= 0.688444\\
+\bm{\lambda^2_{0,2,1}=\Lambda_5} &\bf{= 12312.1}	&\int\div\bm{h} &= -1.04863e-16	&||\div\bm{h}|| &= 0.954444\\
+\lambda^2_{3,1,1}=\Lambda_6 &= 16473	&\int\div\bm{h} &= -1.28681e-17	&||\div\bm{h}|| &= 1.23079\\
+\lambda^2_{3,1,1}=\Lambda_7 &= 16474.4	&\int\div\bm{h} &= -2.9924e-17	&||\div\bm{h}|| &= 1.22237\\
+\lambda^2_{1,2,1}=\Lambda_8 &= 19976.6	&\int\div\bm{h} &= -5.4515e-17	&||\div\bm{h}|| &= 1.8095\\
 &\vdots & &\vdots & &\vdots\\
-\lambda^2_{?,?,?}=\Lambda_{35} &= 51355.4	&\int\div\bm{g} &= 1.14817e-16	&||\div\bm{g}|| &= 7.14748\\
-\lambda^2_{?,?,?}=\Lambda_{36} &= 54891.3	&\int\div\bm{g} &= 1.21431e-17	&||\div\bm{g}|| &= 50.2826\\
-\lambda^2_{?,?,?}=\Lambda_{37} &= 55565.9	&\int\div\bm{g} &= -2.43729e-16	&||\div\bm{g}|| &= 52.281\\
-\lambda^2_{?,?,?}=\Lambda_{38} &= 55976.2	&\int\div\bm{g} &= -1.73906e-16	&||\div\bm{g}|| &= 58.8682\\
-\lambda^2_{?,?,?}=\Lambda_{39} &= 56447.3	&\int\div\bm{g} &= 1.50813e-16	&||\div\bm{g}|| &= 59.4463\\
-\lambda^2_{?,?,?}=\Lambda_{40} &= 57302.4	&\int\div\bm{g} &= 4.13081e-17	&||\div\bm{g}|| &= 40.4527\\
-\lambda^2_{?,?,?}=\Lambda_{41} &= 57360.6	&\int\div\bm{g} &= -3.61581e-17	&||\div\bm{g}|| &= 36.7049\\
-\lambda^2_{?,?,?}=\Lambda_{42} &= 57614.4	&\int\div\bm{g} &= -8.2833e-17	&||\div\bm{g}|| &= 44.0287\\
-\lambda^2_{?,?,?}=\Lambda_{43} &= 57825.8	&\int\div\bm{g} &= 1.47451e-16	&||\div\bm{g}|| &= 58.9588\\
-\lambda^2_{?,?,?}=\Lambda_{44} &= 58151.4	&\int\div\bm{g} &= -9.36751e-17	&||\div\bm{g}|| &= 62.1296\\
-\lambda^2_{?,?,?}=\Lambda_{45} &= 59027	&\int\div\bm{g} &= 1.70328e-16	&||\div\bm{g}|| &= 54.9454\\
-\lambda^2_{?,?,?}=\Lambda_{46} &= 59732.7	&\int\div\bm{g} &= -1.66371e-16	&||\div\bm{g}|| &= 37.642
+\lambda^2_{?,?,?}=\Lambda_{35} &= 51355.4	&\int\div\bm{h} &= 1.14817e-16	&||\div\bm{h}|| &= 7.14748\\
+\lambda^2_{?,?,?}=\Lambda_{36} &= 54891.3	&\int\div\bm{h} &= 1.21431e-17	&||\div\bm{h}|| &= 50.2826\\
+\lambda^2_{?,?,?}=\Lambda_{37} &= 55565.9	&\int\div\bm{h} &= -2.43729e-16	&||\div\bm{h}|| &= 52.281\\
+\lambda^2_{?,?,?}=\Lambda_{38} &= 55976.2	&\int\div\bm{h} &= -1.73906e-16	&||\div\bm{h}|| &= 58.8682\\
+\lambda^2_{?,?,?}=\Lambda_{39} &= 56447.3	&\int\div\bm{h} &= 1.50813e-16	&||\div\bm{h}|| &= 59.4463\\
+\lambda^2_{?,?,?}=\Lambda_{40} &= 57302.4	&\int\div\bm{h} &= 4.13081e-17	&||\div\bm{h}|| &= 40.4527\\
+\lambda^2_{?,?,?}=\Lambda_{41} &= 57360.6	&\int\div\bm{h} &= -3.61581e-17	&||\div\bm{h}|| &= 36.7049\\
+\lambda^2_{?,?,?}=\Lambda_{42} &= 57614.4	&\int\div\bm{h} &= -8.2833e-17	&||\div\bm{h}|| &= 44.0287\\
+\lambda^2_{?,?,?}=\Lambda_{43} &= 57825.8	&\int\div\bm{h} &= 1.47451e-16	&||\div\bm{h}|| &= 58.9588\\
+\lambda^2_{?,?,?}=\Lambda_{44} &= 58151.4	&\int\div\bm{h} &= -9.36751e-17	&||\div\bm{h}|| &= 62.1296
 \end{align*}
 
 Les modes correspondant aux trois premiers zéros de la fonction 0 de Bessel sont présenté dans la figure suivante, avec un autre mode où l'on voit que ces fonctions ne dépendent pas de $\theta$ contrairement aux autres :
@@ -117,6 +116,28 @@ Les modes correspondant aux trois premiers zéros de la fonction 0 de Bessel son
 	\label{resultats}
 \end{figure}
 
+\subsection{Problème spectral}
+
+En utilisant $\bm{f}=(0,0,1)$ et $\alpha_2=\frac{2\times v}{R^2}$, on obtient les coefficients suivants :
+\begin{align*}
+\bf{d_{0}} &\bf{= 0.00242664} & d_{1} &= -5.72621e-05\\
+d_{2} &= -2.79554e-05 & d_{3} &= 1.17409e-06\\
+d_{4} &= 2.4402e-05 & \bf{d_{5}} &\bf{= -0.000211458}\\
+d_{6} &= -7.79286e-06 & d_{7} &= -6.61541e-07\\
+d_{8} &= -6.61893e-07 & d_{9} &= -4.8829e-06\\
+d_{10} &= 1.91622e-05 & d_{11} &= 1.27225e-07\\
+d_{12} &= 3.64327e-06 & d_{13} &= -1.34974e-06\\
+\bf{d_{14}} &\bf{= 6.02757e-05} & d_{15} &= -3.67763e-07
+\end{align*}
+
+Où les coefficients en gras correspondent aux valeurs des fonctions 0 de Bessel. Ce sont les seules qui ne sont pas nuls, et on voit que leur poids diminue rapidement.\\
+En additionnant les vecteurs propres multipliés par leur coefficient, on arrive au vecteur vitesse suivant :
+
+\begin{figure}[H]
+\makebox[\textwidth][c]{
+\includegraphics[scale=0.5]{vZ}}
+\caption{$\bm{v}$ avec 100 modes propres}
+\end{figure}
 
 \section{Relèvement}
 \label{respsih1}
