@@ -31,6 +31,7 @@ makeOptions()
         ( "bc", po::value<double>()->default_value( 0. ), "boundary condition for eigenlapZ" )
         ( "needEigen", po::value<bool>()->default_value( true ), "need to compute the eigen modes or to load them" )
         ( "needDecomp", po::value<bool>()->default_value( false ), "need to decompose the eigen modes" )
+        ( "needRelev", po::value<bool>()->default_value( false ), "need a" )
         ( "testBessel", po::value<bool>()->default_value( false ), "test the third composante using Bessel functions" )
         ( "k", po::value<double>()->default_value( 0.0 ), "k-th Bessel function" )
         ( "j", po::value<int>()->default_value( 1 ), "j-th Bessel's root" )
@@ -115,14 +116,16 @@ main( int argc, char **argv )
         break;
     }
     case 3:{
-        p0.run();
+        if( boption( _name="needRelev" ) ){
+            p0.run();
+            e->add( "a", p0.gradu );
+        }
         eig3.run();
         sp.init( eig3.g, eig3.psi, eig3.lambda, p0.gradu );
         sp.run();
         e->add( "u", sp.u );
         for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++)
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig3.g[i] );
-        e->add( "a", p0.gradu );
         e->save();
         break;
     }

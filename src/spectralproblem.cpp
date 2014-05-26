@@ -179,6 +179,6 @@ void SpectralProblem::run()
         u += vf::project( _space=Vh, _range=elements(mesh),
                           _expr = c(i)*idv(g[i]) );
     }
-    // u += vf::project( _space=Vh, _range=elements(mesh),
-    //                   _expr = a );
+    if( boption(_name="needRelev") )
+        u += vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a) );
 }

@@ -64,16 +64,22 @@ EigenLapZ::compute_eigens()
     auto a = form2( _test=MLh, _trial=MLh);
     // [formA]
     a = integrate( _range=elements( mesh ),
-                   _expr= dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3)
-                   + dzt(u3)*id(xi) + dz(v3)*idt(pi) );
-
-    a += on(_range=markedfaces(mesh, 3), _rhs=l, _element=u3, _expr=cst(bc));
+                   _expr= dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3) );
+    if( boption( _name="needRelev" )){
+        a += integrate( _range=elements(mesh), _expr=1.e-20*idt(pi)*id(xi) );
+        a += on(_range=boundaryfaces(mesh), _rhs=l, _element=u3, _expr=cst(bc));
+        a += on(_range=markedfaces(mesh, 2), _rhs=l, _element=u3, _expr=cst(bc));
+    } else {
+        a += integrate( _range=elements( mesh ),
+                        _expr=dzt(u3)*id(xi) + dz(v3)*idt(pi) );
+        a += on(_range=markedfaces(mesh, 3), _rhs=l, _element=u3, _expr=cst(bc));
+    }
     // [formA]
 
     // [formB]
     auto b = form2( _test=MLh, _trial=MLh);
     b = integrate( _range=elements(mesh),
-                   _expr=idt( u3 )*id( v3 ) + 0*idt(pi)*id(xi) );
+                   _expr=idt( u3 )*id( v3 ) + 0.*idt(pi)*id(xi) );
     // [formB]
 
     auto modes = veigs( _formA=a, _formB=b );
