@@ -6,8 +6,8 @@
 
 EigenLap::EigenLap( mesh_ptrtype mesh ):super()
 {
-    this->nev = option(_name="solvereigen.nev").template as<int>();
-    this->ncv = option(_name="solvereigen.ncv").template as<int>();
+    this->nev = ioption(_name="solvereigen.nev");
+    this->ncv = ioption(_name="solvereigen.ncv");
     this->mesh = mesh;
     this->Vh = vSpace_type::New( mesh );
     this->Mlh = mlSpace_type::New( mesh );
@@ -24,27 +24,27 @@ EigenLap::EigenLap( mesh_ptrtype mesh ):super()
 void
 EigenLap::run()
 {
-    if( option( _name="needEigen").as<bool>() )
+    if( boption( _name="needEigen") )
         compute_eigens();
     else
         load_eigens();
-    if( option( _name="needDecomp").as<bool>() )
+    if( boption( _name="needDecomp") )
         decomp();
 
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "-----End Eigen-----" << std::endl;
+        std::cout << "----- End Eigen -----" << std::endl;
 }
 
 void
 EigenLap::compute_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "-----Eigen Problem-----" << std::endl;
+        std::cout << "----- Eigen Problem -----" << std::endl;
         std::cout << "number of eigenvalues computed = " << nev <<std::endl;
         std::cout << "number of column vector = " << ncv <<std::endl;
     }
 
-    int penal = option(_name="penal").as<double>();
+    int penal = doption(_name="penal");
 
     auto Xh = sSpace_type::New( mesh );
     auto U = Xh->element();
@@ -62,7 +62,7 @@ EigenLap::compute_eigens()
     auto l = form1( _test=Xh );
 
     auto a = form2( _test=Xh, _trial=Xh);
-    a = integrate( elements( mesh ), 
+    a = integrate( elements( mesh ),
                    _expr=dxt(u1)*dx(v1) + dyt(u1)*dy(v1) + dzt(u1)*dz(v1)
                    + dxt(u2)*dx(v2) + dyt(u2)*dy(v2) + dzt(u2)*dz(v2)
                    + dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3)
@@ -78,73 +78,62 @@ EigenLap::compute_eigens()
     auto b = form2( _test=Xh, _trial=Xh);
     b = integrate( elements(mesh), idt( u1 )*id( v1 )
                    + idt( u2 )*id( v2 )
-                   + idt( u3 )*id( v3 )                   
+                   + idt( u3 )*id( v3 )
                    + 0.*idt(p)*id(q) );
 
-    SolverEigen<double>::eigenmodes_type modes;
-    modes = eigs( _matrixA=a.matrixPtr(),
-                  _matrixB=b.matrixPtr(),
-                  _nev=nev,
-                  _ncv=ncv,
-                  _transform=SINVERT,
-                  _spectrum=SMALLEST_MAGNITUDE,
-                  _verbose = true );
-
+    auto modes = veigs( _formA=a, _formB=b );
     auto modeTmp = Xh->element();
 
-    if ( !modes.empty() )
+    int i = 0;
+    std::fstream s;
+    if ( Environment::worldComm().isMasterRank() )
+        s.open ("lambda", std::fstream::out);
+    for( auto const& mode : modes )
     {
-        int i = 0;
-        std::fstream s;
+        modeTmp = mode.second;
+        g[i] = vf::project(_space=Vh, _range=elements(mesh),
+                           _expr=vec(idv(modeTmp.element<0>()),
+                                     idv(modeTmp.element<1>()),
+                                     idv(modeTmp.element<2>()) ) );
+        std::string path = (boost::format("mode-%1%")%i).str();
+        g[i].save(_path=path);
+        lambda[i] = mode.first;
         if ( Environment::worldComm().isMasterRank() )
-            s.open ("lambda", std::fstream::out);
-        for( auto const& mode : modes )
-        {
-            modeTmp = *mode.second.get<2>();
-            g[i] = vf::project(_space=Vh, _range=elements(mesh),
-                               _expr=vec(idv(modeTmp.template element<0>()),
-                                      idv(modeTmp.template element<1>()),
-                                      idv(modeTmp.template element<2>()) ) );
-            std::string path = (boost::format("mode-%1%")%i).str();
-            g[i].save(_path=path);
-            lambda[i] = mode.second.get<0>();
-            if ( Environment::worldComm().isMasterRank() )
-                s << lambda[i] << std::endl;
+            s << lambda[i] << std::endl;
 
-            double erreurEigS = normL2( _range=elements(mesh),
-                                        _expr=curlv(g[i])-sqrt(lambda[i])*idv(g[i]) );
+        double erreurEigS = normL2( _range=elements(mesh),
+                                    _expr=curlv(g[i])-sqrt(lambda[i])*idv(g[i]) );
 
-            auto cg = Vh->element();
-            auto c = form2( _trial=Vh, _test=Vh );
-            c = integrate( _range=elements(mesh), _expr=inner(idt(cg),id(cg)) );
-            auto f = form1( _test=Vh );
-            f = integrate( _range=elements(mesh), _expr=inner(curlv(g[i]),id(cg)) );
-            c.solve( _name="curl", _rhs=f, _solution=cg );
-            double erreurEig = normL2( _range=elements(mesh),
-                                       _expr=curlv(cg)-lambda[i]*idv(g[i]) );
+        auto cg = Vh->element();
+        auto c = form2( _trial=Vh, _test=Vh );
+        c = integrate( _range=elements(mesh), _expr=inner(idt(cg),id(cg)) );
+        auto f = form1( _test=Vh );
+        f = integrate( _range=elements(mesh), _expr=inner(curlv(g[i]),id(cg)) );
+        c.solve( _name="curl", _rhs=f, _solution=cg );
+        double erreurEig = normL2( _range=elements(mesh),
+                                   _expr=curlv(cg)-lambda[i]*idv(g[i]) );
 
-            double di = normL2(elements(mesh), divv(g[i]));
-            double bord = normL2(boundaryfaces(mesh), trans(curlv(g[i]))*N() );
+        double di = normL2(elements(mesh), divv(g[i]));
+        double bord = normL2(boundaryfaces(mesh), trans(curlv(g[i]))*N() );
 
-            if ( Environment::worldComm().isMasterRank() ){
-                std::cout << i << " : " << lambda[i] << std::endl;
-                std::cout << "curl-sqrt(lambda) = " << erreurEigS << " curl-lambda = " << erreurEig << " div = " << di << " curl(g).n = " << bord << std::endl;
-            }
-
-            i++;
-            if(i>=nev)
-                break;
+        if ( Environment::worldComm().isMasterRank() ){
+            std::cout << i << " : " << lambda[i] << std::endl;
+            std::cout << "curl-sqrt(lambda) = " << erreurEigS << " curl-lambda = " << erreurEig << " div = " << di << " curl(g).n = " << bord << std::endl;
         }
-        if ( Environment::worldComm().isMasterRank() )
-            s.close();
+
+        i++;
+        if(i>=nev)
+            break;
     }
+    if ( Environment::worldComm().isMasterRank() )
+        s.close();
 }
 
 void
 EigenLap::load_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "-----Load Eigen-----" << std::endl;
+        std::cout << "----- Load Eigen -----" << std::endl;
         std::cout << "number of eigenvalues = " << nev <<std::endl;
     }
 
@@ -174,7 +163,7 @@ void
 EigenLap::decomp()
 {
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "-----Decomposition-----" << std::endl;
+        std::cout << "----- Decomposition -----" << std::endl;
 
     auto a2 = form2( _test=Vh, _trial=Vh );
     auto l2 = form1( _test=Vh );

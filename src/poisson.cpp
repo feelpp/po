@@ -6,13 +6,15 @@ Poisson::Poisson(mesh_ptrtype mesh, std::string g_s):super()
 {
     this->mesh = mesh;
     this->g_s = g_s;
+    Xh = space_type::New( mesh );
+    gradu = Xh->element();
 }
 
 void
 Poisson::run()
 {
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "-----Poisson-----" << std::endl;
+        std::cout << "----- Poisson -----" << std::endl;
         std::cout << g_s << std::endl;
     }
 
@@ -45,8 +47,6 @@ Poisson::run()
 
     a.solve( _name="psi0", _rhs=l, _solution=U );
 
-    auto Xh = space_type::New( mesh );
-    gradu = Xh->element();
     auto b = form2( _trial=Xh, _test=Xh );
     b = integrate( _range=elements(mesh),
                    _expr=inner(id(gradu),idt(gradu)) );

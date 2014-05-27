@@ -23,7 +23,7 @@ makeOptions()
         ( "radius", po::value<double>()->default_value( 0.05 ), "cylinder's radius" )
         ( "speed", po::value<double>()->default_value( 0.015 ), "average speed" )
         ( "nu", po::value<double>()->default_value( 1.56e-5 ), "viscosity" )
-        ( "f", po::value<std::string>()->default_value( "{0,0,0}:x:y:z" ), "f" )
+        ( "f", po::value<std::string>()->default_value( "{0,0,1}:x:y:z" ), "f" )
         ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
         ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
         ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
@@ -66,7 +66,7 @@ main( int argc, char **argv )
                      _desc_lib=makeLibOptions(),
                      _about=makeAbout() );
 
-    fs::path mypath(option( _name="gmsh.filename" ).as<std::string>());
+    fs::path mypath(soption( _name="gmsh.filename" ));
     std::string meshPartName = ( boost::format( "%1%/%2%_part%3%.msh" )
                                  %Environment::localGeoRepository()
                                  %mypath.stem().string()
@@ -81,16 +81,16 @@ main( int argc, char **argv )
         mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
                          _filename=meshPartName );
 
-    Poisson p0 = Poisson( mesh, option( _name="alpha0" ).as<std::string>() );
+    Poisson p0 = Poisson( mesh, soption( _name="alpha0" ) );
     Eigen_Curl eig = Eigen_Curl( mesh );
     EigenLap eig2 = EigenLap( mesh );
     EigenLapZ eig3 = EigenLapZ( mesh );
-    Darcy d = Darcy( mesh, option( _name="alpha0" ).as<std::string>() );
+    Darcy d = Darcy( mesh, soption( _name="alpha0" ) );
     SpectralProblem sp = SpectralProblem( mesh );
 
     auto e = exporter( _mesh=mesh );
 
-    switch(option(_name="nbApp").as<int>()){
+    switch(ioption(_name="nbApp")){
     case 0:{
         p0.run();
         e->add( "grad_u", p0.gradu );
@@ -99,7 +99,7 @@ main( int argc, char **argv )
     }
     case 1:{
         eig.run();
-        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+        for(int i=0; i<ioption(_name="solvereigen.nev"); i++){
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig.g[i] );
             e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig.g0[i] );
             e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig.psi[i] );
@@ -124,14 +124,14 @@ main( int argc, char **argv )
         sp.init( eig3.g, eig3.psi, eig3.lambda, p0.gradu );
         sp.run();
         e->add( "u", sp.u );
-        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++)
+        for(int i=0; i<ioption(_name="solvereigen.nev"); i++)
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig3.g[i] );
         e->save();
         break;
     }
     case 4:{
         eig2.run();
-        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+        for(int i=0; i<ioption(_name="solvereigen.nev"); i++){
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig2.g[i] );
             e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig2.g0[i] );
             e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig2.psi[i] );
@@ -143,7 +143,7 @@ main( int argc, char **argv )
     }
     case 5:{
         eig3.run();
-        for(int i=0; i<option(_name="solvereigen.nev").as<int>(); i++){
+        for(int i=0; i<ioption(_name="solvereigen.nev"); i++){
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig3.g[i] );
             e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig3.g0[i] );
             e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig3.psi[i] );
@@ -157,5 +157,5 @@ main( int argc, char **argv )
         break;
     }
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "-----End-----" << std::endl;
+        std::cout << "----- End -----" << std::endl;
 }

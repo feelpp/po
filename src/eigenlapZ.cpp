@@ -8,8 +8,8 @@
 
 EigenLapZ::EigenLapZ( mesh_ptrtype mesh ):super()
 {
-    this->nev = option(_name="solvereigen.nev").template as<int>();
-    this->ncv = option(_name="solvereigen.ncv").template as<int>();
+    this->nev = ioption(_name="solvereigen.nev");
+    this->ncv = ioption(_name="solvereigen.ncv");
     this->mesh = mesh;
     this->Vh = vSpace_type::New( mesh );
     this->Sh = sSpace_type::New( mesh );
@@ -26,28 +26,28 @@ EigenLapZ::EigenLapZ( mesh_ptrtype mesh ):super()
 void
 EigenLapZ::run()
 {
-    if( option( _name="needEigen").as<bool>() )
+    if( boption( _name="needEigen") )
         compute_eigens();
     else
         load_eigens();
 
-    if( option( _name="testBessel").as<bool>() )
+    if( boption( _name="testBessel") )
         testBessel();
 
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "-----End Eigen-----" << std::endl;
+        std::cout << "----- End Eigen -----" << std::endl;
 }
 
 void
 EigenLapZ::compute_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "-----Eigen Problem-----" << std::endl;
+        std::cout << "----- Eigen Problem -----" << std::endl;
         std::cout << "number of eigenvalues computed = " << nev <<std::endl;
         std::cout << "number of column vector = " << ncv <<std::endl;
     }
 
-    int bc = option(_name="bc").as<double>();
+    int bc = doption(_name="bc");
 
 
     auto MLh = mlSpace_type::New(mesh);
@@ -65,16 +65,20 @@ EigenLapZ::compute_eigens()
     // [formA]
     a = integrate( _range=elements( mesh ),
                    _expr= dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3) );
+    // [formA]
     if( boption( _name="needRelev" )){
+        // [relev]
         a += integrate( _range=elements(mesh), _expr=1.e-20*idt(pi)*id(xi) );
         a += on(_range=boundaryfaces(mesh), _rhs=l, _element=u3, _expr=cst(bc));
         a += on(_range=markedfaces(mesh, 2), _rhs=l, _element=u3, _expr=cst(bc));
+        // [relev]
     } else {
+        // [nrelev]
         a += integrate( _range=elements( mesh ),
                         _expr=dzt(u3)*id(xi) + dz(v3)*idt(pi) );
         a += on(_range=markedfaces(mesh, 3), _rhs=l, _element=u3, _expr=cst(bc));
+        // [nrelev]
     }
-    // [formA]
 
     // [formB]
     auto b = form2( _test=MLh, _trial=MLh);
@@ -117,7 +121,7 @@ EigenLapZ::compute_eigens()
         if ( Environment::isMasterRank() )
             std::cout << "Lambda_" << i << " = " <<  mode.first << "\tDivergence = " << div << "\t||Div|| = " << normL2Div << "\n";
 
-        if( option(_name="needDecomp").as<bool>() ){
+        if( boption(_name="needDecomp") ){
             // [gi0]
             l2 = integrate( _range=elements(mesh),
                             _expr=mode.first*idv(u3)*id(gd) );
@@ -174,7 +178,7 @@ void
 EigenLapZ::load_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "-----Load Eigen-----" << std::endl;
+        std::cout << "----- Load Eigen -----" << std::endl;
         std::cout << "number of eigenvalues = " << nev <<std::endl;
     }
 

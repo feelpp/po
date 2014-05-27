@@ -10,17 +10,17 @@ SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
     Vh = space_vtype::New( mesh );
     Sh = space_stype::New( mesh );
 
-    M = option( _name="solvereigen.nev" ).as<int>();
+    M = ioption( _name="solvereigen.nev" );
     j = MatrixXd::Matrix(M,M);
     f = VectorXd::Matrix(M);
     c = VectorXd::Matrix(M);
 
-    alpha2 = option( _name="alpha2" ).as<std::string>();
-    double r = option( _name="radius" ).as<double>();
-    double s = option( _name="speed" ).as<double>();
-    double n = option( _name="nu" ).as<double>();
+    alpha2 = soption( _name="alpha2" );
+    double r = doption( _name="radius" );
+    double s = doption( _name="speed" );
+    double n = doption( _name="nu" );
     Re = 2*r*s/n;
-
+    u = Vh->element();
 }
 
 void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> L, element_vtype A )
@@ -29,12 +29,14 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
         std::cout << "----- Initialization Spectral Problem -----" << std::endl;
 
     lambda = VectorXd::Matrix(M);
+
     for(int i = 0; i < M; i++)
         lambda(i) = L[i];
 
     g = G;
     psi = P;
-    a = A;
+    if( boption(_name="needRelev") )
+        a = A;
 
     // initRiak();
     // initRijk();
@@ -107,8 +109,8 @@ void SpectralProblem::initRpk()
     auto a2_e = parse( this->alpha2, vars );
     auto a2 = expr( a2_e, vars );
     a2.setParameterValues( {
-            { "speed", option( _name="speed" ).template as<double>() },
-                { "radius", option( _name="radius" ).template as<double>() } } );
+            { "speed", doption( _name="speed" ) },
+                { "radius", doption( _name="radius" ) } } );
 
     // [rpk]
     Rpk = VectorXd::Matrix(M);
@@ -162,14 +164,12 @@ void SpectralProblem::run()
     // if(i==10)
     //     std::cout << "Newton does not converge\n";
     // else{
-    //     u = Vh->element();
     //     for( i = 0; i < M; i++){
     //         u += vf::project( _space=Vh, _range=elements(mesh),
     //                           _expr = c(i)*idv(g[i]) );
     //     }
     //     u += a;
     // }
-    u = Vh->element();
     // [spz]
     for(int i=0; i<M; i++){
         c(i) = (Rpk(i)+Re*Rfk(i))/lambda(i);
