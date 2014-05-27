@@ -1,6 +1,22 @@
 \chapter{Résultats}
 
-\section{Expression analytique}
+\section{Relèvement}
+\label{respsih1}
+
+Dans la figure \ref{az}, on peut observer la composante en $z$ de $\mathbf{a}$ dans le cylindre, lorsque $\alpha_1=0$ et $\alpha_0(x,y)=2\times v\times\left(1-\frac{x^2+y^2}{r^2}\right)$. Ce résultat a été obtenu avec le programme du chapitre \ref{gradh1}. 
+
+\begin{figure}[H]
+\makebox[\textwidth][c]{
+  \subfloat{\includegraphics[scale=0.3]{az}}\ 
+  \subfloat{\includegraphics[scale=0.3]{az1}}
+}
+\caption{$\mathbf{a}=\grad\psi^0\in H(div)$}
+\label{az}
+\end{figure}
+
+\section{Composante $z$}
+
+\subsection{Expression analytique}
 
 D'après \cite{Saks2005}, on a, pour un cylindre de longueur $l$ et de rayon $R$ :
 \[
@@ -45,40 +61,14 @@ Il montre aussi que :
 g_\mathcal{K}^z(r,\theta,z) = \frac{\sqrt{2}}{\sqrt{l\pi}R|J_k'\left(\rho_{k,j}\frac{r}{R}\right)}exp(ik\theta)sin\left(\frac{m\pi}{l}z\right)
 \]
 
-\iffalse
-
-Pour mémoire, voici les résultats de différents modes obtenus avec freefem++.\\
-
-\begin{figure}[H]
-\makebox[\textwidth][c]{
-\includegraphics[scale=1]{Exemple_de_modes}}
-\end{figure}
-
-On peut voir les mêmes modes obtenus avec Feel++ dans la figure \ref{modes}.\\
-
-\begin{figure}[H]
-	\makebox[\textwidth][c]{
-		\subfloat[mode00]{\includegraphics[scale=0.3]{mode00}}\ 
-		\subfloat[mode19]{\includegraphics[scale=0.3]{mode19}}
-	}\\
-	\makebox[\textwidth][c]{
-		\subfloat[mode57]{\includegraphics[scale=0.3]{mode57}}\ 
-		\subfloat[mode194]{\includegraphics[scale=0.3]{mode194}}
-	}
-	\caption{composante z des fonctions propres}
-	\label{modes}
-\end{figure}
-
-\fi
-
-\section{Composante z}
+\subsection{Sans relèvement}
+\label{resZSR}
 
 On va ici utiliser l'implémentation présenté dans la section \ref{compZ}.
 
-\subsection{Modes propres}
-
+\subsubsection{Modes propres}
 On obtient les valeurs propres suivantes, où l'on voit que les valeurs propres ne correspondant pas à la fonction 0 de Bessel, apparaissent deux fois, cela est dû à la symétrie du cylindre.\\
-D'autre part, on voit qu'à partir d'un certain moment, les valeurs propres ne correspondent plus aux valeurs analytiques et leur divergence explose.\\
+D'autre part, on voit qu'à partir d'un certain moment, les valeurs propres ne correspondent plus aux valeurs analytiques et leur divergence explose. Cela est dû à la taille du maillage, trop grossière pour calculer des modes aux variations de plus en plus fines.\\
 \begin{align*}
 \bm{\lambda^2_{0,1,1}=\Lambda_0} &\bf{= 2329.47}	&\int\div\bm{h} &= 1.94208e-17	&||\div\bm{h}|| &= 0.0983456\\
 \lambda^2_{1,1,1}=\Lambda_1 &= 5917.22	&\int\div\bm{h} &= 3.17129e-18	&||\div\bm{h}|| &= 0.296662\\
@@ -116,7 +106,7 @@ Les modes correspondant aux trois premiers zéros de la fonction 0 de Bessel son
 	\label{resultats}
 \end{figure}
 
-\subsection{Problème spectral}
+\subsubsection{Problème spectral}
 
 En utilisant $\bm{f}=(0,0,1)$ et $\alpha_2=\frac{2\times v}{R^2}$, on obtient les coefficients suivants :
 \begin{align*}
@@ -139,19 +129,41 @@ En additionnant les vecteurs propres multipliés par leur coefficient, on arrive
 \caption{$\bm{v}$ avec 100 modes propres}
 \end{figure}
 
-\section{Relèvement}
-\label{respsih1}
+\subsection{Avec relèvement}
+\label{resZAR}
 
-Dans la figure \ref{az}, on peut observer la composante en $z$ de $\mathbf{a}$ dans le cylindre, lorsque $\alpha_1=0$ et $\alpha_0(x,y)=2\times v\times\left(1-\frac{x^2+y^2}{r^2}\right)$. Ce résultat a été obtenu avec le programme du chapitre \ref{gradh1}. 
+\section{Cas général}
+
+\subsection{Modes propres}
+
+\subsection{Problème spectral}
+
+\iffalse
+
+Pour mémoire, voici les résultats de différents modes obtenus avec freefem++.\\
 
 \begin{figure}[H]
 \makebox[\textwidth][c]{
-  \subfloat{\includegraphics[scale=0.3]{az}}\ 
-  \subfloat{\includegraphics[scale=0.3]{az1}}
-}
-\caption{$\mathbf{a}=\grad\psi^0\in H(div)$}
-\label{az}
+\includegraphics[scale=1]{Exemple_de_modes}}
 \end{figure}
+
+On peut voir les mêmes modes obtenus avec Feel++ dans la figure \ref{modes}.\\
+
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode00]{\includegraphics[scale=0.3]{mode00}}\ 
+		\subfloat[mode19]{\includegraphics[scale=0.3]{mode19}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode57]{\includegraphics[scale=0.3]{mode57}}\ 
+		\subfloat[mode194]{\includegraphics[scale=0.3]{mode194}}
+	}
+	\caption{composante z des fonctions propres}
+	\label{modes}
+\end{figure}
+
+\fi
+
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"

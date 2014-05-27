@@ -34,173 +34,6 @@ On programme la résolution de ce problème à l'aide de la bibliothèque Feel++
 \end{tikzpicture}
 \end{center}
 
-\section{FreeFem++}
-Dans ce chapitre, on va détailler les différentes méthodes employées par Benjamin pour résoudre le problème dans un cylindre.\\
-Tout d'abord, la relation $\rott \mathbf{g} = \grad(\div \mathbf{g}) - \laplace \mathbf{g}$ permet de remplacer, dans $D^1$ où la divergence est nulle, le rotationnel du rotationnel par l'opérateur laplacien.\\
-Comme on travail dans le $[H^1]^3$ et non dans $[D^1]^3$, on a besoin de forcer la condition $\div\mathbf{g}=0$, pour cela, on utilise un terme de pression qui joue le rôle d'un multiplicateur de Lagrange. On a donc le problème suivant :
-\begin{equation}
-\left\{
-\begin{aligned}
--\laplace\mathbf{g} - \grad p = \Lambda \mathbf{g}\\
-\div \mathbf{g}=0
-\end{aligned}
-\right.
-\end{equation}
-En multipliant la première équation par $\bm{\varphi}\in [H^1]^3$ et la seconde par $q\in L^2$, on obtient la formulation faible suivante :
-\begin{equation*}
-\int_\Omega \overline{\grad\mathbf{g}}:\overline{\grad\bm{\varphi}} + p\div\bm{\varphi} + q\div\mathbf{g} = \Lambda \int_\Omega \mathbf{g}\cdot\bm{\varphi}
-\end{equation*}
-
-\subsection{Composante $z$}
-\label{freefem1d}
-Dans le cylindre, on peut supposer que 
-\[
-\bm{g}=
-\begin{pmatrix}
-0\\
-0\\
-g_3
-\end{pmatrix}
-\text{ et donc }
-\rot\bm{g}=
-\begin{pmatrix}
-&\delta_y(g_3)\\
-&-\delta_x(g_3)\\
-&0
-\end{pmatrix}
-\]
-De plus, on sait que $\bm{g}$ ne dépend pas de $z$.\\
-Sur l'entrée et la sortie du cylindre, la condition $\bm{g}\cdot \bm{n}=0$ avec $\bm{n}=(0,0,\pm 1)$ conduit à \[g_3 = 0\]
-Donc $\bm{g}=0$ sur l'entrée et la sortie.\\
-
-De même sur le tour du cylindre, $\bm{n}=(n_1,n_2,0)$, et la condition $\rot\bm{g}\cdot\bm{n}=0$ donne \[\delta_y(g_3)n_1-\delta_x(g_3)n_3=0\]
-Une manière de remplir cette condition est de prendre $\delta_x(g_3)=\delta_y(g_3)=0$, d'où $g_3$ est une constante sur le tour du cylindre.\\
-On peut donc prendre $\bm{g}=0$ sur les bords du cylindre.
-
-Comme $\bm{g_i}=(0,0,g_{i,3})$, on a que $\bm{g_i}\times\bm{g_j}=(0,0,0)$ et donc le terme non linéaire dans (\ref{fvspec}) est nul.\\
-De même, si on note $\bm{a}=(a_1,a_2,a_3)$, alors $\bm{a}\times\bm{g_i}=(-g_{i,3}a_2, g_{i,3}a_1, 0)$ et $(\bm{a}\times\bm{g_i})\cdot\bm{g_k}=0$
-
-\subsection{Composantes $(x,y,z)$}
-Si l'on ne suppose pas $\bm{g}=(0,0,g_3)$, on a : 
-\[
-\bm{g}=
-\begin{pmatrix}
-g_1\\
-g_2\\
-g_3
-\end{pmatrix}
-\text{ et }
-\rot\bm{g}=
-\begin{pmatrix}
-\delta_y(g_3)-\delta_z(g_2)\\
-\delta_z(g_1)-\delta_x(g_3)\\
-\delta_x(g_2)-\delta_y(g_1)
-\end{pmatrix}
-\]
-
-La condition $\bm{g}\cdot\bm{n}=0$ mène sur l'entrée et la sortie, de la même manière que dans \ref{freefem1d} à $g_3=0$, tandis que sur le tour du cylindre, on peut prendre $g_1=g_2=0$ pour satisfaire cette condition.\\
-
-On peut utiliser la contrainte $\div\bm{g}=0$, qui est continue sur les bords, donc applicables sur le tour du cylindre, pour contraindre $g_3$. Comme sur le tour, $g_1=g_2=0$, on a que $\div\bm{g}=\delta_z(g_3)=0$, donc $g_3$ est une constante sur le tour du cylindre, on peut prendre cette constante égale à 0.\\
-
-La condition $\rot\bm{g}\cdot\bm{n}=0$, sur l'entrée et la sortie se lit $\delta_x(g_2)=\delta_y(g_1)$, toujours de la même façon, prendre $g_1$ constant et $g_2$ constant permet de satisfaire la condition.\\
-
-Comme toutes ces contraintes s'expriment par le fait que $\bm{g}$ doit être une constante, on peut choisir cette constante, par exemple, $\bm{g}=0$.
-
-\section{composante $z$}
-\label{compZ}
- \subsection{Problème aux valeurs propres}
-
-Dans cette section, on se positionne dans le cas du cylindre et on a donc que $\bm{v}=(0,0,v_z)$.\\
-De plus on suppose $\bm{v}=\sum_i d_i\bm{h_i}$ avec $\bm{h_i}=(0,0,h_i^z)$ et :
-\begin{align*}
--\laplace\bm{h_i} &= \lambda^2_i \bm{h_i}\\
-\div \bm{h_i} &= 0\\
-\rot\bm{h_i}\cdot\bm{n}\restr &= 0
-\end{align*}
-Afin de contraindre la divergence nulle, on ajoute un multiplicateur de Lagrange qui est équivalent à une pression.\\
-Le problème devient : trouver $(h_i^z,p)\in H^1(\Omega)\times H^1(\Omega)$ tel que, $\forall (\varphi,q)\in H^1(\Omega)\times H^1(\Omega)$ :
-\[
-\int_\Omega \partial_x h_i^z \partial_x\varphi + \partial_y h_i^z \partial_y\varphi + \partial_z h_i^z \partial_z\varphi + \varphi\grad p + h_i^z\grad q = \lambda_i^2 \int_\Omega h_i^z\varphi
-\]
-avec $h_i^z = 0$ sur $\Gamma_3$.
-
-On utilise donc des éléments de Lagrange d'ordre 2 pour $h_i^z$ et des éléments de Lagrange d'ordre 1 pour $p$.
-\lstinputlisting[linerange={typedef}]{../../src/eigenlapZ.h}
-
-On obtient le terme de gauche avec ces lignes de codes :
-\lstinputlisting[linerange={formA}]{../../src/eigenlapZ.cpp}
-
-Et le terme de droite :
-\lstinputlisting[linerange={formB}]{../../src/eigenlapZ.cpp}
-
-\subsection{Décomposition}
-Afin de décomposer $\bm{h_i}$, on utilise la même formulation que pour $\bm{g_i^0}$ et $\psi_i$. Ce qui donne :
-\lstinputlisting[linerange={gi0}]{../../src/eigenlapZ.cpp}
-\lstinputlisting[linerange={psi}]{../../src/eigenlapZ.cpp}
-Cette partie est assez délicate, car les conditions aux bords ne sont pas les mêmes pour $\bm{h_i}$ et $\bm{g_i}$.
-
-\subsection{Problème spectral}
-On obtient donc les fonctions de bases pour $\bm{v}$. Comme celles-ci sont de la forme $\bm{h_i}=(0,0,h_i^z)$, on a que $\bm{h_i}\times\bm{h_i}=0$, ainsi, pour trouver les coefficients $d_i$, il n'y a qu'à calculer les coefficients suivants :
-\[
-d_k = \frac{Re\times (\bm{f},\bm{h_k})+\langle \alpha_2,\psi_k\rangle}{\lambda_k^2}
-\]
-
-Pour cela on calcule d'abord tous les coefficients $(\bm{f},\bm{h_k})\ \forall k=0,\dots,M$
-\lstinputlisting[linerange={rfk}]{../../src/spectralproblem.cpp}
-
-Puis les coefficients $\langle\alpha_2,\psi_k\rangle\ \forall k=0,\dots,M$
-\lstinputlisting[linerange={rpk}]{../../src/spectralproblem.cpp}
-
-Ainsi, il ne reste plus qu'à calculer les $d_k\ \forall k=0,\dots,M$
-\lstinputlisting[linerange={spz}]{../../src/spectralproblem.cpp}
-
-\iffalse
-
-\section{Problème aux valeurs propres}
-\subsection{Valeurs et fonction propres}
-
-On va utiliser une classe \texttt{EigenProblem} acceptant des problèmes de plusieurs dimensions, dans notre cas le problème est de dimension 3.\\
-Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au programme que l'on utilise des simplexes, et que la maillage devra être fait de cette manière.\\
-Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'ordre 2 scalaire.\\
-On utilise enfin la base et le type de maillage pour créer l'espace de fonctions.
-
-\lstinputlisting[linerange={typedef}]{../../src/mode_gen_curl.cpp}
-
-On lit ensuite le nombre de valeurs propres que l'on veut et le nombre de valeurs propres convergées, qui doit être supérieur au premier, dans le fichier de configuration qui doit être nommé de la même manière que l'application. Dans ce fichier doit se trouver aussi le nom du fichier contenant la géographie utilisée, ou le maillage récupérer depuis HyperMesh. On importe cette géographie ou ce maillage avec la fonction \texttt{loadMesh}.
-
-\lstinputlisting[linerange={option,mesh}]{../../src/mode_gen_curl.cpp}
-
-Puis, on a plus qu'à créer un espace de fonction du type précédemment défini, et récupérer deux éléments de cet espace, puis prendre les 3 composantes de ces éléments.
-
-\lstinputlisting[linerange={space}]{../../src/mode_gen_curl.cpp}
-
-Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. On utilise donc pour cela le fait que $curl\ u = (\partial_y(u_3)-\partial_z(u_2))\vec{i} + (\partial_z(u_1) - \partial_x(u_3))\vec{j} + (\partial_x(u_2)-\partial_y(u_1))\vec{k}$.\\
-De plus, on utilise un terme de stabilisation de type $div \times div$. Ce terme ne doit pas jouer de rôle significatif, car la divergence doit tendre vers 0. Il permet seulement d'inverser la matrice A.
-
-\lstinputlisting[linerange={bilinear}]{../../src/mode_gen_curl.cpp}
-
-Puis, on traduit $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.
-
-\lstinputlisting[linerange={boundary}]{../../src/mode_gen_curl.cpp}
-
-On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
-
-\lstinputlisting[linerange={rhs}]{../../src/mode_gen_curl.cpp}
-
-On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}, qui va utiliser un algorithme de type Krylov-Schur(\ref{arnoldi}) pour trouver \texttt{nev} valeurs propres, en se servant de \texttt{ncv} vecteurs pour la base du sous-espace de Krylov. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les valeurs propres de plus petite magnitute.
-
-\lstinputlisting[linerange={modes}]{../../src/mode_gen_curl.cpp}
-
-Enfin, pour visualiser les résultats, on utilise un élément d'un espace vectoriel qui est le projeté du vecteur formé par les composantes de la solution.
-
-\lstinputlisting[linerange={project}]{../../src/mode_gen_curl.cpp}
-
-Les résultats sont visibles dans le chapitre \ref{resModes}.
-
-\subsection{Décomposition}
-
-\fi
-
 \section{Relèvement}
 
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
@@ -240,7 +73,158 @@ Le résultat est visible dans la section (\ref{respsih1}).
 
 \subsection{Rotationnel}
 
-\section{Problème spectral}
+\section{Composante $z$}
+
+Comme on se place dans le cylindre, on sait que $\bm{v}$ est colinéaires en tout point avec le vecteur de base $z$, ainsi on peut écrire $\bm{v}=(0,0,v^z)$.
+
+\subsection{Sans relèvement}
+
+Dans cette section, on va supposer que l'on peut écrire $\bm{v}=\sum_i d_i \bm{h_i}$ où les $\bm{h_i}\in [H^1(\Omega)]^3$ sont solutions de :
+\begin{align}
+\rott\bm{h_i} &= \lambda^2_i \bm{h_i}\nonumber\\
+\div \bm{h_i} &= 0 \label{eqhdiv}\\
+\rot\bm{h_i}\cdot\bm{n}\big\rvert_{\Gamma_3} &= 0\nonumber
+\end{align}
+avec
+\[
+\bm{h_i}=
+\begin{pmatrix}
+0\\
+0\\
+h_i^z
+\end{pmatrix}
+\text{ et }
+\rot\bm{h_i}=
+\begin{pmatrix}
+&\delta_y(h_i^z)\\
+&-\delta_x(h_i^z)\\
+&0
+\end{pmatrix}
+\]
+Or, dans le cylindre, la vitesse ne dépend que de $x$ et de $y$, pas de $z$, et le vecteur normal est de la forme $\bm{n}=(n_x,n_y,0)$ sur $\Gamma_3$. Comme le cylindre est symétrique par rapport à l'axe $z$, on peut se ramener au cas où $\bm{n}=(1,0,0)$ ou $\bm{n}=(0,1,0)$, et donc on trouve que $h_i^z$ est une constante sur $\Gamma_3$. On peut prendre cette constante égale à 0.\\
+
+De plus, la relation $\rott \mathbf{h} = \grad(\div \mathbf{h}) - \laplace \mathbf{h}$ et l'équation (\ref{eqhdiv}), permettent de remplacer le rotationnel du rotationnel par l'opérateur laplacien.\\
+Comme on travail dans l'espace $[H^1(\Omega)]^3$ et non dans $[D^1(\Omega)]^3$, on a besoin de forcer la condition $\div\mathbf{g}=0$, pour cela, on utilise un terme de pression qui joue le rôle d'un multiplicateur de Lagrange. On a donc le problème suivant :
+\begin{equation}
+\left\{
+\begin{aligned}
+-\laplace\mathbf{h_i} + \grad p &= \Lambda \mathbf{h_i}\\
+\div \mathbf{h_i}&=0\\
+\rot\bm{h_i}\cdot\bm{n}\big\rvert_{\Gamma_3} &= 0
+\end{aligned}
+\right.
+\end{equation}
+En multipliant la première équation par $\bm{\varphi}\in [H^1(\Omega)]^3$ et la seconde par $q\in L^2(\Omega)$, on obtient la formulation faible suivante :
+\begin{equation*}
+\int_\Omega \overline{\grad\mathbf{h_i}}:\overline{\grad\bm{\varphi}} + p\div\bm{\varphi} + q\div\mathbf{h_i} = \lambda_i^2 \int_\Omega \mathbf{h_i}\cdot\bm{\varphi}
+\end{equation*}
+Et en utilisant le fait que $h_i=(0,0,h_i^z)$, le problème devient : trouver $(h_i^z,p)\in H^1(\Omega)\times H^1(\Omega)$ tel que, $\forall (\varphi,q)\in H^1(\Omega)\times H^1(\Omega)$ :
+\[
+\int_\Omega \partial_x h_i^z \partial_x\varphi + \partial_y h_i^z \partial_y\varphi + \partial_z h_i^z \partial_z\varphi + \varphi\grad p + h_i^z\grad q = \lambda_i^2 \int_\Omega h_i^z\varphi
+\]
+avec $h_i^z = 0$ sur $\Gamma_3$.\\
+
+On utilise donc des éléments de Lagrange d'ordre 2 pour $h_i^z$ et des éléments de Lagrange d'ordre 1 pour $p$.
+\lstinputlisting[linerange={typedef}]{../../src/eigenlapZ.h}
+
+On obtient le terme de gauche avec ces lignes de codes :
+\lstinputlisting[linerange={formA,nrelev}]{../../src/eigenlapZ.cpp}
+
+Et le terme de droite :
+\lstinputlisting[linerange={formB}]{../../src/eigenlapZ.cpp}
+
+\subsubsection{Décomposition}
+
+Afin de décomposer $\bm{h_i}$, on utilise la même formulation que pour $\bm{g_i^0}$ et $\psi_i$. Ce qui donne :
+\lstinputlisting[linerange={gi0}]{../../src/eigenlapZ.cpp}
+\lstinputlisting[linerange={psi}]{../../src/eigenlapZ.cpp}
+Cette partie est assez délicate, car les conditions aux bords ne sont pas les mêmes pour $\bm{h_i}$ et $\bm{g_i}$.
+
+\subsection{Avec relèvement}
+
+\subsection{Problème spectral}
+
+Comme les fonctions de bases sont de la forme $\bm{g_i}=(0,0,g_i^z)$, on a que $\bm{g_i}\times\bm{g_i}=0$, ainsi, le terme non linéaire est nul.\\
+
+De même, 
+\[
+\bm{a}\times\bm{g_i}=\begin{pmatrix}
+a_xg_i^z\\
+-a_yg_i^z\\
+0
+\end{pmatrix}
+\text{ et donc }
+(\bm{a}\times\bm{g_i})\cdot\bm{g_k} = \begin{pmatrix}
+a_xg_i^z\\
+-a_yg_i^z\\
+0
+\end{pmatrix}\cdot\begin{pmatrix}
+0\\
+0\\
+g_k^z
+\end{pmatrix} = 0
+\]
+Ainsi, pour trouver les coefficients $d_k$ ou $c_k$, il n'y a qu'à calculer les coefficients suivants :
+\[
+c_k = \frac{Re\times (\bm{f},\bm{g_k})+\langle \alpha_2,\psi_k\rangle}{\lambda_k^2}
+\]
+
+Pour cela on calcule d'abord tous les coefficients $(\bm{f},\bm{h_k})\ \forall k=0,\dots,M$
+\lstinputlisting[linerange={rfk}]{../../src/spectralproblem.cpp}
+
+Puis les coefficients $\langle\alpha_2,\psi_k\rangle\ \forall k=0,\dots,M$
+\lstinputlisting[linerange={rpk}]{../../src/spectralproblem.cpp}
+
+Ainsi, il ne reste plus qu'à calculer les $d_k\ \forall k=0,\dots,M$
+\lstinputlisting[linerange={spz}]{../../src/spectralproblem.cpp}
+
+\section{Cas général}
+
+\subsection{Modes propres}
+
+\iffalse
+
+On va utiliser une classe \texttt{EigenProblem} acceptant des problèmes de plusieurs dimensions, dans notre cas le problème est de dimension 3.\\
+Pour commencer, on va définir l'espace de fonctions, pour cela on va dire au programme que l'on utilise des simplexes, et que la maillage devra être fait de cette manière.\\
+Puis comme on veut utiliser chaque composante de la solution pour décrire la normale égale à 0, on va créer une base de fonctions où l'on pourra accéder à chaque composante, chacune sera des fonctions de Lagrange d'ordre 2 scalaire.\\
+On utilise enfin la base et le type de maillage pour créer l'espace de fonctions.
+
+\lstinputlisting[linerange={typedef}]{../../src/mode_gen_curl.cpp}
+
+On lit ensuite le nombre de valeurs propres que l'on veut et le nombre de valeurs propres convergées, qui doit être supérieur au premier, dans le fichier de configuration qui doit être nommé de la même manière que l'application. Dans ce fichier doit se trouver aussi le nom du fichier contenant la géographie utilisée, ou le maillage récupérer depuis HyperMesh. On importe cette géographie ou ce maillage avec la fonction \texttt{loadMesh}.
+
+\lstinputlisting[linerange={option,mesh}]{../../src/mode_gen_curl.cpp}
+
+Puis, on a plus qu'à créer un espace de fonction du type précédemment défini, et récupérer deux éléments de cet espace, puis prendre les 3 composantes de ces éléments.
+
+\lstinputlisting[linerange={space}]{../../src/mode_gen_curl.cpp}
+
+Il faut ensuite construire une forme bilinéaire $a$ correspondant à $\int_\Omega curl\ g\cdot curl\ \psi\ dX$. On utilise donc pour cela le fait que $curl\ u = (\partial_y(u_3)-\partial_z(u_2))\vec{i} + (\partial_z(u_1) - \partial_x(u_3))\vec{j} + (\partial_x(u_2)-\partial_y(u_1))\vec{k}$.\\
+De plus, on utilise un terme de stabilisation de type $div \times div$. Ce terme ne doit pas jouer de rôle significatif, car la divergence doit tendre vers 0. Il permet seulement d'inverser la matrice A.
+
+\lstinputlisting[linerange={bilinear}]{../../src/mode_gen_curl.cpp}
+
+Puis, on traduit $g\cdot n\big\rvert_{\partial\Omega}=0$ par le fait que $z=0$ sur les deux extrémités du cylindre et que $x=y=0$ sur le tour du cylindre.
+
+\lstinputlisting[linerange={boundary}]{../../src/mode_gen_curl.cpp}
+
+On crée ensuite le second terme correspondant à $\int_\Omega g\cdot\psi\ dX$.
+
+\lstinputlisting[linerange={rhs}]{../../src/mode_gen_curl.cpp}
+
+On peut maintenant résoudre le problème aux valeurs propres. On utilise pour cela la librairie \href{http://www.grycap.upv.es/slepc/}{SLEPc}, qui va utiliser un algorithme de type Krylov-Schur(\ref{arnoldi}) pour trouver \texttt{nev} valeurs propres, en se servant de \texttt{ncv} vecteurs pour la base du sous-espace de Krylov. On crée donc 2 matrices avec les formes bilinéaires précédemment construites, et on indique que l'on cherche les valeurs propres de plus petite magnitute.
+
+\lstinputlisting[linerange={modes}]{../../src/mode_gen_curl.cpp}
+
+Enfin, pour visualiser les résultats, on utilise un élément d'un espace vectoriel qui est le projeté du vecteur formé par les composantes de la solution.
+
+\lstinputlisting[linerange={project}]{../../src/mode_gen_curl.cpp}
+
+Les résultats sont visibles dans le chapitre \ref{resModes}.
+
+\fi
+
+\subsection{Problème spectral}
 
 On peut maintenant résoudre le problème (\ref{fvspec}).\\
 Cette équation comporte le terme
@@ -296,7 +280,51 @@ où
 r_l^{(i)} = J(c^{(l)})\delta c^{(l,i)} + F(c^{(l)})
 \]
 
-\section{Pression}
+
+\section{FreeFem++}
+Dans ce chapitre, on va détailler les différentes méthodes employées par Benjamin pour résoudre le problème dans un cylindre.\\
+Tout d'abord, 
+
+\subsection{Composante $z$}
+\label{freefem1d}
+Dans le cylindre, on peut supposer que 
+De plus, on sait que $\bm{g}$ ne dépend pas de $z$.\\
+Sur l'entrée et la sortie du cylindre, la condition $\bm{g}\cdot \bm{n}=0$ avec $\bm{n}=(0,0,\pm 1)$ conduit à \[g_3 = 0\]
+Donc $\bm{g}=0$ sur l'entrée et la sortie.\\
+
+De même sur le tour du cylindre, $\bm{n}=(n_1,n_2,0)$, et la condition $\rot\bm{g}\cdot\bm{n}=0$ donne \[\delta_y(g_3)n_1-\delta_x(g_3)n_3=0\]
+Une manière de remplir cette condition est de prendre $\delta_x(g_3)=\delta_y(g_3)=0$, d'où $g_3$ est une constante sur le tour du cylindre.\\
+On peut donc prendre $\bm{g}=0$ sur les bords du cylindre.
+
+Comme $\bm{g_i}=(0,0,g_{i,3})$, on a que $\bm{g_i}\times\bm{g_j}=(0,0,0)$ et donc le terme non linéaire dans (\ref{fvspec}) est nul.\\
+De même, si on note $\bm{a}=(a_1,a_2,a_3)$, alors $\bm{a}\times\bm{g_i}=(-g_{i,3}a_2, g_{i,3}a_1, 0)$ et $(\bm{a}\times\bm{g_i})\cdot\bm{g_k}=0$
+
+\subsection{Composantes $(x,y,z)$}
+Si l'on ne suppose pas $\bm{g}=(0,0,g_3)$, on a : 
+\[
+\bm{g}=
+\begin{pmatrix}
+g_1\\
+g_2\\
+g_3
+\end{pmatrix}
+\text{ et }
+\rot\bm{g}=
+\begin{pmatrix}
+\delta_y(g_3)-\delta_z(g_2)\\
+\delta_z(g_1)-\delta_x(g_3)\\
+\delta_x(g_2)-\delta_y(g_1)
+\end{pmatrix}
+\]
+
+La condition $\bm{g}\cdot\bm{n}=0$ mène sur l'entrée et la sortie, de la même manière que dans \ref{freefem1d} à $g_3=0$, tandis que sur le tour du cylindre, on peut prendre $g_1=g_2=0$ pour satisfaire cette condition.\\
+
+On peut utiliser la contrainte $\div\bm{g}=0$, qui est continue sur les bords, donc applicables sur le tour du cylindre, pour contraindre $g_3$. Comme sur le tour, $g_1=g_2=0$, on a que $\div\bm{g}=\delta_z(g_3)=0$, donc $g_3$ est une constante sur le tour du cylindre, on peut prendre cette constante égale à 0.\\
+
+La condition $\rot\bm{g}\cdot\bm{n}=0$, sur l'entrée et la sortie se lit $\delta_x(g_2)=\delta_y(g_1)$, toujours de la même façon, prendre $g_1$ constant et $g_2$ constant permet de satisfaire la condition.\\
+
+Comme toutes ces contraintes s'expriment par le fait que $\bm{g}$ doit être une constante, on peut choisir cette constante, par exemple, $\bm{g}=0$.
+
 
 
 
