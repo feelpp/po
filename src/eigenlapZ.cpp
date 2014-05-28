@@ -64,7 +64,7 @@ EigenLapZ::compute_eigens()
     auto a = form2( _test=MLh, _trial=MLh);
     // [formA]
     a = integrate( _range=elements( mesh ),
-                   _expr= dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3) );
+                   _expr= dxt(u3)*dx(v3) + dyt(u3)*dy(v3) + dzt(u3)*dz(v3));
     // [formA]
     if( boption( _name="needRelev" )){
         // [relev]
@@ -96,10 +96,20 @@ EigenLapZ::compute_eigens()
     auto gd = Sh->element();
 
     auto a2 = form2( _test=Sh, _trial=Sh );
+    a2 = integrate( _range=elements(mesh),
+                    _expr=-dzt(gd)*dz(gd)
+                    + dxt(gd)*dx(gd) + dyt(gd)*dy(gd) + dzt(gd)*dz(gd) );
     auto l2 = form1( _test=Sh );
 
     auto a3 = form2( _test=Sh, _trial=Sh );
+    a3 = integrate(_range=elements(mesh),
+                   _expr=dxt(psi[i])*dx(psi[i]) + dyt(psi[i])*dy(psi[i]) + dzt(psi[i])*dz(psi[i]) );
     auto l3 = form1( _test=Sh );
+
+    auto gv = Vh->element();
+    auto c = form2( _trial=Vh, _test=Vh );
+    c = integrate( _range=elements(mesh), _expr=inner(idt(gradu[i]),id(gv)) );
+    auto f = form1( _test=Vh );
 
     for( auto const& mode: modes )
     {
@@ -125,9 +135,6 @@ EigenLapZ::compute_eigens()
             // [gi0]
             l2 = integrate( _range=elements(mesh),
                             _expr=mode.first*idv(u3)*id(gd) );
-            a2 = integrate( _range=elements(mesh),
-                            _expr=-dzt(gd)*dz(gd)
-                            + dxt(gd)*dx(gd) + dyt(gd)*dy(gd) + dzt(gd)*dz(gd) );
             a2 += on(_range=boundaryfaces(mesh), _rhs=l2, _element=gd, _expr=cst(0.) );
             // [gi0]
             a2.solve(_name="gi0", _rhs=l2, _solution=gd);
@@ -139,31 +146,26 @@ EigenLapZ::compute_eigens()
             // [psi]
             l3 = integrate(_range=elements(mesh),
                            _expr=dzv(gd)*id(gd) );
-            a3 = integrate(_range=elements(mesh),
-                           _expr=dxt(psi[i])*dx(psi[i]) + dyt(psi[i])*dy(psi[i]) + dzt(psi[i])*dz(psi[i]) );
             // [psi]
             a3.solve(_name="psi", _rhs=l3, _solution=psi[i]);
-
-            auto gv = Vh->element();
-            auto c = form2( _trial=Vh, _test=Vh );
-            c = integrate( _range=elements(mesh), _expr=inner(idt(gradu[i]),id(gv)) );
-            auto f = form1( _test=Vh );
-            f = integrate( _range=elements(mesh), _expr=gradv( psi[i] )*id(gv));
-            c.solve( _name="gradpsi", _rhs=f, _solution=gradu[i] );
-
-            modebis[i] = vf::project( _space=Vh, _range=elements(mesh),
-                                      _expr=idv(g0[i])+idv(gradu[i]) );
-
-            double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(modebis[i]) );
-            double nG = normL2( elements(mesh), idv(g[i]) );
-            double nG0 = normL2( elements(mesh), idv(g0[i]) );
-            double nPsi = normL2( elements(mesh), idv(gradu[i]) );
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << " ||g|| = " << nG << " ||g0|| = " << nG0 << " ||psi|| = " << nPsi << std::endl;
 
             std::string pathPsi = (boost::format("psi-%1%")%i).str();
             psi[i].save(_path=pathPsi);
 
+            if( boption( _name="needDebug" )){
+                f = integrate( _range=elements(mesh), _expr=gradv( psi[i] )*id(gv));
+                c.solve( _name="gradpsi", _rhs=f, _solution=gradu[i] );
+
+                modebis[i] = vf::project( _space=Vh, _range=elements(mesh),
+                                          _expr=idv(g0[i])+idv(gradu[i]) );
+
+                double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(modebis[i]) );
+                double nG = normL2( elements(mesh), idv(g[i]) );
+                double nG0 = normL2( elements(mesh), idv(g0[i]) );
+                double nPsi = normL2( elements(mesh), idv(gradu[i]) );
+                if ( Environment::worldComm().isMasterRank() )
+                    std::cout << "||g-(g0+grad(psi)||_L2 = " << erreurL2 << " ||g|| = " << nG << " ||g0|| = " << nG0 << " ||psi|| = " << nPsi << std::endl;
+            }
         }
         i++;
         if(i>=nev)
