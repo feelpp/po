@@ -39,7 +39,7 @@ On programme la résolution de ce problème à l'aide de la bibliothèque Feel++
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
 
 \subsection{Gradient dans $\HH^1$}
-\label{gradh1}
+\label{impGradh1}
 
 Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors il faut utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$. Cela se traduit par le changement de formulation variationnelle suivant où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
 \[
@@ -78,6 +78,7 @@ Le résultat est visible dans la section (\ref{respsih1}).
 Comme on se place dans le cylindre, on sait que $\bm{v}$ est colinéaires en tout point avec le vecteur de base $z$, ainsi on peut écrire $\bm{v}=(0,0,v^z)$.
 
 \subsection{Sans relèvement}
+\label{impZSR}
 
 Dans cette section, on va supposer que l'on peut écrire $\bm{v}=\sum_i d_i \bm{h_i}$ où les $\bm{h_i}\in [H^1(\Omega)]^3$ sont solutions de :
 \begin{align}
@@ -138,11 +139,46 @@ Et le terme de droite :
 Afin de décomposer $\bm{h_i}$, on utilise la même formulation que pour $\bm{g_i^0}$ et $\psi_i$. Ce qui donne :
 \lstinputlisting[linerange={gi0}]{../../src/eigenlapZ.cpp}
 \lstinputlisting[linerange={psi}]{../../src/eigenlapZ.cpp}
-Cette partie est assez délicate, car les conditions aux bords ne sont pas les mêmes pour $\bm{h_i}$ et $\bm{g_i}$.
+Cette partie est assez délicate, car les conditions aux bords ne devrait pas être les mêmes pour $\bm{h_i}$ et $\bm{g_i}$.\\
+
+Les résultats de cette implémentation sont présenté dans \ref{resZSR}.
 
 \subsection{Avec relèvement}
+\label{impZAR}
+
+Ici, on utilise le relèvement, $\bm{v}=\bm{a}+\bm{u}$ avec $\bm{u}=\sum_i c_i\bm{g_i}$ où les $\bm{g_i}\in [D^1(\Omega)]^3$ sont solutions de :
+\begin{align*}
+\rott  \mathbf{g_i} &= \Lambda_i \mathbf{g_i}\\
+\mathbf{g_i}\cdot \mathbf{n}\restr &= 0\\
+\rot \mathbf{g_i}\cdot \mathbf{n}\restr &= 0\\
+\rott  \mathbf{g_i}\cdot \mathbf{n}\restr &= 0
+\end{align*}
+avec
+\[
+\bm{g_i}=
+\begin{pmatrix}
+0\\
+0\\
+g_i^z
+\end{pmatrix}
+\text{ et }
+\rot\bm{g_i}=
+\begin{pmatrix}
+&\delta_y(g_i^z)\\
+&-\delta_x(g_i^z)\\
+&0
+\end{pmatrix}
+\]
+De la même manière que dans \ref{impZSR}, on utilise le laplacien à la place du rotationnel et un terme en pression pour forcer la pression nulle.\\
+
+Sur $\Gamma_1$ et $\Gamma_2$, $\bm{n}=(0,0,\pm 1)$, et donc la condition $\bm{g}\cdot \bm{n}=0$ conduit à $g_3 = 0$.\\
+Donc $\bm{g}=0$ sur $\partial\Omega$.\\
+
+Ainsi le terme de droite dans la formulation se traduit par :
+\lstinputlisting[linerange={formA,relev}]{../../src/eigenlapZ.cpp}
 
 \subsection{Problème spectral}
+\label{impZPS}
 
 Comme les fonctions de bases sont de la forme $\bm{g_i}=(0,0,g_i^z)$, on a que $\bm{g_i}\times\bm{g_i}=0$, ainsi, le terme non linéaire est nul.\\
 
@@ -280,24 +316,7 @@ où
 r_l^{(i)} = J(c^{(l)})\delta c^{(l,i)} + F(c^{(l)})
 \]
 
-
-\section{FreeFem++}
-Dans ce chapitre, on va détailler les différentes méthodes employées par Benjamin pour résoudre le problème dans un cylindre.\\
-Tout d'abord, 
-
-\subsection{Composante $z$}
-\label{freefem1d}
-Dans le cylindre, on peut supposer que 
-De plus, on sait que $\bm{g}$ ne dépend pas de $z$.\\
-Sur l'entrée et la sortie du cylindre, la condition $\bm{g}\cdot \bm{n}=0$ avec $\bm{n}=(0,0,\pm 1)$ conduit à \[g_3 = 0\]
-Donc $\bm{g}=0$ sur l'entrée et la sortie.\\
-
-De même sur le tour du cylindre, $\bm{n}=(n_1,n_2,0)$, et la condition $\rot\bm{g}\cdot\bm{n}=0$ donne \[\delta_y(g_3)n_1-\delta_x(g_3)n_3=0\]
-Une manière de remplir cette condition est de prendre $\delta_x(g_3)=\delta_y(g_3)=0$, d'où $g_3$ est une constante sur le tour du cylindre.\\
-On peut donc prendre $\bm{g}=0$ sur les bords du cylindre.
-
-Comme $\bm{g_i}=(0,0,g_{i,3})$, on a que $\bm{g_i}\times\bm{g_j}=(0,0,0)$ et donc le terme non linéaire dans (\ref{fvspec}) est nul.\\
-De même, si on note $\bm{a}=(a_1,a_2,a_3)$, alors $\bm{a}\times\bm{g_i}=(-g_{i,3}a_2, g_{i,3}a_1, 0)$ et $(\bm{a}\times\bm{g_i})\cdot\bm{g_k}=0$
+\iffalse
 
 \subsection{Composantes $(x,y,z)$}
 Si l'on ne suppose pas $\bm{g}=(0,0,g_3)$, on a : 
@@ -325,7 +344,7 @@ La condition $\rot\bm{g}\cdot\bm{n}=0$, sur l'entrée et la sortie se lit $\delt
 
 Comme toutes ces contraintes s'expriment par le fait que $\bm{g}$ doit être une constante, on peut choisir cette constante, par exemple, $\bm{g}=0$.
 
-
+\fi
 
 
 %%% Local Variables:

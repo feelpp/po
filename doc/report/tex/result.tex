@@ -3,7 +3,7 @@
 \section{Relèvement}
 \label{respsih1}
 
-Dans la figure \ref{az}, on peut observer la composante en $z$ de $\mathbf{a}$ dans le cylindre, lorsque $\alpha_1=0$ et $\alpha_0(x,y)=2\times v\times\left(1-\frac{x^2+y^2}{r^2}\right)$. Ce résultat a été obtenu avec le programme du chapitre \ref{gradh1}. 
+Dans la figure \ref{az}, on peut observer la composante en $z$ de $\mathbf{a}$ dans le cylindre, lorsque $\alpha_1=0$ et $\alpha_0(x,y)=2\times v\times\left(1-\frac{x^2+y^2}{r^2}\right)$. Ce résultat a été obtenu avec le programme du chapitre \ref{impGradh1}. 
 
 \begin{figure}[H]
 \makebox[\textwidth][c]{
@@ -64,10 +64,10 @@ g_\mathcal{K}^z(r,\theta,z) = \frac{\sqrt{2}}{\sqrt{l\pi}R|J_k'\left(\rho_{k,j}\
 \subsection{Sans relèvement}
 \label{resZSR}
 
-On va ici utiliser l'implémentation présenté dans la section \ref{compZ}.
+On va ici utiliser l'implémentation présenté dans la section \ref{impZSR}.
 
 \subsubsection{Modes propres}
-On obtient les valeurs propres suivantes, où l'on voit que les valeurs propres ne correspondant pas à la fonction 0 de Bessel, apparaissent deux fois, cela est dû à la symétrie du cylindre.\\
+On obtient les valeurs propres suivantes, où l'on voit que $m=1$ pour toutes les valeurs propres, et que celles ne correspondant pas à la fonction 0 de Bessel, apparaissent deux fois, cela est dû à la symétrie du cylindre.\\
 D'autre part, on voit qu'à partir d'un certain moment, les valeurs propres ne correspondent plus aux valeurs analytiques et leur divergence explose. Cela est dû à la taille du maillage, trop grossière pour calculer des modes aux variations de plus en plus fines.\\
 \begin{align*}
 \bm{\lambda^2_{0,1,1}=\Lambda_0} &\bf{= 2329.47}	&\int\div\bm{h} &= 1.94208e-17	&||\div\bm{h}|| &= 0.0983456\\
@@ -107,8 +107,9 @@ Les modes correspondant aux trois premiers zéros de la fonction 0 de Bessel son
 \end{figure}
 
 \subsubsection{Problème spectral}
+\label{resZSRPS}
 
-En utilisant $\bm{f}=(0,0,1)$ et $\alpha_2=\frac{2\times v}{R^2}$, on obtient les coefficients suivants :
+En utilisant \ref{impZPS} et $\bm{f}=(0,0,1)$ et $\alpha_2=\frac{2\times v}{R^2}$, on obtient les coefficients suivants :
 \begin{align*}
 \bf{d_{0}} &\bf{= 0.00242664} & d_{1} &= -5.72621e-05\\
 d_{2} &= -2.79554e-05 & d_{3} &= 1.17409e-06\\
@@ -129,8 +130,80 @@ En additionnant les vecteurs propres multipliés par leur coefficient, on arrive
 \caption{$\bm{v}$ avec 100 modes propres}
 \end{figure}
 
+A un coefficient d'adimensionnement près, les résultats sont ceux recherchés.\\
+
+Mais la formulation mathématique de cette méthode n'est pas rigoureuse, et il y a de fortes chances que l'on ne puisse pas utiliser cette méthode dans d'autres cas que le cylindre. De plus, on perd le contrôle de $\alpha_0$ et $\alpha_1$.
+
 \subsection{Avec relèvement}
 \label{resZAR}
+
+\subsubsection{Modes propres}
+
+Ici, les valeurs propres correspondent bien à toutes les valeurs analytiques que R. Saks trouvent, de plus, on a bien plus de valeurs propres cohérentes bien que la taille de maillage soit la même.\\
+Par contre, on a encore les valeurs qui apparaissent en double dû à la symétrie du cylindre.\\
+Il faut noter que la divergence augmente linéairement et est égale environ à $m\times 2\pi$.\\
+
+\begin{align*}
+\lambda^2_{0,1,1} = \Lambda_{0} &= 2369	& \int\div\bm{g} &= -1.60651e-09	& ||\div\bm{g}|| &= 6.24909\\
+\lambda^2_{0,1,2} = \Lambda_{1} &= 2487.46	& \int\div\bm{g} &= 7.32721e-07	& ||\div\bm{g}|| &= 12.4931\\
+\lambda^2_{0,1,3} = \Lambda_{2} &= 2684.89	& \int\div\bm{g} &= 4.90275e-09	& ||\div\bm{g}|| &= 18.7299\\
+\lambda^2_{0,1,4} = \Lambda_{3} &= 2961.33	& \int\div\bm{g} &= 1.74436e-06	& ||\div\bm{g}|| &= 24.9565\\
+\lambda^2_{0,1,5} = \Lambda_{4} &= 3316.78	& \int\div\bm{g} &= 1.10662e-08	& ||\div\bm{g}|| &= 31.1678\\
+\lambda^2_{0,1,6} = \Lambda_{5} &= 3751.28	& \int\div\bm{g} &= -3.31484e-06	& ||\div\bm{g}|| &= 37.3597\\
+\lambda^2_{0,1,7} = \Lambda_{6} &= 4264.86	& \int\div\bm{g} &= 1.97088e-08	& ||\div\bm{g}|| &= 43.5285\\
+\lambda^2_{0,1,8} = \Lambda_{7} &= 4857.65	& \int\div\bm{g} &= 5.72063e-06	& ||\div\bm{g}|| &= 49.6785\\
+\lambda^2_{0,1,9} = \Lambda_{8} &= 5529.66	& \int\div\bm{g} &= 3.31517e-08	& ||\div\bm{g}|| &= 55.7955\\
+\lambda^2_{1,1,1} = \Lambda_{9} &= 5956.95	& \int\div\bm{g} &= -5.20023e-09	& ||\div\bm{g}|| &= 6.20444\\
+&\vdots & &\vdots & &\vdots\\
+\lambda^2_{1,1,9} = \Lambda_{30} &= 9124.64	& \int\div\bm{g} &= -1.66897e-07	& ||\div\bm{g}|| &= 55.404\\
+\lambda^2_{1,1,10} = \Lambda_{31} &= 9877.82	& \int\div\bm{g} &= -7.9746e-08	& ||\div\bm{g}|| &= 61.4882\\
+\lambda^2_{1,1,10} = \Lambda_{32} &= 9878.29	& \int\div\bm{g} &= 5.9413e-08	& ||\div\bm{g}|| &= 61.4728\\
+\lambda^2_{0,1,14} = \Lambda_{33} &= 10084.8	& \int\div\bm{g} &= -2.07731e-05	& ||\div\bm{g}|| &= 85.9147\\
+\lambda^2_{2,1,1} = \Lambda_{34} &= 10685.8	& \int\div\bm{g} &= 9.04227e-08	& ||\div\bm{g}|| &= 6.19571\\
+\lambda^2_{2,1,1} = \Lambda_{35} &= 10688.2	& \int\div\bm{g} &= 1.56108e-08	& ||\div\bm{g}|| &= 6.28396\\
+\lambda^2_{1,1,11} = \Lambda_{36} &= 10711	& \int\div\bm{g} &= -2.3174e-07	& ||\div\bm{g}|| &= 67.4732\\
+\lambda^2_{1,1,11} = \Lambda_{37} &= 10711.4	& \int\div\bm{g} &= -4.91277e-08	& ||\div\bm{g}|| &= 67.535\\
+\lambda^2_{2,1,2} = \Lambda_{38} &= 10804.7	& \int\div\bm{g} &= 1.65283e-07	& ||\div\bm{g}|| &= 12.3054\\
+\lambda^2_{2,1,2} = \Lambda_{39} &= 10806.9	& \int\div\bm{g} &= 3.99449e-08	& ||\div\bm{g}|| &= 12.3059
+\end{align*}
+
+Les modes correspondants à $\lambda_{0,1,1}$, $\lambda_{0,1,4}$, $\lambda_{1,1,1}$ et $\lambda_{2,1,1}$ sont présentés dans la figure suivante :
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 0]{\includegraphics[scale=0.3]{modeZAR-0}}\ 
+		\subfloat[mode 3]{\includegraphics[scale=0.3]{modeZAR-3}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 9]{\includegraphics[scale=0.3]{modeZAR-9}}\ 
+		\subfloat[mode 34]{\includegraphics[scale=0.3]{modeZAR-34}}
+	}
+	\caption{composante z des fonctions propres}
+	\label{modesZAR}
+\end{figure}
+
+\subsubsection{Problème spectral}
+
+En utilisant les mêmes paramètres que dans \ref{resZSRPS}, on obtient les coefficients suivants :
+\begin{align*}
+c_{0} &= -0.00162348 & c_{1} &= 2.76514e-05\\
+c_{2} &= 0.000461607 & c_{3} &= 0.000621154\\
+c_{4} &= 0.000261723 & c_{5} &= -0.000181696\\
+c_{6} &= -6.11957e-05 & c_{7} &= -3.59883e-05\\
+c_{8} &= 8.39453e-05 & c_{9} &= 2.42786e-05\\
+c_{10} &= 2.29969e-07 & c_{11} &= -8.20664e-05\\
+c_{12} &= 1.98117e-05 & c_{13} &= -0.000165568\\
+c_{14} &= -1.08967e-05 & c_{15} &= 4.07849e-05
+\end{align*}
+
+Ce qui correspond à la vitesse présenté dans la figure suivante :
+\begin{figure}[H]
+\makebox[\textwidth][c]{
+\includegraphics[scale=0.5]{vZAR}}
+\caption{$\bm{v}$ avec 40 modes propres}
+\end{figure}
+Il y a évidemment des problèmes, cela peut venir soit du fait que certains paramètres ne soient pas valides, soit du fait que l'hypothèse qui consiste à dire que $\bm{g_i}=(0,0,g_i^z)$ est fausse.\\
+
+Pour ma part, je pense que l'on ne peut pas prendre $\bm{g_i}$ sous cette forme, en effet si $\bm{v}$ est bien sous cette forme dans le cylindre, $\bm{a}$ ne l'est pas, et donc $\bm{u}$ ne devrait pas l'être non plus.
 
 \section{Cas général}
 
