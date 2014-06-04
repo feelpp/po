@@ -34,7 +34,7 @@ git clone http://github.com/feelpp/po.git
 
 ### Compiling Po
 
-Just do the ```cmake``` Feel++ procedure and it will configure Po and generate the necessary Makefiles.
+Just do the ```cmake``` Feel++ procedure with the option ```-DFEELPP_ENABLE_RESEARCH_PO=ON```and it will configure Po and generate the necessary Makefiles.
 Afterwards just compile the applications you are interested in.
 
 

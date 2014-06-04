@@ -35,10 +35,12 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
 
     g = G;
     psi = P;
-    if( boption(_name="needRelev") )
-        a = A;
 
-    // initRiak();
+    if( boption(_name="needRelev") ){
+        a = A;
+        initRiak();
+    }
+
     // initRijk();
     initRfk();
     initRpk();

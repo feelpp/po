@@ -218,6 +218,68 @@ Ainsi, il ne reste plus qu'à calculer les $d_k\ \forall k=0,\dots,M$
 
 \subsection{Modes propres}
 
+Ici on veut utiliser les travaux de V. Girault \cite{Girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
+On rappel les définitions suivantes :
+\begin{align*}
+L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
+D^1(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}
+\end{align*}
+De plus, on a (voir \cite{Girault79}) :
+\[
+H^1(\Omega)=H(rot)\cap H(div)
+\]
+D'où:
+\begin{align*}
+D^1(\Omega) &= \{\bm{v}\in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
+&=\{\bm{v}\in H(rot)\cap H(div)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
+&&\text{ or }L^2_\sigma\subset H(div)\\
+&=\{\bm{v}\in H(rot)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
+&=\{\bm{v}\in H(rot)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\cap L^2_\sigma(\Omega)&\\
+&=X\cap L^2_\sigma(\Omega)&
+\end{align*}
+
+
+Le problème aux valeurs propres est :\\
+Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que :
+\begin{align}
+\rott\bm{g}&=\lambda^2\bm{g} \label{impPb1}\\
+\div\bm{g}&=0 \label{impPb2}\\
+(\bm{g}\cdot\bm{n})\restr&=0 \label{impPb3}\\
+(\rot\bm{g}\cdot\bm{n})\restr&=0 \label{impPb4}\\
+(\rott\bm{g}\cdot\bm{n})\restr&=0 \label{impPb5}
+\end{align}
+Mais les conditions (\ref{impPb2}-\ref{impPb3}) sont satisfaites par le fait que $\bm{g}\in L^2_\sigma$ et la condition (\ref{impPb4}) par l'appartenance à $X$.\\
+
+En passant à la forme variationnelle, on impose la condition (\ref{impPb5}), voir le chapitre (\ref{eigen}). On a donc le problème suivant :\\
+Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que $\forall \bm{\varphi}\in X\cap L^2_\sigma$ :
+\[
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
+\]
+
+Ne pouvant pas utiliser directement des fonctions de bases à divergence nulle pour les éléments finis, on impose cette condition par un terme de pression fictif. On a donc :\\
+Trouver $((\bm{g},p),\lambda)\in X\cap L^2_\sigma \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X\cap L^2_\sigma \times H^1$ :
+\begin{align*}
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p &= \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}\\
+\int_\Omega (\div\bm{g}) q &= 0
+\end{align*}
+En intégrant par partie la seconde équation, on obtient
+\[
+\int_\Omega (\div\bm{g}) q = \int_\Omega \bm{g}\grad q - \int_{\partial\Omega} (\underbrace{\bm{g}\cdot \bm{n}}_{=0})q = 0
+\]
+On peut donc imposer les contraintes (\ref{impPb2}-\ref{impPb3}), liées à $L^2_\sigma$, dans la formulation faible suivante :\\
+Trouver $((\bm{g},p),\lambda)\in X \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X \times H^1$ :
+\[
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
+\]
+
+Pour imposer la condition (\ref{impPb4}), on utilise une méthode de pénalisation, le problème devient donc :
+Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in H(rot) \times H^1$ :
+\[
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
+\]
+avec $\gamma$ une très grande valeur.
+
+
 \iffalse
 
 On va utiliser une classe \texttt{EigenProblem} acceptant des problèmes de plusieurs dimensions, dans notre cas le problème est de dimension 3.\\

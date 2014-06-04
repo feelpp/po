@@ -1102,24 +1102,24 @@ On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
 \]
 \begin{block}{En intégrant par partie et en additionnant :}
 \[
-(\grad\bm{g_i},\grad\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q) = \lambda^2(\bm{g_i},\bm{\varphi})
+(\grad\bm{g_i},\grad\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\bm{g_i},q) = \lambda^2(\bm{g_i},\bm{\varphi})
 \]
 \end{block}
 \end{frame}
 
 \begin{frame}{Conditions aux bords}
-Pour imposer les conditions aux bords, on utilise une méthode de pénalisation, ainsi pour imposer $\bm{g_i}\cdot\bm{n}=0$ on ajoute :
+En intégrant par partie $(\div\bm{g_i},q)$, on a :
 \[
-\gamma\int_\Omega (\bm{g_i}\cdot\bm{n})(\bm{\varphi}\cdot\bm{n})
-\]
-Et pour imposer $\rot\bm{g_i}\cdot\bm{n}=0$ on ajoute :
+(\div\bm{g_i},q) = (\bm{g_i},\grad q) - \langle \underbrace{\bm{g_i}\cdot \bm{n}}_{=0}, q \rangle
+\] 
+Pour imposer $\rot\bm{g_i}\cdot\bm{n}=0$ on utilise une méthode de pénalisation, on ajoute donc :
 \[
 \gamma\int_\Omega (\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n})
 \]
 \begin{block}{Ce qui donne la forme variationnelle :}
 \[\begin{aligned}
 (\grad\bm{g_i},\grad\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
-&+ \gamma(\bm{g_i}\cdot\bm{n},\bm{\varphi}\cdot\bm{n})\\ &+ \gamma(\rot\bm{g_i}\cdot\bm{n},\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2(\bm{g_i},\bm{\varphi})
+&+ \gamma(\rot\bm{g_i}\cdot\bm{n},\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2(\bm{g_i},\bm{\varphi})
 \end{aligned}\]
 \end{block}
 \end{frame}
