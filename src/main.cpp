@@ -31,9 +31,11 @@ makeOptions()
         ( "gamma", po::value<double>()->default_value( 20. ), "penalisation for curl g.n (eigenlap)" )
         ( "bc", po::value<double>()->default_value( 0. ), "boundary condition for eigenlapZ" )
         ( "needEigen", po::value<bool>()->default_value( true ), "need to compute the eigen modes or to load them" )
-        ( "bccurln", po::value<bool>()->default_value( true ), "need boundary condition curl g.n" )
+        ( "bccurln", po::value<bool>()->default_value( true ), "need boundary condition curl g.n (eigenlap)" )
+        ( "bcn1", po::value<bool>()->default_value( true ), "need boundary condition1 g.n (eigenlap)" )
+        ( "bcn2", po::value<bool>()->default_value( true ), "need boundary condition2 g.n (eigenlap)" )
         ( "divdiv", po::value<bool>()->default_value( true ), "need divdiv term" )
-        ( "needDecomp", po::value<bool>()->default_value( false ), "need to decompose the eigen modes" )
+        ( "needDecomp", po::value<bool>()->default_value( true ), "need to decompose the eigen modes" )
         ( "needRelev", po::value<bool>()->default_value( false ), "need a" )
         ( "needDebug", po::value<bool>()->default_value( false ), "debug" )
         ( "testBessel", po::value<bool>()->default_value( false ), "test the third composante using Bessel functions" )
@@ -137,10 +139,13 @@ main( int argc, char **argv )
         eig2.run();
         for(int i=0; i<ioption(_name="solvereigen.nev"); i++){
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig2.g[i] );
-            e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig2.g0[i] );
-            e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig2.psi[i] );
-            e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig2.gradu[i] );
-            e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig2.modebis[i] );
+            e->add( ( boost::format( "mode2-%1%" ) % i ).str(), eig2.gbis[i] );
+            if( boption( _name="needDecomp") ){
+                e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig2.g0[i] );
+                e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig2.psi[i] );
+                e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig2.gradu[i] );
+                e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig2.modebis[i] );
+            }
         }
         e->save();
         break;
@@ -149,10 +154,12 @@ main( int argc, char **argv )
         eig3.run();
         for(int i=0; i<ioption(_name="solvereigen.nev"); i++){
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), eig3.g[i] );
-            e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig3.g0[i] );
-            e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig3.psi[i] );
-            e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig3.gradu[i] );
-            e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig3.modebis[i] );
+            if( boption( _name="needDecomp") ){
+                e->add( ( boost::format( "g0-%1%" ) % i ).str(), eig3.g0[i] );
+                e->add( ( boost::format( "psi-%1%" ) % i ).str(), eig3.psi[i] );
+                e->add( ( boost::format( "gradpsi-%1%" ) % i ).str(), eig3.gradu[i] );
+                e->add( ( boost::format( "modebis-%1%" ) % i ).str(), eig3.modebis[i] );
+            }
         }
         e->save();
         break;

@@ -27,7 +27,8 @@ Eigen_Curl::run()
         compute_eigens();
     else
         load_eigens();
-    decomp();
+    if( option( _name="needDecomp").as<bool>() )
+        decomp();
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "-----End Eigen-----" << std::endl;
 }
@@ -40,6 +41,8 @@ Eigen_Curl::compute_eigens()
         std::cout << "number of eigenvalues computed = " << nev <<std::endl;
         std::cout << "number of eigenvalues for convergence = " << ncv <<std::endl;
     }
+
+    double penal = option(_name="penal").as<double>();
 
     auto Xh = sSpace_type::New( mesh );
     auto U = Xh->element();
@@ -57,7 +60,7 @@ Eigen_Curl::compute_eigens()
     a = integrate( elements( mesh ), (dyt(u3)-dzt(u2)) * (dy(v3)-dz(v2))
                    + (dzt(u1)-dxt(u3)) * (dz(v1)-dx(v3))
                    + (dxt(u2)-dyt(u1)) * (dx(v2)-dy(v1))
-                   + (dxt(u1)+dyt(u2)+dzt(u3)) * (dx(u1)+dy(u2)+dz(u3)) );
+                   + penal*(dxt(u1)+dyt(u2)+dzt(u3)) * (dx(u1)+dy(u2)+dz(u3))/hFace() );
 
     a += on(_range=markedfaces(mesh, 1), _rhs=l, _element=u3, _expr=cst(0.));
     a += on(_range=markedfaces(mesh, 2), _rhs=l, _element=u3, _expr=cst(0.));
@@ -99,21 +102,24 @@ Eigen_Curl::compute_eigens()
             if ( Environment::worldComm().isMasterRank() )
                 s << lambda[i] << std::endl;
 
-            double ag = a(modeTmp,modeTmp);
-            double bg = b(modeTmp,modeTmp);
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << ag << " " << bg << " " << ag/bg << std::endl;
-            double erreurEig = normL2(_range=elements(mesh),
-                                      _expr=curlv(g[i])-sqrt(lambda[i])*idv(g[i]) );
-            double di = integrate(elements(mesh), abs(divv(g[i]))).evaluate()(0,0);
-            /*auto cg = project(_space=Vh, _range=elements(mesh),
-              _expr=curlv(g[i]) );
-              double erreurEig5 = normL2(_range=elements(mesh),
-              _expr=curlv(curlv(cg))-lambda[i]*idv(g[i]) );
-            */
+            double erreurEigS = normL2( _range=elements(mesh),
+                                        _expr=curlv(g[i])-sqrt(lambda[i])*idv(g[i]) );
 
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << "curl-sqrt = " << erreurEig << " div = " << di << std::endl;
+            auto cg = Vh->element();
+            auto c = form2( _trial=Vh, _test=Vh );
+            c = integrate( _range=elements(mesh), _expr=inner(idt(cg),id(cg)) );
+            auto f = form1( _test=Vh );
+            f = integrate( _range=elements(mesh), _expr=inner(curlv(g[i]),id(cg)) );
+            c.solve( _name="curl", _rhs=f, _solution=cg );
+            double erreurEig = normL2( _range=elements(mesh),
+                                       _expr=curlv(cg)-lambda[i]*idv(g[i]) );
+
+            double di = normL2(elements(mesh), divv(g[i]));
+
+            if ( Environment::worldComm().isMasterRank() ){
+                std::cout << i << " : " << lambda[i] << std::endl;
+                std::cout << "curl-sqrt(lambda) = " << erreurEigS << " curl-lambda = " << erreurEig << " div = " << di << std::endl;
+            }
 
             i++;
             if(i>=nev)
@@ -169,10 +175,10 @@ Eigen_Curl::decomp()
     for(int i=0; i<nev; i++){
         auto vg0 = Vh->element();
         l2 = integrate( _range=elements(mesh),
-                        //_expr=lambda[i]*inner(idv(g[i])),id(vg0)) );
-                        _expr=inner(gradv(g[i]), grad(vg0) ) );
+                        //_expr=lambda[i]*inner(idv(g[i]),id(vg0)) ); // curl2(g) = lambda*g
+                        _expr=inner(gradv(g[i]), grad(vg0) ) );       //          = -laplacien(g)
         a2 = integrate( _range=elements(mesh),
-                        _expr=divt(g0[i])*div(vg0) );
+                        _expr=divt(g0[i])*div(vg0) ); // +-
         a2+= integrate( _range=elements(mesh),
                         _expr=inner(gradt(g0[i]), grad(vg0) ) );
         a2+= on( _range=boundaryfaces(mesh),
