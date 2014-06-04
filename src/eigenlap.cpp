@@ -7,15 +7,21 @@ EigenLap::EigenLap( mesh_ptrtype mesh ):super()
 {
     this->nev = ioption(_name="solvereigen.nev");
     this->ncv = ioption(_name="solvereigen.ncv");
+
     this->mesh = mesh;
+    // H(curl)^3
     this->Vh = space_vtype::New( mesh );
+    // L2^3
     this->Vh2 = space_v2type::New( mesh );
+    // L2
     this->Sh = space_stype::New( mesh );
+
     this->g = std::vector<element_vtype>(nev, Vh->element() );
     this->gbis = std::vector<element_v2type>(nev, Vh2->element() );
     this->psi = std::vector<element_stype>(nev, Sh->element() );
     this->lambda = std::vector<double>(nev, 0 );
 
+    // debug
     this->g0 = std::vector<element_vtype>(nev, Vh->element() );
     this->gradu = std::vector<element_vtype>(nev, Vh->element() );
     this->modebis = std::vector<element_vtype>(nev, Vh->element() );
@@ -54,34 +60,33 @@ EigenLap::compute_eigens()
     auto p = U.element<1>();
     auto q = V.element<1>();
 
+    // eigen problem Ax=lambda*Bx
     auto l = form1( _test=Xh );
-
     auto a = form2( _test=Xh, _trial=Xh);
     a = integrate( elements( mesh ),
                    trans(curlt(u))*curl(v)
                    + grad(q)*idt(u) + gradt(p)*id(v)
-                   + 1e-6*idt(p)*id(q) );
+                   );//+ 1e-6*idt(p)*id(q) );
     if( boption(_name="divdiv") )
         a += integrate( elements(mesh), divt(u)*div(v) );
     if ( boption(_name="bccurln" ) )
         a += integrate( boundaryfaces(mesh), gamma*(trans(curlt(u))*N())*(trans(curl(v))*N())/hFace() );
     if( boption(_name="bcn1" ) )
         a += integrate( boundaryfaces(mesh), gamma*(trans(idt(u))*N())*(trans(id(v))*N())/hFace() );
-    // if( boption(_name="bcn2" ) )
-    //     a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u*N(), _expr=cst(0.) );
 
     auto b = form2( _test=Xh, _trial=Xh);
-    b = integrate( elements(mesh), inner(idt(u),id(v)) + 0.*idt(p)*id(q) );
+    b = integrate( elements(mesh), inner(idt(u),id(v)) );// + 0.*idt(p)*id(q) );
 
     auto modes = veigs( _formA=a, _formB=b );
 
-
+    // left side of projection on L2
     auto w = Vh2->element();
     auto bb = form2( _test=Vh2, _trial=Vh2 );
     bb = integrate(_range=elements(mesh), _expr=trans(idt(w))*id(w));
     auto ll = form1( _test=Vh2 );
 
 
+    // preparation for the decomposition
     auto Mlh = space_mltype::New( mesh );
 
     auto vg0 = Vh->element();
@@ -94,16 +99,19 @@ EigenLap::compute_eigens()
     auto a3 = form2( _test=Mlh, _trial=Mlh );
     auto l3 = form1( _test=Mlh );
     if( boption( _name="needDecomp") ){
+        // left side of gi0
         a2 = integrate( _range=elements(mesh),
                         _expr=trans(curlt(vg0))*curl(vg0) );
         // _expr=-divt(vg0)*div(vg0)
         // + inner(gradt(vg0), grad(vg0) ) );
+        // left side of psi
         a3 = integrate( _range=elements(mesh),
                         _expr=inner(gradt(psii),grad(psii) )
                         + id(psii)*idt(nu) + idt(psii)*id(nu) );
     }
 
 
+    // left side for grad psi
     auto gv = Vh->element();
     auto c = form2( _trial=Vh, _test=Vh );
     auto f = form1( _test=Vh );
@@ -111,6 +119,7 @@ EigenLap::compute_eigens()
         c = integrate( _range=elements(mesh), _expr=inner(idt(gv),id(gv)) );
 
 
+    // opening file to store lambda
     int i = 0;
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
@@ -119,13 +128,14 @@ EigenLap::compute_eigens()
 
     for( auto const& mode : modes )
     {
+        // projection of g on L2
         ll = integrate( _range=elements(mesh), _expr=trans(idv(mode.second.element<0>()))*id(w));
-        bb.solve( _solution=w, _rhs=ll, _name="curl" );
-        gbis[i] = vf::project(_range=boundaryfaces(mesh), _space=Vh2, _expr=idv(w));
+        bb.solve( _solution=gbis[i], _rhs=ll, _name="curl" );
 
         g[i] = mode.second.element<0>();
         lambda[i] = mode.first;
 
+        // storing g and lambda
         std::string path = (boost::format("mode-%1%")%i).str();
         g[i].save(_path=path);
         if ( Environment::worldComm().isMasterRank() )
@@ -136,29 +146,37 @@ EigenLap::compute_eigens()
             double di = normL2(elements(mesh), divv(g[i]));
             double gn = normL2(boundaryfaces(mesh), trans(idv(g[i]))*N());
             double curlgn = normL2(boundaryfaces(mesh), trans(curlv(g[i]))*N());
+            double diC = normL2(elements(mesh), divv(gbis[i]));
+            double gnC = normL2(boundaryfaces(mesh), trans(idv(gbis[i]))*N());
+            double curlgnC = normL2(boundaryfaces(mesh), trans(curlv(gbis[i]))*N());
             if ( Environment::worldComm().isMasterRank() )
-                std::cout << "lambda_" << i << " = " << lambda[i] << "    ||div|| = " << di << "    ||g.n|| = " << gn << "    ||curlg.n|| = " << curlgn;
+                std::cout << "lambda_" << i << " = " << lambda[i] << "  //  ||div||L2 = " << di << "    ||div||Curl = " << diC << "  //  ||g.n||L2 = " << gn << "    ||g.n||Curl = " << gnC << "  //  ||curlg.n||L2 = " << curlgn << "    ||curlg.n||Curl = " << curlgnC;
         }
 
         if ( boption( _name="needDecomp") ){
+            // right side of gi0
             l2 = integrate( _range=elements(mesh),
                             _expr=lambda[i]*inner(idv(g[i]),id(vg0)) );
             a2+= on( _range=boundaryfaces(mesh),
                      _element=vg0, _rhs=l2, _expr=cst(0.) );
             a2.solve( _name="gi0", _rhs=l2, _solution=g0[i] );
 
+            // right side of psi
             l3 = integrate( _range=elements(mesh), _expr=divv(g0[i])*id(psii) );
             a3.solve( _name="psi", _rhs=l3, _solution=Psi );
             psi[i] = Psi.element<0>();
 
+            // storing psi
             std::string pathPsi = (boost::format("psi-%1%")%i).str();
             psi[i].save(_path=pathPsi);
 
 
             if( boption( _name="needDebug") ){
+                // right side of grad psi
                 f = integrate( _range=elements(mesh), _expr=gradv( psi[i] )*id(gv));
                 c.solve( _name="gradpsi", _rhs=f, _solution=gradu[i] );
 
+                // g0 + grad psi
                 modebis[i] = vf::project( _space=Vh, _range=elements(mesh),
                                           _expr=idv(g0[i])+idv(gradu[i]) );
 
