@@ -11,7 +11,8 @@ H^1_0(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\ |\ \mathbf{v}\restr = 0\}\\
 H(div) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div\mathbf{v} \in L^2(\Omega) \}\\
 H(rot) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \rot\mathbf{v} \in L^2(\Omega) \}\\
 D^1(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\\
-&=\{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ \mathbf{v}=\mathbf{v_0}+\grad\phi \text{ avec } \mathbf{v_0}\restr = 0,\ \grad\phi\cdot \mathbf{n}\restr = 0 \}
+&=\{\bm{v}\in L^2(\Omega)\ |\ \grad\bm{v}\in L^2(\Omega),\ \div\bm{v}=0,\ \bm{v}\cdot\bm{n}\restr = 0,\ \rot\bm{v}\cdot\bm{n}\restr = 0\}\\
+&=\{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \}
 \end{align*}
 
 Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :

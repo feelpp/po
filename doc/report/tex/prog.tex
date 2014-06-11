@@ -250,7 +250,11 @@ Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que :
 \end{align}
 Mais les conditions (\ref{impPb2}-\ref{impPb3}) sont satisfaites par le fait que $\bm{g}\in L^2_\sigma$ et la condition (\ref{impPb4}) par l'appartenance à $X$.\\
 
-En passant à la forme variationnelle, on impose la condition (\ref{impPb5}), voir le chapitre (\ref{eigen}). On a donc le problème suivant :\\
+En passant à la forme variationnelle, et en suivant les mêmes étapes que dans le chapitre (\ref{eigen}), on impose la condition (\ref{impPb5}) :
+\[
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi(\underbrace{(\rott \bm{g})\cdot\bm{n}}_{=0})= \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
+\]
+On a donc le problème suivant :\\
 Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que $\forall \bm{\varphi}\in X\cap L^2_\sigma$ :
 \[
 \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
@@ -274,9 +278,10 @@ Trouver $((\bm{g},p),\lambda)\in X \times H^1 \times \R$ tel que $\forall (\bm{\
 
 Pour imposer la condition (\ref{impPb4}), on utilise une méthode de pénalisation, le problème devient donc :
 Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in H(rot) \times H^1$ :
-\[
+\begin{equation}
+\label{impFvEigen}
 \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
-\]
+\end{equation}
 avec $\gamma$ une très grande valeur.
 
 
