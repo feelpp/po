@@ -3,7 +3,6 @@
 
 #include <feel/feelcore/application.hpp>
 #include <feel/feeldiscr/functionspace.hpp>
-#include <feel/feeldiscr/pchv.hpp>
 
 using namespace Feel;
 using namespace Feel::vf;

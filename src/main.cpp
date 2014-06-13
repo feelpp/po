@@ -78,9 +78,10 @@ main( int argc, char **argv )
                                  %Environment::numberOfProcessors() ).str();
 
     boost::shared_ptr<Mesh<Simplex<3> > > mesh;
+    bool isMsh = mypath.extension() == ".msh";
     if(option(_name="needEigen").as<bool>())
         mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
-                         _rebuild_partitions=true,
+                         _rebuild_partitions=isMsh,
                          _rebuild_partitions_filename=meshPartName );
     else
         mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,

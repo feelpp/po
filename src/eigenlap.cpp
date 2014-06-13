@@ -1,5 +1,23 @@
+#include <boost/fusion/tuple.hpp>
+#include <boost/fusion/sequence.hpp>
+#include <boost/fusion/algorithm.hpp>
 #include <feel/feelalg/solvereigen.hpp>
-#include <feel/feelvf/vf.hpp>
+#include <feel/feelcore/feel.hpp>
+#include <feel/feelvf/detail/gmc.hpp>
+#include <feel/feelvf/expr.hpp>
+#include <feel/feelvf/cst.hpp>
+#include <feel/feelvf/trans.hpp>
+#include <feel/feelvf/operations.hpp>
+#include <feel/feelvf/operators.hpp>
+#include <feel/feelvf/geometricdata.hpp>
+#include <feel/feelvf/inner.hpp>
+#include <feel/feelvf/ones.hpp>
+#include <feel/feelvf/form.hpp>
+#include <feel/feelvf/norml2.hpp>
+#include <feel/feelvf/on.hpp>
+#include <feel/feelvf/projectors.hpp>
+//#include <feel/feelvf/evaluator.hpp>
+//#include <feel/feelvf/ginac.hpp>
 
 #include "eigenlap.h"
 
@@ -8,6 +26,7 @@ EigenLap::EigenLap( mesh_ptrtype mesh ):super()
     this->nev = ioption(_name="solvereigen.nev");
 
     this->mesh = mesh;
+
     // L2^3
     this->Vh = space_vtype::New( mesh );
     // L2
