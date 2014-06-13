@@ -6,18 +6,14 @@
 EigenLap::EigenLap( mesh_ptrtype mesh ):super()
 {
     this->nev = ioption(_name="solvereigen.nev");
-    this->ncv = ioption(_name="solvereigen.ncv");
 
     this->mesh = mesh;
-    // H(curl)^3
-    this->Vh = space_vtype::New( mesh );
     // L2^3
-    this->Vh2 = space_v2type::New( mesh );
+    this->Vh = space_vtype::New( mesh );
     // L2
     this->Sh = space_stype::New( mesh );
 
     this->g = std::vector<element_vtype>(nev, Vh->element() );
-    this->gbis = std::vector<element_v2type>(nev, Vh2->element() );
     this->psi = std::vector<element_stype>(nev, Sh->element() );
     this->lambda = std::vector<double>(nev, 0 );
 
@@ -46,12 +42,14 @@ EigenLap::compute_eigens()
     if ( Environment::worldComm().isMasterRank() ){
         std::cout << "----- Eigen Problem -----" << std::endl;
         std::cout << "number of eigenvalues computed = " << nev <<std::endl;
-        std::cout << "number of column vector = " << ncv <<std::endl;
+        std::cout << "number of column vector = " << ioption(_name="solvereigen.ncv") <<std::endl;
     }
 
-    int penal = doption(_name="penal");
-    int gamma = doption(_name="gamma");
+    double alpha = doption(_name="parameters.alpha");
+    double beta = doption(_name="parameters.beta");
+    double gamma = doption(_name="parameters.gamma");
 
+    // L2^3xL2
     auto Xh = space_ptype::New( mesh );
     auto U = Xh->element();
     auto V = Xh->element();
@@ -66,27 +64,22 @@ EigenLap::compute_eigens()
     a = integrate( elements( mesh ),
                    trans(curlt(u))*curl(v)
                    + grad(q)*idt(u) + gradt(p)*id(v)
-                   );//+ 1e-6*idt(p)*id(q) );
+                   );
     if( boption(_name="divdiv") )
-        a += integrate( elements(mesh), divt(u)*div(v) );
+        a += integrate( elements(mesh), alpha*divt(u)*div(v) );
     if ( boption(_name="bccurln" ) )
-        a += integrate( boundaryfaces(mesh), gamma*(trans(curlt(u))*N())*(trans(curl(v))*N())/hFace() );
-    if( boption(_name="bcn1" ) )
+        a += integrate( boundaryfaces(mesh), beta*(trans(curlt(u))*N())*(trans(curl(v))*N())/hFace() );
+    if( boption(_name="bcn" ) )
         a += integrate( boundaryfaces(mesh), gamma*(trans(idt(u))*N())*(trans(id(v))*N())/hFace() );
 
     auto b = form2( _test=Xh, _trial=Xh);
-    b = integrate( elements(mesh), inner(idt(u),id(v)) );// + 0.*idt(p)*id(q) );
+    b = integrate( elements(mesh), inner(idt(u),id(v)) );
 
     auto modes = veigs( _formA=a, _formB=b );
 
-    // left side of projection on L2
-    auto w = Vh2->element();
-    auto bb = form2( _test=Vh2, _trial=Vh2 );
-    bb = integrate(_range=elements(mesh), _expr=trans(idt(w))*id(w));
-    auto ll = form1( _test=Vh2 );
-
 
     // preparation for the decomposition
+    // L2xR
     auto Mlh = space_mltype::New( mesh );
 
     auto vg0 = Vh->element();
@@ -98,23 +91,23 @@ EigenLap::compute_eigens()
     auto nu = Psi.element<1>();
     auto a3 = form2( _test=Mlh, _trial=Mlh );
     auto l3 = form1( _test=Mlh );
+
     if( boption( _name="needDecomp") ){
         // left side of gi0
         a2 = integrate( _range=elements(mesh),
                         _expr=trans(curlt(vg0))*curl(vg0) );
-        // _expr=-divt(vg0)*div(vg0)
-        // + inner(gradt(vg0), grad(vg0) ) );
+
         // left side of psi
         a3 = integrate( _range=elements(mesh),
                         _expr=inner(gradt(psii),grad(psii) )
                         + id(psii)*idt(nu) + idt(psii)*id(nu) );
     }
 
-
     // left side for grad psi
     auto gv = Vh->element();
     auto c = form2( _trial=Vh, _test=Vh );
     auto f = form1( _test=Vh );
+
     if( boption( _name="needDebug") && boption(_name="needDecomp") )
         c = integrate( _range=elements(mesh), _expr=inner(idt(gv),id(gv)) );
 
@@ -128,10 +121,6 @@ EigenLap::compute_eigens()
 
     for( auto const& mode : modes )
     {
-        // projection of g on L2
-        ll = integrate( _range=elements(mesh), _expr=trans(idv(mode.second.element<0>()))*id(w));
-        bb.solve( _solution=gbis[i], _rhs=ll, _name="curl" );
-
         g[i] = mode.second.element<0>();
         lambda[i] = mode.first;
 
@@ -146,19 +135,16 @@ EigenLap::compute_eigens()
             double di = normL2(elements(mesh), divv(g[i]));
             double gn = normL2(boundaryfaces(mesh), trans(idv(g[i]))*N());
             double curlgn = normL2(boundaryfaces(mesh), trans(curlv(g[i]))*N());
-            double diC = normL2(elements(mesh), divv(gbis[i]));
-            double gnC = normL2(boundaryfaces(mesh), trans(idv(gbis[i]))*N());
-            double curlgnC = normL2(boundaryfaces(mesh), trans(curlv(gbis[i]))*N());
             if ( Environment::worldComm().isMasterRank() )
-                std::cout << "lambda_" << i << " = " << lambda[i] << "  //  ||div||L2 = " << di << "    ||div||Curl = " << diC << "  //  ||g.n||L2 = " << gn << "    ||g.n||Curl = " << gnC << "  //  ||curlg.n||L2 = " << curlgn << "    ||curlg.n||Curl = " << curlgnC;
-        }
+                std::cout << "lambda_" << i << " = " << lambda[i] << "  //  ||div|| = " << di << "  //  ||g.n|| = " << gn << "  //  ||curlg.n|| = " << curlgn;
+     }
 
         if ( boption( _name="needDecomp") ){
             // right side of gi0
             l2 = integrate( _range=elements(mesh),
                             _expr=lambda[i]*inner(idv(g[i]),id(vg0)) );
             a2+= on( _range=boundaryfaces(mesh),
-                     _element=vg0, _rhs=l2, _expr=cst(0.) );
+                     _element=vg0, _rhs=l2, _expr=zero<3>() );
             a2.solve( _name="gi0", _rhs=l2, _solution=g0[i] );
 
             // right side of psi
