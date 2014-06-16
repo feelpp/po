@@ -1,6 +1,6 @@
 #include <feel/feelvf/vf.hpp>
 
-#include "spectralproblem.h"
+#include "spectralproblem.hpp"
 
 using namespace Eigen;
 

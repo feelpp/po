@@ -16,12 +16,10 @@
 #include <feel/feelvf/norml2.hpp>
 #include <feel/feelvf/on.hpp>
 #include <feel/feelvf/projectors.hpp>
-//#include <feel/feelvf/evaluator.hpp>
-//#include <feel/feelvf/ginac.hpp>
 
-#include "eigenlap.h"
+#include "eigenprob.hpp"
 
-EigenLap::EigenLap( mesh_ptrtype mesh ):super()
+EigenProb::EigenProb( mesh_ptrtype mesh ):super()
 {
     this->nev = ioption(_name="solvereigen.nev");
 
@@ -44,7 +42,7 @@ EigenLap::EigenLap( mesh_ptrtype mesh ):super()
 }
 
 void
-EigenLap::run()
+EigenProb::run()
 {
     if( boption( _name="needEigen") )
         compute_eigens();
@@ -56,7 +54,7 @@ EigenLap::run()
 }
 
 void
-EigenLap::compute_eigens()
+EigenProb::compute_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
         std::cout << "----- Eigen Problem -----" << std::endl;
@@ -98,13 +96,12 @@ EigenLap::compute_eigens()
 
 
     // preparation for the decomposition
-    // L2xR
-    auto Mlh = space_mltype::New( mesh );
-
     auto vg0 = Vh->element();
     auto a2 = form2( _test=Vh, _trial=Vh );
     auto l2 = form1( _test=Vh );
 
+    // L2xR
+    auto Mlh = space_mltype::New( mesh );
     auto Psi = Mlh->element();
     auto psii = Psi.element<0>();
     auto nu = Psi.element<1>();
@@ -205,7 +202,7 @@ EigenLap::compute_eigens()
 }
 
 void
-EigenLap::load_eigens()
+EigenProb::load_eigens()
 {
     if ( Environment::worldComm().isMasterRank() ){
         std::cout << "----- Load Eigen -----" << std::endl;

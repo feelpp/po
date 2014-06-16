@@ -1,5 +1,5 @@
-#ifndef EIGENLAP_H
-#define EIGENLAP_H
+#ifndef EIGENPROB_H
+#define EIGENPROB_H
 
 #include <feel/feelcore/application.hpp>
 #include <feel/feeldiscr/functionspace.hpp>
@@ -7,7 +7,7 @@
 using namespace Feel;
 using namespace Feel::vf;
 
-class EigenLap : public Application
+class EigenProb : public Application
 {
     typedef Application super;
     static const uint16_type Order = 2;
@@ -42,7 +42,7 @@ class EigenLap : public Application
     std::vector<element_vtype> gradu;
     std::vector<element_vtype> modebis;
 
-    EigenLap( mesh_ptrtype );
+    EigenProb( mesh_ptrtype );
     void run();
     void compute_eigens();
     void load_eigens();

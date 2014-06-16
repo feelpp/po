@@ -5,8 +5,8 @@
   int_O grad(u)*grad(v) + u*nu + v*lambda = int_pO g*v
   use of Lagrange multipliers int_0 u = 0
  */
-#ifndef __POISSON_H
-#define __POISSON_H
+#ifndef __PSI0_H
+#define __PSI0_H
 
 #include <feel/feelcore/application.hpp>
 #include <feel/feeldiscr/functionspace.hpp>
@@ -14,7 +14,7 @@
 using namespace Feel;
 using namespace Feel::vf;
 
-class Poisson : public Application
+class Psi0 : public Application
 {
     typedef Application super;
  public:
@@ -34,7 +34,7 @@ class Poisson : public Application
     mlElement_type U;
     element_type gradu;
 
-    Poisson(mesh_ptrtype, std::string);
+    Psi0(mesh_ptrtype, std::string);
     void run();
 
  private:
