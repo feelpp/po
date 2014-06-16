@@ -35,12 +35,9 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
 
     g = G;
     psi = P;
+    a = A;
 
-    if( boption(_name="needRelev") ){
-        a = A;
-        initRiak();
-    }
-
+    initRiak();
     // initRijk();
     initRfk();
     initRpk();
@@ -122,7 +119,6 @@ void SpectralProblem::initRpk()
         Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
                              _expr=a2*idv(psi[k]) ).evaluate()(0,0);
         // [rpk]
-                            //_expr=a2*idv(psi[k].template element<0>()) ).evaluate()(0,0);
         if ( Environment::worldComm().isMasterRank() )
             std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
     }
@@ -132,6 +128,24 @@ void SpectralProblem::run()
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Start Spectral Problem -----" << std::endl;
+
+    // MatrixXd A = MatrixXd::Matrix(M,M);
+    // A = Riak + lambda.asDiagonal();
+    Riak += (lambda/Re).asDiagonal();
+    VectorXd b = VectorXd::Matrix(M);
+    b= Rfk+Rpk/Re;
+
+    HouseholderQR<MatrixXd> qr(M,M);
+    qr.compute(Riak);
+    c = qr.solve(b);
+
+    for(int i=0; i<M; i++){
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "c(" << i << ") = " << c(i) << std::endl;
+        u += vf::project( _space=Vh, _range=elements(mesh),
+                          _expr = c(i)*idv(g[i]) );
+    }
+    u += vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a) );
 
     // VectorXd dc = VectorXd::Matrix(M);
     // double tol = 1.e-6;
@@ -172,15 +186,4 @@ void SpectralProblem::run()
     //     }
     //     u += a;
     // }
-    // [spz]
-    for(int i=0; i<M; i++){
-        c(i) = (Rpk(i)+Re*Rfk(i))/lambda(i);
-    // [spz]
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "c(" << i << ") = " << c(i) << std::endl;
-        u += vf::project( _space=Vh, _range=elements(mesh),
-                          _expr = c(i)*idv(g[i]) );
-    }
-    if( boption(_name="needRelev") )
-        u += vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a) );
 }

@@ -87,7 +87,7 @@ main( int argc, char **argv )
 
     if( boption(_name="needP0") || boption(_name="needPS") ){
         p0.run();
-        e->add( "grad_u", p0.gradu );
+        e->add( "psi0", p0.gradu );
     }
     if( boption(_name="needEigen") || boption(_name="needPS") ){
         eig.run();
@@ -106,7 +106,7 @@ main( int argc, char **argv )
     if( boption(_name="needPS") ){
         sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
         sp.run();
-        e->add( "u", sp.u );
+        e->add( "v", sp.u );
     }
     e->save();
 
