@@ -6,8 +6,6 @@ Psi0::Psi0(mesh_ptrtype mesh, std::string g_s):super()
 {
     this->mesh = mesh;
     this->g_s = g_s;
-    Xh = space_type::New( mesh );
-    gradu = Xh->element();
 }
 
 void
@@ -25,34 +23,38 @@ Psi0::run()
             { "radius", option( _name="radius" ).template as<double>() },
                 { "speed", option( _name="speed" ).template as<double>() } } );
 
-    auto Vh = mlSpace_type::New( mesh );
+    auto Vh = space_type::New( mesh );
     U = Vh->element();
     auto V = Vh->element();
     auto u = U.template element<0>() ;
-    auto lambda = U.template element<1>() ;
     auto v = V.template element<0>() ;
-    auto nu = V.template element<1>() ;
-
-    auto a = form2( _trial=Vh, _test=Vh );
-    a = integrate( _range=elements(mesh),
-                   _expr=inner(gradt(u),grad(v)) + id( v )*idt( lambda ) + idt( u )*id( nu ) );
+    auto p = U.template element<1>() ;
+    auto q = U.template element<1>() ;
+    // auto lambda = U.template element<2>() ;
+    // auto nu = V.template element<2>() ;
 
     auto l = form1( _test=Vh );
     l = integrate( _range=markedfaces(mesh, 1), // inflow
-                   _expr=-g*id(v) );
+                   _expr=-g*id(q) );
     l += integrate( _range=markedfaces(mesh, 2), // outflow
-                    _expr=g*id(v) );
+                    _expr=g*id(q) );
     l += integrate( _range=markedfaces(mesh, 3), // wall
-                    _expr=cst(0.)*id(v) );
+                    _expr=cst(0.)*id(q) );
+    /// [rhs]
 
-    a.solve( _name="psi0", _rhs=l, _solution=U );
+    /// [bilinear]
+    auto a = form2( _test=Vh, _trial=Vh );
+    a = integrate( _range=elements(mesh),
+                   _expr = -inner(idt( u ),id( v )) );
+    a = integrate( _range=elements(mesh),
+                   _expr = inner(trans(gradt( p )),id( v )) );
+    a = integrate( _range=elements(mesh),
+                   _expr = inner(trans(grad( q )),idt( u )) );
+    // a = integrate( _range=elements(mesh),
+    //                _expr = idt( p ) * id( nu ) );
+    // a = integrate( _range=elements(mesh),
+    //                _expr = idt( lambda ) * id( q ) );
 
-    auto b = form2( _trial=Xh, _test=Xh );
-    b = integrate( _range=elements(mesh),
-                   _expr=inner(id(gradu),idt(gradu)) );
-    auto k = form1( _test=Xh );
-    k = integrate( _range=elements(mesh),
-                   _expr=inner(trans(gradv( U.template element<0>() )),id(gradu)) );
-    // gradu is the L2 projection of grad(psi0) over Xh
-    b.solve( _name="gradpsi0", _rhs=k, _solution=gradu );
+    a.solve( _name="psi0Div", _rhs=l, _solution=U );
+
 }

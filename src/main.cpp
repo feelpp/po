@@ -40,7 +40,7 @@ po::options_description
 makeLibOptions()
 {
     po::options_description libOptions( "Lib options" );
-    libOptions.add( backend_options( "psi0" ) ).add( backend_options( "gradpsi0" ) ); // Poisson
+    libOptions.add( backend_options( "psi0Div" ) );
     libOptions.add( backend_options( "gi0" ) ).add( backend_options( "psi" ) ).add( backend_options( "gradpsi" ) ).add( backend_options( "curl" ) ); // Eigen_Curl
     return libOptions.add( feel_options() );
 }
@@ -87,7 +87,7 @@ main( int argc, char **argv )
 
     if( boption(_name="needP0") || boption(_name="needPS") ){
         p0.run();
-        e->add( "grad_u", p0.gradu );
+        e->add( "grad_u", p0.U );
     }
     if( boption(_name="needEigen") || boption(_name="needPS") ){
         eig.run();
@@ -103,11 +103,11 @@ main( int argc, char **argv )
             }
         }
     }
-    if( boption(_name="needPS") ){
-        sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
-        sp.run();
-        e->add( "u", sp.u );
-    }
+    // if( boption(_name="needPS") ){
+    //     sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
+    //     sp.run();
+    //     e->add( "u", sp.u );
+    // }
     e->save();
 
     if ( Environment::worldComm().isMasterRank() )
