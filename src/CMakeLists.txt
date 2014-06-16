@@ -21,9 +21,4 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-#feelpp_add_application( po_modeGen SRCS modeGen.cpp CFG po_modeGen.cfg )
-#feelpp_add_application( po_psi0 SRCS psi0.cpp CFG po_psi0.cfg )
-#feelpp_add_application( po_mode_gen_curl SRCS mode_gen_curl.cpp CFG po_mode_gen_curl.cfg )
-#feelpp_add_application( po_psi0Div SRCS psi0Div.cpp CFG po_psi0Div.cfg )
 feelpp_add_application( po_app SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp CFG po_app.cfg )
-feelpp_add_application( po_stokes SRCS eigenstokes.cpp CFG po_stokes.cfg )
