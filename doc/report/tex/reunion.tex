@@ -61,6 +61,21 @@ De plus, en utilisant la publication de R. Saks \cite{Saks2005}, je pourrai comp
 Il faut aussi que j’ajoute dans la documentation les explications à ces différentes méthodes.\\
 Aussi, il est prévu d’avoir une réunion avec les gens du LNCMI, afin de faire un point sur le projet.
 
+\section{Mercredi 18/06}
+
+Lors de la réunion de cet après-midi, nous avons parlé des différents problèmes survenus lors de la décomposition des modes propres en $\bm{g}=\bm{g_0}+\grad\psi$.\\
+Le plus gros problème soulevé est l'adimensionnement des équations mais pas de la géomètrie, ce qui peut conduire à des erreurs lors de la résolution des coefficients $c_i$.\\
+Un autre problème est la moyenne nulle des composantes des modes propres, ce qui implique l'impossibilité d'appliquer des forces volumiques sur $\bm{u}$. Cela peut provenir de la symétrie du cylindre, et ainsi des modes propres. Il faudrait donc vérifier si il existe des modes de moyennes non nulles. Une solution est aussi de tester le problème sur une autre géomètrie, telle que la marche.\\
+De la même manière, il faut tester $\psi$ avec différentes moyennes, afin de voir le comportements du coefficient $R_{pk}$.\\
+
+Afin de calculer l'erreur sur la condition au bord $\rott\bm{g}\cdot\bm{n}$ et sur les modes propres $\rott\bm{g}-\lambda^2\bm{g}$, il faut pouvoir calculer $\rott\bm{g}$. Si on peut calculer $\rot\bm{g}$ avec Paraview, il faut utiliser une projection sur les fonctions continues et monter en ordre afin de calculer $\rott\bm{g}$.\\
+Afin de limiter l'utilisation de la mémoire, il faudrait utiliser une décomposition du domaine afin de limiter la taille des problèmes.\\
+
+Un autre ajout important est le contrôle des différents paramètres du problème, la taille du maillage, le nombre de degré de libertè,... Cela permettra de pouvoir comparer les résultats entre eux précisément.
+
+
+
+
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"

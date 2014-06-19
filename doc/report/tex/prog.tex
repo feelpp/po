@@ -1,39 +1,5 @@
 \chapter{Implémentation}
 
-On programme la résolution de ce problème à l'aide de la bibliothèque Feel++. Pour commencer, on utilise une géomètrie d'un cylindre de rayon 0.05 et de longueur 0.5 orienté dans la direction $z$.
-\begin{center}
-\begin{tikzpicture}
-\begin{scope}[x={(.7cm,-.3cm)}]
-\path (1,0,0);
-\pgfgetlastxy{\cylxx}{\cylxy}
-\path (0,1,0);
-\pgfgetlastxy{\cylyx}{\cylyy}
-\path (0,0,1);
-\pgfgetlastxy{\cylzx}{\cylzy}
-\pgfmathsetmacro{\cylt}{(\cylzy * \cylyx - \cylzx * \cylyy)/ (\cylzy * \cylxx - \cylzx * \cylxy)}
-\pgfmathsetmacro{\ang}{atan(\cylt)}
-\pgfmathsetmacro{\ct}{1/sqrt(1 + (\cylt)^2)}
-\pgfmathsetmacro{\st}{\cylt * \ct}
-\begin{scope}[every path/.style={ultra thick}]
-\draw (0,0,0) circle[radius=1];
-\draw[->] (-1,3,1) -- (0,3,1);
-\draw (0,3,1) node [right] {$x$};
-\draw[->] (-1,3,1) -- (-1,4,1);
-\draw (-1,4,1) node [right] {$y$};
-\draw[->] (-1,3,1) -- (-1,3,-1);
-\draw (-1,3,-1) node [right] {$z$};
-\draw (\ct,\st,0) -- ++(0,0,-8);
-\draw (-\ct,-\st,0) -- ++(0,0,-8);
-\draw (\ct,\st,-8) arc[start angle=\ang,delta angle=180,radius=1];
-\draw[dashed] (\ct,\st,-8) arc[start angle=\ang,delta angle=-180,radius=1];
-\draw (0,0,0) node {$\Gamma_1$};
-\draw (0,0,-8) node {$\Gamma_2$};
-\draw (1,0,-4) node {$\Gamma_3$};
-\end{scope}
-\end{scope}
-\end{tikzpicture}
-\end{center}
-
 \section{Relèvement}
 
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
@@ -47,7 +13,7 @@ Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors il faut ut
 \]
 On va donc créé un espace de fonction produit correspondant à $\HH^1\times\R$.
 
-\lstinputlisting[linerange={space}]{../../src/psi0.cpp}
+\lstinputlisting[linerange={space}]{../../src/psi0.hpp}
 
 On ajoute une fonction permettant de rajouter en option le profil d'entrée en fonction du rayon et de la vitesse. Cela correspond à $\alpha_0$.
 
@@ -73,152 +39,9 @@ Le résultat est visible dans la section (\ref{respsih1}).
 
 \subsection{Rotationnel}
 
-\section{Composante $z$}
+\section{Modes propres}
 
-Comme on se place dans le cylindre, on sait que $\bm{v}$ est colinéaires en tout point avec le vecteur de base $z$, ainsi on peut écrire $\bm{v}=(0,0,v^z)$.
-
-\subsection{Sans relèvement}
-\label{impZSR}
-
-Dans cette section, on va supposer que l'on peut écrire $\bm{v}=\sum_i d_i \bm{h_i}$ où les $\bm{h_i}\in [H^1(\Omega)]^3$ sont solutions de :
-\begin{align}
-\rott\bm{h_i} &= \lambda^2_i \bm{h_i}\nonumber\\
-\div \bm{h_i} &= 0 \label{eqhdiv}\\
-\rot\bm{h_i}\cdot\bm{n}\big\rvert_{\Gamma_3} &= 0\nonumber
-\end{align}
-avec
-\[
-\bm{h_i}=
-\begin{pmatrix}
-0\\
-0\\
-h_i^z
-\end{pmatrix}
-\text{ et }
-\rot\bm{h_i}=
-\begin{pmatrix}
-&\delta_y(h_i^z)\\
-&-\delta_x(h_i^z)\\
-&0
-\end{pmatrix}
-\]
-Or, dans le cylindre, la vitesse ne dépend que de $x$ et de $y$, pas de $z$, et le vecteur normal est de la forme $\bm{n}=(n_x,n_y,0)$ sur $\Gamma_3$. Comme le cylindre est symétrique par rapport à l'axe $z$, on peut se ramener au cas où $\bm{n}=(1,0,0)$ ou $\bm{n}=(0,1,0)$, et donc on trouve que $h_i^z$ est une constante sur $\Gamma_3$. On peut prendre cette constante égale à 0.\\
-
-De plus, la relation $\rott \mathbf{h} = \grad(\div \mathbf{h}) - \laplace \mathbf{h}$ et l'équation (\ref{eqhdiv}), permettent de remplacer le rotationnel du rotationnel par l'opérateur laplacien.\\
-Comme on travail dans l'espace $[H^1(\Omega)]^3$ et non dans $[D^1(\Omega)]^3$, on a besoin de forcer la condition $\div\mathbf{g}=0$, pour cela, on utilise un terme de pression qui joue le rôle d'un multiplicateur de Lagrange. On a donc le problème suivant :
-\begin{equation}
-\left\{
-\begin{aligned}
--\laplace\mathbf{h_i} + \grad p &= \Lambda \mathbf{h_i}\\
-\div \mathbf{h_i}&=0\\
-\rot\bm{h_i}\cdot\bm{n}\big\rvert_{\Gamma_3} &= 0
-\end{aligned}
-\right.
-\end{equation}
-En multipliant la première équation par $\bm{\varphi}\in [H^1(\Omega)]^3$ et la seconde par $q\in L^2(\Omega)$, on obtient la formulation faible suivante :
-\begin{equation*}
-\int_\Omega \overline{\grad\mathbf{h_i}}:\overline{\grad\bm{\varphi}} + p\div\bm{\varphi} + q\div\mathbf{h_i} = \lambda_i^2 \int_\Omega \mathbf{h_i}\cdot\bm{\varphi}
-\end{equation*}
-Et en utilisant le fait que $h_i=(0,0,h_i^z)$, le problème devient : trouver $(h_i^z,p)\in H^1(\Omega)\times H^1(\Omega)$ tel que, $\forall (\varphi,q)\in H^1(\Omega)\times H^1(\Omega)$ :
-\[
-\int_\Omega \partial_x h_i^z \partial_x\varphi + \partial_y h_i^z \partial_y\varphi + \partial_z h_i^z \partial_z\varphi + \varphi\grad p + h_i^z\grad q = \lambda_i^2 \int_\Omega h_i^z\varphi
-\]
-avec $h_i^z = 0$ sur $\Gamma_3$.\\
-
-On utilise donc des éléments de Lagrange d'ordre 2 pour $h_i^z$ et des éléments de Lagrange d'ordre 1 pour $p$.
-\lstinputlisting[linerange={typedef}]{../../src/eigenlapZ.h}
-
-On obtient le terme de gauche avec ces lignes de codes :
-\lstinputlisting[linerange={formA,nrelev}]{../../src/eigenlapZ.cpp}
-
-Et le terme de droite :
-\lstinputlisting[linerange={formB}]{../../src/eigenlapZ.cpp}
-
-\subsubsection{Décomposition}
-
-Afin de décomposer $\bm{h_i}$, on utilise la même formulation que pour $\bm{g_i^0}$ et $\psi_i$. Ce qui donne :
-\lstinputlisting[linerange={gi0}]{../../src/eigenlapZ.cpp}
-\lstinputlisting[linerange={psi}]{../../src/eigenlapZ.cpp}
-Cette partie est assez délicate, car les conditions aux bords ne devrait pas être les mêmes pour $\bm{h_i}$ et $\bm{g_i}$.\\
-
-Les résultats de cette implémentation sont présenté dans \ref{resZSR}.
-
-\subsection{Avec relèvement}
-\label{impZAR}
-
-Ici, on utilise le relèvement, $\bm{v}=\bm{a}+\bm{u}$ avec $\bm{u}=\sum_i c_i\bm{g_i}$ où les $\bm{g_i}\in [D^1(\Omega)]^3$ sont solutions de :
-\begin{align*}
-\rott  \mathbf{g_i} &= \Lambda_i \mathbf{g_i}\\
-\mathbf{g_i}\cdot \mathbf{n}\restr &= 0\\
-\rot \mathbf{g_i}\cdot \mathbf{n}\restr &= 0\\
-\rott  \mathbf{g_i}\cdot \mathbf{n}\restr &= 0
-\end{align*}
-avec
-\[
-\bm{g_i}=
-\begin{pmatrix}
-0\\
-0\\
-g_i^z
-\end{pmatrix}
-\text{ et }
-\rot\bm{g_i}=
-\begin{pmatrix}
-&\delta_y(g_i^z)\\
-&-\delta_x(g_i^z)\\
-&0
-\end{pmatrix}
-\]
-De la même manière que dans \ref{impZSR}, on utilise le laplacien à la place du rotationnel et un terme en pression pour forcer la pression nulle.\\
-
-Sur $\Gamma_1$ et $\Gamma_2$, $\bm{n}=(0,0,\pm 1)$, et donc la condition $\bm{g}\cdot \bm{n}=0$ conduit à $g_3 = 0$.\\
-Donc $\bm{g}=0$ sur $\partial\Omega$.\\
-
-Ainsi le terme de droite dans la formulation se traduit par :
-\lstinputlisting[linerange={formA,relev}]{../../src/eigenlapZ.cpp}
-
-\subsection{Problème spectral}
-\label{impZPS}
-
-Comme les fonctions de bases sont de la forme $\bm{g_i}=(0,0,g_i^z)$, on a que $\bm{g_i}\times\bm{g_i}=0$, ainsi, le terme non linéaire est nul.\\
-
-De même, 
-\[
-\bm{a}\times\bm{g_i}=\begin{pmatrix}
-a_xg_i^z\\
--a_yg_i^z\\
-0
-\end{pmatrix}
-\text{ et donc }
-(\bm{a}\times\bm{g_i})\cdot\bm{g_k} = \begin{pmatrix}
-a_xg_i^z\\
--a_yg_i^z\\
-0
-\end{pmatrix}\cdot\begin{pmatrix}
-0\\
-0\\
-g_k^z
-\end{pmatrix} = 0
-\]
-Ainsi, pour trouver les coefficients $d_k$ ou $c_k$, il n'y a qu'à calculer les coefficients suivants :
-\[
-c_k = \frac{Re\times (\bm{f},\bm{g_k})+\langle \alpha_2,\psi_k\rangle}{\lambda_k^2}
-\]
-
-Pour cela on calcule d'abord tous les coefficients $(\bm{f},\bm{h_k})\ \forall k=0,\dots,M$
-\lstinputlisting[linerange={rfk}]{../../src/spectralproblem.cpp}
-
-Puis les coefficients $\langle\alpha_2,\psi_k\rangle\ \forall k=0,\dots,M$
-\lstinputlisting[linerange={rpk}]{../../src/spectralproblem.cpp}
-
-Ainsi, il ne reste plus qu'à calculer les $d_k\ \forall k=0,\dots,M$
-\lstinputlisting[linerange={spz}]{../../src/spectralproblem.cpp}
-
-\section{Cas général}
-
-\subsection{Modes propres}
-
-Ici on veut utiliser les travaux de V. Girault \cite{Girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
+Ici on veut utiliser les travaux de V. Girault \cite{girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
 On rappel les définitions suivantes :
 \begin{align*}
 L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
@@ -327,7 +150,7 @@ Les résultats sont visibles dans le chapitre \ref{resModes}.
 
 \fi
 
-\subsection{Problème spectral}
+\section{Problème spectral}
 
 On peut maintenant résoudre le problème (\ref{fvspec}).\\
 Cette équation comporte le terme
@@ -382,36 +205,6 @@ où
 \[
 r_l^{(i)} = J(c^{(l)})\delta c^{(l,i)} + F(c^{(l)})
 \]
-
-\iffalse
-
-\subsection{Composantes $(x,y,z)$}
-Si l'on ne suppose pas $\bm{g}=(0,0,g_3)$, on a : 
-\[
-\bm{g}=
-\begin{pmatrix}
-g_1\\
-g_2\\
-g_3
-\end{pmatrix}
-\text{ et }
-\rot\bm{g}=
-\begin{pmatrix}
-\delta_y(g_3)-\delta_z(g_2)\\
-\delta_z(g_1)-\delta_x(g_3)\\
-\delta_x(g_2)-\delta_y(g_1)
-\end{pmatrix}
-\]
-
-La condition $\bm{g}\cdot\bm{n}=0$ mène sur l'entrée et la sortie, de la même manière que dans \ref{freefem1d} à $g_3=0$, tandis que sur le tour du cylindre, on peut prendre $g_1=g_2=0$ pour satisfaire cette condition.\\
-
-On peut utiliser la contrainte $\div\bm{g}=0$, qui est continue sur les bords, donc applicables sur le tour du cylindre, pour contraindre $g_3$. Comme sur le tour, $g_1=g_2=0$, on a que $\div\bm{g}=\delta_z(g_3)=0$, donc $g_3$ est une constante sur le tour du cylindre, on peut prendre cette constante égale à 0.\\
-
-La condition $\rot\bm{g}\cdot\bm{n}=0$, sur l'entrée et la sortie se lit $\delta_x(g_2)=\delta_y(g_1)$, toujours de la même façon, prendre $g_1$ constant et $g_2$ constant permet de satisfaire la condition.\\
-
-Comme toutes ces contraintes s'expriment par le fait que $\bm{g}$ doit être une constante, on peut choisir cette constante, par exemple, $\bm{g}=0$.
-
-\fi
 
 
 %%% Local Variables:

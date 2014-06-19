@@ -110,107 +110,6 @@ La partie difficile est donc repoussé à trouver les coefficients $c_i$.
 \end{block}
 \end{frame}
 
-\begin{frame}{Organigramme}
-\begin{figure}
-\centering
-\begin{tikzpicture}[scale=\taille]
-\node[draw,scale=\taille,fill=green!50] (a0) at (0,0) {$\alpha_0$} ;
-\node[draw,scale=\taille,fill=green!50] (a1) at (4,0) {$\alpha_1$} ;
-\node[scale=\taille] at(0,-2) {\ref{psi0}} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-2) 
-{$
-\begin{aligned}
--\laplace\psi_0&=0\\
-\grad\psi_0\cdot \mathbf{n}\restr &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbb) at (4,-3) 
-{$\begin{aligned}
-\rott \mathbf{b} &= \grad\psi_1\\
-\div \mathbf{b} &=0\\ 
-\mathbf{b}\cdot \mathbf{n}\restr &= 0\\
-\rot \mathbf{b}\cdot \mathbf{n}\restr &= 0\\
-\rott \mathbf{b}\cdot \mathbf{n}\restr &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbeigen) at (12,-3) 
-{$\begin{aligned}
-\rott \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
-\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rott \mathbf{g_i}\cdot \mathbf{n}\restr = 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi0) at (0,-6) {$\grad\psi_0$} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (4,-6) {$\rot \mathbf{b}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambda) at (11,-6) {$\Lambda_i$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi) at (13,-6) {$\mathbf{g_i}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgi0) at (16,-6) 
-{$\begin{aligned}
-\grad(\div \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} = \Lambda_i \mathbf{g_i}\\
-\mathbf{\mathbf{g_i}^0}\restr = 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-8) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi_0$} ;
-\node[draw,scale=\taille,fill=green!50] (f) at (7,-8) {$f$} ;
-\node[draw,scale=\taille,fill=green!50] (a2) at (8,-8) {$\alpha_2$} ;
-\node[draw,scale=\taille,fill=green!50] (ck0) at (9,-8) {$c_k^0$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi0) at (16,-8) {$\mathbf{\mathbf{g_i}^0}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi) at (16,-10) 
-{$\begin{aligned}
--\laplace\psi_i = \div \mathbf{\mathbf{g_i}^0}\\
-\grad\psi_i\cdot \mathbf{n}\restr = 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (psi) at (16,-12) {$\psi_i$} ;
-\node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$a$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbs) at (9,-12)
-{$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \\
-&+ \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) + \sum_i c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) \\
-&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
-&c_k(0)=c_k^0
-\end{aligned}
-$} ;
-\node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbu) at (9,-16) {$\mathbf{u}=\sum c_k\mathbf{g_k}$} ;
-\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$\mathbf{u}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbv) at (3,-18) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (3,-19) {$\mathbf{v}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbq) at (9,-19)
-{$\begin{aligned}
--\laplace q = \div((\rot \mathbf{v})\times \mathbf{v}) - \div \mathbf{f}\\
-\grad q\cdot \mathbf{n}\restr =  \mathbf{f}\cdot \mathbf{n}\restr - \frac{\partial\alpha_0}{\partial t} - ((\rot \mathbf{v})\times \mathbf{v})\cdot \mathbf{n}\restr - \frac{\alpha_2}{Re}
-\end{aligned}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (q) at(15,-19) {$q$} ;
-
-\draw[->,>=latex] (a0) -- (pbpsi0);
-\draw[->,>=latex] (a1) -- (pbb);
-\draw[->,>=latex] (pbpsi0) -- (psi0);
-\draw[->,>=latex] (pbb) -- (b);
-\draw[->,>=latex] (b) -- (pba);
-\draw[->,>=latex] (psi0) -- (pba); 
-\draw[->,>=latex] (pba) -- (a); 
-\draw[->,>=latex] (pbeigen) -- (lambda);
-\draw[->,>=latex] (pbeigen) -- (gi);
-\draw[->,>=latex] (gi) -- (pbgi0);
-\draw[->,>=latex] (pbgi0) -- (gi0);
-\draw[->,>=latex] (gi0) -- (pbpsi);
-\draw[->,>=latex] (pbpsi) -- (psi);
-\draw[->,>=latex] (a) -- (pbs);
-\draw[->,>=latex] (f) -- (pbs);
-\draw[->,>=latex] (a2) -- (pbs);
-\draw[->,>=latex] (ck0) -- (pbs);
-\draw[->,>=latex] (lambda) -- (pbs);
-\draw[->,>=latex] (gi) -- (pbs);
-\draw[->,>=latex] (psi) -- (pbs);
-\draw[->,>=latex] (pbs) -- (ck);
-\draw[->,>=latex] (ck) -- (pbu);
-\draw[->,>=latex] (pbu) -- (u);
-\draw[->,>=latex] (u) -- (pbv);
-\draw[->,>=latex] (a) -- (pbv);
-\draw[->,>=latex] (pbv) -- (v);
-\draw[->,>=latex] (v) -- (pbq);
-\draw[->,>=latex] (pbq) -- (q);
-\end{tikzpicture}
-\end{figure}
-\end{frame}
-
 \begin{frame}{$\mathbf{v}=\mathbf{a}+\mathbf{u}$}
 \begin{block}{Relèvement par $\mathbf{a}$ pour utiliser les travaux de P. Penel}
 \begin{center}
@@ -674,401 +573,40 @@ $} ;
 
 \end{frame}
 
-\section{Explications}
-\begin{frame}{Préliminaires}
-\begin{block}{Cylindre}
-\begin{center}
-\begin{tikzpicture}
-\begin{scope}[x={(.7cm,-.3cm)}]
-\path (1,0,0);
-\pgfgetlastxy{\cylxx}{\cylxy}
-\path (0,1,0);
-\pgfgetlastxy{\cylyx}{\cylyy}
-\path (0,0,1);
-\pgfgetlastxy{\cylzx}{\cylzy}
-\pgfmathsetmacro{\cylt}{(\cylzy * \cylyx - \cylzx * \cylyy)/ (\cylzy * \cylxx - \cylzx * \cylxy)}
-\pgfmathsetmacro{\ang}{atan(\cylt)}
-\pgfmathsetmacro{\ct}{1/sqrt(1 + (\cylt)^2)}
-\pgfmathsetmacro{\st}{\cylt * \ct}
-\begin{scope}[every path/.style={ultra thick}]
-\draw (0,0,0) circle[radius=1];
-\draw[->] (-1,3,1) -- (0,3,1);
-\draw (0,3,1) node [right] {$x$};
-\draw[->] (-1,3,1) -- (-1,4,1);
-\draw (-1,4,1) node [right] {$y$};
-\draw[->] (-1,3,1) -- (-1,3,-1);
-\draw (-1,3,-1) node [right] {$z$};
-\draw (\ct,\st,0) -- ++(0,0,-8);
-\draw (-\ct,-\st,0) -- ++(0,0,-8);
-\draw (\ct,\st,-8) arc[start angle=\ang,delta angle=180,radius=1];
-\draw[dashed] (\ct,\st,-8) arc[start angle=\ang,delta angle=-180,radius=1];
-\draw (0,0,0) node {$\Gamma_1$};
-\draw (0,0,-8) node {$\Gamma_2$};
-\draw (1,0,-4) node {$\Gamma_3$};
-\end{scope}
-\end{scope}
-\end{tikzpicture}
-\end{center}
-l=0.5, R=0.05, $\partial\Omega = \Gamma_1+\Gamma_2+\Gamma_3$
-\end{block}
-\end{frame}
-
-\begin{frame}{Problème}
-\begin{block}{On traite le problème aux valeurs propres}
+\begin{frame}{$P_\sigma(H^1_0)$}
+On sait que
 \[
-\begin{aligned}
-\rott \mathbf{g_i} = -\laplace\bm{g_i} = \Lambda_i\mathbf{g_i}\\
-\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rott \mathbf{g_i}\cdot \mathbf{n}\restr = 0
+D^1 = \{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \}
+\]
+En notant $P_\sigma = I + \grad(-\laplace)^{-1}\div$ alors
+\[
+D^1 = P_\sigma(H^1_0)
+\]
+Comme les valeurs propres $(g_0^i)$ de
+\[
+\left\{\begin{aligned}
+-\laplace\bm{g_0} = \beta\bm{g_0}\\
+\bm{g_0} = 0 \text{ sur } \partial\Omega
 \end{aligned}
+\right.
 \]
-\end{block}
-
-Or, dans le cas du cylindre :
-\[
-\bm{v}=\begin{pmatrix}
-0\\
-0\\
-v_z
-\end{pmatrix}
-\text{ et }
-\rot \bm{v} = \begin{pmatrix}
-\frac{\partial v_z}{\partial y}\\
--\frac{\partial v_z}{\partial x}\\
-0
-\end{pmatrix}
-\]
+sont une base de $H^1_0$, $P_\sigma(g_0^i)$ est une base de $D^1$.
 \end{frame}
 
-\begin{frame}{Problème}
-\begin{block}{Décomposition en plusieurs composantes}
-On cherche donc à exprimer $\bm{u}=\bm{v}-\bm{a}$ comme $\bm{u}=\sum_i c_i\bm{g_i}$ avec :
-\[
-\bm{g_i}=\begin{pmatrix}
-0\\
-0\\
-g_i^z
-\end{pmatrix}
-\text{ et donc }
-\rot\bm{g_i}=\begin{pmatrix}
-\frac{\partial g_i^z}{\partial y}\\
--\frac{\partial g_i^z}{\partial x}\\
-0
-\end{pmatrix}
-\]
-\end{block}
-On va donc écrire le problème en décomposant $\bm{g_i}=(g_i^x,g_i^y,g_i^z)$.
-\end{frame}
-
-\begin{frame}{Problème}
-\begin{align}
--\laplace\bm{g_i}=\begin{pmatrix}-\laplace g_i^x\\-\laplace g_i^y\\-\laplace g_i^z\end{pmatrix}&=\lambda_i^2\begin{pmatrix}g_i^x\\g_i^y\\g_i^z\end{pmatrix} & \Omega\\
-\div\bm{g_i}=\partial_x g_i^x+\partial_y g_i^y + \partial_z g_i^z &= 0 &\Omega \label{contdiv}\\
-\bm{g_i}\cdot\bm{n} = g_i^xn^x + g_i^yn^y + g_i^zn^z &= 0 &\partial\Omega \label{bc1}\\
-\rot\bm{g_i}\cdot \bm{n} = \begin{pmatrix}
-\partial_y g_i^z - \partial_z g_i^y\\
-\partial_z g_i^x - \partial_x g_i^z\\
-\partial_x g_i^y - \partial_y g_i^x
-\end{pmatrix}\cdot\begin{pmatrix}n^x\\n^y\\n^z\end{pmatrix} &= 0 &\partial\Omega \label{bc2}
-\end{align}
-\end{frame}
-
-\begin{frame}{Vecteur normal}
-Sur $\Gamma_1$ et $\Gamma_2$, $\bm{n}=(0,0,\pm 1)$ :
-\begin{center}
-\begin{tikzpicture}[scale=0.5]
-\begin{scope}[x={(.7cm,-.3cm)}]
-\path (1,0,0);
-\pgfgetlastxy{\cylxx}{\cylxy}
-\path (0,1,0);
-\pgfgetlastxy{\cylyx}{\cylyy}
-\path (0,0,1);
-\pgfgetlastxy{\cylzx}{\cylzy}
-\pgfmathsetmacro{\cylt}{(\cylzy * \cylyx - \cylzx * \cylyy)/ (\cylzy * \cylxx - \cylzx * \cylxy)}
-\pgfmathsetmacro{\ang}{atan(\cylt)}
-\pgfmathsetmacro{\ct}{1/sqrt(1 + (\cylt)^2)}
-\pgfmathsetmacro{\st}{\cylt * \ct}
-%\begin{scope}[every path/.style={ultra thick}]
-\draw (0,0,0) circle[radius=1];
-\draw (\ct,\st,0) -- ++(0,0,-8);
-\draw (-\ct,-\st,0) -- ++(0,0,-8);
-\draw (\ct,\st,-8) arc[start angle=\ang,delta angle=180,radius=1];
-\draw[dashed] (\ct,\st,-8) arc[start angle=\ang,delta angle=-180,radius=1];
-\draw[->] (0,0,0) -- (0,0,1);
-\draw[dashed,->] (0,0,-8) -- (0,0,-9);
-%\end{scope}
-\end{scope}
-\end{tikzpicture}
-\end{center}
-Sur $\Gamma_3$ :
-\begin{center}
-\begin{tikzpicture}[scale=0.5]
-\draw (0,0) circle[radius=1];
-\draw[->] (0.7071,0.7071) -- (1.4142,1.4142);
-\draw (3,0) circle[radius=1];
-\draw[->] (3,1) -- (3,2);
-\draw (5.5,0) circle[radius=1];
-\draw[->] (6.5,0) -- (7.5,0);
-\end{tikzpicture}
-\end{center}
-Par symétrie, on peut se ramener aux deux derniers cas par une rotation. Et donc supposer que $\bm{n}=(1,0,0)$ ou $\bm{n}=(0,1,0)$
-\end{frame}
-
-\begin{frame}{Conditions aux bords}
-(\ref{bc1}) équivaut donc à :
-\begin{align}
-g_i^x=g_i^y &= 0 & \Gamma_3\\
-g_i^z &= 0 & \Gamma_1,\Gamma_2
-\end{align}
-et (\ref{bc2}) à :
-\begin{align}
-\partial_y g_i^z - \partial_z g_i^y = \partial_y g_i^z &= 0 & \Gamma_3\\
-\partial_z g_i^x - \partial_x g_i^z = - \partial_x g_i^z &= 0 & \Gamma_3\\
-\partial_x g_i^y - \partial_y g_i^x &= 0 & \Gamma_1,\Gamma_2
-\end{align}
-\end{frame}
-
-\begin{frame}{Formulation variationnelle}
-On utilise un multiplicateur de Lagrange pour forcer la condition (\ref{contdiv}).\\
-On cherche donc $(\bm{g_i}, \pi_i, \lambda_i)\in [D^1(\Omega)]^3 \times \mathbb{R} \times \mathbb{R}$.
-\begin{block}{On obtient la formulation faible suivante :}
-\begin{align*}
-\int_\Omega \partial_xg_i^x\partial_x\varphi^x + \partial_yg_i^x\partial_y\varphi^x + \partial_zg_i^x\partial_z\varphi^x&\\
-+\int_\Omega \partial_xg_i^y\partial_x\varphi^y + \partial_yg_i^y\partial_y\varphi^y + \partial_zg_i^y\partial_z\varphi^y&\\
-+\int_\Omega \partial_xg_i^z\partial_x\varphi^z + \partial_yg_i^z\partial_y\varphi^z + \partial_zg_i^z\partial_z\varphi^z&\\
-+\int_\Omega (\partial_x g_i^x+ \partial_y g_i^y + \partial_z g_i^z)\xi&\\
-+\int_\Omega (\partial_x\varphi^x + \partial_y\varphi^y + \partial_z\varphi^z)\pi_i &= \lambda^2\int_\Omega g_i^z\varphi^z
-\end{align*}
-\end{block}
-\end{frame}
-
-\section{Avec relèvement}
-\begin{frame}{Hypothèse}
-\begin{alertblock}{Avec Relèvement}
-\[
-\bm{v}=\bm{a}+\bm{u}=\bm{a}+\sum_i c_i\bm{g_i}
-\]
-On suppose que
-\[
-\bm{v} = \begin{pmatrix}0\\0\\v^z\end{pmatrix}\text{ et }\bm{g_i} = \begin{pmatrix}0\\0\\g_i^z\end{pmatrix}
-\]
-
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Hypothèse}
-Cela simplifie le problème, et on obtient la forme variationnelle suivante :
-\begin{align*}
-\int_\Omega \partial_xg_i^z\partial_x\varphi^z &+ \partial_yg_i^z\partial_y\varphi^z + \partial_zg_i^z\partial_z\varphi^z\\
-&+ \partial_z g_i^z\xi + \partial_z\varphi^z\pi_i = \lambda^2\int_\Omega g_i^z\varphi^z
-\end{align*}
-Avec $g_i^Z=0$ sur $\Gamma_1$,$\Gamma_2$ et $g_i^z=cst$ sur $\Gamma_3$\\
-Alors $\bm{v}=\bm{a}+\sum_i c_i\bm{g_i}$
-\end{frame}
-
-\begin{frame}{Valeurs propres}
-\begin{block}{Comparaison avec Saks}
-\[
-\lambda^2_{k,j,m} = \frac{\rho_{kj}^2}{R^2}+\frac{\pi^2m^2}{l^2}
-\]
-\end{block}
-\begin{align*}
-\lambda^2_{0,1,1} = \Lambda_{0} &= 2369	& \div\bm{g} &= -1.60651e-09	& ||\div\bm{g}|| &= 6.24909\\
-\lambda^2_{0,1,2} = \Lambda_{1} &= 2487.46	& \div\bm{g} &= 7.32721e-07	& ||\div\bm{g}|| &= 12.4931\\
-\lambda^2_{0,1,3} = \Lambda_{2} &= 2684.89	& \div\bm{g} &= 4.90275e-09	& ||\div\bm{g}|| &= 18.7299\\
-\lambda^2_{0,1,4} = \Lambda_{3} &= 2961.33	& \div\bm{g} &= 1.74436e-06	& ||\div\bm{g}|| &= 24.9565\\
-\lambda^2_{0,1,5} = \Lambda_{4} &= 3316.78	& \div\bm{g} &= 1.10662e-08	& ||\div\bm{g}|| &= 31.1678\\
-\lambda^2_{0,1,6} = \Lambda_{5} &= 3751.28	& \div\bm{g} &= -3.31484e-06	& ||\div\bm{g}|| &= 37.3597\\
-\lambda^2_{0,1,7} = \Lambda_{6} &= 4264.86	& \div\bm{g} &= 1.97088e-08	& ||\div\bm{g}|| &= 43.5285\\
-\lambda^2_{0,1,8} = \Lambda_{7} &= 4857.65	& \div\bm{g} &= 5.72063e-06	& ||\div\bm{g}|| &= 49.6785\\
-\lambda^2_{0,1,9} = \Lambda_{8} &= 5529.66	& \div\bm{g} &= 3.31517e-08	& ||\div\bm{g}|| &= 55.7955
-\end{align*}
-\end{frame}
-
-\begin{frame}{Valeurs propres}
-\begin{align*}
-\lambda^2_{1,1,9} = \Lambda_{30} &= 9124.64	& \div\bm{g} &= -1.66897e-07	& ||\div\bm{g}|| &= 55.404\\
-\lambda^2_{1,1,10} = \Lambda_{31} &= 9877.82	& \div\bm{g} &= -7.9746e-08	& ||\div\bm{g}|| &= 61.4882\\
-\lambda^2_{1,1,10} = \Lambda_{32} &= 9878.29	& \div\bm{g} &= 5.9413e-08	& ||\div\bm{g}|| &= 61.4728\\
-\lambda^2_{0,1,14} = \Lambda_{33} &= 10084.8	& \div\bm{g} &= -2.07731e-05	& ||\div\bm{g}|| &= 85.9147\\
-\lambda^2_{2,1,1} = \Lambda_{34} &= 10685.8	& \div\bm{g} &= 9.04227e-08	& ||\div\bm{g}|| &= 6.19571\\
-\lambda^2_{2,1,1} = \Lambda_{35} &= 10688.2	& \div\bm{g} &= 1.56108e-08	& ||\div\bm{g}|| &= 6.28396\\
-\lambda^2_{1,1,11} = \Lambda_{36} &= 10711	& \div\bm{g} &= -2.3174e-07	& ||\div\bm{g}|| &= 67.4732\\
-\lambda^2_{1,1,11} = \Lambda_{37} &= 10711.4	& \div\bm{g} &= -4.91277e-08	& ||\div\bm{g}|| &= 67.535\\
-\lambda^2_{2,1,2} = \Lambda_{38} &= 10804.7	& \div\bm{g} &= 1.65283e-07	& ||\div\bm{g}|| &= 12.3054\\
-\lambda^2_{2,1,2} = \Lambda_{39} &= 10806.9	& \div\bm{g} &= 3.99449e-08	& ||\div\bm{g}|| &= 12.3059
-\end{align*}
-\end{frame}
-
-\begin{frame}{Vecteurs propres}
-\begin{figure}[H]
-	\makebox[\textwidth][c]{
-		\subfloat[mode 0]{\includegraphics[scale=0.12]{modeZAR-0}}\ 
-		\subfloat[mode 3]{\includegraphics[scale=0.12]{modeZAR-3}}
-	}\\
-	\makebox[\textwidth][c]{
-		\subfloat[mode 9]{\includegraphics[scale=0.12]{modeZAR-9}}\ 
-		\subfloat[mode 34]{\includegraphics[scale=0.12]{modeZAR-34}}
-	}
-	\caption{composante z des fonctions propres}
-\end{figure}
-\end{frame}
-
-\begin{frame}{Coefficients}
-\begin{block}{Problème de Stokes}
-\[
-c_k = \frac{Re\times (f,g_k)+\langle \alpha_2,\psi_k\rangle}{\lambda_k^2}
-\]
-avec $\bm{f}=(0,0,1)$
-\end{block}
-\begin{align*}
-c_{0} &= -0.00162348 & c_{1} &= 2.76514e-05\\
-c_{2} &= 0.000461607 & c_{3} &= 0.000621154\\
-c_{4} &= 0.000261723 & c_{5} &= -0.000181696\\
-c_{6} &= -6.11957e-05 & c_{7} &= -3.59883e-05\\
-c_{8} &= 8.39453e-05 & c_{9} &= 2.42786e-05\\
-c_{10} &= 2.29969e-07 & c_{11} &= -8.20664e-05\\
-c_{12} &= 1.98117e-05 & c_{13} &= -0.000165568\\
-c_{14} &= -1.08967e-05 & c_{15} &= 4.07849e-05
-\end{align*}
-\end{frame}
-
-\begin{frame}{Résultats}
-\begin{figure}[H]
-\makebox[\textwidth][c]{
-\includegraphics[scale=0.3]{vZAR}}
-\caption{U avec 100 modes propres}
-\end{figure}
-\end{frame}
-
-\section{Sans relèvement}
-\begin{frame}{Autre hypothèse}
-\begin{alertblock}{Sans relèvement}
-\[\bm{v}=\sum_i d_i\bm{h_i}\]
-Avec :
-\[
-\bm{v}=\begin{pmatrix}
-0\\0\\v_z
-\end{pmatrix}
-\text{ et }\bm{h_i}=\begin{pmatrix}
-0\\0\\h_i^z
-\end{pmatrix}
-\]
-\begin{align}
--\laplace\bm{h_i}&=\lambda_i^2\bm{h_i} & \Omega\\
-\div\bm{h_i}&=0 & \Omega\label{hdiv}\\
-\rot\bm{h_i}\cdot\bm{n}&=0 & \partial\Omega \label{hbord}
-\end{align}
-\end{alertblock}
-La condition (\ref{hbord}) équivaut à $h_i^z=0$ sur $\Gamma_3$.
-\end{frame}
-
-\begin{frame}{Autre hypothèse}
-On utilise un multiplicateur de Lagrange pour ajouter la contrainte (\ref{hdiv}).\\
-On cherche donc $(\bm{h_i},\pi_i,\lambda_i)\in [H^1(\Omega)]^3\cap [L^2_\sigma(\Omega)]^3 \times \mathbb{R} \times \mathbb{R}$.
-\begin{block}{On obtient donc la forme variationnelle :}
-\begin{align*}
-\int_\Omega \partial_xh_i^z\partial_x\varphi^z &+ \partial_yh_i^z\partial_y\varphi^z + \partial_zh_i^z\partial_z\varphi^z\\
-&+ \partial_z h_i^z\xi + \partial_z\varphi^z\pi_i = \lambda^2\int_\Omega h_i^z\varphi^z
-\end{align*}
-Avec $h_i^z=0$ sur $\Gamma_3$.
-\end{block}
-\begin{alertblock}{Inconvénient}
+\begin{frame}{$P_\sigma(H^1_0)$}
+\begin{alertblock}{Problèmes}
 \begin{itemize}
-\item Mathématiquement non prouvé
-\item Fonctionne seulement pour le cylindre
+\item $\div\bm{g} = \div (\bm{g_0}+\grad\psi) = \div\bm{g_0} + \laplace\psi \ne 0$
+\item On veut une base $(\bm{g_i})$ de $D^1$ particulière, celle telle que 
+\[
+\rot\bm{g_i} = \lambda\bm{g_i}
+\]
+or $(g_i)\ne(g_o^i)$
 \end{itemize}
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Valeurs propres}
-\begin{block}{Comparaison avec Saks}
-\[
-\lambda^2_{k,j,m} = \frac{\rho_{kj}^2}{R^2}+\frac{\pi^2m^2}{l^2}
-\]
-\end{block}
-\begin{align*}
-\bm{\lambda^2_{0,1,1}=\Lambda_0} &\bf{= 2329.47}	&\div\bm{g} &= 1.94208e-17	&||\div\bm{g}|| &= 0.0983456\\
-\lambda^2_{1,1,1}=\Lambda_1 &= 5917.22	&\div\bm{g} &= 3.17129e-18	&||\div\bm{g}|| &= 0.296662\\
-\lambda^2_{1,1,1}=\Lambda_2 &= 5917.43	&\div\bm{g} &= -3.4708e-17	&||\div\bm{g}|| &= 0.299039\\
-\lambda^2_{2,1,1}=\Lambda_3 &= 10644.7	&\div\bm{g} &= 2.20627e-17	&||\div\bm{g}|| &= 0.683934\\
-\lambda^2_{2,1,1}=\Lambda_4 &= 10647.4	&\div\bm{g} &= 2.89804e-17	&||\div\bm{g}|| &= 0.688444\\
-\bm{\lambda^2_{0,2,1}=\Lambda_5} &\bf{= 12312.1}	&\div\bm{g} &= -1.04863e-16	&||\div\bm{g}|| &= 0.954444\\
-\lambda^2_{3,1,1}=\Lambda_6 &= 16473	&\div\bm{g} &= -1.28681e-17	&||\div\bm{g}|| &= 1.23079\\
-\lambda^2_{3,1,1}=\Lambda_7 &= 16474.4	&\div\bm{g} &= -2.9924e-17	&||\div\bm{g}|| &= 1.22237\\
-\lambda^2_{1,2,1}=\Lambda_8 &= 19976.6	&\div\bm{g} &= -5.4515e-17	&||\div\bm{g}|| &= 1.8095
-\end{align*}
-\end{frame}
-
-\begin{frame}{Valeurs propres}
-\begin{align*}
-\lambda^2_{?,?,?}=\Lambda_{35} &= 51355.4	&\div\bm{g} &= 1.14817e-16	&||\div\bm{g}|| &= 7.14748\\
-\lambda^2_{?,?,?}=\Lambda_{36} &= 54891.3	&\div\bm{g} &= 1.21431e-17	&||\div\bm{g}|| &= 50.2826\\
-\lambda^2_{?,?,?}=\Lambda_{37} &= 55565.9	&\div\bm{g} &= -2.43729e-16	&||\div\bm{g}|| &= 52.281\\
-\lambda^2_{?,?,?}=\Lambda_{38} &= 55976.2	&\div\bm{g} &= -1.73906e-16	&||\div\bm{g}|| &= 58.8682\\
-\lambda^2_{?,?,?}=\Lambda_{39} &= 56447.3	&\div\bm{g} &= 1.50813e-16	&||\div\bm{g}|| &= 59.4463\\
-\lambda^2_{?,?,?}=\Lambda_{40} &= 57302.4	&\div\bm{g} &= 4.13081e-17	&||\div\bm{g}|| &= 40.4527\\
-\lambda^2_{?,?,?}=\Lambda_{41} &= 57360.6	&\div\bm{g} &= -3.61581e-17	&||\div\bm{g}|| &= 36.7049\\
-\lambda^2_{?,?,?}=\Lambda_{42} &= 57614.4	&\div\bm{g} &= -8.2833e-17	&||\div\bm{g}|| &= 44.0287\\
-\lambda^2_{?,?,?}=\Lambda_{43} &= 57825.8	&\div\bm{g} &= 1.47451e-16	&||\div\bm{g}|| &= 58.9588\\
-\lambda^2_{?,?,?}=\Lambda_{44} &= 58151.4	&\div\bm{g} &= -9.36751e-17	&||\div\bm{g}|| &= 62.1296\\
-\lambda^2_{?,?,?}=\Lambda_{45} &= 59027	&\div\bm{g} &= 1.70328e-16	&||\div\bm{g}|| &= 54.9454\\
-\lambda^2_{?,?,?}=\Lambda_{46} &= 59732.7	&\div\bm{g} &= -1.66371e-16	&||\div\bm{g}|| &= 37.642
-\end{align*}
-\end{frame}
-
-\begin{frame}{Vecteurs propres}
-\begin{figure}[H]
-	\makebox[\textwidth][c]{
-		\subfloat[mode 0]{\includegraphics[scale=0.12]{modeZ-0}}\ 
-		\subfloat[mode 5]{\includegraphics[scale=0.12]{modeZ-5}}
-	}\\
-	\makebox[\textwidth][c]{
-		\subfloat[mode 14]{\includegraphics[scale=0.12]{modeZ-14}}\ 
-		\subfloat[mode 16]{\includegraphics[scale=0.12]{modeZ-16}}
-	}
-	\caption{composante z des fonctions propres}
-	\label{resultats}
-\end{figure}
-\end{frame}
-
-\begin{frame}{Coefficients}
-\begin{block}{Problème de Stokes}
-\[
-c_k = \frac{Re\times (f,g_k)+\langle \alpha_2,\psi_k\rangle}{\lambda_k^2}
-\]
-avec $\bm{f}=(0,0,1)$
-\end{block}
-\begin{align*}
-\bf{d_{0}} &\bf{= 0.00242664} & d_{1} &= -5.72621e-05\\
-d_{2} &= -2.79554e-05 & d_{3} &= 1.17409e-06\\
-d_{4} &= 2.4402e-05 & \bf{d_{5}} &\bf{= -0.000211458}\\
-d_{6} &= -7.79286e-06 & d_{7} &= -6.61541e-07\\
-d_{8} &= -6.61893e-07 & d_{9} &= -4.8829e-06\\
-d_{10} &= 1.91622e-05 & d_{11} &= 1.27225e-07\\
-d_{12} &= 3.64327e-06 & d_{13} &= -1.34974e-06\\
-\bf{d_{14}} &\bf{= 6.02757e-05} & d_{15} &= -3.67763e-07
-\end{align*}
-\end{frame}
-
-\begin{frame}{Résultats}
-\begin{figure}[H]
-\makebox[\textwidth][c]{
-\includegraphics[scale=0.3]{vZSR}}
-\caption{U avec 100 modes propres}
-\end{figure}
-\end{frame}
-
 \section{Stokes-Curl}
-\begin{frame}{Stokes-Curl}
-\begin{alertblock}{A partir d'ici,}
-\[\bm{v}=\bm{a}+\bm{u}\]
-\end{alertblock}
-
-De plus, on ne suppose plus que $\bm{v}=(0,0,v^z)$.
-\end{frame}
-
 \begin{frame}{Stokes-Curl}
 %\begin{block}{On résout le problème suivant :}
 \begin{align}
@@ -1078,13 +616,9 @@ De plus, on ne suppose plus que $\bm{v}=(0,0,v^z)$.
 \rot\bm{g_i}\cdot\bm{n}&=0
 \end{align}
 %\end{block}
-On a :
-\[
-\rott\bm{g_i}=-\laplace\bm{g_i}+\grad(\underbrace{\div\bm{g_i}}_{=0})=-\laplace\bm{g_i}
-\]
 De plus, on utilise un terme de pression pour imposer (\ref{sc2}). On a donc le problème :
 \begin{align}
--\laplace \bm{g_i} + \grad p &= \lambda^2_i\bm{g_i}\label{sc11}\\
+\rott \bm{g_i} + \grad p &= \lambda^2_i\bm{g_i}\label{sc11}\\
 \div\bm{g_i} &= 0\label{sc22}\\
 \bm{g_i}\cdot\bm{n}&=0\\
 \rot\bm{g_i}\cdot\bm{n}&=0
@@ -1094,7 +628,7 @@ De plus, on utilise un terme de pression pour imposer (\ref{sc2}). On a donc le 
 \begin{frame}{Forme variationnelle}
 On multiplie (\ref{sc11}) par $\bm{\varphi}\in H(rot)$ et on intègre :
 \[
-(-\laplace\bm{g_i},\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\bm{g_i},\bm{\varphi})
+(\rott\bm{g_i},\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\bm{g_i},\bm{\varphi})
 \]
 On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
 \[
@@ -1102,7 +636,7 @@ On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
 \]
 \begin{block}{En intégrant par partie et en additionnant :}
 \[
-(\grad\bm{g_i},\grad\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\bm{g_i},q) = \lambda^2(\bm{g_i},\bm{\varphi})
+(\rot\bm{g_i},\rot\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\bm{g_i},q) = \lambda^2(\bm{g_i},\bm{\varphi})
 \]
 \end{block}
 \end{frame}
@@ -1118,11 +652,57 @@ Pour imposer $\rot\bm{g_i}\cdot\bm{n}=0$ on utilise une méthode de pénalisatio
 \]
 \begin{block}{Ce qui donne la forme variationnelle :}
 \[\begin{aligned}
-(\grad\bm{g_i},\grad\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
+(\rot\bm{g_i},\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
 &+ \gamma(\rot\bm{g_i}\cdot\bm{n},\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2(\bm{g_i},\bm{\varphi})
 \end{aligned}\]
 \end{block}
 \end{frame}
 
+\begin{frame}{Ajustements}
+Avec cette formulation, on a : $||\div\bm{g}||_{L^2(\Omega)}=415.271$  $||\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=6.10952$ $||\rot\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=5.56388e-08$\\
+
+On ajoute donc deux termes de pénalisation afin de forcer la divergence et la condition de bord $\rot\bm{g}\cdot\bm{n} = 0$ :
+\[\begin{aligned}
+(\rot\bm{g_i},\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
+&+ \gamma(\rot\bm{g_i}\cdot\bm{n},\rot\bm{\varphi}\cdot\bm{n})\\
+&+ \alpha(\div\bm{g_i})(\div\bm{\varphi})\\
+&+ \beta(\bm{g_i}\cdot\bm{n},\bm{\varphi}\cdot\bm{n}) = \lambda^2(\bm{g_i},\bm{\varphi})
+\end{aligned}\]
+En prenant $\alpha=\beta=\gamma=1000$, on a :
+$||\div\bm{g}||_{L^2(\Omega)}=0.0371$  $||\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=0.0844$ $||\rot\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=0.00035$
+\end{frame}
+
+\begin{frame}{Modes}
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 0]{\includegraphics[scale=0.12]{glyphMode0}}\ 
+		\subfloat[mode 5]{\includegraphics[scale=0.12]{glyphMode5}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 10]{\includegraphics[scale=0.12]{glyphMode10}}\ 
+		\subfloat[mode 14]{\includegraphics[scale=0.12]{glyphMode14}}
+	}
+	\caption{Modes propres}
+	\label{resultats}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Problème spectral}
+On observe que $\int_\Omega g^z = 0$, d'où, avec $\bm{f}=(0,0,9.81)$, on a
+\[
+R_{fk}=\int_\Omega \bm{f}\cdot\bm{g}=0
+\]
+
+De plus, $R_{pk}=\int_{\partial\Omega} \alpha_2\psi_k$, donc si $\psi$ est de moyenne nulle,
+\[
+R_{fk}=0
+\]
+
+On pose $\bm{c} = (c_0,c_1,\dots,c_M)$ et $A=\frac{\lambda^2}{Re}I+R_{iak}$, alors on résout
+\[
+Ac = R_{fk}+\frac{R_{pk}}{Re} = 0
+\]
+On cherche donc $\psi$ de moyenne non nulle.
+\end{frame}
 
 \end{document}
