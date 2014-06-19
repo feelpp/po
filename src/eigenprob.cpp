@@ -12,6 +12,7 @@
 #include <feel/feelvf/geometricdata.hpp>
 #include <feel/feelvf/inner.hpp>
 #include <feel/feelvf/ones.hpp>
+#include <feel/feelvf/matvec.hpp>
 #include <feel/feelvf/form.hpp>
 #include <feel/feelvf/norml2.hpp>
 #include <feel/feelvf/on.hpp>
@@ -44,7 +45,7 @@ EigenProb::EigenProb( mesh_ptrtype mesh ):super()
 void
 EigenProb::run()
 {
-    if( boption( _name="needEigen") )
+    if( boption( _name="computeEigen") )
         compute_eigens();
     else
         load_eigens();
@@ -75,6 +76,22 @@ EigenProb::compute_eigens()
     auto p = U.element<1>();
     auto q = V.element<1>();
 
+    LOG(INFO) << "[dof] number of dof: " << Xh->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc: " << Xh->nLocalDof() << "\n";
+    LOG(INFO) << "[dof] number of dof(U): " << Xh->template functionSpace<0>()->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc(U): " << Xh->template functionSpace<0>()->nLocalDof() << "\n";
+    LOG(INFO) << "[dof] number of dof(P): " << Xh->template functionSpace<1>()->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc(P): " << Xh->template functionSpace<1>()->nLocalDof() << "\n";
+
+    if ( Environment::isMasterRank() ){
+        std::cout << "[dof] number of dof: " << Xh->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc: " << Xh->nLocalDof() << "\n";
+        std::cout << "[dof] number of dof(U): " << Xh->template functionSpace<0>()->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc(U): " << Xh->template functionSpace<0>()->nLocalDof() << "\n";
+        std::cout << "[dof] number of dof(P): " << Xh->template functionSpace<1>()->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc(P): " << Xh->template functionSpace<1>()->nLocalDof() << "\n";
+    }
+
     // eigen problem Ax=lambda*Bx
     auto l = form1( _test=Xh );
     auto a = form2( _test=Xh, _trial=Xh);
@@ -96,6 +113,17 @@ EigenProb::compute_eigens()
 
 
     // preparation for the decomposition
+
+    LOG(INFO) << "----- G0 -----\n";
+    LOG(INFO) << "[dof] number of dof: " << Vh->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
+
+    if ( Environment::isMasterRank() ){
+        std::cout << "----- G0 -----\n";
+        std::cout << "[dof] number of dof: " << Vh->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
+    }
+
     auto vg0 = Vh->element();
     auto a2 = form2( _test=Vh, _trial=Vh );
     auto l2 = form1( _test=Vh );
@@ -108,10 +136,31 @@ EigenProb::compute_eigens()
     auto a3 = form2( _test=Mlh, _trial=Mlh );
     auto l3 = form1( _test=Mlh );
 
+    LOG(INFO) << "----- PSI -----\n";
+    LOG(INFO) << "[dof] number of dof: " << Mlh->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc: " << Mlh->nLocalDof() << "\n";
+    LOG(INFO) << "[dof] number of dof(U): " << Mlh->template functionSpace<0>()->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc(U): " << Mlh->template functionSpace<0>()->nLocalDof() << "\n";
+    LOG(INFO) << "[dof] number of dof(P): " << Mlh->template functionSpace<1>()->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc(P): " << Mlh->template functionSpace<1>()->nLocalDof() << "\n";
+
+    if ( Environment::isMasterRank() ){
+        std::cout << "----- PSI -----\n";
+        std::cout << "[dof] number of dof: " << Mlh->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc: " << Mlh->nLocalDof() << "\n";
+        std::cout << "[dof] number of dof(U): " << Mlh->template functionSpace<0>()->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc(U): " << Mlh->template functionSpace<0>()->nLocalDof() << "\n";
+        std::cout << "[dof] number of dof(P): " << Mlh->template functionSpace<1>()->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc(P): " << Mlh->template functionSpace<1>()->nLocalDof() << "\n";
+    }
+
+
     if( boption( _name="needDecomp") ){
         // left side of gi0
         a2 = integrate( _range=elements(mesh),
                         _expr=trans(curlt(vg0))*curl(vg0) );
+                        // _expr=inner(gradt(vg0),grad(vg0))
+                        // - divt(vg0)*div(vg0) );
 
         // left side of psi
         a3 = integrate( _range=elements(mesh),
@@ -151,9 +200,14 @@ EigenProb::compute_eigens()
             double di = normL2(elements(mesh), divv(g[i]));
             double gn = normL2(boundaryfaces(mesh), trans(idv(g[i]))*N());
             double curlgn = normL2(boundaryfaces(mesh), trans(curlv(g[i]))*N());
+            double erreurP = normL2(elements(mesh), curlv(g[i])-sqrt(lambda[i])*idv(g[i]));
+            double erreurM = normL2(elements(mesh), curlv(g[i])+sqrt(lambda[i])*idv(g[i]));
+            double avX = normL2(elements(mesh), trans(vec(cst(1),cst(0.),cst(0.)))*idv(g[i]) );
+            double avY = normL2(elements(mesh), trans(vec(cst(0.),cst(1),cst(0.)))*idv(g[i]) );
+            double avZ = normL2(elements(mesh), trans(vec(cst(0.),cst(0.),cst(1)))*idv(g[i]) );
             if ( Environment::worldComm().isMasterRank() )
-                std::cout << "lambda_" << i << " = " << lambda[i] << "  //  ||div|| = " << di << "  //  ||g.n|| = " << gn << "  //  ||curlg.n|| = " << curlgn;
-     }
+                std::cout << "lambda_" << i << " = " << lambda[i] << "    ||div|| = " << di << "    ||g.n|| = " << gn << "    ||curlg.n|| = " << curlgn << "     err- = " << erreurM << "     err+ = " << erreurP << "    avX = " << avX << "    avY = " << avY << "    avZ = " << avZ << std::endl;
+        }
 
         if ( boption( _name="needDecomp") ){
             // right side of gi0
@@ -164,7 +218,11 @@ EigenProb::compute_eigens()
             a2.solve( _name="gi0", _rhs=l2, _solution=g0[i] );
 
             // right side of psi
-            l3 = integrate( _range=elements(mesh), _expr=divv(g0[i])*id(psii) );
+            double meanPsi = doption(_name="c");
+            l3 = integrate( _range=elements(mesh),
+                            _expr=divv(g0[i])*id(psii)
+                            + meanPsi*id(nu)
+                            );
             a3.solve( _name="psi", _rhs=l3, _solution=Psi );
             psi[i] = Psi.element<0>();
 
@@ -183,15 +241,16 @@ EigenProb::compute_eigens()
                                           _expr=idv(g0[i])+idv(gradu[i]) );
 
                 double erreurL2 = normL2( elements(mesh), idv(g[i])-idv(modebis[i]) );
-                double nG = normL2( elements(mesh), idv(g[i]) );
+                double nGBis = normL2( elements(mesh), idv(g0[i])+idv(gradu[i]) );
                 double nG0 = normL2( elements(mesh), idv(g0[i]) );
                 double nPsi = normL2( elements(mesh), idv(gradu[i]) );
                 if ( Environment::worldComm().isMasterRank() )
-                    std::cout << "    ||g-(g0+grad(psi)|| = " << erreurL2 << "    ||g|| = " << nG << "    ||g0|| = " << nG0 << "    ||psi|| = " << nPsi;
+                    std::cout << "    ||g-(g0+grad(psi)|| = " << erreurL2 << "    ||g0|| = " << nG0 << "    ||Grad(psi)|| = " << nPsi << "    ||g0+grad(psi)|| = " << nGBis << std::endl;
             }
+
+            gradu[i] = vf::project(_space=Vh, _range=elements(mesh),
+                                   _expr=curlv(g[i]) );
         }
-        if ( Environment::worldComm().isMasterRank() )
-             std::cout << std::endl;
 
         i++;
         if(i>=nev)

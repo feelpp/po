@@ -21,10 +21,11 @@ class Psi0 : public Application
     typedef Mesh<Simplex<3> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
+    // [space]
     typedef FunctionSpace<mesh_type, bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > > mlSpace_type;
     typedef mlSpace_type::element_type mlElement_type;
-    //typedef typename mlElement_type:: sub_element<0>::type element_0_type;
     typedef boost::shared_ptr<mlElement_type> mlElement_ptrtype;
+    // [space]
 
     typedef FunctionSpace<mesh_type, bases<Lagrange<2, Vectorial> > > space_type;
     typedef boost::shared_ptr<space_type> space_ptrtype;

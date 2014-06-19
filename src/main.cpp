@@ -24,15 +24,16 @@ makeOptions()
         ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
         ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
         ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
-        ( "penal", po::value<double>()->default_value( 1e-6 ), "penalization" )
         ( "needP0", po::value<bool>()->default_value( true ), "need to compute psi0" )
-        ( "needEigen", po::value<bool>()->default_value( true ), "need to compute the eigen modes or to load them" )
+        ( "needEigen", po::value<bool>()->default_value( true ), "need the eigen modes" )
+        ( "computeEigen", po::value<bool>()->default_value( true ), "compute the eigen modes or load them" )
         ( "needPS", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
         ( "needDecomp", po::value<bool>()->default_value( true ), "need to decompose the eigen modes" )
         ( "needDebug", po::value<bool>()->default_value( false ), "debug" )
         ( "bccurln", po::value<bool>()->default_value( true ), "need boundary condition curl g.n (eigenlap)" )
         ( "bcn", po::value<bool>()->default_value( true ), "need boundary condition1 g.n (eigenlap)" )
-        ( "divdiv", po::value<bool>()->default_value( true ), "need divdiv term" );
+        ( "divdiv", po::value<bool>()->default_value( true ), "need divdiv term" )
+        ( "c", po::value<double>()->default_value( 1. ), "psi average" );
     return myappOptions;
 }
 
@@ -53,6 +54,51 @@ makeAbout()
     return about;
 }
 
+boost::shared_ptr<Mesh<Simplex<3> > >
+load_mesh()
+{
+    fs::path mypath(soption( _name="gmsh.filename" ));
+    std::string meshPartName = ( boost::format( "%1%.msh" )
+                                 %mypath.stem().string() ).str();
+
+    boost::shared_ptr<Mesh<Simplex<3> > > mesh;
+    if(option(_name="computeEigen").as<bool>())
+        mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
+                         _rebuild_partitions=(mypath.extension() == ".msh") );
+    else
+        mesh = loadGMSHMesh( _mesh=new Mesh<Simplex<3> >,
+                             _filename=meshPartName );
+
+    LOG(INFO) << " - mesh entities" << std::endl;
+    LOG(INFO) << " number of elements : " << mesh->numGlobalElements() << std::endl;
+    LOG(INFO) << " number of faces : " << mesh->numGlobalFaces() << std::endl;
+    LOG(INFO) << " number of edges : " << mesh->numGlobalEdges() << std::endl;
+    LOG(INFO) << " number of points : " << mesh->numGlobalPoints() << std::endl;
+    LOG(INFO) << " number of vertices : " << mesh->numGlobalVertices() << std::endl;
+    LOG(INFO) << " - mesh sizes" << std::endl;
+    LOG(INFO) << " h max : " << mesh->hMax() << std::endl;
+    LOG(INFO) << " h min : " << mesh->hMin() << std::endl;
+    LOG(INFO) << " h avg : " << mesh->hAverage() << std::endl;
+    LOG(INFO) << " measure : " << mesh->measure() << std::endl;
+
+    if ( Environment::isMasterRank() )
+    {
+        std::cout << " - mesh entities" << std::endl;
+        std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
+        std::cout << " number of faces : " << mesh->numGlobalFaces() << std::endl;
+        std::cout << " number of edges : " << mesh->numGlobalEdges() << std::endl;
+        std::cout << " number of points : " << mesh->numGlobalPoints() << std::endl;
+        std::cout << " number of vertices : " << mesh->numGlobalVertices() << std::endl;
+        std::cout << " - mesh sizes" << std::endl;
+        std::cout << " h max : " << mesh->hMax() << std::endl;
+        std::cout << " h min : " << mesh->hMin() << std::endl;
+        std::cout << " h avg : " << mesh->hAverage() << std::endl;
+        std::cout << " measure : " << mesh->measure() << std::endl;
+    }
+
+    return mesh;
+}
+
 int
 main( int argc, char **argv )
 {
@@ -61,26 +107,24 @@ main( int argc, char **argv )
                      _desc_lib=makeLibOptions(),
                      _about=makeAbout() );
 
-    fs::path mypath(soption( _name="gmsh.filename" ));
-    std::string meshPartName = ( boost::format( "%1%/%2%_part%3%.msh" )
-                                 %Environment::localGeoRepository()
-                                 %mypath.stem().string()
-                                 %Environment::numberOfProcessors() ).str();
+    // fs::path mypath(soption( _name="gmsh.filename" ));
+    // std::string meshPartName = ( boost::format( "%1%/%2%_part%3%.msh" )
+    //                              %Environment::localGeoRepository()
+    //                              %mypath.stem().string()
+    //                              %Environment::numberOfProcessors() ).str();
 
-    boost::shared_ptr<Mesh<Simplex<3> > > mesh;
-    bool isMsh = mypath.extension() == ".msh";
-    if(option(_name="needEigen").as<bool>())
-        mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
-                         _rebuild_partitions=isMsh,
-                         _rebuild_partitions_filename=meshPartName );
-    else
-        mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
-                         _filename=meshPartName );
+    boost::shared_ptr<Mesh<Simplex<3> > > mesh = load_mesh();
+    // bool isMsh = mypath.extension() == ".msh";
+    // if(option(_name="computeEigen").as<bool>())
+    //     mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
+    //                      _rebuild_partitions=isMsh,
+    //                      _rebuild_partitions_filename=meshPartName );
+    // else
+    //     mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
+    //                      _filename=meshPartName );
 
     Psi0 p0 = Psi0( mesh, soption( _name="alpha0" ) );
-    // Eigen_Curl eig = Eigen_Curl( mesh );
     EigenProb eig = EigenProb( mesh );
-    // Darcy d = Darcy( mesh, soption( _name="alpha0" ) );
     SpectralProblem sp = SpectralProblem( mesh );
 
     auto e = exporter( _mesh=mesh );
@@ -112,4 +156,6 @@ main( int argc, char **argv )
 
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- End -----" << std::endl;
+
+    return 0;
 }

@@ -1,4 +1,18 @@
-#include <feel/feelvf/vf.hpp>
+#include <boost/fusion/tuple.hpp>
+#include <boost/fusion/sequence.hpp>
+#include <boost/fusion/algorithm.hpp>
+#include <feel/feelcore/feel.hpp>
+#include <feel/feelvf/detail/gmc.hpp>
+#include <feel/feelvf/expr.hpp>
+#include <feel/feelvf/cst.hpp>
+#include <feel/feelvf/trans.hpp>
+#include <feel/feelvf/operations.hpp>
+#include <feel/feelvf/operators.hpp>
+#include <feel/feelvf/inner.hpp>
+#include <feel/feelvf/cross.hpp>
+#include <feel/feelvf/integrate.hpp>
+#include <feel/feelvf/projectors.hpp>
+#include <feel/feelvf/ginac.hpp>
 
 #include "spectralproblem.hpp"
 
@@ -11,9 +25,9 @@ SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
     Sh = space_stype::New( mesh );
 
     M = ioption( _name="solvereigen.nev" );
-    j = MatrixXd::Matrix(M,M);
-    f = VectorXd::Matrix(M);
-    c = VectorXd::Matrix(M);
+    j = MatrixXd(M,M);
+    f = VectorXd(M);
+    c = VectorXd(M);
 
     alpha2 = soption( _name="alpha2" );
     double r = doption( _name="radius" );
@@ -25,10 +39,13 @@ SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
 
 void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> L, element_vtype A )
 {
-    if ( Environment::worldComm().isMasterRank() )
+    if ( Environment::worldComm().isMasterRank() ){
         std::cout << "----- Initialization Spectral Problem -----" << std::endl;
+        std::cout << "----- Re = " << Re << " -----" << std::endl;
+        std::cout << "----- alpha2 = " << alpha2 << " -----" << std::endl;
+    }
 
-    lambda = VectorXd::Matrix(M);
+    lambda = VectorXd(M);
 
     for(int i = 0; i < M; i++)
         lambda(i) = L[i];
@@ -51,7 +68,7 @@ void SpectralProblem::initRiak()
         std::cout << "----- Riak -----" << std::endl;
 
     // [riak]
-    Riak = MatrixXd::Matrix(M,M);
+    Riak = MatrixXd(M,M);
     for(int i = 0; i< M ; i++)
         for(int k = 0; k < M; k++){
             Riak(k,i) = integrate( _range=elements( mesh ),
@@ -68,9 +85,9 @@ void SpectralProblem::initRijk()
         std::cout << "----- Rijk -----" << std::endl;
 
     // [rijk]
-    Rijk = Matrix<MatrixXd, Dynamic, 1>::Matrix(M,1);
+    Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
     for(int k = 0; k < M; k++){
-        Rijk(k) = MatrixXd::Matrix(M,M);
+        Rijk(k) = MatrixXd(M,M);
         for(int i = 0; i < M; i++)
             for(int j = 0; j < M; j++){
                 Rijk(k)(i,j) = integrate( _range=elements( mesh ),
@@ -89,7 +106,7 @@ void SpectralProblem::initRfk()
 
     auto ff = expr<3,1>(soption(_name="f"));
     // [rfk]
-    Rfk = VectorXd::Matrix(M);
+    Rfk = VectorXd(M);
     for(int k = 0; k < M; k++){
         Rfk(k) = integrate( _range=elements( mesh ),
                             _expr=trans(ff)*idv(g[k]) ).evaluate()(0,0);
@@ -112,7 +129,7 @@ void SpectralProblem::initRpk()
                 { "radius", doption( _name="radius" ) } } );
 
     // [rpk]
-    Rpk = VectorXd::Matrix(M);
+    Rpk = VectorXd(M);
     for(int k = 0; k < M; k++){
         Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
                             _expr=a2*idv(psi[k]) ).evaluate()(0,0);
@@ -132,7 +149,7 @@ void SpectralProblem::run()
     // MatrixXd A = MatrixXd::Matrix(M,M);
     // A = Riak + lambda.asDiagonal();
     Riak += (lambda/Re).asDiagonal();
-    VectorXd b = VectorXd::Matrix(M);
+    VectorXd b = VectorXd(M);
     b= Rfk+Rpk/Re;
 
     HouseholderQR<MatrixXd> qr(M,M);
