@@ -22,9 +22,7 @@ Ce qui donne l'algorithme suivant :
 \end{enumerate}
 
 Toutes les approximations ne sont pas bonnes, pour vérifier on calcul :
-\[
-||Ax_i-\lambda_ix_i||_2 = ||AV_my_i-\lambda_iV_my_i||_2 = ||(AV_m-V_mH_m)y_i||_2 = \beta|e_my_i|
-\]
+\[ ||Ax_i-\lambda_ix_i||_2 = ||AV_my_i-\lambda_iV_my_i||_2 = ||(AV_m-V_mH_m)y_i||_2 = \beta|e_my_i| \]
 
 Lorsque l'on veut un grand nombre de valeurs propres, il faut augmenter la taille de la base $m$, cependant, cela entraine une consomation de ressources importantes. Au lieu d'augmenter $m$, on recommence l'algorithme avec un autre vecteur initial. Il existe plusieurs méthodes pour choisir ce vecteur, on peut par exemple prendre $V_my_i$.\\
 

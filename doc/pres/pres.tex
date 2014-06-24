@@ -75,16 +75,14 @@ tabsize=2}
 \begin{block}{On cherche $(\mathbf{v},p)$ solution de :}
 \begin{eqnarray}
 \label{depart}
-\left\{
-\begin{aligned}
+\left\{\begin{aligned}
 &\frac{\partial \mathbf{v}}{\partial t} + (\rot  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\rott  \mathbf{v}-\mathbf{f} = 0\\
 &\div \mathbf{v} = 0\\
 &\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0\\
 &\mathbf{v}\cdot \mathbf{n}\restr = \alpha_0\\
 &(\rot  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_1\\
 &(\rott  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_2
-\end{aligned}
-\right.
+\end{aligned}\right.
 \end{eqnarray}
 où $q = \frac{|\mathbf{v}|^2}{2}+p$.
 \end{block}
@@ -144,20 +142,14 @@ $\rott\star\cdot \mathbf{n}\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \begin{block}{Fonctions propres de $\rott\star$}
 \begin{itemize}
 \item Problème :
-\[
-\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}\\
 &\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
 &\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0
-\end{aligned}
-\right.
-\]
+\end{aligned}\right.\]
 \item Formulation variationnelle :
-\[
-\int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \Lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX
-\]
+\[ \int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \Lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX \]
 \end{itemize}
 \end{block}
 \end{frame}
@@ -176,18 +168,12 @@ $\star\cdot \mathbf{n}\restr$ & 0 & & 0 & & 0
 \begin{block}{$\mathbf{g_i}=\mathbf{\mathbf{g_i}^0}+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
-\[
-\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 \grad(\div \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= \Lambda_i \mathbf{g_i}\\
 \mathbf{\mathbf{g_i}^0}\restr &= 0
-\end{aligned}
-\right.
-\]
+\end{aligned}\right.\]
 \item Formulation variationnelle :
-\[
--\int_\Omega (\div \mathbf{\mathbf{g_i}^0})(\div\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\bm{\varphi} = \int_\Omega \Lambda_i\mathbf{g_i}\bm{\varphi}
-\]
+\[ -\int_\Omega (\div \mathbf{\mathbf{g_i}^0})(\div\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\bm{\varphi} = \int_\Omega \Lambda_i\mathbf{g_i}\bm{\varphi} \]
 \end{itemize}
 \end{block}
 \end{frame}
@@ -196,23 +182,15 @@ $\star\cdot \mathbf{n}\restr$ & 0 & & 0 & & 0
 \begin{block}{$\mathbf{g_i}=\mathbf{\mathbf{g_i}^0}+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
-\[
-\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 -\laplace\psi_i &= \div \mathbf{\mathbf{g_i}^0}\\
 \grad\psi_i\cdot \mathbf{n}\restr &= 0
-\end{aligned}
-\right.
-\]
+\end{aligned}\right.\]
 \item Formulation variationnelle :
-\[
-\int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\div \mathbf{\mathbf{g_i}^0})\varphi
-\]
+\[ \int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\div \mathbf{\mathbf{g_i}^0})\varphi \]
 \end{itemize}
 \end{block}
 \end{frame}
-
-
 
 \section{Relèvement}
 \begin{frame}{$\mathbf{a}=\grad\psi_0+\rot \mathbf{b}$}
@@ -230,23 +208,19 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \begin{columns}[t]
 \begin{column}{5cm}
 \begin{block}{Problème dans $ H^1$}
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &-\laplace\psi_0 = 0\\
 &\grad\psi_0\cdot \mathbf{n}\restr=\alpha_0
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 \end{block}
 \end{column}
 \begin{column}{5cm}
 \begin{block}{Problème dans $ H(div)$}
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 \mathbf{w} &= \grad \psi_0\\
 \div \mathbf{w} &= 0\\
 \mathbf{w}\cdot \mathbf{n}\restr &= \alpha_0
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 \end{block}
 \end{column}
 \end{columns}
@@ -256,16 +230,12 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \begin{block}{Problème dans $ H^1$}
 \begin{itemize}
 \item Problème :
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &-\laplace\psi_0 = 0\\
 &\grad\psi_0\cdot \mathbf{n}\restr=\alpha_0
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 \item Formulation variationnelle :
-\[
--\int_\Omega \grad\psi_0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0
-\]
+\[ -\int_\Omega \grad\psi_0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0 \]
 \end{itemize}
 \end{block}
 \begin{columns}[t]
@@ -290,17 +260,13 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \begin{block}{Problème dans $ H(div)$}
 \begin{itemize}
 \item Problème :
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 \mathbf{w} &= \grad \psi^0\\
 \div\mathbf{w} &= 0\\
 \mathbf{w}\cdot \mathbf{n}\restr &= \alpha_0
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 \item Formulation variationnelle :
-\[
--\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi}  = \int_{\partial\Omega} \alpha_0\nu
-\]
+\[ -\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi}  = \int_{\partial\Omega} \alpha_0\nu \]
 \end{itemize}
 \end{block}
 \begin{columns}[t]
@@ -326,34 +292,28 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \begin{columns}[t]
 \begin{column}{5cm}
 \begin{block}{Problème dans $ H(rot)$}
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &\rott \mathbf{b} = \grad\psi_1\\
 &\div \mathbf{b} = 0\\
 &\mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\grad\psi_1\cdot \mathbf{n}\restr = \alpha_1
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 \end{block}
 \end{column}
 \begin{column}{5cm}
 \begin{block}{$ D^1$}
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &\rott \mathbf{b} = \grad\psi_1\\
 &\mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\rott b\cdot \mathbf{n}\restr = \alpha_1
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 où $\psi^1$ solution de
-\[\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &-\laplace\psi_1 = 0\\
 &\grad\psi_1\cdot \mathbf{n}\restr=\alpha_1
-\end{aligned}
-\right.\]
+\end{aligned}\right.\]
 \end{block}
 \end{column}
 \end{columns}
@@ -388,9 +348,7 @@ où $\psi^1$ solution de
 \begin{block}{Problème dans $ D^1$}
 \begin{itemize}
 \item Formulation faible
-\[
-\int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\bm{\varphi}
-\]
+\[ \int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\bm{\varphi} \]
 \item Discrétisation $\mathbf{b}=\sum d_ig_i$
 \begin{align*}
 d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
@@ -419,18 +377,14 @@ d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 \section{Problème spectral}
 \begin{frame}{Problème spectral}
 \begin{block}{Problème dans $ D^1$}
-\[
-\left\{
-\begin{aligned}
+\[\left\{\begin{aligned}
 &\frac{\partial \mathbf{u}}{\partial t} + (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} + \left(\rot \mathbf{a}\right)\times \mathbf{u} \\
 &+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{h_a} = 0\\
 &\div \mathbf{u} = 0\\
 &\mathbf{u}\cdot \mathbf{n}\restr = 0\\
 &(\rot \mathbf{u})\cdot \mathbf{n}\restr = 0\\
 &(\rott \mathbf{u})\cdot \mathbf{n}\restr = \alpha_2
-\end{aligned}
-\right.
-\]
+\end{aligned}\right.\]
 \end{block}
 \end{frame}
 
@@ -443,9 +397,7 @@ d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 \end{align*}
 \end{block}
 On peut maintenant utiliser la relation 
-\[
-\mathbf{u}\approx\sum_{i=1}^M c_i\mathbf{g_i}
-\]
+\[ \mathbf{u}\approx\sum_{i=1}^M c_i\mathbf{g_i} \]
 \end{frame}
 
 \begin{frame}{Problème spectral}
@@ -535,61 +487,27 @@ $} ;
 \end{aligned}$} ;
 \node[draw,scale=\tailleg,fill=red!50] (q) at(15,-18.5) {$p$} ;
 
-\draw[->,>=latex] (a0) -- (pbpsi0);
-\draw[->,>=latex] (a1) -- (pbpsi1);
-\draw[->,>=latex] (pbpsi0) -- (psi0);
-\draw[->,>=latex] (pbpsi1) -- (psi1);
-\draw[->,>=latex] (psi1) -- (pbb);
-\draw[->,>=latex] (psi) -- (pbb);
-\draw[->,>=latex] (lambda) -- (pbb);
-\draw[->,>=latex] (gi) -- (pbb);
-\draw[->,>=latex] (pbb) -- (b);
-\draw[->,>=latex] (b) -- (pba);
-\draw[->,>=latex] (psi0) -- (pba);
-\draw[->,>=latex] (pba) -- (a);
-\draw[->,>=latex] (pbeigen) -- (lambda);
-\draw[->,>=latex] (pbeigen) -- (gi);
-\draw[->,>=latex] (gi) -- (pbgi0);
-\draw[->,>=latex] (pbgi0) -- (gi0);
-\draw[->,>=latex] (gi0) -- (pbpsi);
-\draw[->,>=latex] (pbpsi) -- (psi);
-\draw[->,>=latex] (a) -- (pbs);
-\draw[->,>=latex] (f) -- (pbs);
-\draw[->,>=latex] (a2) -- (pbs);
-\draw[->,>=latex] (ck0) -- (pbs);
-\draw[->,>=latex] (lambda) -- (pbs);
-\draw[->,>=latex] (gi) -- (pbs);
-\draw[->,>=latex] (psi) -- (pbs);
-\draw[->,>=latex] (pbs) -- (ck);
-\draw[->,>=latex] (ck) -- (pbu);
-\draw[->,>=latex] (pbu) -- (u);
-\draw[->,>=latex] (u) -- (pbv);
-\draw[->,>=latex] (a) -- (pbv);
-\draw[->,>=latex] (pbv) -- (v);
-\draw[->,>=latex] (v) -- (pbq);
-\draw[->,>=latex] (pbq) -- (q);
+\draw[->,>=latex] (a0) -- (pbpsi0); \draw[->,>=latex] (a1) -- (pbpsi1); \draw[->,>=latex] (pbpsi0) -- (psi0); \draw[->,>=latex] (pbpsi1) -- (psi1); \draw[->,>=latex] (psi1) -- (pbb);
+\draw[->,>=latex] (psi) -- (pbb); \draw[->,>=latex] (lambda) -- (pbb); \draw[->,>=latex] (gi) -- (pbb); \draw[->,>=latex] (pbb) -- (b); \draw[->,>=latex] (b) -- (pba);
+\draw[->,>=latex] (psi0) -- (pba); \draw[->,>=latex] (pba) -- (a); \draw[->,>=latex] (pbeigen) -- (lambda); \draw[->,>=latex] (pbeigen) -- (gi); \draw[->,>=latex] (gi) -- (pbgi0);
+\draw[->,>=latex] (pbgi0) -- (gi0); \draw[->,>=latex] (gi0) -- (pbpsi); \draw[->,>=latex] (pbpsi) -- (psi); \draw[->,>=latex] (a) -- (pbs); \draw[->,>=latex] (f) -- (pbs);
+\draw[->,>=latex] (a2) -- (pbs); \draw[->,>=latex] (ck0) -- (pbs); \draw[->,>=latex] (lambda) -- (pbs); \draw[->,>=latex] (gi) -- (pbs);\draw[->,>=latex] (psi) -- (pbs);
+\draw[->,>=latex] (pbs) -- (ck); \draw[->,>=latex] (ck) -- (pbu); \draw[->,>=latex] (pbu) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv);
+\draw[->,>=latex] (pbv) -- (v); \draw[->,>=latex] (v) -- (pbq); \draw[->,>=latex] (pbq) -- (q);
 \end{tikzpicture}
 \end{figure}
-
 \end{frame}
 
 \begin{frame}{$P_\sigma(H^1_0)$}
 On sait que
-\[
-D^1 = \{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \}
-\]
+\[ D^1 = \{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \} \]
 En notant $P_\sigma = I + \grad(-\laplace)^{-1}\div$ alors
-\[
-D^1 = P_\sigma(H^1_0)
-\]
+\[ D^1 = P_\sigma(H^1_0) \]
 Comme les valeurs propres $(g_0^i)$ de
-\[
-\left\{\begin{aligned}
+\[\left\{\begin{aligned}
 -\laplace\bm{g_0} = \beta\bm{g_0}\\
 \bm{g_0} = 0 \text{ sur } \partial\Omega
-\end{aligned}
-\right.
-\]
+\end{aligned}\right.\]
 sont une base de $H^1_0$, $P_\sigma(g_0^i)$ est une base de $D^1$.
 \end{frame}
 
@@ -598,9 +516,7 @@ sont une base de $H^1_0$, $P_\sigma(g_0^i)$ est une base de $D^1$.
 \begin{itemize}
 \item $\div\bm{g} = \div (\bm{g_0}+\grad\psi) = \div\bm{g_0} + \laplace\psi \ne 0$
 \item On veut une base $(\bm{g_i})$ de $D^1$ particulière, celle telle que 
-\[
-\rot\bm{g_i} = \lambda\bm{g_i}
-\]
+\[ \rot\bm{g_i} = \lambda\bm{g_i} \]
 or $(g_i)\ne(g_o^i)$
 \end{itemize}
 \end{alertblock}
@@ -627,29 +543,19 @@ De plus, on utilise un terme de pression pour imposer (\ref{sc2}). On a donc le 
 
 \begin{frame}{Forme variationnelle}
 On multiplie (\ref{sc11}) par $\bm{\varphi}\in H(rot)$ et on intègre :
-\[
-(\rott\bm{g_i},\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\bm{g_i},\bm{\varphi})
-\]
+\[ (\rott\bm{g_i},\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\bm{g_i},\bm{\varphi}) \]
 On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
-\[
-(\div\bm{g_i},q) = 0
-\]
+\[ (\div\bm{g_i},q) = 0 \]
 \begin{block}{En intégrant par partie et en additionnant :}
-\[
-(\rot\bm{g_i},\rot\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\bm{g_i},q) = \lambda^2(\bm{g_i},\bm{\varphi})
-\]
+\[ (\rot\bm{g_i},\rot\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\bm{g_i},q) = \lambda^2(\bm{g_i},\bm{\varphi}) \]
 \end{block}
 \end{frame}
 
 \begin{frame}{Conditions aux bords}
 En intégrant par partie $(\div\bm{g_i},q)$, on a :
-\[
-(\div\bm{g_i},q) = (\bm{g_i},\grad q) - \langle \underbrace{\bm{g_i}\cdot \bm{n}}_{=0}, q \rangle
-\] 
+\[ (\div\bm{g_i},q) = (\bm{g_i},\grad q) - \langle \underbrace{\bm{g_i}\cdot \bm{n}}_{=0}, q \rangle \] 
 Pour imposer $\rot\bm{g_i}\cdot\bm{n}=0$ on utilise une méthode de pénalisation, on ajoute donc :
-\[
-\gamma\int_\Omega (\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n})
-\]
+\[ \gamma\int_\Omega (\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) \]
 \begin{block}{Ce qui donne la forme variationnelle :}
 \[\begin{aligned}
 (\rot\bm{g_i},\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
@@ -689,19 +595,13 @@ $||\div\bm{g}||_{L^2(\Omega)}=0.0371$  $||\bm{g}\cdot\bm{n}||_{L^2(\partial\Omeg
 
 \begin{frame}{Problème spectral}
 On observe que $\int_\Omega g^z = 0$, d'où, avec $\bm{f}=(0,0,9.81)$, on a
-\[
-R_{fk}=\int_\Omega \bm{f}\cdot\bm{g}=0
-\]
+\[ R_{fk}=\int_\Omega \bm{f}\cdot\bm{g}=0 \]
 
 De plus, $R_{pk}=\int_{\partial\Omega} \alpha_2\psi_k$, donc si $\psi$ est de moyenne nulle,
-\[
-R_{fk}=0
-\]
+\[ R_{pk}=0 \]
 
 On pose $\bm{c} = (c_0,c_1,\dots,c_M)$ et $A=\frac{\lambda^2}{Re}I+R_{iak}$, alors on résout
-\[
-Ac = R_{fk}+\frac{R_{pk}}{Re} = 0
-\]
+\[ Ac = R_{fk}+\frac{R_{pk}}{Re} = 0 \]
 On cherche donc $\psi$ de moyenne non nulle.
 \end{frame}
 
