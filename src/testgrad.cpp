@@ -13,7 +13,7 @@ public Simget
 {
     typedef Simget super;
     static const uint16_type Dim = 3;
-    static const uint16_type Order = 2;
+    static const uint16_type Order = 3;
  public:
     typedef Simplex<Dim> convex_type;
     typedef Mesh<convex_type> mesh_type;
@@ -45,7 +45,26 @@ TestGrad::TestGrad( mesh_ptrtype mesh)
 {
     this->mesh = mesh;
     this->Vh = space_stype::New( mesh );
+    LOG(INFO) << "----- Vh -----\n";
+    LOG(INFO) << "[dof] number of dof: " << Vh->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
+
+    if ( Environment::isMasterRank() ){
+        std::cout << "----- Vh -----\n";
+        std::cout << "[dof] number of dof: " << Vh->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
+    }
+
     this->Vh2 = space_vtype::New( mesh );
+    LOG(INFO) << "----- Vh2 -----\n";
+    LOG(INFO) << "[dof] number of dof: " << Vh2->nDof() << "\n";
+    LOG(INFO) << "[dof] number of dof/proc: " << Vh2->nLocalDof() << "\n";
+
+    if ( Environment::isMasterRank() ){
+        std::cout << "----- Vh2 -----\n";
+        std::cout << "[dof] number of dof: " << Vh2->nDof() << "\n";
+        std::cout << "[dof] number of dof/proc: " << Vh2->nLocalDof() << "\n";
+    }
 }
 
 void
@@ -60,18 +79,6 @@ TestGrad::run()
 void
 TestGrad::prob()
 {
-
-    LOG(INFO) << "----- Vh -----\n";
-    LOG(INFO) << "[dof] number of dof: " << Vh->nDof() << "\n";
-    LOG(INFO) << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
-
-    if ( Environment::isMasterRank() ){
-        std::cout << "----- Vh -----\n";
-        std::cout << "[dof] number of dof: " << Vh->nDof() << "\n";
-        std::cout << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
-    }
-
-
     auto u = Vh->element();
     auto v = Vh->element();
 
@@ -84,7 +91,6 @@ TestGrad::prob()
     a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u, _expr=cst(0.) );
 
     b = integrate( elements(mesh), inner(idt(u),id(v)) );
-    //b += integrate( boundaryfaces(mesh), 2*id(v) );
 
     auto modes = veigs( _formA=a, _formB=b);
 
@@ -100,6 +106,13 @@ TestGrad::prob()
 
     accu  = integrate( elements(mesh), idt(ccu)*id(ccu) );
 
+    auto hessu = Vh->element();
+    auto ahess = form2( _test=Vh, _trial=Vh );
+    auto bhess = form1( _test=Vh );
+
+    ahess = integrate( elements(mesh), trans(idt(hessu))*id(hessu) );
+
+
     auto e =  exporter( _mesh=mesh );
 
     int i = 0;
@@ -107,20 +120,24 @@ TestGrad::prob()
     for( auto const& mode : modes )
     {
         bcu = integrate( elements(mesh), gradv(mode.second)*id(cu) );
-        //acu += on(boundaryfaces(mesh), _rhs=bcu, _element=cu, _expr=zero<3>());
         acu.solve(_rhs=bcu, _solution=cu, _name="grad");
 
         bccu = integrate( elements(mesh), divv(cu)*id(ccu) );
-        //accu += on(boundaryfaces(mesh), _rhs=bccu, _element=ccu, _expr=cst(0.) );
         accu.solve( _rhs=bccu, _solution=ccu, _name="div" );
+
+        bhess = integrate( elements(mesh), trace(hessv(mode.second))*id(hessu) );
+        ahess.solve( _rhs=bhess, _solution=hessu, _name="hess" );
 
         e->add( ( boost::format( "mode-%1%" ) % i ).str(), mode.second );
         e->add( ( boost::format( "lapl-%1%" ) % i ).str(), ccu );
+        e->add( ( boost::format( "hess-%1%" ) % i ).str(), hessu );
 
-        auto erreur = normL2(elements(mesh), idv(ccu)+mode.first*idv(mode.second) );
-        auto erreur2 = normL2(elements(mesh), divv(cu)+mode.first*idv(mode.second) );
+        auto erreur = normL2(elements(mesh), idv(ccu) + mode.first*idv(mode.second) );
+        auto erreur2 = normL2(elements(mesh), divv(cu) + mode.first*idv(mode.second) );
+        auto erreur3 = normL2(elements(mesh), idv(hessu) + mode.first*idv(mode.second) );
+
         if ( Environment::worldComm().isMasterRank() )
-            std::cout << "err(" << i << ") = " << erreur << "     err2(" << i << ") = " << erreur2 << std::endl;
+            std::cout << "err(" << i << ") = " << erreur << "     err2(" << i << ") = " << erreur2 << "     err3(" << i << ") = " << erreur3 << std::endl;
         i++;
     }
 
@@ -130,16 +147,18 @@ TestGrad::prob()
 void
 TestGrad::test()
 {
-    auto t1 = expr(soption("t1"));
-    auto laplacian_t1=laplacian(t1);
+    auto ext1 = expr(soption("t1"));
+    auto laplacian_t1 = laplacian(ext1);
+    auto grad_t1 = grad<3>(ext1);
     auto exgt1 = expr<3,1>(soption("gt1"));
     auto exlt1 = expr(soption("lt1"));
-    auto vt1 = Vh->element(t1);
+    auto vt1 = Vh->element(ext1);
     auto gt1 = Vh2->element(exgt1);
     auto lt1 = Vh->element(exlt1);
 
     auto ext2 = expr(soption("t2"));
-    auto laplacian_t2=laplacian(ext2);
+    auto laplacian_t2 = laplacian(ext2);
+    auto grad_t2 = grad<3>(ext2);
     auto exgt2 = expr<3,1>(soption("gt2"));
     auto exlt2 = expr(soption("lt2"));
     auto vt2 = Vh->element(ext2);
@@ -147,7 +166,8 @@ TestGrad::test()
     auto lt2 = Vh->element(exlt2);
 
     auto ext3 = expr(soption("t3"));
-    auto laplacian_t3=laplacian(ext3);
+    auto laplacian_t3 = laplacian(ext3);
+    auto grad_t3 = grad<3>(ext3);
     auto exgt3 = expr<3,1>(soption("gt3"));
     auto exlt3 = expr(soption("lt3"));
     auto vt3 = Vh->element(ext3);
@@ -155,9 +175,9 @@ TestGrad::test()
     auto lt3 = Vh->element(exlt3);
 
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "t1 = " << t1 << "\tlap(t1) = " << laplacian_t1 << std::endl;
-        std::cout << "t2 = " << ext2 << "\tlap(t2) = " << laplacian_t2 << std::endl;
-        std::cout << "t3 = " << ext3 << "\tlap(t3) = " << laplacian_t3 << std::endl;
+        std::cout << "t1 = " << ext1 << "\tgrad(t1) = " << grad_t1 << "\tlap(t1) = " << laplacian_t1 << std::endl;
+        std::cout << "t2 = " << ext2 << "\tgrad(t2) = " << grad_t2 << "\tlap(t2) = " << laplacian_t2 << std::endl;
+        std::cout << "t3 = " << ext3 << "\tgrad(t3) = " << grad_t3 << "\tlap(t3) = " << laplacian_t3 << std::endl;
     }
 
 
@@ -173,7 +193,14 @@ TestGrad::test()
 
     accu  = integrate( elements(mesh), idt(ccu)*id(ccu) );
 
-    double err1, err2;
+    auto hessu = Vh->element();
+    auto ahess = form2( _test=Vh, _trial=Vh );
+    auto bhess = form1( _test=Vh );
+
+    ahess = integrate( elements(mesh), trans(idt(hessu))*id(hessu) );
+
+
+    double err1, err2, err3;
 
 
     bcu = integrate( elements(mesh), gradv(vt1)*id(cu) );
@@ -182,12 +209,15 @@ TestGrad::test()
     bccu = integrate( elements(mesh), divv(cu)*id(ccu) );
     accu.solve( _rhs=bccu, _solution=ccu, _name="div" );
 
+    bhess = integrate( elements(mesh), trace(hessv(vt1))*id(hessu) );
+    ahess.solve( _rhs=bhess, _solution=hessu, _name="hess" );
 
-    err1 = normL2(elements(mesh), idv(cu)-idv(gt1) );
-    err2 = normL2(elements(mesh), idv(ccu)-idv(lt1) );
+    err1 = normL2(elements(mesh), idv(cu) - idv(gt1) );
+    err2 = normL2(elements(mesh), idv(ccu) - idv(lt1) );
+    err3 = normL2(elements(mesh), idv(hessu) - idv(lt1) );
 
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "errGrad1 = " << err1 << "     errLap1 = " << err2 << std::endl;
+        std::cout << "errGrad1 = " << err1 << "     errLap1 = " << err2 << "     errHess1 = " << err3 << std::endl;
 
 
     bcu = integrate( elements(mesh), gradv(vt2)*id(cu) );
@@ -196,11 +226,15 @@ TestGrad::test()
     bccu = integrate( elements(mesh), divv(cu)*id(ccu) );
     accu.solve( _rhs=bccu, _solution=ccu, _name="div" );
 
-    err1 = normL2(elements(mesh), idv(cu)-idv(gt2) );
-    err2 = normL2(elements(mesh), idv(ccu)-idv(lt2) );
+    bhess = integrate( elements(mesh), trace(hessv(vt2))*id(hessu) );
+    ahess.solve( _rhs=bhess, _solution=hessu, _name="hess" );
+
+    err1 = normL2(elements(mesh), idv(cu) - idv(gt2) );
+    err2 = normL2(elements(mesh), idv(ccu) - idv(lt2) );
+    err3 = normL2(elements(mesh), idv(hessu) - idv(lt2) );
 
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "errGrad2 = " << err1 << "     errLap2 = " << err2 << std::endl;
+        std::cout << "errGrad2 = " << err1 << "     errLap2 = " << err2 << "     errHess2 = " << err3 << std::endl;
 
 
     bcu = integrate( elements(mesh), gradv(vt3)*id(cu) );
@@ -209,11 +243,15 @@ TestGrad::test()
     bccu = integrate( elements(mesh), divv(cu)*id(ccu) );
     accu.solve( _rhs=bccu, _solution=ccu, _name="div" );
 
-    err1 = normL2(elements(mesh), idv(cu)-idv(gt3) );
-    err2 = normL2(elements(mesh), idv(ccu)-idv(lt3) );
+    bhess = integrate( elements(mesh), trace(hessv(vt3))*id(hessu) );
+    ahess.solve( _rhs=bhess, _solution=hessu, _name="hess" );
+
+    err1 = normL2(elements(mesh), idv(cu) - idv(gt3) );
+    err2 = normL2(elements(mesh), idv(ccu) - idv(lt3) );
+    err3 = normL2(elements(mesh), idv(hessu) - idv(lt3) );
 
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "errGrad3 = " << err1 << "     errLap3 = " << err2 << std::endl;
+        std::cout << "errGrad3 = " << err1 << "     errLap3 = " << err2 << "     errHess3 = " << err3 << std::endl;
 
 
 
@@ -246,7 +284,7 @@ main( int argc, char** argv )
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=makeOptions(),
-                     _desc_lib=feel_options().add( backend_options( "grad" ) ).add ( backend_options( "div" ) ),
+                     _desc_lib=feel_options().add( backend_options( "grad" ) ).add ( backend_options( "div" ) ).add( backend_options( "hess" ) ),
                      _about=about(_name="po_testgrad",
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com") );
