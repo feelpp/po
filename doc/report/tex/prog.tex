@@ -92,7 +92,22 @@ Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (
 \begin{equation}\label{impFvEigen}
 \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
 \end{equation}
-avec $\gamma$ une très grande valeur.
+avec $\gamma$ une très grande valeur.\\
+
+Comme on cherche la solution dans l'espace $H(rot)$, nous devrions utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec.\\
+
+Cependant, les éléments de Nedelec n'étant pas près dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\bm{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
+
+Ces erreurs mènent à une divergence non nulle, on utilise donc un terme de pénalisation en plus afin de forcer la divergence. On résout donc le système suivant :
+\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) + \alpha\int_\Omega \div\bm{g}\div\bm{\varphi} = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
+
+Cependant, on a toujours la condition $\bm{g}\cdot\bm{n}$ qui n'est pas respecter. On ajoute donc un troisième terme de pénalisation :
+\begin{align*}
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) &+ \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q\\
+&+ \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n})\\
+& + \alpha\int_\Omega \div\bm{g}\div\bm{\varphi}\\
+&+ \beta\int_{\partial\Omega}\bm{g_i}\cdot\bm{n})(\bm{\varphi}\cdot\bm{n})  = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
+\end{align*}
 
 \section{Problème spectral}
 
