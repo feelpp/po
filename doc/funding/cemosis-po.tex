@@ -1,0 +1,109 @@
+\documentclass{article}
+\usepackage{fontspec}
+
+\title{NS2: Non standard Navier-Stokes equations treatment for }
+\begin{document}
+
+\section{Description}
+\label{sec:description}
+
+Les pertes dans le sillage d’un véhicule contribuent, dans le cas d’un véhicule
+break, à la moitié des pertes totales d’énergie sur un trajet
+autoroutier. Cependant la réduction des pertes dans cette zone instationnaire
+nécessite des études numériques modélisant les plus grandes structures
+tourbillonnaires de l’écoulement. Grâce aux performances des serveurs de calcul,
+il est maintenant possible d’utiliser des modèles numériques tels que les
+modèles LES, permettant de résoudre les phénomènes instationnaires aux grandes
+échelles de la turbulence. Il nécessite cependant des temps de calcul et de
+stockage importants.
+
+Une alternative à cette méthode serait de définir la base des vecteurs propres
+de la vorticité, dépendant uniquement de la géométrie et sur laquelle serait
+projeté le champ de vitesse, pour résoudre les équations de Navier-Stokes. Seuls
+les coefficients associés aux vecteurs propres seraient à calculer à chaque pas
+de temps, ce qui permettrait de réduire fortement les temps de calcul. Cette
+méthode se fonde sur les travaux mathématiques du professeur Penel de
+l’université de Toulon, réalisé en collaboration avec le Prof Neustupa de la
+faculté de mathématique de Prague. Elle suppose de résoudre le champ de vitesse
+d’écoulements incompressibles sur la base de des vecteurs propres de la
+vorticité avec des conditions d’imperméabilité sur la vitesse et la vorticité,
+dans un espace à divergence nulle. La mise en équation réalisée avec le
+Prof. Penel a été testée par un doctorant à Plastic Omnium avec le logiciel
+Freefem++, mais le nombre de modes à résoudre et la taille des matrices
+demandent une décomposition et une résolution sur plusieurs processeurs avec des
+algorithmes itératifs disponibles uniquement dans Feel++.
+
+
+
+
+\section{Travaux actuels}
+\label{sec:travaux-actuels}
+
+Un stagiaire en Master à l’université de Strasbourg a donc repris ces travaux au
+premier semestre 2014, pour retrouver avec Feel++ les résultats de l’écoulement
+de Stokes dans un conduit cylindrique, obtenus précédemment avec Freefem++.
+
+La collaboration entre le laboratoire IRMA et Plastic Omnium a permis au cours
+de ce stage d’identifier les développements à réaliser sur Feel++ pour apporter
+plus de robustesse à la méthode de résolution. Il serait nécessaire d’intégrer
+de nouvelles fonctions tests dans l’espace mathématique nouvellement défini et
+des routines permettant de résoudre l’opérateur de vorticité, associé aux
+nouvelles conditions d’imperméabilité généralisées. Ce sont ces deux
+développements, qui seraient à réaliser pendant les six premiers mois du projet
+PEPS, avant de tester le résultat de ce développement sur des modèles numériques
+différents de celui du cylindre. La première partie de développement aurait lieu
+à Strasbourg et la deuxième phase plus applicative pourrait être localisée à
+Plastic Omnium. Le cas d’application pourrait être celui d’un écoulement
+derrière une marche, résolu à faible puis à haut nombre de Reynolds. Les
+résultats à haut nombre de Reynolds pourraient être comparés à des résultats de
+calculs à lancer avec un modèle LES, disponible à Plastic Omnium, ainsi qu’à des
+résultats d’essais connus. Cet objectif a pour but de définir le nombre de mode
+de la vorticité à prendre en compte, de comparer les temps de calcul et la
+précision des résultats à ceux obtenus avec le modèle LES disponible. En cas de
+succès, cette méthode permettrait d’augmenter le nombre de pas de temps calculés
+et de de réaliser des études spectrales sur un nombre d’échantillons important,
+permettant d’analyser par exemple les phénomènes fréquentiels dans les couches
+de cisaillement, à l’origine des pertes dans le sillage.
+
+
+
+\section{Budget du projet}
+\label{sec:budget}
+
+Pour ce projet, Plastic Omnium propose en terme de ressource, de dédier la
+moitié du temps d’une personne, pour orienter et guider les développements sous
+Feel++, pour réaliser les calculs sur un solveur LES et pour analyser les
+résultats obtenus. Les calculs pourront être réalisés à PO sur un serveur
+disposant de 48 processeurs. Un bureau et un accès au serveur sera disponible à
+plastic Omnium pour la personne chargée du développement. Le cout de ce projet
+amont pour Plastic Omnium peut être évalué à 50 k€.
+
+En ce qui concerne Cemosis (IRMA), 2 ingénieurs pourront contribuer aux
+développements dans le cadre du projet( 5\% de leur temps chacun) ainsi que 10\%
+du temps de recherche de C. Prud'homme.
+
+Dans le cadre du projet, nous demandons la subvention suivante:
+\begin{itemize}
+\item Personnel: embauche pour un an de Romain Hild, 35000 Euros (salaire sortie Master)
+\item Missions : 5000 Euros
+\item Fonctionnement  : 5000 Euros (equipement)
+\end{itemize}
+Soit un total de 45000 Euros.
+
+Romain Hild obtiendra son master de mathématiques appliquées (Calcul
+Scientifique et Mathématiques de l'Information) en aout 2014 et le salaire est
+calé sur les grille en vigueur à l'Université de Strasbourg.
+
+Les missions concernent le bon fonctionnement du projet avec l'intervention des
+ingénieurs de Cemosis pour la mise en place des outils à PO ainsi que les
+séances de travail communes entre les deux centres. On y adjoint également la
+participation à 2 conférences nationales et 1 internationale.
+
+Concernant le fonctionnement, le projet se servira abondammement d'un cluster de
+calcul (irma-atlas), les 5000 Euros sont une contribution à la maintenance de la
+machine, aux stockages des données du projet et aux licences logicels (Ensight
+10 et DDT/MAP outre Feel++) .
+
+
+
+\end{document}
