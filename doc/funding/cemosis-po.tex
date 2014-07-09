@@ -1,5 +1,6 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 \usepackage{fontspec}
+\usepackage[colorlinks]{hyperref}
 \usepackage{libertine}
 \usepackage{stmaryrd}
 \usepackage{amsmath,amsthm,amssymb}
@@ -7,13 +8,17 @@
 \usepackage{geometry}
 \usepackage{xspace}
 \newcommand{\curlk}[1][k]{\ensuremath{\nabla^{#1}\hspace{-.3em}\times}\xspace}
-\title{NS2: Non standard Navier-Stokes equations treatment for }
+\title{NS$^2$: Non Standard Navier-Stokes equations for large scale computational
+fluid dynamics}
+\author{P. Gilotte\thanks{PlasticOmnium}, C. Prud'homme\thanks{Cemosis,
+Irma, U. Strasbourg}, Benjamin Surowiec\thanks{PlasticOmnium}}
 \begin{document}
 
 \maketitle
 
 \abstract{
-
+Dans ce projet, on cherche à mettre en place une stratégie de résolution des
+équations de Navier-Stokes incompressibles permettant de multiplier passer
 }
 
 \section{Description}
@@ -36,16 +41,16 @@ les coefficients associés aux vecteurs propres seraient à calculer à chaque p
 de temps, ce qui permettrait de réduire fortement les temps de calcul. Cette
 méthode se fonde sur les travaux mathématiques du professeur Penel de
 l’université de Toulon, réalisé en collaboration avec le Prof Neustupa de la
-faculté de mathématique de Prague. Elle suppose de résoudre le champ de vitesse
-d’écoulements incompressibles sur la base de des vecteurs propres de la
-vorticité avec des conditions d’imperméabilité sur la vitesse et la vorticité,
-dans un espace à divergence nulle. La mise en équation réalisée avec le
-Prof. Penel a été testée par un doctorant à Plastic Omnium avec le logiciel
-Freefem++, mais le nombre de modes à résoudre et la taille des matrices
+faculté de mathématique de Prague~\cite{Penel2004}. Elle suppose de résoudre le
+champ de vitesse d’écoulements incompressibles sur la base de des vecteurs
+propres de la vorticité avec des conditions d’imperméabilité sur la vitesse et
+la vorticité, dans un espace à divergence nulle. La mise en équation réalisée
+avec le Prof. Penel a été testée par un doctorant à Plastic Omnium avec le
+logiciel Freefem++, mais le nombre de modes à résoudre et la taille des matrices
 demandent une décomposition et une résolution sur plusieurs processeurs avec des
 algorithmes itératifs disponibles uniquement dans Feel++.
 
-Feel++ (Finite Element Embedded Library in C++, \cite{} ) est une librairie C++
+Feel++ (Finite Element Embedded Library in C++, \cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) est une librairie C++
 permettant la résolution d'une très large gamme d'équations aux dérivées
 partielles par des méthodes de Galerkin continue et discontinue en 1D, 2D et
 3D. Elle permet d'écrire via un language permettant de manipuler les
@@ -103,7 +108,7 @@ de cisaillement, à l’origine des pertes dans le sillage.
 
 
 
-\section{Budget du projet}
+\section{Ressource et budget du projet}
 \label{sec:budget}
 
 Pour ce projet, Plastic Omnium propose en terme de ressource, de dédier la
