@@ -8,18 +8,22 @@
 \usepackage{geometry}
 \usepackage{xspace}
 \newcommand{\curlk}[1][k]{\ensuremath{\nabla^{#1}\hspace{-.3em}\times}\xspace}
-\title{NS$^2$: Non Standard Navier-Stokes equations for large scale computational
-fluid dynamics}
+\title{NS$^2++$: Non Standard Navier-Stokes equations for large scale computational
+fluid dynamics avec Feel++.}
 \author{P. Gilotte\thanks{PlasticOmnium}, C. Prud'homme\thanks{Cemosis,
 Irma, U. Strasbourg}, Benjamin Surowiec\thanks{PlasticOmnium}}
 \begin{document}
 
 \maketitle
 
-\abstract{
-Dans ce projet, on cherche à mettre en place une stratégie de résolution des
-équations de Navier-Stokes incompressibles permettant de multiplier passer
-}
+\abstract{Dans ce projet, on cherche à mettre en place les briques nécessaires à
+une stratégie non-standard de résolution des équations de Navier-Stokes
+incompressibles qui permettrait à PlasticOmnium (PO) afin d'augmenter le temps
+d'étude des écoulements de 1s actuellement à 10s avec un budget identique sur
+des grilles de l'ordre de 100 millions de mailles. L'objectif à la fin du projet
+étant d'avoir \textit{(i)} développé le cadre numérique, \textit{(ii)} développé
+les briques logicielles en Feel++ nécessaires et \textit{(iii)} testé sur
+quelques benchmarks de PO. }
 
 \section{Description}
 \label{sec:description}
@@ -68,7 +72,7 @@ un grand nombre de modes propres sont à calculés pour le problème de Stokes
 suivant: soit $\Omega \subset \mathbb{R}ˆ3$,
 \begin{align}
   \label{eq:1}
-  \curlk[2]{} \mathbf{u} + \nabla p &= \mathbf{f},\quad \mbox{ dans } \Omega\\
+  -\Delta \mathbf{u} + \nabla p &= \mathbf{f},\quad \mbox{ dans } \Omega\\
   \nabla \cdot \mathbf{u} &= 0,\quad \mbox{ dans } \Omega\\
   \curlk{} \mathbf{u} \cdot \mathbf{n} &= 0,\, k=0,1,2,\quad \mbox{ sur
   } \partial \Omega
@@ -77,8 +81,9 @@ où $\mathbf{u}$ et $p$ sont respectivement la vitesse et la pression,
 $\mathbf{n}$ la normale exterieure à $\partial \Omega$ et avec la convention
 $\curlk[0]{} = Id$. Ce type de problème de Stokes a été étudié par
 V. Girault~\cite{girault90-1} mais il apparait que ce formulation n'est pas
-utilisée dans la pratique en particulier du fait du traitement de la condition
-aux limites $\curlk[]{} \mathbf{u}\cdot \mathbf{n} = 0$.
+utilisée et a été relativement peu étudiée. Il  est d'abord nécessaire de
+l'étudier et de proposer un cadre numérique propre pour sa résolution. Un autre
+aspect est la résolution d'un grand nombre de modes propres.
 
 Un stagiaire en Master à l’université de Strasbourg a donc repris ces travaux au
 premier semestre 2014, pour retrouver avec Feel++ les résultats de l’écoulement
@@ -97,7 +102,7 @@ différents de celui du cylindre. La première partie de développement aurait l
 Plastic Omnium. Le cas d’application pourrait être celui d’un écoulement
 derrière une marche, résolu à faible puis à haut nombre de Reynolds. Les
 résultats à haut nombre de Reynolds pourraient être comparés à des résultats de
-calculs à lancer avec un modèle LES, disponible à Plastic Omnium, ainsi qu’à des
+calculs à lancer avec un modèle LES, disponibles à Plastic Omnium, ainsi qu’à des
 résultats d’essais connus. Cet objectif a pour but de définir le nombre de mode
 de la vorticité à prendre en compte, de comparer les temps de calcul et la
 précision des résultats à ceux obtenus avec le modèle LES disponible. En cas de
@@ -111,6 +116,16 @@ de cisaillement, à l’origine des pertes dans le sillage.
 \section{Ressource et budget du projet}
 \label{sec:budget}
 
+\subsection{Déroulement du projet}
+\label{sec:dero-du-proj}
+
+La personne recrutée sur le projet sera pendant 7 à 8 mois à Strasbourg au
+laboratoire IRMA (Cemosis) pour la mise en place des outils mathématiques et des
+briques informatiques avec quelques missions à PO. Puis les 4 à 5 derniers mois
+il sera à PO pour effectuer des benchmarks sur des géométries propriétaires.
+
+\subsection{Ressources existentes}
+
 Pour ce projet, Plastic Omnium propose en terme de ressource, de dédier la
 moitié du temps d’une personne, pour orienter et guider les développements sous
 Feel++, pour réaliser les calculs sur un solveur LES et pour analyser les
@@ -123,17 +138,20 @@ En ce qui concerne Cemosis (IRMA), 2 ingénieurs pourront contribuer aux
 développements dans le cadre du projet( 5\% de leur temps chacun) ainsi que 10\%
 du temps de recherche de C. Prud'homme.
 
+\subsection{Demande}
+
+
 Dans le cadre du projet, nous demandons la subvention suivante:
 \begin{itemize}
 \item Personnel: embauche pour un an de Romain Hild, 35000 Euros (salaire sortie Master)
 \item Missions : 5000 Euros
 \item Fonctionnement  : 5000 Euros (equipement)
 \end{itemize}
-Soit un total de 45000 Euros.
+Soit un total de \textbf{45000} Euros.
 
 Romain Hild obtiendra son master de mathématiques appliquées (Calcul
 Scientifique et Mathématiques de l'Information) en aout 2014 et le salaire est
-calé sur les grille en vigueur à l'Université de Strasbourg.
+calé sur les grilles en vigueur au CNRS.
 
 Les missions concernent le bon fonctionnement du projet avec l'intervention des
 ingénieurs de Cemosis pour la mise en place des outils à PO ainsi que les
