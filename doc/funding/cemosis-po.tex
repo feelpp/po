@@ -1,5 +1,7 @@
 \documentclass{article}
 \usepackage{fontspec}
+\usepackage{amsmath,amsthm}
+\usepackage{geometry}
 
 \title{NS2: Non standard Navier-Stokes equations treatment for }
 \begin{document}
@@ -33,11 +35,30 @@ Freefem++, mais le nombre de modes à résoudre et la taille des matrices
 demandent une décomposition et une résolution sur plusieurs processeurs avec des
 algorithmes itératifs disponibles uniquement dans Feel++.
 
+Feel++ (Finite Element Embedded Library in C++ ) est une librairie C++
+permettant la résolution d'une très large gamme d'équations aux dérivées
+partielles par des méthodes de Galerkin continue et discontinue en 1D, 2D et
+3D. Elle permet d'écrire via un language permettant de manipuler les
+formulations variationnelles ainsi que les objets afférents (mailage, espaces de
+functions, matrices, vecteurs...) de manière très proche des mathématique. Cette
+librairie offre un parallélisme transparent et a déjà été utilisé pour des
+simulations sur plusieurs miliers de coeurs de calcul avec les bonnes propriétés
+de scalabilité. Enfin Feel++ s'appuie sur PETSc pour les structures
+matrices/vecteurs, solveurs linéaires et non-linéaires ainsi que
+préconditionneurs et SLEPc pour les solveurs de problèmes aux valeurs propres
+standards et généralisés (qui s'appuie sur PETSc).
 
+En effet au coeur de la nouvelle stratégie proposée par Penel et Neustupa [REF]
+un grand nombre de problèmes aux valeurs propres sont à calculés pour le
+problème suivant:
 
-
-\section{Travaux actuels}
-\label{sec:travaux-actuels}
+\begin{align}
+  \label{eq:1}
+  \nabla^2 \times \mathbf{u} + \nabla p &= \lambda \mathbf{u},\\
+  \nabla \cdot \mathbf{u} &= 0\\
+  \nabla^k\times \mathbf{u} \cdot \mathbf{n} &= 0,\, k=0,1,2
+\end{align}
+avec la convention $\nabla^0\times = Id$.
 
 Un stagiaire en Master à l’université de Strasbourg a donc repris ces travaux au
 premier semestre 2014, pour retrouver avec Feel++ les résultats de l’écoulement
