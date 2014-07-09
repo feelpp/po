@@ -24,12 +24,14 @@
 
 #include "testCurl.hpp"
 
+
 TestCurl::TestCurl( mesh_ptrtype mesh )
 {
     this->mesh = mesh;
-    this->Vh = space_vtype::New( mesh );
-    this->test = std::vector<element_vtype>(15, Vh->element() );
+    this->Vh = space_type::New( mesh );
+    this->test = std::vector<element_type>(15, Vh->element() );
 }
+
 
 void
 TestCurl::run()
@@ -44,22 +46,35 @@ TestCurl::run()
         std::cout << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
     }
 
+    // [exacte]
     auto t = expr<3,1>( soption("t") );
     auto t1 = expr<3,1>( soption("t1") );
     auto t2 = expr<3,1>( soption("t2") );
 
-    //    auto curl_t = curl(t);             //ne fonctionne pas
-    //auto curl2_t = curl(curl_t);
+    // solution exacte
+    auto vt = Vh->element(t);     // t
+    // [exacte]
+
+    auto vt1 = Vh->element(t1);   // curl(t)
+    auto vt2 = Vh->element(t2);   // curl2(t)
+
+    auto curl_t = curl(t);             //ne fonctionne pas
+    auto curl2_t = curl(curl_t);
 
     if ( Environment::worldComm().isMasterRank() ){
         std::cout << "t : " << t << "\nt1 : " << t1 << "\nt2 : " << t2/* << "\ncurl(t) : " << curl_t << "\ncurl2(t) : " << curl2_t*/ << std::endl;
     }
 
-    // solution exacte
-    auto vt = Vh->element(t);     // t
-    auto vt1 = Vh->element(t1);   // curl(t)
-    auto vt2 = Vh->element(t2);   // curl2(t)
 
+    // [Nedelec]
+    // auto vt = Vh->element();
+
+    // auto ap = form2( _test=Vh, _trial=Vh);
+    // auto bp = form1( _test=Vh );
+    // ap = integrate( elements(mesh), trans(idt(vt))*id(vt) );
+    // bp = integrate( elements(mesh), trans(t)*id(vt) );
+    // ap.solve(_rhs=bp, _solution=vt, _name="gi0" );
+    // [Nedelec]
 
     // utilisation de project et curlv
     auto curl_vt = vf::project(_space=Vh, _range=elements(mesh),
@@ -67,38 +82,44 @@ TestCurl::run()
     auto curl2_vt = vf::project(_space=Vh, _range=elements(mesh),
                                 _expr=curlv(curl_vt) );
 
+    // [masse]
+    auto cu = Vh->element();  //curl
+    auto ccu = Vh->element(); //curl2
+    auto a = form2( _test=Vh, _trial=Vh );
+    auto b = form1( _test=Vh );
+    a = integrate( elements(mesh), trans(idt(cu))*id(cu) );
+    // [masse]
 
-    // resolution d'un systeme
-    auto cu = Vh->element();
-    auto ccu = Vh->element();
-    auto acu = form2( _test=Vh, _trial=Vh );
-    auto bcu = form1( _test=Vh );
-    acu = integrate( elements(mesh), trans(idt(cu))*id(cu) );
+    // [curl]
+    b = integrate(elements(mesh),
+                  trans(curlv(vt))*id(cu) );
+    a.solve(_rhs=b, _solution=cu, _name="curl" );
+    // [curl]
 
-    // premier systeme pour curl(t)
-    bcu = integrate(elements(mesh),
-                    trans(curlv(vt))*id(cu) );
-    acu.solve(_rhs=bcu, _solution=cu, _name="curl" );
+    // [curl2]
+    b = integrate(elements(mesh),
+                  trans(curlv(cu))*id(cu) );
+    a.solve(_rhs=b, _solution=ccu, _name="curl2" );
+    // [curl2]
 
-    // second systeme pour curl2(t)
-    bcu = integrate(elements(mesh),
-                    trans(curlv(cu))*id(cu) );
-    acu.solve(_rhs=bcu, _solution=ccu, _name="curl2" );
+    auto norm2id = normL2( elements(mesh), idv(vt) - t );
 
-    // norme avec project
-    auto norm2curl_1 = normL2( elements(mesh), curlv(vt) - idv(vt1) );
-    auto norm2curl_2 = normL2( elements(mesh), idv(curl_vt) - idv(vt1) );
-    auto norm2curl_3 = normL2( elements(mesh), idv(cu) - idv(vt1) );
+    auto norm2curl_1 = normL2( elements(mesh), curlv(vt) - t1 );
+    auto norm2curl2_1 = normL2( elements(mesh), curlv(cu) - t2 );
 
-    // norme avec systeme
-    auto norm2curl2_1 = normL2( elements(mesh), curlv(curl_vt) - idv(vt2) );
-    auto norm2curl2_2 = normL2( elements(mesh), idv(curl2_vt) - idv(vt2) );
-    auto norm2curl2_3 = normL2( elements(mesh), idv(ccu) - idv(vt2) );
+    auto norm2curl_2 = normL2( elements(mesh), idv(curl_vt) - t1 );
+    auto norm2curl2_2 = normL2( elements(mesh), idv(curl2_vt) - t2 );
+
+    // [erreur]
+    auto norm2curl_3 = normL2( elements(mesh), idv(cu) - t1 );
+    auto norm2curl2_3 = normL2( elements(mesh), idv(ccu) - t2 );
+    // [erreur]
 
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "\t\t\tcurlv\t\t project \t\t systeme" << std::endl;
-        std::cout << "norm(curlv(t)-idv(vt1))=\t" << norm2curl_1 << "\t" << norm2curl_2 << "\t" << norm2curl_3 << std::endl;
-        std::cout << "norm(curl2v(t)-idv(vt1))=\t" << norm2curl2_1 << "\t" << norm2curl2_2 << "\t" << norm2curl2_3 << std::endl;
+        std::cout << "\t\t\t\tcurlv \t project \t systeme" << std::endl;
+        std::cout << "norm(vt - t) =\t\t" << norm2id << std::endl;
+        std::cout << "norm(curlv(t)-t1)=\t" << norm2curl_1 << "\t" << norm2curl_2 << "\t" << norm2curl_3 << std::endl;
+        std::cout << "norm(curl2v(t)-t2)=\t" << norm2curl2_1 << "\t" << norm2curl2_2 << "\t" << norm2curl2_3 << std::endl;
     }
 
     test[0] = vt;

@@ -169,7 +169,7 @@ main( int argc, char **argv )
         e->add( "projCurl", tc.test[3] );
         e->add( "projCurl2", tc.test[4] );
         e->add( "sysCurl", tc.test[5] );
-        e->add( "sysCurl", tc.test[6] );
+        e->add( "sysCurl2", tc.test[6] );
     }
 
     if( boption(_name="needPS") || boption(_name="needEigen") || boption(_name="needP0") || boption("testCurl") )
