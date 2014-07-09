@@ -8,7 +8,7 @@
 \usepackage{geometry}
 \usepackage{xspace}
 \newcommand{\curlk}[1][k]{\ensuremath{\nabla^{#1}\hspace{-.3em}\times}\xspace}
-\title{NS$^2++$: Non Standard Navier-Stokes equations for large scale computational
+\title{NS$^2_{++}$: Non Standard Navier-Stokes equations for large scale computational
 fluid dynamics avec Feel++.}
 \author{P. Gilotte\thanks{PlasticOmnium}, C. Prud'homme\thanks{Cemosis,
 Irma, U. Strasbourg}, Benjamin Surowiec\thanks{PlasticOmnium}}
@@ -54,16 +54,17 @@ logiciel Freefem++, mais le nombre de modes à résoudre et la taille des matric
 demandent une décomposition et une résolution sur plusieurs processeurs avec des
 algorithmes itératifs disponibles uniquement dans Feel++.
 
-Feel++ (Finite Element Embedded Library in C++, \cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) est une librairie C++
-permettant la résolution d'une très large gamme d'équations aux dérivées
-partielles par des méthodes de Galerkin continue et discontinue en 1D, 2D et
-3D. Elle permet d'écrire via un language permettant de manipuler les
-formulations variationnelles ainsi que les objets afférents (mailage, espaces de
-functions, matrices, vecteurs...) de manière très proche des mathématique. Cette
-librairie offre un parallélisme transparent et a déjà été utilisé pour des
-simulations sur plusieurs miliers de coeurs de calcul avec les bonnes propriétés
-de scalabilité. Enfin Feel++ s'appuie sur PETSc pour les structures
-matrices/vecteurs, solveurs linéaires et non-linéaires ainsi que
+Feel++ (Finite Element Embedded Library in C++,
+\cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) est une librairie C++,
+dont le responsable est C. Prud'homme, permettant la résolution d'une très large
+gamme d'équations aux dérivées partielles par des méthodes de Galerkin continue
+et discontinue en 1D, 2D et 3D. Elle permet d'écrire via un language permettant
+de manipuler les formulations variationnelles ainsi que les objets afférents
+(mailage, espaces de functions, matrices, vecteurs...) de manière très proche
+des mathématique. Cette librairie offre un parallélisme transparent et a déjà
+été utilisé pour des simulations sur plusieurs miliers de coeurs de calcul avec
+les bonnes propriétés de scalabilité. Enfin Feel++ s'appuie sur PETSc pour les
+structures matrices/vecteurs, solveurs linéaires et non-linéaires ainsi que
 préconditionneurs et SLEPc pour les solveurs de problèmes aux valeurs propres
 standards et généralisés (qui s'appuie sur PETSc).
 
@@ -81,9 +82,11 @@ où $\mathbf{u}$ et $p$ sont respectivement la vitesse et la pression,
 $\mathbf{n}$ la normale exterieure à $\partial \Omega$ et avec la convention
 $\curlk[0]{} = Id$. Ce type de problème de Stokes a été étudié par
 V. Girault~\cite{girault90-1} mais il apparait que ce formulation n'est pas
-utilisée et a été relativement peu étudiée. Il  est d'abord nécessaire de
-l'étudier et de proposer un cadre numérique propre pour sa résolution. Un autre
-aspect est la résolution d'un grand nombre de modes propres.
+utilisée et a été relativement peu étudiée. Il est d'abord nécessaire de
+l'étudier et de proposer un cadre discret propre pour sa résolution. Un autre
+aspect délicat est la résolution d'un grand nombre de modes propres sur des
+grilles avec un très grand nombre de mailles en 3D, l'objectif est de pouvoir
+résoudre ces problèmes sur des grilles d'environ  100 millions de mailles.
 
 Un stagiaire en Master à l’université de Strasbourg a donc repris ces travaux au
 premier semestre 2014, pour retrouver avec Feel++ les résultats de l’écoulement
@@ -143,9 +146,9 @@ du temps de recherche de C. Prud'homme.
 
 Dans le cadre du projet, nous demandons la subvention suivante:
 \begin{itemize}
-\item Personnel: embauche pour un an de Romain Hild, 35000 Euros (salaire sortie Master)
+\item Personnel: embauche pour un an de Romain Hild, 35000 Euros
 \item Missions : 5000 Euros
-\item Fonctionnement  : 5000 Euros (equipement)
+\item Fonctionnement  : 8000 Euros
 \end{itemize}
 Soit un total de \textbf{45000} Euros.
 
@@ -158,10 +161,10 @@ ingénieurs de Cemosis pour la mise en place des outils à PO ainsi que les
 séances de travail communes entre les deux centres. On y adjoint également la
 participation à 2 conférences nationales et 1 internationale.
 
-Concernant le fonctionnement, le projet se servira abondammement d'un cluster de
-calcul (irma-atlas), les 5000 Euros sont une contribution à la maintenance de la
-machine, aux stockages des données du projet et aux licences logicels (Ensight
-10 et DDT/MAP outre Feel++) .
+Concernant le fonctionnement, le projet se servira abondamment d'un cluster de
+calcul (irma-atlas), les 8000 Euros sont une contribution à la maintenance et
+mise à jour de la machine, aux stockages des données du projet et aux licences
+logicels (Ensight 10 et DDT/MAP qui sont des logiciels commerciaux).
 
 
 \bibliographystyle{plain}
