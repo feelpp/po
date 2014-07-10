@@ -81,12 +81,18 @@ $\Omega \subset \mathbb{R}ˆ3$, trouver $(\mathbf{u},p)$ tels que
 où $\mathbf{u}$ et $p$ sont respectivement la vitesse et la pression,
 $\mathbf{n}$ la normale exterieure à $\partial \Omega$ et avec la convention
 $\curlk[0]{} = Id$. Ce type de problème de Stokes a été étudié par
-V. Girault~\cite{girault90-1} mais il apparait que ce formulation n'est pas
-utilisée et a été relativement peu étudiée. Il est d'abord nécessaire de
-l'étudier et de proposer un cadre discret propre pour sa résolution. Un autre
-aspect délicat est la résolution d'un grand nombre de modes propres sur des
-grilles avec un très grand nombre de mailles en 3D, l'objectif est de pouvoir
-résoudre ces problèmes sur des grilles d'environ  100 millions de mailles.
+V. Girault~\cite{girault90-1} mais cette formulation n'est pas ou peu utilisée
+et a été relativement peu étudiée. Il est d'abord nécessaire de l'étudier et de
+proposer un cadre discret propre pour sa résolution. Un autre aspect délicat est
+la résolution d'un grand nombre de modes propres sur des grilles avec un très
+grand nombre de mailles en 3D, l'objectif est de pouvoir résoudre ces problèmes
+sur des grilles d'environ 100 millions de mailles.  Le travail a donc deux
+composantes : \textit{(i)} l'étude mathématique et numérique et l'implémentation
+efficace de la formulation ci-dessus, \textit{(ii)} le passage à l'échelle de la
+nouvelle stratégie, et en particulier des problèmes aux valeurs propres, sur des
+grilles de très grande taille.
+
+
 
 Un stagiaire en Master à l’université de Strasbourg a  repris ces travaux au
 premier semestre 2014, pour retrouver avec Feel++ les résultats de l’écoulement
@@ -140,7 +146,10 @@ amont pour Plastic Omnium peut être évalué à 50 k€.
 
 En ce qui concerne Cemosis (IRMA), 2 ingénieurs pourront contribuer aux
 développements dans le cadre du projet( 5\% de leur temps chacun) ainsi que 10\%
-du temps de recherche de C. Prud'homme.
+du temps de recherche de C. Prud'homme. Le projet aura accès aux ressources
+locales de calcul (irma-atlas 64 coeurs et 0.5 To de memoire) ainsi que le
+mésocentre de Strasbourg qui fait partie de l'équipex equip@meso permettant de
+donner accès à des ressources de calcul aux collaborations avec les entreprises.
 
 \subsection{Demande}
 
@@ -156,7 +165,8 @@ Soit un total de \textbf{50123} Euros.
 
 Romain Hild obtiendra son master de mathématiques appliquées (Calcul
 Scientifique et Mathématiques de l'Information) en aout 2014 et le salaire est
-calé sur les grilles en vigueur au CNRS.
+calé sur les grilles en vigueur au CNRS. Une perspective est de pouvoir recruté
+Mr Hild à la suite de ce travail sur une thèse Cifre.
 
 Les missions concernent le bon fonctionnement du projet avec l'intervention des
 ingénieurs de Cemosis pour la mise en place des outils à PO ainsi que les
