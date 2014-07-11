@@ -1,6 +1,6 @@
-\chapter{Implémentation}
+\part{Implémentation Numérique}
 
-\section{Relèvement}
+\chapter{Relèvement}
 
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
 
@@ -37,7 +37,7 @@ Le résultat est visible dans la section (\ref{respsih1}).
 
 \subsection{Rotationnel}
 
-\section{Modes propres}
+\chapter{Modes propres}
 
 Ici on veut utiliser les travaux de V. Girault \cite{girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
 On rappel les définitions suivantes :
@@ -109,7 +109,7 @@ Cependant, on a toujours la condition $\bm{g}\cdot\bm{n}$ qui n'est pas respecte
 &+ \beta\int_{\partial\Omega}\bm{g_i}\cdot\bm{n})(\bm{\varphi}\cdot\bm{n})  = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
 \end{align*}
 
-\section{Problème spectral}
+\chapter{Problème spectral}
 
 On peut maintenant résoudre le problème (\ref{fvspec}).\\
 Cette équation comporte le terme

@@ -1,9 +1,19 @@
-\chapter{Problème}
+\part{Problème}
 
-Notation :
+Introduisons d'abord les notations utilisées par la suite :
 \begin{align*}
-divergence(\mathbf{v})&=\div \mathbf{v}\\
-rot(\mathbf{v})&=\rot \mathbf{v}\\
+gradient(v)&=(\partial_x v, \partial_y v, \partial_z v)=\grad v\\
+gradient(\bm{v})&=\begin{pmatrix}
+\partial_x \bm{v_x} & \partial_y \bm{v_x} & \partial_z \bm{v_x}\\
+\partial_x \bm{v_y} & \partial_y \bm{v_y} & \partial_z \bm{v_y}\\
+\partial_x \bm{v_z} & \partial_y \bm{v_z} & \partial_z \bm{v_z}
+\end{pmatrix}=\grad\bm{v}\\
+divergence(\mathbf{v})&=\frac{\partial v_x}{\partial x}+\frac{\partial v_y}{\partial y}+\frac{\partial v_z}{\partial z}=\div \mathbf{v}\\
+rot(\mathbf{v})&=\begin{pmatrix}
+\partial_y v_z - \partial_z v_y\\
+\partial_z v_x - \partial_x v_z\\
+\partial_x v_y - \partial_y v_x
+\end{pmatrix}=\rot \mathbf{v}\\
 rot(rot(\mathbf{v}))&=\rott \mathbf{v}\\
 L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
 H^1(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \grad \mathbf{v}\in L^2(\Omega)\}\\
@@ -31,7 +41,7 @@ Alors, on cherche la solution dans l'espace $[L^2_\sigma(\Omega)]^3\times [L^2(\
 
 On va maintenant expliquer la décomposition du problème en une suite de problème plus simple dans le chapitre \ref{local}, puis étudié plus en détail chacun de ces problèmes dans \ref{fv}. Enfin on verra la discrétisation du problème dans la section \ref{discr}.
 
-\section{Problème local}
+\chapter{Problème local}
 \label{local}
 
 Afin d'utiliser les travaux de H. Bellout, J. Neustupa et P. Penel \cite{Penel2004} qui ont étudié ce type d'équations dans $D^1$, on cherche à écrire $\mathbf{v}=\mathbf{u}+\mathbf{a}$, tel que :\\
@@ -141,9 +151,9 @@ Pour résumer, on doit donc :
 \item recomposer $\mathbf{v}=\mathbf{u}+\mathbf{a}$, et chercher $p$ pour avoir la solution du problème (\ref{depart}). Cette dernière partie est montré dans \ref{pression}.
 \end{enumerate}
 
-\section{Forme variationnelle}
+\chapter{Forme variationnelle}
 \label{fv}
-\subsection{Problème aux valeurs propres}
+\section{Problème aux valeurs propres}
 \label{eigen}
 
 On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
@@ -180,7 +190,7 @@ Comme $\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0$, le deuxième terme s'annu
 
 On obtient donc $(\Lambda_i,\mathbf{g_i})$, où $(\mathbf{g_i})$ forme une base de $[D^1(\Omega)]^3$. Comme énoncé plus tôt, tout élément de $D^1$ peut s'écrire $\bm{\varphi} = \bm{\varphi}_0 + \grad\phi$, y compris bien sûr les $\mathbf{g_i}$. Comme on va en avoir besoin pour les problèmes suivants, le prochain chapitre explique comment les décomposer.
 
-\subsection{Décomposition des $\mathbf{g_i}$}
+\section{Décomposition des $\mathbf{g_i}$}
 \label{decomp}
 
 Une fois les fonctions propres connues, on a besoin de les décomposer en $\mathbf{g_i}=\mathbf{g_i^0}+\grad\psi_i$ avec $\mathbf{g_i^0}\restr = 0$ et $\grad\psi_i\cdot \mathbf{n}\restr = 0$.\\
@@ -198,7 +208,7 @@ $\star\cdot \mathbf{n}\restr$ & 0 & & 0 & & 0
 \end{tabular}
 \end{center}
 
-\subsubsection{$g_i^0$}
+\subsection{$g_i^0$}
 En utilisant la première et la dernière ligne on parvient au problème :
 \begin{equation}\label{gi0}
 \left\{\begin{aligned}
@@ -220,7 +230,7 @@ Coercivité : $a(u,u)\ ?\geq?\ \alpha||u||^2_1$\\
 \[ a(u,u)=-\int(\div u)(\div u) + \int \grad u\grad u = -||\div u||_0^2 + ||\grad u||^2_0 \geq \frac{1}{1+c^2}||u||^2_1 - ||\div u||^2_0 \]
 question : $||\div u||^2_0\ ?\geq?\ \beta ||u||^2_1$ et $\alpha=\frac{1}{1+c^2}-\beta\ ?>?\ 0$\\
 
-\subsubsection{Gradient $\psi_i$}
+\subsection{Gradient $\psi_i$}
 \label{multLagrange}
 
 D'autre part, les deux dernières lignes du tableau nous donnent le problème de Poisson suivant :
@@ -247,10 +257,10 @@ a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) \notag \\
 \int_\Omega \grad\psi_i\cdot\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega \psi_i\mu &= \int_\Omega (\div \mathbf{g_i^0})\varphi
 \end{align}
 
-\subsection{Relèvement}
+\section{Relèvement}
 \label{relev}
 
-\subsubsection{Gradient dans $H(div)$}
+\subsection{Gradient dans $H(div)$}
 
 On cherche maintenant $\mathbf{a}$, on va donc s'intéresser d'abord à $\grad\psi^0$.\\
 Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord chercher $(\mathbf{w},\psi^0)\in [H(div)]^3\times [L^2(\Omega)]^1$ solution du problème de Darcy suivant :
@@ -276,7 +286,7 @@ Comme énoncé précédemment, on va devoir utiliser les multiplicateurs de Lagr
 -\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi} + \int_\Omega \lambda\varphi + \int_\Omega \psi^0\mu = \int_{\partial\Omega} \alpha_0\nu
 \end{equation}
 
-\subsubsection{Gradient dans $H^1$}
+\subsection{Gradient dans $H^1$}
 \label{secpsi0hdiv}
 
 L'autre possibilité pour résoudre (\ref{psi0}) est de se placer dans $[H^1(\Omega)]^1$ et de résoudre :
@@ -303,7 +313,7 @@ Cependant, comme dans la section \ref{secpsi0hdiv}, on va utiliser les multiplic
 
 Calculer $\grad\psi^0$ dans $H(div)$ a l'avantage de faire gagner un ordre à la régularité de $\grad\psi^0$ par rapport à résoudre le problème dans $H^1$ pour trouver $\psi^0$ et ensuite calculer son gradient.\\
 
-\subsubsection{Rotationnel dans $H(rot)$}
+\subsection{Rotationnel dans $H(rot)$}
 
 Pour le problème (\ref{curlb}), on peut le résoudre de deux manières différentes.\\
 Soit de résoudre dans $[H(rot)]^3$ le problème mixte suivant : 
@@ -324,7 +334,7 @@ En intégrant par partie le premier terme et en utilisant la formule de Green su
 \int_\Omega (\rot \mathbf{b})\cdot(\rot\bm{\varphi}) - \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot \mathbf{n}) + \int_\Omega \psi^1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot \mathbf{n}) = 0
 \end{equation}
 
-\subsubsection{Rotationnel dans $D^1$}
+\subsection{Rotationnel dans $D^1$}
 
 Soit résoudre les deux problèmes (\ref{curlb}) et (\ref{psi1}) séparément, en réutilisant la technique de (\ref{psi0}) pour (\ref{psi1}), et en cherchant $\rot b$ dans $[D^1(\Omega)]^3$, cela permet de réutiliser les fonctions propres de l'opérateur $\rott$, et d'avoir une plus grande régularité de $\rot \mathbf{b}$.\\
 On cherche donc à résoudre :
@@ -342,7 +352,7 @@ Le troisième terme est toujours nul, tandis que le deuxième peut s'écrire ave
 \int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\bm{\varphi}
 \end{equation}
 
-\subsection{Problème spectral}
+\section{Problème spectral}
 \label{spectre}
 
 On cherche maintenant $\mathbf{u}\in [D^1(\Omega)]^3$ solution de (\ref{pbu}), on veut donc obtenir la forme variationnelle du problème, pour cela, on multiplie par une fonction test $\bm{\varphi}\in [D^1(\Omega)]^3$ et on intègre :
@@ -365,7 +375,7 @@ Or, $\bm{\varphi}\in [D^1(\Omega)]^3$ donc $\div\bm{\varphi}=0$ et $\bm{\varphi}
 
 Où $\phi$ provient de la décomposition de la fonction de test en $\bm{\varphi}=\bm{\varphi}_0+\grad\phi$.
 
-\subsection{Pression}
+\section{Pression}
 \label{pression}
 
 Pour retrouver la vitesse $\mathbf{v}$, il suffit maintenant d'additionner $\mathbf{a}$ et $\mathbf{u}$.\\
@@ -395,7 +405,7 @@ Toujours de même manière, on va trouver la pression à une constante près, on
 \end{aligned}
 \end{equation}
 
-\section{Discrétisation}
+\chapter{Discrétisation}
 \label{discr}
 
 Dans les problèmes (\ref{bd1}) et (\ref{fvu}), on va chercher à exprimer $\mathbf{b}$ et $\mathbf{u}$ dans la base $(\mathbf{g_i})$, c'est-à-dire $\mathbf{b}=\sum_i d_ig_i$ et $\mathbf{u}=\sum_i c_ig_i$. De plus, prendre une fonction de test $\bm{\varphi}$ dans $[D^1(\Omega)]^3$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
@@ -420,7 +430,7 @@ Pour le problème (\ref{bd1}), on obtient de la même manière :
 d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 \end{equation}
 
-\section{Conclusion}
+\chapter{Récapitulatif}
 
 On calcul d'abord les valeurs et fonctions propres de l'opérateur rotationnel avec (\ref{fveigen}), puis on décompose les fonctions à l'aide de (\ref{fvgi0}) et (\ref{fvpsi}).\\
 On cherche ensuite à trouver $\mathbf{a}$, pour cela, on a plusieurs solutions :
