@@ -33,7 +33,7 @@ SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
     double r = doption( _name="radius" );
     double s = doption( _name="speed" );
     double n = doption( _name="nu" );
-    Re = 2*r*s/n;
+    Re = r*s/n;
     u = Vh->element();
 }
 
@@ -146,9 +146,10 @@ void SpectralProblem::run()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Start Spectral Problem -----" << std::endl;
 
-    // MatrixXd A = MatrixXd::Matrix(M,M);
-    // A = Riak + lambda.asDiagonal();
-    Riak += (lambda/Re).asDiagonal();
+    MatrixXd A = MatrixXd(M,M);
+    A = Riak;
+    A += (lambda/Re).asDiagonal();
+
     VectorXd b = VectorXd(M);
     b= Rfk+Rpk/Re;
 
