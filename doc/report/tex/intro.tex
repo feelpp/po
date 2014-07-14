@@ -16,9 +16,12 @@ Le but de ce stage est d'explorer une méthode afin de réduire le temps de calc
 
 Cependant, la simulation de ces effets nécessite la résolution d'équations de Navier-Stokes avec un grand nombre d'inconnue, et est donc très coûteuse en temps de calcul. C'est pourquoi on s'intéresse à de nouvelles méthodes de résolutions de ces équations. Suivant les travaux du professeur Penel de l'université de Toulon, réalisé en collaboration avec le professeur Neustupa de la faculté de mathématiques de Pragues, on cherche à projeter la vitesse sur l'espace des fonctions propres de l'opérateur rotationnel, qui dépend uniquement de la géométrie. Ainsi, à chaque pas de temps, on aurait seulement à calculer les coefficients associés à cette projection. Cela conduirait à réduire le temps de calcul et donc de passer de une seconde de simulation à 10 secondes.\\
 
-Cette idée a été étudiée par Benjamin Surowiek, qui a utilisé le logiciel FreeFem++ pour simulé des écoulements dans un cylindre. Cependant, la taille de la géométrie et la finesse de maillage demandée oblige à l'utilisation de logiciel de calcul permettant la résolution en parallèle des problèmes. Je dois donc utilisé Feel++ (Finite Element Embedded Library in C++, \cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) pour implémenter le code nécessaire à la résolution d'un écoulement dans une géométrie simple, et comparer avec les différents résultats précédemment obtenus.
+Cette idée a été étudiée par Benjamin Surowiek, qui a utilisé le logiciel FreeFem++ pour simulé des écoulements dans un cylindre. Cependant, la taille de la géométrie et la finesse de maillage demandée oblige à l'utilisation de logiciel de calcul permettant la résolution en parallèle des problèmes. Je dois donc utilisé Feel++ (Finite Element Embedded Library in C++, \cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) pour implémenter le code nécessaire à la résolution d'un écoulement dans une géométrie simple, et comparer avec les différents résultats précédemment obtenus.\\
+
+Dans la partie \ref{partProb}, on va étudier le problème à résoudre et chercher à le simplifier en le décomposant en plusieurs problèmes plus simples, puis dans la partie \ref{partImp}, on verra les différentes approches considérées pour chaque problème et les différents résultats obtenus.
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
 %%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
 %%% End:

@@ -1,5 +1,5 @@
 \part{Problème}
-
+\label{partProb}
 Introduisons d'abord les notations utilisées par la suite :
 \begin{align*}
 gradient(v)&=(\partial_x v, \partial_y v, \partial_z v)=\grad v\\
@@ -15,17 +15,17 @@ rot(\mathbf{v})&=\begin{pmatrix}
 \partial_x v_y - \partial_y v_x
 \end{pmatrix}=\rot \mathbf{v}\\
 rot(rot(\mathbf{v}))&=\rott \mathbf{v}\\
-L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
 H^1(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \grad \mathbf{v}\in L^2(\Omega)\}\\
 H^1_0(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\ |\ \mathbf{v}\restr = 0\}\\
 H(div) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div\mathbf{v} \in L^2(\Omega) \}\\
 H(rot) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \rot\mathbf{v} \in L^2(\Omega) \}\\
-D^1(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\\
-&=\{\bm{v}\in L^2(\Omega)\ |\ \grad\bm{v}\in L^2(\Omega),\ \div\bm{v}=0,\ \bm{v}\cdot\bm{n}\restr = 0,\ \rot\bm{v}\cdot\bm{n}\restr = 0\}\\
+L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
+D^1(\Omega) &=\{\bm{v}\in L^2(\Omega)\ |\ \grad\bm{v}\in L^2(\Omega),\ \div\bm{v}=0,\ \bm{v}\cdot\bm{n}\restr = 0,\ \rot\bm{v}\cdot\bm{n}\restr = 0\}\\
+&= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\\
 &=\{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \}
 \end{align*}
 
-Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$ un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
+Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$, où $\Omega$ est un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée :
 \begin{equation}\label{depart}
 \left\{\begin{aligned}
 &\frac{\partial \mathbf{v}}{\partial t} + (\rot  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\rott  \mathbf{v}-\mathbf{f} = 0\\
@@ -37,9 +37,8 @@ Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et �
 \end{aligned}\right.
 \end{equation}
 où $q = \frac{|\mathbf{v}|^2}{2}+p$.\\
-Alors, on cherche la solution dans l'espace $[L^2_\sigma(\Omega)]^3\times [L^2(\Omega)]^1$.\\
 
-On va maintenant expliquer la décomposition du problème en une suite de problème plus simple dans le chapitre \ref{local}, puis étudié plus en détail chacun de ces problèmes dans \ref{fv}. Enfin on verra la discrétisation du problème dans la section \ref{discr}.
+On va maintenant expliquer la décomposition du problème en une suite de problème plus simple dans le chapitre \ref{local}, puis étudié plus en détail chacun de ces problèmes dans \ref{fv}.
 
 \chapter{Problème local}
 \label{local}
@@ -51,7 +50,7 @@ Afin d'utiliser les travaux de H. Bellout, J. Neustupa et P. Penel \cite{Penel20
 \div\star & 0 & & 0 & & 0\\ \hline
 \star\cdot \mathbf{n}\restr & \alpha_0 & & \alpha_0 & & 0\\ \hline
 \rot\star\cdot \mathbf{n}\restr & \alpha_1 & & \alpha_1 & & 0\\ \hline
-\rott\star\cdot \mathbf{n}\restr & \alpha_1 & & 0 & & \alpha_2
+\rott\star\cdot \mathbf{n}\restr & \alpha_1 & & \alpha_2 & & 0
 \end{array}
 \end{equation}
 Ainsi, on a $\mathbf{u}\in [D^1(\Omega)]^3$ et $\mathbf{a}\in [L_\sigma^2(\Omega)]^3$ sert à relever le problème.
@@ -59,19 +58,21 @@ Ainsi, on a $\mathbf{u}\in [D^1(\Omega)]^3$ et $\mathbf{a}\in [L_\sigma^2(\Omega
 On veut $\mathbf{a}$ tel que :
 \begin{equation}\label{a}
 \left\{\begin{aligned}
-&\mathbf{a}=\rot \mathbf{b}+\grad\psi^0\\
+&\mathbf{a}=\rot \mathbf{b}+\grad\psi^0+\bm{e}\\
 &\div \mathbf{a} =0\\
 &\mathbf{a}\cdot \mathbf{n}\restr = \alpha_0\\
-&(\rot \mathbf{a})\cdot \mathbf{n}\restr = \alpha_1
+&(\rot \mathbf{a})\cdot \mathbf{n}\restr = \alpha_1\\
+&(\rott \bm{a})\cdot \bm{n}\restr = \alpha_2
 \end{aligned}\right.
 \end{equation}
 En appliquant la divergence et les conditions aux bords à la première ligne du problème on obtient le tableau suivant :
 \begin{center}
-\begin{tabular}{c|ccccc}
-& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\rot \mathbf{b}$ \\ \hline
-$\div\star$ & 0 & & $\laplace\psi^0$ & & 0\\ \hline
-$\star\cdot \mathbf{n}\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
-$\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
+\begin{tabular}{c|ccccccc}
+& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\rot \mathbf{b}$ & + & \bm{e} \\ \hline
+$\div\star$ & 0 & & $\laplace\psi^0$ & & 0 & & 0\\ \hline
+$\star\cdot \mathbf{n}\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0 & & 0\\ \hline
+$\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$ & & 0\\ \hline
+$\rott\star\cdot \mathbf{n}\restr$ & $\alpha_2 & & 0 & & 0 & & \alpha_2
 \end{tabular}
 \end{center}
 En utilisant la première et la deuxième ligne du tableau, on voit que $\psi^0$ est solution de l'équation :
@@ -103,12 +104,15 @@ Et $b$ tel que :
 
 Il y a plusieurs manières de résoudre les problèmes (\ref{psi0}-\ref{psi1}-\ref{curlb}), la solution choisie sera discutée plus loin.\\
 
-Une fois $\grad\psi^0$ et $\rot \mathbf{b}$ connus, on peut retrouver $\mathbf{a}$.\\
+Il reste encore plusieurs questions concernant la manière de relever $\alpha_2$ avec $\bm{e}$. En effet, écris de cette manière, $\bm{e}\in [D^1(\Omega)]^3$ et donc si $\bm{e}\cdot\bm{n}=0$ alors $\rott{e}\cdot\bm{n}=0$ aussi. Ce problème est donc encore ouvert.\\
+
+Une fois $\grad\psi^0$, $\rot \mathbf{b}$ et $\bm{e}$ connus, on peut retrouver $\mathbf{a}$.\\
 
 On cherche donc $\mathbf{u}=\mathbf{v}-\mathbf{a}$, et en utilisant la décomposition de Galerkin généralisée, on a :
 \begin{equation}\label{u}
 \mathbf{u}(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)\mathbf{g_i}(\cdot)
 \end{equation}
+
 Comme $\mathbf{u}\in [D^1(\Omega)]^3=D(curl_{imperm})$, on peut choisir les fonctions de base
 $\mathbf{g_i}$ comme étant les fonctions propres de l'opérateur rotationnel. Ces
 fonctions sont les mêmes que celles de l'opérateur $\rott$.
@@ -572,4 +576,6 @@ $} ;
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
 %%% End:
