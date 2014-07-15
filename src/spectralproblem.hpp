@@ -53,9 +53,11 @@ class SpectralProblem : public Application
     std::string alpha2;
     double Re;
 
+    // [ri]
     MatrixXd Riak;
     Matrix<MatrixXd, Dynamic, 1 > Rijk;
     VectorXd Rfk;
+    // [ri]
     VectorXd Rpk;
 
     void initRiak();

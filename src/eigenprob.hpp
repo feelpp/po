@@ -22,7 +22,9 @@ class EigenProb : public Application
 
 
 // typedef bases<Nedelec<0,NedelecKind::NED1>, Lagrange<1, Scalar> > basis_ptype;
+    // [space]
     typedef bases<Lagrange<Order, Vectorial>, Lagrange<1, Scalar> > basis_ptype;
+    // [space]
     typedef FunctionSpace<mesh_type, basis_ptype > space_ptype;
 
     typedef bases<Lagrange<Order, Scalar>, Lagrange<0, Scalar> > basis_mltype;

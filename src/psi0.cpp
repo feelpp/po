@@ -36,12 +36,12 @@ Psi0::run()
     auto g_e = parse( this->g_s, vars );
     auto g = expr( g_e, vars );
     g.setParameterValues( {
-            { "radius", option( _name="radius" ).template as<double>() },
-                { "speed", option( _name="speed" ).template as<double>() } } );
+            { "radius", doption( _name="radius" ) },
+                { "speed", doption( _name="speed" ) } } );
     // [option]
 
     auto Vh = mlSpace_type::New( mesh );
-    U = Vh->element();
+    auto U = Vh->element();
     auto V = Vh->element();
     auto u = U.template element<0>() ;
     auto lambda = U.template element<1>() ;

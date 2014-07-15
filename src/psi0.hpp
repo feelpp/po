@@ -23,8 +23,6 @@ class Psi0 : public Application
 
     // [space]
     typedef FunctionSpace<mesh_type, bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > > mlSpace_type;
-    typedef mlSpace_type::element_type mlElement_type;
-    typedef boost::shared_ptr<mlElement_type> mlElement_ptrtype;
     // [space]
 
     typedef FunctionSpace<mesh_type, bases<Lagrange<2, Vectorial> > > space_type;
@@ -32,7 +30,6 @@ class Psi0 : public Application
     typedef space_type::element_type element_type;
     typedef boost::shared_ptr<element_type> element_ptrtype;
 
-    mlElement_type U;
     element_type gradu;
 
     Psi0(mesh_ptrtype, std::string);
