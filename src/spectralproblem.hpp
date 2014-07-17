@@ -23,13 +23,13 @@ class SpectralProblem : public Application
     typedef Mesh<convex_type> mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-    typedef bases<Lagrange<2, Vectorial> > basis_vtype;
+    typedef bases<Lagrange<3, Vectorial> > basis_vtype;
     typedef FunctionSpace<mesh_type, basis_vtype > space_vtype;
     typedef boost::shared_ptr<space_vtype> space_ptrvtype;
     typedef space_vtype::element_type element_vtype;
 
     //typedef bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > basis_stype; // ML
-    typedef bases<Lagrange<2, Scalar> > basis_stype;
+    typedef bases<Lagrange<3, Scalar> > basis_stype;
     typedef FunctionSpace<mesh_type, basis_stype > space_stype;
     typedef boost::shared_ptr<space_stype> space_ptrstype;
     typedef space_stype::element_type element_stype;

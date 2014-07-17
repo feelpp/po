@@ -59,7 +59,7 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
     initRiak();
     // initRijk();
     initRfk();
-    initRpk();
+    // initRpk();
 
     c = VectorXd::Ones(M);
 }
@@ -160,9 +160,9 @@ void SpectralProblem::run()
     // [StokesB]
 
     // [StokesSolve]
-    // HouseholderQR<MatrixXd> qr(M,M);
-    // qr.compute(A);
-    // c = qr.solve(b);
+    HouseholderQR<MatrixXd> qr(M,M);
+    qr.compute(A);
+    c = qr.solve(b);
     // [StokesSolve]
 
     for(int i=0; i<M; i++){
@@ -173,54 +173,54 @@ void SpectralProblem::run()
     }
     u += vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a) );
 
-    // [NSInit]
-    VectorXd dc = VectorXd::Matrix(M);
-    double tol = 1.e-6;
-    // [NSInit]
-    // [NSSys1]
-    HouseholderQR<MatrixXd> qr(M,M);
-    // [NSSys1]
+    // // [NSInit]
+    // VectorXd dc = VectorXd::Matrix(M);
+    // double tol = 1.e-6;
+    // // [NSInit]
+    // // [NSSys1]
+    // HouseholderQR<MatrixXd> qr(M,M);
+    // // [NSSys1]
 
-    // [NSNewton1]
-    int i=0;
-    do{
-        // [NSNewton1]
-        // [NSMatF]
-        f = c.cwiseProduct(lambda)/Re + Riak*c - Rfk;
-        for (int k = 0; k < M; k++)
-            f(k) += c.transpose()*Rijk(k)*c;
-        // [NSMatF]
+    // // [NSNewton1]
+    // int i=0;
+    // do{
+    //     // [NSNewton1]
+    //     // [NSMatF]
+    //     f = c.cwiseProduct(lambda)/Re + Riak*c - Rfk;
+    //     for (int k = 0; k < M; k++)
+    //         f(k) += c.transpose()*Rijk(k)*c;
+    //     // [NSMatF]
 
-        // [NSMatJ]
-        for (int k = 0; k < M; k++)
-            j.row(k) = c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
-        j += Riak;
-        j += lambda.asDiagonal();
-        // [NSMatJ]
-        // [NSNewton2]
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "j = " << j << std::endl << "f = " << f << std::endl;
+    //     // [NSMatJ]
+    //     for (int k = 0; k < M; k++)
+    //         j.row(k) = c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
+    //     j += Riak;
+    //     j += lambda.asDiagonal();
+    //     // [NSMatJ]
+    //     // [NSNewton2]
+    //     if ( Environment::worldComm().isMasterRank() )
+    //         std::cout << "j = " << j << std::endl << "f = " << f << std::endl;
 
-        // [NSSys2]
-        qr.compute(j);
-        dc = qr.solve(-f);
-        // [NSSys2]
-        // [NSAdd]
-        c += dc;
-        // [NSAdd]
+    //     // [NSSys2]
+    //     qr.compute(j);
+    //     dc = qr.solve(-f);
+    //     // [NSSys2]
+    //     // [NSAdd]
+    //     c += dc;
+    //     // [NSAdd]
 
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
+    //     if ( Environment::worldComm().isMasterRank() )
+    //         std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
 
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << c << std::endl;
+    //     if ( Environment::worldComm().isMasterRank() )
+    //         std::cout << c << std::endl;
 
-        i++;
-    } while(i < 10 && dc.norm() > tol);
+    //     i++;
+    // } while(i < 10 && dc.norm() > tol);
 
-    if(i==10)
-        std::cout << "Newton does not converge\n";
-    // [NSNewton2]
+    // if(i==10)
+    //     std::cout << "Newton does not converge\n";
+    // // [NSNewton2]
     // else{
     //     for( i = 0; i < M; i++){
     //         u += vf::project( _space=Vh, _range=elements(mesh),
