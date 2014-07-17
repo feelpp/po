@@ -1,7 +1,7 @@
 \part{Implémentation Numérique}
 \label{partImp}
 
-Une fois les différents problèmes correctement posés, il s'agit d'implémenter un code pour les résoudre. Ceci est fait avec la bibliothèque Feel++, qui permet de manipuler en C++ des objets permettant la résolution d'équations aux dérivées partielles par des méthodes de Galerkin continues et discontinues. Ces objets peuvent correspondre au maillage, aux formes variationnelles ainsi que plusieurs solveurs linéaires et pré-conditionneurs grâce à PETSc \cite{petsc-web-page,petsc-user-ref,petsc-efficient} et des solveurs de problèmes aux valeurs propres grâce à SLEPc \cite{Hernandez:2005:SSF}.\\
+Une fois les différents problèmes correctement posés, il s'agit d'implémenter un code pour les résoudre. Ceci est fait avec la bibliothèque Feel++, qui permet de manipuler en C++ des objets permettant la résolution d'équations aux dérivées partielles par des méthodes de Galerkin continues et discontinues (voir \ref{eltfinis}). Ces objets peuvent correspondre au maillage, aux formes variationnelles ainsi que plusieurs solveurs linéaires et pré-conditionneurs grâce à PETSc \cite{petsc-web-page,petsc-user-ref,petsc-efficient} et des solveurs de problèmes aux valeurs propres grâce à SLEPc \cite{Hernandez:2005:SSF}.\\
 
 D'abord, il faut choisir une géométrie sur laquelle travaillé. On prend donc un cylindre de diamètre 1 et de longueur 5, orienté dans l'axe $z$. La géométrie est notée $\Omega$ et le bord de la géométrie est noté $\Gamma$ ou $\partial\Omega$. $\Gamma$ se décompose en trois partie, l'entrée $\Gamma_1$,  la sortie $\Gamma_2$ et le tour noté $\Gamma_3$, comme montré dans la figure \ref{figMesh}\\
 
