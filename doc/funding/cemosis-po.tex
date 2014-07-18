@@ -1,24 +1,21 @@
-\documentclass[12pt]{article}
-\usepackage{fontspec}
-\usepackage[colorlinks]{hyperref}
-\usepackage{libertine}
-\usepackage{stmaryrd}
-\usepackage{amsmath,amsthm,amssymb}
-\usepackage[french]{babel}
-\usepackage{geometry}
-\usepackage{xspace}
+\documentclass[12pt]{article} \usepackage{fontspec}
+\usepackage[colorlinks]{hyperref} \usepackage{libertine} \usepackage{stmaryrd}
+\usepackage{amsmath,amsthm,amssymb} \usepackage[french]{babel}
+\usepackage{geometry} \usepackage{xspace}
 \newcommand{\curlk}[1][k]{\ensuremath{\nabla^{#1}\hspace{-.3em}\times}\xspace}
-\title{NS$^2_{++}$: Non Standard Navier-Stokes equations for large scale computational
-fluid dynamics avec Feel++.}
-\author{P. Gilotte\thanks{PlasticOmnium}, C. Prud'homme\thanks{Cemosis,
-Irma, U. Strasbourg}, Benjamin Surowiec\thanks{PlasticOmnium}}
+\title{NS$^2_{++}$: Non Standard Navier-Stokes equations for large scale
+computational fluid dynamics in Feel++.}  \author{P. Gilotte\thanks{Plastic
+Omnium Auto Exterior Services - SIGMATECH} \and Benjamin
+Surowiec\footnotemark[1] \and C. Prud'homme\thanks{Cemosis, Irma, U. Strasbourg
+-- Centre de Modélisation et Simulation de Strasbourg -
+\url{http://www.cemosis.fr}} }
 \begin{document}
 
 \maketitle
 
 \abstract{Dans ce projet, on cherche à mettre en place les briques nécessaires à
 une stratégie non-standard de résolution des équations de Navier-Stokes
-incompressibles qui permettrait à PlasticOmnium (PO) afin d'augmenter le temps
+incompressibles qui permettrait à PlasticOmnium (PO) d'augmenter le temps
 d'étude des écoulements de 1s actuellement à 10s avec un budget identique sur
 des grilles de l'ordre de 100 millions de mailles. L'objectif à la fin du projet
 étant d'avoir \textit{(i)} développé le cadre numérique, \textit{(ii)} développé
@@ -46,7 +43,7 @@ de temps, ce qui permettrait de réduire fortement les temps de calcul. Cette
 méthode se fonde sur les travaux mathématiques du professeur Penel de
 l’université de Toulon, réalisé en collaboration avec le Prof Neustupa de la
 faculté de mathématique de Prague~\cite{Penel2004}. Elle suppose de résoudre le
-champ de vitesse d’écoulements incompressibles sur la base de des vecteurs
+champ de vitesse d’écoulements incompressibles sur la base de vecteurs
 propres de la vorticité avec des conditions d’imperméabilité sur la vitesse et
 la vorticité, dans un espace à divergence nulle. La mise en équation réalisée
 avec le Prof. Penel a été testée par un doctorant à Plastic Omnium avec le
@@ -54,14 +51,14 @@ logiciel Freefem++, mais le nombre de modes à résoudre et la taille des matric
 demandent une décomposition et une résolution sur plusieurs processeurs avec des
 algorithmes itératifs disponibles uniquement dans Feel++.
 
-Feel++ (Finite Element Embedded Library in C++,
+Feel++\footnote{\url{http://www.feelpp.org}} (Finite Element Embedded Library in C++,
 \cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) est une librairie C++,
 dont le responsable est C. Prud'homme, permettant la résolution d'une très large
 gamme d'équations aux dérivées partielles par des méthodes de Galerkin continue
 et discontinue en 1D, 2D et 3D. Elle permet d'écrire via un language permettant
 de manipuler les formulations variationnelles ainsi que les objets afférents
 (mailage, espaces de functions, matrices, vecteurs...) de manière très proche
-des mathématique. Cette librairie offre un parallélisme transparent et a déjà
+des mathématiques. Cette librairie offre un parallélisme transparent et a déjà
 été utilisé pour des simulations sur plusieurs miliers de coeurs de calcul avec
 les bonnes propriétés de scalabilité. Enfin Feel++ s'appuie sur PETSc pour les
 structures matrices/vecteurs, solveurs linéaires et non-linéaires ainsi que
@@ -69,8 +66,8 @@ préconditionneurs et SLEPc pour les solveurs de problèmes aux valeurs propres
 standards et généralisés (qui s'appuie sur PETSc).
 
 Concernant le dernier point, au coeur de la nouvelle stratégie un grand nombre
-de modes propres sont à calculés pour le problème de Stokes suivant: soit
-$\Omega \subset \mathbb{R}ˆ3$, trouver $(\mathbf{u},p)$ tels que
+de modes propres sont à calculer pour le problème de Stokes suivant: soit
+$\Omega \subset \mathbb{R}^3$, trouver $(\mathbf{u},p)$ tels que
 \begin{align}
   \label{eq:1}
   -\Delta \mathbf{u} + \nabla p &= \mathbf{f},\quad \mbox{ dans } \Omega\\
@@ -81,16 +78,16 @@ $\Omega \subset \mathbb{R}ˆ3$, trouver $(\mathbf{u},p)$ tels que
 où $\mathbf{u}$ et $p$ sont respectivement la vitesse et la pression,
 $\mathbf{n}$ la normale exterieure à $\partial \Omega$ et avec la convention
 $\curlk[0]{} = Id$. Ce type de problème de Stokes a été étudié par
-V. Girault~\cite{girault90-1} mais cette formulation n'est pas ou peu utilisée
-et a été relativement peu étudiée. Il est d'abord nécessaire de l'étudier et de
-proposer un cadre discret propre pour sa résolution. Un autre aspect délicat est
-la résolution d'un grand nombre de modes propres sur des grilles avec un très
-grand nombre de mailles en 3D, l'objectif est de pouvoir résoudre ces problèmes
-sur des grilles d'environ 100 millions de mailles.  Le travail a donc deux
-composantes : \textit{(i)} l'étude mathématique et numérique et l'implémentation
-efficace de la formulation ci-dessus, \textit{(ii)} le passage à l'échelle de la
-nouvelle stratégie, et en particulier des problèmes aux valeurs propres, sur des
-grilles de très grande taille.
+V. Girault~\cite{girault90-1} mais cette formulation n'est pas ou peu
+utilisée. Il est d'abord nécessaire de l'étudier et de proposer un cadre discret
+propre pour sa résolution. Un autre aspect délicat est la résolution d'un grand
+nombre de modes propres sur des grilles avec un très grand nombre de mailles en
+3D, l'objectif est de pouvoir résoudre ces problèmes sur des grilles jusqu'à
+environ 100 millions de mailles.  Le travail a donc deux composantes :
+\textit{(i)} l'étude mathématique et numérique et l'implémentation efficace de
+la formulation ci-dessus, \textit{(ii)} le passage à l'échelle de la nouvelle
+stratégie, et en particulier des problèmes aux valeurs propres, sur des grilles
+de très grande taille.
 
 
 
@@ -116,7 +113,7 @@ résultats d’essais connus. Cet objectif a pour but de définir le nombre de m
 de la vorticité à prendre en compte, de comparer les temps de calcul et la
 précision des résultats à ceux obtenus avec le modèle LES disponible. En cas de
 succès, cette méthode permettrait d’augmenter le nombre de pas de temps calculés
-et de de réaliser des études spectrales sur un nombre d’échantillons important,
+et de  réaliser des études spectrales sur un nombre d’échantillons important,
 permettant d’analyser par exemple les phénomènes fréquentiels dans les couches
 de cisaillement, à l’origine des pertes dans le sillage.
 
@@ -129,20 +126,29 @@ de cisaillement, à l’origine des pertes dans le sillage.
 \label{sec:dero-du-proj}
 
 La personne recrutée sur le projet sera pendant 7 à 8 mois à Strasbourg au
-laboratoire IRMA (Cemosis) pour la mise en place des outils mathématiques et des
-briques informatiques avec quelques missions à PO. Puis les 4 à 5 derniers mois
-il sera à PO pour effectuer des benchmarks sur des géométries propriétaires avec
-quelques missiosn à Strasbourg de mise au point.
+laboratoire IRMA, et en particulier à Cemosis, pour la mise en place des outils
+mathématiques et des briques informatiques avec quelques missions à PO. Puis les
+4 à 5 derniers mois il sera à PO pour effectuer des benchmarks sur des
+géométries propriétaires avec quelques missions à Strasbourg de mise au point.
+
+Cemosis\footnote{\url{http://www.cemosis.fr}} est le Centre de Modélisation et
+Simulation de Strasbourg dont l'objectif est la promition et le soutien aux
+projets multidisciplinaires et les projects avec les entreprises en modélisation
+et simulation en région Alsace. Cemosis s'appuie actuellement sur l'équipe
+modélisation et contrôle de l'IRMA et le mésocentre de Strasbourg. Deux
+ingénieurs de recherche y sont actuellement dédiés et travaillents sur des
+projets collaboratifs avec d'autres disciplines (bio-médical et ingénierie) et
+avec des entreprises.
 
 \subsection{Ressources existentes}
 
-Pour ce projet, Plastic Omnium propose en terme de ressource, de dédier la
-moitié du temps d’une personne, pour orienter et guider les développements sous
+Pour ce projet, Plastic Omnium propose en terme de ressource de dédier 30\%
+de temps ingénieur au projet pour orienter et guider les développements sous
 Feel++, pour réaliser les calculs sur un solveur LES et pour analyser les
 résultats obtenus. Les calculs pourront être réalisés à PO sur un serveur
 disposant de 48 processeurs. Un bureau et un accès au serveur sera disponible à
 plastic Omnium pour la personne chargée du développement. Le cout de ce projet
-amont pour Plastic Omnium peut être évalué à 50 k€.
+amont pour Plastic Omnium peut être évalué à 40 k€.
 
 En ce qui concerne Cemosis (IRMA), 2 ingénieurs pourront contribuer aux
 développements dans le cadre du projet( 5\% de leur temps chacun) ainsi que 10\%
@@ -156,17 +162,18 @@ donner accès à des ressources de calcul aux collaborations avec les entreprise
 
 Dans le cadre du projet, nous demandons la subvention suivante:
 \begin{itemize}
-\item Personnel: embauche pour un an de Romain Hild, 37123 Euros
+\item Personnel: embauche pour un an d'un ingénieur, 37123 Euros
 \item Missions : 5000 Euros
 \item Fonctionnement  : 5000 Euros
 \item Sous traitance en valorisation et propriété intellectuelle : 3000 Euros.
 \end{itemize}
 Soit un total de \textbf{50123} Euros.
 
-Romain Hild obtiendra son master de mathématiques appliquées (Calcul
-Scientifique et Mathématiques de l'Information) en aout 2014 et le salaire est
-calé sur les grilles en vigueur au CNRS. Une perspective est de pouvoir recruté
-Mr Hild à la suite de ce travail sur une thèse Cifre.
+Concernant le poste d'ingénieur, nous aimerions recruter Romain Hild qui
+obtiendra son master de mathématiques appliquées (Calcul Scientifique et
+Mathématiques de l'Information) de Strasbourg en aout 2014. Le salaire est calé
+sur les grilles en vigueur au CNRS. Une perspective est de pouvoir recruté Mr
+Hild à la suite de ce travail sur une thèse Cifre.
 
 Les missions concernent le bon fonctionnement du projet avec l'intervention des
 ingénieurs de Cemosis pour la mise en place des outils à PO ainsi que les
@@ -178,11 +185,10 @@ calcul (irma-atlas), les 5000 Euros sont une contribution à la maintenance et
 mise à jour de la machine, aux stockages des données du projet et aux licences
 logicels (Ensight 10 et DDT/MAP qui sont des logiciels commerciaux).
 
-Concernant la sous-traitance, la SATT connectus accompagnera le projet sur la
-valorisation et la mise en place du contrat entre l'Université de Strasbourg et
-PlasticOmnium et en particulier sur les aspects logiciels. Cela correspond à un
-prélèvement de type frais de gestion sur le projet.
-
+Concernant la sous-traitance, la SATT Conectus accompagnera le projet pour les
+aspects de valorisation et de mise en place contractuelle entre l'Université de
+Strasbourg et PlasticOmnium et ainsi que sur les aspects de propriétés
+intellectuelles et sur les aspects logiciels.
 
 \bibliographystyle{plain}
 \bibliography{../report/ref}
