@@ -1,0 +1,113 @@
+\chapter{Problème spectral}
+\section{Cas général}
+\label{PSNewton}
+Intéressons nous maintenant au problème (\ref{fvspec}).\\
+Tout d'abord, dans le cylindre, comme $\alpha_1=0$, on a $\bm{a}=\grad\psi^0$ et donc $\rot \bm{a} = 0$. Ce qui amène le terme $\sum_i c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k})$ à être nul.\\
+Cette équation comporte aussi le terme
+\[ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \]
+qui est non linéaire. Ce problème s'écrit donc sous la forme :
+\[ F(c) = 0 \]
+où $F:\R^M\rightarrow\R^M$, $c=(c_1,\ldots, c_M)$ et :
+\begin{align}
+F_k(c) = \frac{1}{Re} c_k\lambda_k^2 &+ \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a}, \mathbf{g_k}) \nonumber \label{psf}\\
+&+ \sum_{i,j} c_i\lambda_i c_j (\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) - (\mathbf{h_a},\mathbf{g_k})
+\end{align}
+
+On va utiliser une méthode de Newton pour résoudre ce problème, on cherche donc :
+\begin{equation}\label{Newton}
+c^{(l+1)} = c^{(l)} - J(c^{(l)})^{-1}F(c^{(l)})\quad l=0,1,\ldots
+\end{equation}
+où $c^{(0)}$ est une donnée initiale et $J(c)$ est la matrice jacobienne de $F$ en $c$ :
+\[ J(c)=
+\begin{pmatrix}
+\frac{\partial F_1(c)}{\partial c_1} & \ldots & \frac{\partial F_1(c)}{\partial c_M}\\
+\vdots & \ddots & \vdots\\
+\frac{\partial F_M(c)}{\partial c_1} & \ldots & \frac{\partial F_M(c)}{\partial c_M}
+\end{pmatrix}\]
+avec 
+\begin{align}
+J(c)_{ki} = \frac{\partial F_k(c)}{\partial c_i} &= \delta_{ki}\lambda_i^2 + \lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) \nonumber \label{psj}\\
+&+ \sum_j\lambda_i c_j (\mathbf{g_i}\times\mathbf{g_j},\mathbf{g_k}) + \sum_j c_j\lambda_j (\mathbf{g_j}\times\mathbf{g_i},\mathbf{g_k})
+\end{align}
+avec $\delta_{ki}$ le symbole de Kronecker.\\
+
+Résoudre (\ref{Newton}) est équivalent à résoudre 
+\begin{align}
+J(c^{(l)})\delta c^{(l)} = -F(c^{(l)})\label{INewton1}\\
+c^{(l+1)}=c{(l)}+\delta c^{(l)}\label{INewton2}
+\end{align}
+
+On itère ce système jusqu'à ce que la différence entre deux itération soit inférieure à une certaine tolérance, c'est-à-dire $||\delta c^{(l)}||<tol$ ou que le nombre d'itération soit trop grand, ce qui indique la non convergence du système.
+
+\subsection{Implémentation}
+
+Comme on va manipuler des matrices pleines, au lieu d'utiliser PETSc, qui est plus adapté aux matrices creuses, on utilise la librairie Eigen \cite{eigenweb}.\\
+Dans cette librairie, on déclare une matrice comme \texttt{Matrix<type, ligne, colonne>}. Afin de pouvoir utiliser des matrices de tailles différentes à chaque exécution, on utilise le mot clé \texttt{Dynamic} pour la taille. Il existe un type pré-déclaré pour le type \texttt{Matrix<Double, Dynamic, Dynamic>} : \texttt{MatrixXd}. De même pour le type \texttt{Matrix<Double, Dynamic, 1>}, qui est un vecteur de double de taille variable, on utilise le mot clé \texttt{VectorXd}.\\
+
+Par exemple, si on a un vecteur de la librairie standard contenant les différentes valeurs des $\lambda_i$, on les stock dans un vecteur de la librairie Eigen avec les lignes de code suivantes : 
+\lstinputlisting[linerange=lambda]{../../src/spectralproblem.cpp}
+où $M$ est le nombre de valeurs propres que l'on a précédemment calculées. On remarque aussi que l'on peut accéder aux éléments du vecteur avec l'opérateur \texttt{()}.\\
+
+Chaque somme de l'équation \ref{fvspec} peut être considérée comme un élément de la librairie Eigen. Ainsi $R_{iak}=\lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément d'une matrice, celui de la i-ème ligne et k-ième colonne.\\
+$R_{hk} = \int \bm{h_a}\cdot\bm{g_k}$ est un vecteur et $R_{ijk} = \lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément de 3 dimensions, donc un vecteur de matrices. On a ainsi les déclarations suivantes :\\
+\lstinputlisting[linerange=ri]{../../src/spectralproblem.hpp}
+
+On initialise d'abord la mémoire nécessaire pour contenir le vecteur, puis on initialise chaque élément de la matrice $R_{iak}$ à l'aide de deux boucles imbriquées :\\
+\lstinputlisting[linerange=riak]{../../src/spectralproblem.cpp}
+
+De même, on initialise la mémoire utilisée par la matrice, puis chaque élément du vecteur $R_{hk}$ avec une boucle :\\
+\lstinputlisting[linerange=rfk]{../../src/spectralproblem.cpp}
+
+Pour $R_{ijk}$, on doit tout d'abord initialiser le vecteur contenant les matrices, puis pour chaque élément de ce vecteur, initialisé la mémoire de la matrice elle-même. Ensuite seulement, on peut initialiser chaque élément de $R_{ijk}$ :\\
+\lstinputlisting[linerange=rijk]{../../src/spectralproblem.cpp}
+
+Afin d'appliquer la méthode de Newton, il faut d'abord initialiser un vecteur pour stocker la solution $\delta c^{(l)}$ au problème \ref{INewton1} et choisir la tolérance pour laquelle on considère le système résolut.\\
+\lstinputlisting[linerange=NSInit]{../../src/spectralproblem.cpp}
+
+On peut maintenant appliquer la méthode de Newton décrite dans \ref{PSNewton}. On veut donc exprimer le vecteur $F(c)$ (\ref{psf}) dans la librairie Eigen. On utilise donc le mot clé \texttt{wiseProduct} pour faire un produit élément par élément de $c$ et de $\lambda$, et on multiplie la matrice $R_{iak}$ avec $c$, on retranche aussi le vecteur $R_{fk}$.\\
+Puis pour la ligne $k$, le terme non linéaire $\sum_{i,j} c_i\lambda_i c_j (\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k})$ est le produit $c^TR_{ijk}(k)c$ où $R_{ijk}(k)$ est la matrice se trouvant à la k-ième position dans le vecteur $R_{ijk}$ et $c^T$ est le vecteur transposé de $c$.\\
+\lstinputlisting[linerange=NSMatF]{../../src/spectralproblem.cpp}
+
+Pour la matrice $J(c)$ (\ref{psj}), le terme $\delta_{ik}\lambda^2$, signifie que le vecteur $\lambda^2$ se trouve sur la diagonale de $J(c)$, on utilise donc le mot clé \texttt{asDiagonal} pour effectuer cette opération. On ajoute aussi la matrice $R_{iak}$ telle quelle à $J(c)$.\\
+Le terme $\sum_j c_j\lambda_j (\mathbf{g_j}\times\mathbf{g_i},\mathbf{g_k})$ est égal au i-ème élément du vecteur produit $c^TR_{ijk}$, tandis que $\sum_j\lambda_i c_j (\mathbf{g_i}\times\mathbf{g_j},\mathbf{g_k})$ est le i-ème élément du vecteur $c^TR_{ijk}^T$.\\
+\lstinputlisting[linerange=NSMatJ]{../../src/spectralproblem.cpp}
+
+Il faut aussi initialiser le solveur avec lequel résoudre les systèmes \ref{INewton1}, par exemple, pour les résoudre avec une méthode de Householder, on utilisera les lignes suivantes :\\
+\lstinputlisting[linerange={NSSys1,NSSys2}]{../../src/spectralproblem.cpp}
+
+Il suffit maintenant d'additionner $c^{(l)}$ et $c^{(l+1)}$ pour obtenir la solution à l'itération suivante.\\
+\lstinputlisting[linerange=NSAdd]{../../src/spectralproblem.cpp}
+
+On itère ces étapes jusqu'à ce que la tolérance soit dépassée, ou que l'on pense que la méthode diverge.
+
+\section{Stokes}
+\subsection{Implémentation}
+
+Si l'on supprime le terme non linéaire, l'équation s'écrit :
+\[ \sum_i c_i\lambda_i(\bm{g_i}\times\bm{a},\bm{g_k}) +\frac{1}{Re}c_k\lambda^2 = (\bm{h_a},\bm{g_k}) \]
+
+Ainsi, il suffit de résoudre l'équation $Ax=b$ où $A=(a_{kj})$ avec :
+\[ a_{kj} = \delta_{kj}\frac{\lambda^2}{Re} + \lambda_j\int_\Omega (\bm{g_j}\times\bm{a})\cdot\bm{g_k} \]
+et
+\[ b_k = \int_\Omega \bm{h_a}\cdot\bm{g_k} \]
+
+Il faut donc créer la matrice $A$ à l'aide des $\lambda$ et de $R_{iak}$ :\\
+\lstinputlisting[linerange=StokesA]{../../src/spectralproblem.cpp}
+et le vecteur $b$ avec $R_{hk}$ :\\
+\lstinputlisting[linerange=StokesB]{../../src/spectralproblem.cpp}
+
+Puis, on résout le système de la même manière que précédemment :\\
+\lstinputlisting[linerange=StokesSolve]{../../src/spectralproblem.cpp}
+
+\subsection{Résultats}
+
+% \section{Composante $z$}
+% \subsection{Implémentation}
+% \subsection{Résultats}
+
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
+%%% End:

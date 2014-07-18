@@ -1,4 +1,5 @@
 \chapter{Maillage}
+\label{mesh}
 \section{Gmsh}
 \label{cylindre}
 
@@ -6,16 +7,16 @@ Pour résoudre ce problème avec Feel++, on commence par recréer le maillage du
 Pour cela, il faut d'abord créer un cercle, que l'on va ensuite étirer pour faire un cylindre. On construit donc le centre de ce cercle et quatre points permettant de faire quatre arcs de cercle formant un cercle entier, car le logiciel ne permet pas de faire un cercle directement.\\
 Chaque point est admet un paramètre définissant la taille du maillage associé.
 
-\lstinputlisting[firstline=3, lastline=13]{../../src/test.geo}
+\lstinputlisting[firstline=3, lastline=13]{../../src/mesh/cylinderAdim.geo}
 
 On peut ensuite former une surface avec ces quarts de cercle. On doit déjà former un bord avec ces arcs de cercles et ensuite dire que c'est une surface. Puis on fait de cette surface un élément physique que l'on nommera "entree".
 
-\lstinputlisting[firstline=14, lastline=16]{../../src/test.geo}
+\lstinputlisting[firstline=14, lastline=16]{../../src/mesh/cylinderAdim.geo}
 
-On utilise ensuite la commande \texttt{Extrude} pour créer le cylindre à partir de cette surface en le translatant de 0.5 dans la direction z, et en formant 40 couches intermédiaires.\\
+On utilise ensuite la commande \texttt{Extrude} pour créer le cylindre à partir de cette surface en le translatant de 5 dans la direction z, et en formant 40 couches intermédiaires.\\
 En utilisant l'interface graphique, on récupère les numéros des surfaces composant le tour du cylindre et celui de l'autre bout du cylindre. Enfin, il suffit de créer une volume physique pour l'intérieur du cylindre.
 
-\lstinputlisting[firstline=17, lastline=21]{../../src/test.geo}
+\lstinputlisting[firstline=17, lastline=21]{../../src/mesh/cylinderAdim.geo}
 
 On peut maintenant utiliser cette géométrie pour le programme en Feel++.
 
@@ -101,4 +102,6 @@ Si le nom de la composante contient le mot ``fluid'', alors c'est un volume, sin
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
 %%% End:

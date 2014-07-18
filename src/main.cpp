@@ -156,7 +156,7 @@ main( int argc, char **argv )
     }
 
     if( boption(_name="needPS") ){
-        // sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
+        sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
         sp.run();
         e->add( "v", sp.u );
     }

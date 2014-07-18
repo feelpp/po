@@ -1,159 +1,50 @@
-\chapter{Implémentation}
+\part{Implémentation Numérique}
+\label{partImp}
 
-\section{Relèvement}
+Une fois les différents problèmes correctement posés, il s'agit d'implémenter un code pour les résoudre. Ceci est fait avec la bibliothèque Feel++, qui permet de manipuler en C++ des objets permettant la résolution d'équations aux dérivées partielles par des méthodes de Galerkin continues et discontinues (voir \ref{eltfinis}). Ces objets peuvent correspondre au maillage, aux formes variationnelles ainsi que plusieurs solveurs linéaires et pré-conditionneurs grâce à PETSc \cite{petsc-web-page,petsc-user-ref,petsc-efficient} et des solveurs de problèmes aux valeurs propres grâce à SLEPc \cite{Hernandez:2005:SSF}.\\
 
-Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
+D'abord, il faut choisir une géométrie sur laquelle travaillé. On prend donc un cylindre de diamètre 1 et de longueur 5, orienté dans l'axe $z$. La géométrie est notée $\Omega$ et le bord de la géométrie est noté $\Gamma$ ou $\partial\Omega$. $\Gamma$ se décompose en trois partie, l'entrée $\Gamma_1$,  la sortie $\Gamma_2$ et le tour noté $\Gamma_3$, comme montré dans la figure \ref{figMesh}\\
 
-\subsection{Gradient dans $\HH^1$}
-\label{impGradh1}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{scope}[x={(.7cm,-.3cm)}]
+\path (1,0,0);
+\pgfgetlastxy{\cylxx}{\cylxy}
+\path (0,1,0);
+\pgfgetlastxy{\cylyx}{\cylyy}
+\path (0,0,1);
+\pgfgetlastxy{\cylzx}{\cylzy}
+\pgfmathsetmacro{\cylt}{(\cylzy * \cylyx - \cylzx * \cylyy)/ (\cylzy * \cylxx - \cylzx * \cylxy)}
+\pgfmathsetmacro{\ang}{atan(\cylt)}
+\pgfmathsetmacro{\ct}{1/sqrt(1 + (\cylt)^2)}
+\pgfmathsetmacro{\st}{\cylt * \ct}
+\begin{scope}[every path/.style={ultra thick}]
+\draw (0,0,0) circle[radius=1];
+\draw[->] (-1,3,1) -- (0,3,1);
+\draw (0,3,1) node [right] {$x$};
+\draw[->] (-1,3,1) -- (-1,4,1);
+\draw (-1,4,1) node [right] {$y$};
+\draw[->] (-1,3,1) -- (-1,3,-1);
+\draw (-1,3,-1) node [right] {$z$};
+\draw (\ct,\st,0) -- ++(0,0,-8);
+\draw (-\ct,-\st,0) -- ++(0,0,-8);
+\draw (\ct,\st,-8) arc[start angle=\ang,delta angle=180,radius=1];
+\draw[dashed] (\ct,\st,-8) arc[start angle=\ang,delta angle=-180,radius=1];
+\draw (0,0,0) node {$\Gamma_1$};
+\draw (0,0,-8) node {$\Gamma_2$};
+\draw (1,0,-4) node {$\Gamma_3$};
+\end{scope}
+\end{scope}
+\end{tikzpicture}
+\caption{Géométrie utilisée}
+\label{figMesh}
+\end{figure}
 
-Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors il faut utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$. Cela se traduit par le changement de formulation variationnelle suivant où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
-\[ \int_\Omega\grad \psi^0\grad\varphi + \int_\Omega \psi^0\nu + \int_\Omega \lambda\varphi = \int_{\partial\Omega} \alpha_0\varphi \]
-On va donc créé un espace de fonction produit correspondant à $\HH^1\times\R$.
-
-\lstinputlisting[linerange={space}]{../../src/psi0.hpp}
-
-On ajoute une fonction permettant de rajouter en option le profil d'entrée en fonction du rayon et de la vitesse. Cela correspond à $\alpha_0$.
-
-\lstinputlisting[linerange={option}]{../../src/psi0.cpp}
-
-Une fois les éléments de l'espace créé, on peut définir la forme bilinéaire de la façon suivante :
-
-\lstinputlisting[linerange={bilinear}]{../../src/psi0.cpp}
-
-Ici, $u$ correspond à $\psi^0$ et $v$ à $\varphi$.\\
-
-On veut que ce qui rentre du cylindre par l'entrée, correspondant à la partie du maillage marquée 1, sorte par l'autre bout du cylindre, marqué 2, et que le tour du cylindre, marqué 3, soit imperméable. Ce qui donne la terme de droite suivant :
-
-\lstinputlisting[linerange={rhs}]{../../src/psi0.cpp}
-
-Une fois le problème résolut, on veut projeter le gradient de $\psi^0$ sur $\LL^2$. Pour cela on résout le problème simple $u=\grad\psi^0$.
-
-\lstinputlisting[linerange={gradpsi0}]{../../src/psi0.cpp}
-
-Le résultat est visible dans la section (\ref{respsih1}).
-
-\subsection{Gradient dans $\HH(div)$}
-
-\subsection{Rotationnel}
-
-\section{Modes propres}
-
-Ici on veut utiliser les travaux de V. Girault \cite{girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
-On rappel les définitions suivantes :
-\begin{align*}
-L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
-D^1(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}
-\end{align*}
-De plus, on a (voir \cite{Girault79}) :
-\[ H^1(\Omega)=H(rot)\cap H(div) \]
-D'où:
-\begin{align*}
-D^1(\Omega) &= \{\bm{v}\in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
-&=\{\bm{v}\in H(rot)\cap H(div)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
-&&\text{ or }L^2_\sigma\subset H(div)\\
-&=\{\bm{v}\in H(rot)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
-&=\{\bm{v}\in H(rot)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\cap L^2_\sigma(\Omega)&\\
-&=X\cap L^2_\sigma(\Omega)&
-\end{align*}
-
-
-Le problème aux valeurs propres est :\\
-Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que :
-\begin{align}
-\rott\bm{g}&=\lambda^2\bm{g} \label{impPb1}\\
-\div\bm{g}&=0 \label{impPb2}\\
-(\bm{g}\cdot\bm{n})\restr&=0 \label{impPb3}\\
-(\rot\bm{g}\cdot\bm{n})\restr&=0 \label{impPb4}\\
-(\rott\bm{g}\cdot\bm{n})\restr&=0 \label{impPb5}
-\end{align}
-Mais les conditions (\ref{impPb2}-\ref{impPb3}) sont satisfaites par le fait que $\bm{g}\in L^2_\sigma$ et la condition (\ref{impPb4}) par l'appartenance à $X$.\\
-
-En passant à la forme variationnelle, et en suivant les mêmes étapes que dans le chapitre (\ref{eigen}), on impose la condition (\ref{impPb5}) :
-\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi(\underbrace{(\rott \bm{g})\cdot\bm{n}}_{=0})= \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
-On a donc le problème suivant :\\
-Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que $\forall \bm{\varphi}\in X\cap L^2_\sigma$ :
-\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
-
-Ne pouvant pas utiliser directement des fonctions de bases à divergence nulle pour les éléments finis, on impose cette condition par un terme de pression fictif. On a donc :\\
-Trouver $((\bm{g},p),\lambda)\in X\cap L^2_\sigma \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X\cap L^2_\sigma \times H^1$ :
-\begin{align*}
-\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p &= \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}\\
-\int_\Omega (\div\bm{g}) q &= 0
-\end{align*}
-En intégrant par partie la seconde équation, on obtient
-\[ \int_\Omega (\div\bm{g}) q = \int_\Omega \bm{g}\grad q - \int_{\partial\Omega} (\underbrace{\bm{g}\cdot \bm{n}}_{=0})q = 0 \]
-On peut donc imposer les contraintes (\ref{impPb2}-\ref{impPb3}), liées à $L^2_\sigma$, dans la formulation faible suivante :\\
-Trouver $((\bm{g},p),\lambda)\in X \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X \times H^1$ :
-\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
-
-Pour imposer la condition (\ref{impPb4}), on utilise une méthode de pénalisation, le problème devient donc :
-Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in H(rot) \times H^1$ :
-\begin{equation}\label{impFvEigen}
-\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
-\end{equation}
-avec $\gamma$ une très grande valeur.\\
-
-Comme on cherche la solution dans l'espace $H(rot)$, nous devrions utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec.\\
-
-Cependant, les éléments de Nedelec n'étant pas près dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\bm{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
-
-Ces erreurs mènent à une divergence non nulle, on utilise donc un terme de pénalisation en plus afin de forcer la divergence. On résout donc le système suivant :
-\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) + \alpha\int_\Omega \div\bm{g}\div\bm{\varphi} = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
-
-Cependant, on a toujours la condition $\bm{g}\cdot\bm{n}$ qui n'est pas respecter. On ajoute donc un troisième terme de pénalisation :
-\begin{align*}
-\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) &+ \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q\\
-&+ \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n})\\
-& + \alpha\int_\Omega \div\bm{g}\div\bm{\varphi}\\
-&+ \beta\int_{\partial\Omega}\bm{g_i}\cdot\bm{n})(\bm{\varphi}\cdot\bm{n})  = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
-\end{align*}
-
-\section{Problème spectral}
-
-On peut maintenant résoudre le problème (\ref{fvspec}).\\
-Cette équation comporte le terme
-\[ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \]
-qui est non linéaire. Ce problème s'écrit donc sous la forme :
-\[ F(c) = 0 \]
-où $F:\R^M\rightarrow\R^M$, $c=(c_1,\ldots, c_M)$ et :
-\begin{align*}
-F_k(c) &= \frac{1}{Re} c_k\lambda_k^2 + \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a}, \mathbf{g_k})\\
-&+ \sum_{i,j} c_i\lambda_i c_j (\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) - (\mathbf{h_a},\mathbf{g_k}) - \frac{1}{Re}\langle \alpha_2, \psi_k \rangle
-\end{align*}
-
-On va utiliser une méthode de Newton pour résoudre ce problème, on cherche donc :
-\begin{equation}\label{Newton}
-c^{(l+1)} = c^{(l)} - J(c^{(l)})^{-1}F(c^{(l)})\quad l=0,1,\ldots
-\end{equation}
-où $c^{(0)}$ est une donnée initiale et $J(c)$ est la matrice jacobienne de $F$ en $c$ :
-\[ J(c)=
-\begin{pmatrix}
-\frac{\partial F_1(c)}{\partial c_1} & \ldots & \frac{\partial F_1(c)}{\partial c_M}\\
-\vdots & \ddots & \vdots\\
-\frac{\partial F_M(c)}{\partial c_1} & \ldots & \frac{\partial F_M(c)}{\partial c_M}
-\end{pmatrix}\]
-avec 
-\begin{align*}
-J(c)_{ki} = \frac{\partial F_k(c)}{\partial c_i} &= \delta_{ki}\lambda_i^2 + \lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
-&+ \sum_j\lambda_i c_j (\mathbf{g_i}\times\mathbf{g_j},\mathbf{g_k}) + \sum_j c_j\lambda_j (\mathbf{g_j}\times\mathbf{g_i},\mathbf{g_k})
-\end{align*}
-Résoudre (\ref{Newton}) est équivalent à résoudre 
-\begin{equation}\label{INewton}
-\begin{aligned}
-J(c^{(l)})\delta c^{(l)} = -F(c^{(l)})\\
-c^{(l+1)}=c{(l)}+\delta c^{(l)}
-\end{aligned}
-\end{equation}
-
-Toutefois, résoudre exactement (\ref{INewton}) à chaque itération peut être très couteux et peu intéressant, surtout au début lorsque l'on est loin de la solution exacte. On utilise donc une méthode de Newton inexacte pour résoudre cette équation à chaque itération.\\
-Cette méthode est elle même une méthode itérative, et la précision de la méthode dépend du nombre d'itération, ainsi, plus on se rapproche de la solution exacte, plus on veut être précis.
-\\On se donne donc une suite de nombres positifs $(\eta_l)$, et les itérations continuent jusqu'à ce que :
-\[ \frac{||r_l^{(i)}||}{||F(c^{(l)})||} \leq \eta_l<1 \]
-où
-\[ r_l^{(i)} = J(c^{(l)})\delta c^{(l,i)} + F(c^{(l)}) \]
-
+Sa conception est détaillé dans l'annexe \ref{mesh}.
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
 %%% End:

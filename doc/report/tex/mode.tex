@@ -1,0 +1,159 @@
+\chapter{Modes propres}
+\section{Cas général}
+Ici on veut utiliser les travaux de V. Girault \cite{girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
+On rappel les définitions suivantes :
+\begin{align*}
+L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
+D^1(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}
+\end{align*}
+De plus, on a (voir \cite{Girault79}) :
+\[ H^1(\Omega)=H(rot)\cap H(div) \]
+D'où:
+\begin{align*}
+D^1(\Omega) &= \{\bm{v}\in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
+&=\{\bm{v}\in H(rot)\cap H(div)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
+&&\text{ or }L^2_\sigma\subset H(div)\\
+&=\{\bm{v}\in H(rot)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}&\\
+&=\{\bm{v}\in H(rot)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\cap L^2_\sigma(\Omega)&\\
+&=X\cap L^2_\sigma(\Omega)&
+\end{align*}
+
+Le problème aux valeurs propres est :\\
+Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que :
+\begin{align}
+\rott\bm{g}&=\lambda^2\bm{g} \label{impPb1}\\
+\div\bm{g}&=0 \label{impPb2}\\
+(\bm{g}\cdot\bm{n})\restr&=0 \label{impPb3}\\
+(\rot\bm{g}\cdot\bm{n})\restr&=0 \label{impPb4}\\
+(\rott\bm{g}\cdot\bm{n})\restr&=0 \label{impPb5}
+\end{align}
+Mais les conditions (\ref{impPb2}-\ref{impPb3}) sont satisfaites par le fait que $\bm{g}\in L^2_\sigma$ et la condition (\ref{impPb4}) par l'appartenance à $X$.\\
+
+En passant à la forme variationnelle, et en suivant les mêmes étapes que dans le chapitre (\ref{eigen}), on impose la condition (\ref{impPb5}) :
+\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi(\underbrace{(\rott \bm{g})\cdot\bm{n}}_{=0})= \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
+On a donc le problème suivant :\\
+Trouver $(\bm{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que $\forall \bm{\varphi}\in X\cap L^2_\sigma$ :
+\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
+
+Ne pouvant pas utiliser directement des fonctions de bases à divergence nulle pour les éléments finis, on impose cette condition par un terme de pression fictif. On a donc :\\
+Trouver $((\bm{g},p),\lambda)\in X\cap L^2_\sigma \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X\cap L^2_\sigma \times H^1$ :
+\begin{align*}
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p &= \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}\\
+\int_\Omega (\div\bm{g}) q &= 0
+\end{align*}
+En intégrant par partie la seconde équation, on obtient
+\[ \int_\Omega (\div\bm{g}) q = \int_\Omega \bm{g}\grad q - \int_{\partial\Omega} (\underbrace{\bm{g}\cdot \bm{n}}_{=0})q = 0 \]
+On peut donc imposer les contraintes (\ref{impPb2}-\ref{impPb3}), liées à $L^2_\sigma$, dans la formulation faible suivante :\\
+Trouver $((\bm{g},p),\lambda)\in X \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X \times H^1$ :
+\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
+
+Pour imposer la condition (\ref{impPb4}), on utilise une méthode de pénalisation, le problème devient donc :
+Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in H(rot) \times H^1$ :
+\begin{equation}\label{impFvEigen}
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi}
+\end{equation}
+avec $\gamma$ une très grande valeur.\\
+
+Comme on cherche la solution dans l'espace $H(rot)$, nous devrions utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec.\\
+
+\subsection{Implémentation}
+
+Cependant, les éléments de Nedelec n'étant pas prêt dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\bm{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
+
+Ces erreurs mènent à une divergence non nulle, on utilise donc un terme de pénalisation en plus afin de forcer la divergence. On résout donc le système suivant :
+\[ \int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q + \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) + \alpha\int_\Omega \div\bm{g}\div\bm{\varphi} = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} \]
+
+Cependant, on a toujours la condition $\bm{g}\cdot\bm{n}$ qui n'est pas respecter. On ajoute donc un troisième terme de pénalisation :
+\begin{align*}
+\int_\Omega (\rot\bm{g})\cdot(\rot\bm{\varphi}) &+ \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q & \\
+&+ \gamma\int_{\partial\Omega}(\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) & (\ref{impPb4})\\
+& + \alpha\int_\Omega \div\bm{g}\div\bm{\varphi} & (\ref{impPb2})\\
+&+ \beta\int_{\partial\Omega}\bm{g_i}\cdot\bm{n})(\bm{\varphi}\cdot\bm{n})  = \lambda^2\int_\Omega \bm{g}\cdot\bm{\varphi} & (\ref{impPb3})
+\end{align*}
+
+Comme on cherche les solutions dans $[H^1(\Omega)]^3$, on utilise des éléments de Lagrange et non de Nedelec pour approcher les $\bm{g_i}$. Pour le terme de pression fictif, on utilise aussi des éléments de Lagrange, scalaire et d'ordre 1.\\ 
+\lstinputlisting[linerange=space]{../../src/eigenprob.hpp}
+Pour résoudre le problème $Ax=\lambda Bx$, on initialise $B$ comme une matrice de masse. On utilise pour cela une forme bilinéaire :\\
+\lstinputlisting[linerange=rhsB]{../../src/eigenprob.cpp}
+On ajoute maintenant les termes 
+\[ \int_\Omega \rot \bm{g}\cdot\rot\bm{\varphi} + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \bm{g}\grad q \]
+à une autre forme bilinéaire qui formera la matrice $A$ :
+\lstinputlisting[linerange={acurl,presgrad}]{../../src/eigenprob.cpp}
+Afin de pouvoir contrôler les paramètres de pénalisation, on les ajoute en tant qu'options :
+\lstinputlisting[linerange=options]{../../src/eigenprob.cpp}
+On peut maintenant rajouter les trois termes de pénalisations :
+\lstinputlisting[linerange={divdiv,bccurln,bcn}]{../../src/eigenprob.cpp}
+Les deux matrices étant prêtes, on peut maintenant appeler une routine SLEPc pour résoudre le problème aux valeurs propres. Le solveurs et le pré-conditionneur sont définis en tant qu'options. Par défaut, on utilise un solveur de type Krylov-Schur (voir \ref{arnoldi}), avec une transformation de type \emph{shift and invert} qui facilite la recherche des valeurs propres de plus petites magnitudes.
+\lstinputlisting[linerange=eigen]{../../src/eigenprob.cpp}
+
+\subsection{Résultats}
+Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$, les conditions imposées sont bien respectés, toutefois, la condition $\rot\bm{g}\cdot\bm{n}$ est plus difficile à imposer que les autres. Cela peut aussi être dû à des erreurs de calculs sur le rotationnel.
+\begin{center}
+\begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
+\no & \lambda^2 & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} \\ \hline
+0 & 40.9302 & 0.00210937 & 0.0232026 & 0.185115 \\ \hline
+20 & 62.7893 & 0.00142931 & 0.00150083 & 0.0948699 \\ \hline
+30 & 72.3563 & 0.00236504 & 0.0244683 & 0.240543 \\ \hline
+45 & 90.406 & 0.00354548 & 0.0201967 & 0.32537
+\end{tabular}
+\end{center}
+
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 0]{\includegraphics[scale=0.3]{curl-grad-1e3-mode0}}\ 
+		\subfloat[mode 5]{\includegraphics[scale=0.3]{curl-grad-1e3-mode20}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 10]{\includegraphics[scale=0.3]{curl-grad-1e3-mode30}}\ 
+		\subfloat[mode 14]{\includegraphics[scale=0.3]{curl-grad-1e3-mode45}}
+	}
+	\caption{Modes propres}
+	\label{resultats}
+\end{figure}
+
+Cependant, lorsqu'on calcul l'erreur entre le rotationnel du champ et le champ multiplier par sa valeur propre, on voit qu'il y a des erreurs, bien que la norme du rotationnel est bien $\lambda$ fois la norme du vecteur propre.
+\begin{center}
+\begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
+\no & \lambda^2 & \lambda & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} & ||\rot\star-\star|| & ||\star|| & ||\rot\star|| \\ \hline
+10 & 49.1504 & 7.0107 & 0.00217561 & 0.0250946 & 0.208425 & 9.62716 & 0.999049 & 6.94417
+\end{tabular}
+\end{center}
+
+De plus, en regardant les deux champs, on voit qu'ils n'ont pas la même forme. Par exemple, la figure \ref{eigendiff} montre la différence entre le $10^{ème}$ vecteur propre et son rotationnel :
+
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 10]{\includegraphics[scale=0.3]{mode10}}\ 
+		\subfloat[$\rot($mode 10$)$]{\includegraphics[scale=0.3]{curl10}}
+	}
+	\caption{Différences entre les modes et leur rotationnel}
+	\label{eigendiff}
+\end{figure}
+
+Cela peut être dû aux paramètres de pénalisation, en effet si on change ces paramètres, on trouve des valeurs propres complètement différentes :
+
+\begin{center}
+\begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
+\alpha & \beta & \gamma & \lambda^2 & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} \\ \hline
+0 & 0 & 0 & 5.24707e-11 & 15.0503 & 0.477078 & 1.23413e-07 \\ \hline
+10^3 & 10^3 & 10^3 & 40.9302 & 0.00210937 & 0.0232026 & 0.185115 \\ \hline
+10^6 & 10^6 & 10^6 & 57.1154 & 0.000159613 & 0.000673913 & 0.466915 \\ \hline
+10^{10} & 10^{10} & 10^{10} & 61.731 & 1.3273e-06 & 6.06696e-06 & 0.847356 \\ \hline
+10^{15} & 10^{15} & 10^{15} & 1.36827 & 2.30829e-09 & 5.37688e-08 & 5.57285 \\ \hline
+10^{10} & 10^3 & 10^3 & 42.0751 & 6.2461e-09 & 0.0310199 & 0.299304 \\ \hline
+10^3 & 10^{10} & 10^3 & 42.0096 & 0.00280563 & 0.0302683 & 0.280824 \\ \hline
+10^3 & 10^3 & 10^{10} & 57.5605 & 0.00622557 & 1.23812e-06 & 0.621214
+\end{tabular}
+\end{center}
+
+Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème avec seulement les termes de pénalisation.
+
+% \section{Composante $z$}
+% \subsection{Implémentation}
+% \subsection{Résultats}
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
+%%% End:
