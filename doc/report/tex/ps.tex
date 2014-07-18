@@ -48,7 +48,7 @@ Par exemple, si on a un vecteur de la librairie standard contenant les différen
 \lstinputlisting[linerange=lambda]{../../src/spectralproblem.cpp}
 où $M$ est le nombre de valeurs propres que l'on a précédemment calculées. On remarque aussi que l'on peut accéder aux éléments du vecteur avec l'opérateur \texttt{()}.\\
 
-Chaque somme de l'équation \ref{fvspec} peut être considérée comme un élément de la librairie Eigen. Ainsi $R_{iak}=\lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément d'une matrice, celui de la i-ème ligne et k-ième colonne.\\
+Chaque somme de l'équation \ref{fvspec} peut être considérée comme un élément de la librairie Eigen. Ainsi $R_{iak}=\lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément d'une matrice, celui de la $i$\ieme\ ligne et $k$\ieme\ colonne.\\
 $R_{hk} = \int \bm{h_a}\cdot\bm{g_k}$ est un vecteur et $R_{ijk} = \lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément de 3 dimensions, donc un vecteur de matrices. On a ainsi les déclarations suivantes :\\
 \lstinputlisting[linerange=ri]{../../src/spectralproblem.hpp}
 
@@ -65,11 +65,11 @@ Afin d'appliquer la méthode de Newton, il faut d'abord initialiser un vecteur p
 \lstinputlisting[linerange=NSInit]{../../src/spectralproblem.cpp}
 
 On peut maintenant appliquer la méthode de Newton décrite dans \ref{PSNewton}. On veut donc exprimer le vecteur $F(c)$ (\ref{psf}) dans la librairie Eigen. On utilise donc le mot clé \texttt{wiseProduct} pour faire un produit élément par élément de $c$ et de $\lambda$, et on multiplie la matrice $R_{iak}$ avec $c$, on retranche aussi le vecteur $R_{fk}$.\\
-Puis pour la ligne $k$, le terme non linéaire $\sum_{i,j} c_i\lambda_i c_j (\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k})$ est le produit $c^TR_{ijk}(k)c$ où $R_{ijk}(k)$ est la matrice se trouvant à la k-ième position dans le vecteur $R_{ijk}$ et $c^T$ est le vecteur transposé de $c$.\\
+Puis pour la ligne $k$, le terme non linéaire $\sum_{i,j} c_i\lambda_i c_j (\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k})$ est le produit $c^TR_{ijk}(k)c$ où $R_{ijk}(k)$ est la matrice se trouvant à la $k$\ieme\ position dans le vecteur $R_{ijk}$ et $c^T$ est le vecteur transposé de $c$.\\
 \lstinputlisting[linerange=NSMatF]{../../src/spectralproblem.cpp}
 
 Pour la matrice $J(c)$ (\ref{psj}), le terme $\delta_{ik}\lambda^2$, signifie que le vecteur $\lambda^2$ se trouve sur la diagonale de $J(c)$, on utilise donc le mot clé \texttt{asDiagonal} pour effectuer cette opération. On ajoute aussi la matrice $R_{iak}$ telle quelle à $J(c)$.\\
-Le terme $\sum_j c_j\lambda_j (\mathbf{g_j}\times\mathbf{g_i},\mathbf{g_k})$ est égal au i-ème élément du vecteur produit $c^TR_{ijk}$, tandis que $\sum_j\lambda_i c_j (\mathbf{g_i}\times\mathbf{g_j},\mathbf{g_k})$ est le i-ème élément du vecteur $c^TR_{ijk}^T$.\\
+Le terme $\sum_j c_j\lambda_j (\mathbf{g_j}\times\mathbf{g_i},\mathbf{g_k})$ est égal au $i$\ieme\ élément du vecteur produit $c^TR_{ijk}$, tandis que $\sum_j\lambda_i c_j (\mathbf{g_i}\times\mathbf{g_j},\mathbf{g_k})$ est le $i$\ieme\ élément du vecteur $c^TR_{ijk}^T$.\\
 \lstinputlisting[linerange=NSMatJ]{../../src/spectralproblem.cpp}
 
 Il faut aussi initialiser le solveur avec lequel résoudre les systèmes \ref{INewton1}, par exemple, pour les résoudre avec une méthode de Householder, on utilisera les lignes suivantes :\\

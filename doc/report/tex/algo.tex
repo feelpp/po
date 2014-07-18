@@ -55,12 +55,12 @@ Afin d'utiliser des algorithmes connus, on veut ordonner les $\varphi_i$ de tell
 On peut ramener les intégrales à une somme d'intégrales sur chaque mailles du domaine. Toutes ces mailles sont identiques à une transformation affine près, ainsi, tous les calculs d'intégrales peuvent se ramener sur une maille de référence par un changement de variable.\\
 
 Pour choisir les fonctions de base de $V_h$, on trouve des degrés de liberté, tel que leur donnée détermine toute fonction de $V_h$ de manière unique. C'est le principe d'unisolvance.\\
-Les fonctions $\varphi_i$ sont  définies telles que $\varphi_i(ddl_j)=\delta_{ij}$ où $ddl_j$ est le j-ième degré de liberté et $\delta_{ij}$ est le symbole de Kronecker.
+Les fonctions $\varphi_i$ sont  définies telles que $\varphi_i(ddl_j)=\delta_{ij}$ où $ddl_j$ est le $j$\ieme\ degré de liberté et $\delta_{ij}$ est le symbole de Kronecker.
 
 \section{Méthode d'Arnoldi}
 \label{arnoldi}
 L'algorithme d'Arnoldi permet de réduire une matrice carrée $A$ d'ordre $n$ sous la forme d'une matrice de Hessenberg, avec $AV = VH$, où $H$ est une matrice de Hessenberg supérieure et $V$ une matrice orthogonale.\\
-Si l'on arrête l'algorithme après $m$ étapes, on obtient une matrice $n\times m$ $V_m$ dont les colonnes sont orthogonales et une matrice de Hessenberg $H_m$ d'ordre $m$, qui vérifient $AV_m - V_mH_m = fe_m$, où $f$ est le résidu et $e_m$ est le $m$-ième vecteur de la base canonique.\\
+Si l'on arrête l'algorithme après $m$ étapes, on obtient une matrice $n\times m$ $V_m$ dont les colonnes sont orthogonales et une matrice de Hessenberg $H_m$ d'ordre $m$, qui vérifient $AV_m - V_mH_m = fe_m$, où $f$ est le résidu et $e_m$ est le $m$\ieme\ vecteur de la base canonique.\\
 Alors $H_m$ est le projeté orthogonal de $A$ sur l'espace $\mathcal{V}$ généré par les vecteurs colonnes de $V_m$. Si $(\lambda_i, y_i)$ est un couple de valeur et de vecteur propres pour $H_m$, alors $(\lambda_i, V_my_i)$ sont appelés respectivement la valeur de Ritz et le vecteur de Ritz, ce sont les approximations de Rayleigh-Ritz des vecteurs et valeurs propres de $A$.\\
 En pratique, on utilise $\mathcal{V}= vec<v_1, Av_1, A^2v_1,\dots,A^{m-1}v_1>$, l'espace de Krylov associé à $A$ et au vecteur initial $v_1$.\\
 

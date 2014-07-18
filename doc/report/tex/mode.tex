@@ -101,11 +101,11 @@ Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$,
 \begin{figure}[H]
 	\makebox[\textwidth][c]{
 		\subfloat[mode 0]{\includegraphics[scale=0.3]{curl-grad-1e3-mode0}}\ 
-		\subfloat[mode 5]{\includegraphics[scale=0.3]{curl-grad-1e3-mode20}}
+		\subfloat[mode 20]{\includegraphics[scale=0.3]{curl-grad-1e3-mode20}}
 	}\\
 	\makebox[\textwidth][c]{
-		\subfloat[mode 10]{\includegraphics[scale=0.3]{curl-grad-1e3-mode30}}\ 
-		\subfloat[mode 14]{\includegraphics[scale=0.3]{curl-grad-1e3-mode45}}
+		\subfloat[mode 30]{\includegraphics[scale=0.3]{curl-grad-1e3-mode30}}\ 
+		\subfloat[mode 45]{\includegraphics[scale=0.3]{curl-grad-1e3-mode45}}
 	}
 	\caption{Modes propres}
 	\label{resultats}
@@ -119,7 +119,7 @@ Cependant, lorsqu'on calcul l'erreur entre le rotationnel du champ et le champ m
 \end{tabular}
 \end{center}
 
-De plus, en regardant les deux champs, on voit qu'ils n'ont pas la même forme. Par exemple, la figure \ref{eigendiff} montre la différence entre le $10^{ème}$ vecteur propre et son rotationnel :
+De plus, en regardant les deux champs, on voit qu'ils n'ont pas la même forme. Par exemple, la figure \ref{eigendiff} montre la différence entre le 10\ieme\ vecteur propre et son rotationnel :
 
 \begin{figure}[H]
 	\makebox[\textwidth][c]{
@@ -146,7 +146,28 @@ Cela peut être dû aux paramètres de pénalisation, en effet si on change ces 
 \end{tabular}
 \end{center}
 
-Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème avec seulement les termes de pénalisation.
+Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème avec seulement les termes de pénalisation.\\
+
+\subsection{Temps de calculs}
+La figure \ref{tpsMode} montre les temps de calculs en fonction du nombre de modes propres, entre 1 et 100, pour différentes tailles de maillage.\\
+Ces tests on été effectués sur une machine virtuelle Linux Debian 6, invitée sur un ordinateur avec 4 processeurs Intel Xeon cadencés à 2,4 GHz et 64 Go de RAM, mais avec seulement 47 Go de RAM alloués à la machine virtuelle.\\
+J'ai effectué les tests sur les maillages suivants avec des éléments de Lagrange d'ordre 3 vectoriel pour $\bm{g}$ et d'ordre 1 scalaire pour $p$. \\
+
+\begin{center}
+\begin{tabular}{c|c|c|c}
+taille du maillage & nombre d'éléments & Degré de liberté & Degré de liberté/proc\\ \hline
+0,15 & 5000 & 80000 & 20000\\ \hline
+0.125 & 7500 & 125000 & 30000\\ \hline
+0.1 & 12500 & 200000 & 50000
+\end{tabular}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\includegraphics{tpsMode}
+\caption{Temps de calcul en fonction du nombre de modes propres}
+\label{tpsMode}
+\end{figure}
 
 % \section{Composante $z$}
 % \subsection{Implémentation}
