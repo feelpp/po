@@ -1,14 +1,22 @@
-\documentclass[12pt]{article} \usepackage{fontspec}
-\usepackage[colorlinks]{hyperref} \usepackage{libertine} \usepackage{stmaryrd}
-\usepackage{amsmath,amsthm,amssymb} \usepackage[french]{babel}
-\usepackage{geometry} \usepackage{xspace}
+\documentclass[12pt]{article}
+\usepackage{fontspec}
+\usepackage[colorlinks]{hyperref}
+\usepackage{libertine}
+\usepackage{stmaryrd}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{xspace}
 \newcommand{\curlk}[1][k]{\ensuremath{\nabla^{#1}\hspace{-.3em}\times}\xspace}
+
 \title{NS$^2_{++}$: Non Standard Navier-Stokes equations for large scale
-computational fluid dynamics in Feel++.}  \author{P. Gilotte\thanks{Plastic
-Omnium Auto Exterior Services - SIGMATECH} \and Benjamin
-Surowiec\footnotemark[1] \and C. Prud'homme\thanks{Cemosis, Irma, U. Strasbourg
--- Centre de Modélisation et Simulation de Strasbourg -
+computational fluid dynamics in Feel++.}
+
+\author{P. Gilotte\thanks{Plastic Omnium Auto Exterior Services - SIGMATECH}
+\and Benjamin Surowiec\footnotemark[1] \and C. Prud'homme\thanks{Cemosis, Irma,
+U. Strasbourg -- Centre de Modélisation et Simulation de Strasbourg -
 \url{http://www.cemosis.fr}} }
+
 \begin{document}
 
 \maketitle
@@ -52,7 +60,7 @@ demandent une décomposition et une résolution sur plusieurs processeurs avec d
 algorithmes itératifs disponibles uniquement dans Feel++.
 
 Feel++\footnote{\url{http://www.feelpp.org}} (Finite Element Embedded Library in C++,
-\cite{PRUDHOMME:2012:HAL-00662868:3,feelpp098:10046} ) est une librairie C++,
+\cite{prud2012feel++,feelpp098:10046} ) est une librairie C++,
 dont le responsable est C. Prud'homme, permettant la résolution d'une très large
 gamme d'équations aux dérivées partielles par des méthodes de Galerkin continue
 et discontinue en 1D, 2D et 3D. Elle permet d'écrire via un language permettant
