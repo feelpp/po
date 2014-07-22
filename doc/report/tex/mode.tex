@@ -1,5 +1,7 @@
 \chapter{Modes propres}
+\todo[inline]{intro ch + diff Curl/Lagrange}
 \section{Cas général}
+\todo[inline]{reformulation : mieux :utiliser Nedelec, d'où Girault, avec avantages}
 Ici on veut utiliser les travaux de V. Girault \cite{girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
 On rappel les définitions suivantes :
 \begin{align*}
@@ -55,7 +57,7 @@ Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (
 avec $\gamma$ une très grande valeur.\\
 
 Comme on cherche la solution dans l'espace $H(rot)$, nous devrions utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec.\\
-
+\todo[inline]{voir au dessus}
 \subsection{Implémentation}
 
 Cependant, les éléments de Nedelec n'étant pas prêt dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\bm{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
@@ -85,6 +87,7 @@ On peut maintenant rajouter les trois termes de pénalisations :
 \lstinputlisting[linerange={divdiv,bccurln,bcn}]{../../src/eigenprob.cpp}
 Les deux matrices étant prêtes, on peut maintenant appeler une routine SLEPc pour résoudre le problème aux valeurs propres. Le solveurs et le pré-conditionneur sont définis en tant qu'options. Par défaut, on utilise un solveur de type Krylov-Schur (voir \ref{arnoldi}), avec une transformation de type \emph{shift and invert} qui facilite la recherche des valeurs propres de plus petites magnitudes.
 \lstinputlisting[linerange=eigen]{../../src/eigenprob.cpp}
+\todo[inline]{précision itératif/direct}
 
 \subsection{Résultats}
 Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$, les conditions imposées sont bien respectés, toutefois, la condition $\rot\bm{g}\cdot\bm{n}$ est plus difficile à imposer que les autres. Cela peut aussi être dû à des erreurs de calculs sur le rotationnel.
@@ -129,7 +132,7 @@ De plus, en regardant les deux champs, on voit qu'ils n'ont pas la même forme. 
 	\caption{Différences entre les modes et leur rotationnel}
 	\label{eigendiff}
 \end{figure}
-
+\todo[inline]{problème calcul curl régularité pb ordre maillage, tant pis, utilisation de $\lambda\bm{g_i}$ à la place}
 Cela peut être dû aux paramètres de pénalisation, en effet si on change ces paramètres, on trouve des valeurs propres complètement différentes :
 
 \begin{center}

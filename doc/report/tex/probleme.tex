@@ -53,7 +53,7 @@ Afin d'utiliser les travaux de H. Bellout, J. Neustupa et P. Penel \cite{Penel20
 \rott\star\cdot \mathbf{n}\restr & \alpha_1 & & \alpha_2 & & 0
 \end{array}
 \end{equation}
-Ainsi, on a $\mathbf{u}\in [D^1(\Omega)]^3$ et $\mathbf{a}\in [L_\sigma^2(\Omega)]^3$ sert à relever le problème.
+Ainsi, on a $\mathbf{u}\in [D^1(\Omega)]^3$ qui sert à définir la solution à l'intérieur du domaine et $\mathbf{a}\in [L_\sigma^2(\Omega)]^3$ qui sert à relever le problème sur les bords du domaine.
 
 On veut $\mathbf{a}$ tel que :
 \begin{equation}\label{a}
@@ -65,6 +65,7 @@ On veut $\mathbf{a}$ tel que :
 &(\rott \bm{a})\cdot \bm{n}\restr = \alpha_2
 \end{aligned}\right.
 \end{equation}
+\todo[inline]{définir $\bm{e}$}
 En appliquant la divergence et les conditions aux bords à la première ligne du problème on obtient le tableau suivant :
 \begin{center}
 \begin{tabular}{c|ccccccc}
@@ -135,15 +136,32 @@ Comme $\rott \mathbf{a} = 0$ et en notant $\mathbf{h_a}=\mathbf{f}-\frac{\partia
 &\mathbf{u}\big\rvert_{t=0} = \mathbf{v}_0 - \mathbf{a}(0,\cdot)\\
 &\mathbf{u}\cdot \mathbf{n}\restr = 0\\
 &(\rot \mathbf{u})\cdot \mathbf{n}\restr = 0\\
-&(\rott  \mathbf{u})\cdot \mathbf{n}\restr = \alpha_2
+&(\rott  \mathbf{u})\cdot \mathbf{n}\restr = 0
 \end{aligned}\right.
 \end{equation}
+
+En injectant (\ref{u}) dans l'équation précédente, on obtient :
+\begin{align*}
+\frac{\partial}{\partial t}\left(\sum_{i=1}^M c_i\bm{g_i}\right) &+ \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \mathbf{a}&\\
+&+ (\rot \mathbf{a})\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) - \mathbf{h_a} =0\\
+\end{align*} 
+
+En utilisant la linéarité de la dérivée, ainsi que celle de l'opérateur rotationnel et le fait que les fonctions $\bm{g_i}$ soient les modes propres de cet opérateur, on a :
+\begin{equation}\label{pbc}
+\begin{aligned}
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\bm{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\bm{g_i}\times \bm{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\bm{g_i}\times \mathbf{a})\\
+& +  \sum_{i=1}^Mc_i((\rot\mathbf{a})\times \mathbf{g_i}) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\mathbf{g_i} - \mathbf{h_a} = 0\\
+\end{aligned}\end{equation}
+Comme les conditions aux bords sont respectées par tous les $\bm{g_i}$, $\bm{u}$, en tant que combinaison linéaire de ceux-ci, les respectent aussi.\\
+Il faut donc fournir les coefficients initiaux pour que 
+\[ \sum_{i=1}^M c_i(0)\bm{g_i} = \bm{v_0}-\bm{a}(0,\cdot) \]
+\todo[inline]{Ajouter simplification si $\alpha_1=0$ et $\alpha_2$ ?}
 
 Pour résumer, on doit donc :
 \begin{enumerate}
 \item générer la base $\mathbf{g_i}$ des fonctions propres de l'opérateur curl en résolvant l'équation (\ref{curlcurl}) comme expliqué dans le chapitre \ref{eigen}.
 \item trouver $\mathbf{a}$ pour pouvoir décomposer $\mathbf{v}$ en $\mathbf{u}+\mathbf{a}$, pour cela, on résout les équations (\ref{psi0}) et (\ref{curlb}) et un système encore à définir pour $\bm{e}$. Ce qui permet de trouver $\mathbf{a}$ grâce à (\ref{a}). Cette partie est détaillé dans \ref{relev}.
-\item résoudre l'équation (\ref{pbu}) pour trouver les coefficients $c_i$. Cela est expliqué dans \ref{spectre}.
+\item résoudre l'équation (\ref{pbc}) pour trouver les coefficients $c_i$. Cela est expliqué dans \ref{spectre}.
 \item recomposer $\mathbf{v}=\mathbf{u}+\mathbf{a}$, et chercher $p$ pour avoir la solution du problème (\ref{depart}). Cette dernière partie est montré dans \ref{pression}.
 \end{enumerate}
 
@@ -151,8 +169,7 @@ Pour résumer, on doit donc :
 \label{fv}
 \section{Problème aux valeurs propres}
 \label{eigen}
-
-On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
+On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}),
 \begin{equation}\label{pbeigen}
 (\Lambda_i,\mathbf{g_i})\in\R\times [D^1(\Omega)]^3\quad \left\{\begin{aligned}
 &\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}\\
@@ -161,6 +178,8 @@ On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}).
 &\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0
 \end{aligned}\right.
 \end{equation}
+qui va nous donner les valeurs et fonctions propres de l'opérateur rotationnel avec les conditions aux limites d'imperméabilité. Cela nous permettra ensuite d'exprimer $\bm{u}$ dans la base de $D^1$ formée par ces fonctions.\\
+
 On note d'abord que tout élément $\bm{\varphi}\in [D^1(\Omega)]^3$ peut s'écrire de la manière suivante :
 \[ \bm{\varphi} = \bm{\varphi}_0 + \grad\phi\text{ et } \bm{\varphi}\restr = \grad\phi \]
 
@@ -252,6 +271,7 @@ a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) \notag \\
 \fi
 \section{Relèvement}
 \label{relev}
+\todo[inline]{intro ch}
 
 \subsection{Gradient dans $H^1$}
 \label{secpsi0hdiv} \label{multLagrange}
@@ -339,9 +359,12 @@ Comme on peut le voir dans la formulation, $\alpha_1$ n'apparaît pas, il faut d
 
 De même, il faut encore trouver un système permettant de relever la condition $\alpha_2$.
 
+\subsection{Relèvement de $\alpha_2$}
+\todo[inline]{ajout $\bm{e}$}
+
 \section{Problème spectral}
 \label{spectre}
-
+\todo[inline]{intro ch}
 On cherche maintenant $\mathbf{u}\in [D^1(\Omega)]^3$ solution de (\ref{pbu}), on veut donc obtenir la forme variationnelle du problème, pour cela, on multiplie par une fonction test $\bm{\varphi}\in [D^1(\Omega)]^3$ et on intègre :
 \begin{align*}
 \int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} \\
@@ -383,7 +406,7 @@ Par ailleurs, on rappel que la base $(\mathbf{g_i})$ est orthonormale. On obtien
 
 \section{Pression}
 \label{pression}
-
+\todo[inline]{intro ch}
 Pour retrouver la vitesse $\mathbf{v}$, il suffit maintenant d'additionner $\mathbf{a}$ et $\mathbf{u}$.\\
 Le terme correspondant à la pression ayant été relayé en post-traitement de la vitesse, il faut le recalculer à partir de l'équation (\ref{depart}).
 
