@@ -116,7 +116,7 @@ La figure \ref{resultats} montre ces modes.
 	\caption{Modes propres}
 	\label{resultats}
 \end{figure}
-
+\todo[inline]{explication mode corrects}
 Cependant, dû au manque de régularité de $\rot\bm{g_i}$, le calcul du rotationnel induit de grandes erreurs. Ainsi si on calcul l'erreur entre le rotationnel du champ et le champ multiplier par sa valeur propre, ou même lors du calcul de la condition $\rot\bm{g_i}\cdot\bm{n}$, on n'obtient pas les résultats escomptés :
 \begin{center}
 \begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
@@ -137,23 +137,23 @@ De plus, en regardant les deux champs, on voit qu'ils n'ont pas la même forme. 
 \end{figure}
 Ces erreurs empêchent la vérification des résultats mais comme tous les calculs sur le rotationnel des modes propres sont remplacés par des calculs sur les fonctions propres multipliées par leur valeur propre respective, cela n'empêche pas la suite de la résolution du problème.\\
 
-Cela peut aussi être dû aux paramètres de pénalisation, en effet si on change ces paramètres, on trouve des valeurs propres complètement différentes :
+%% Cela peut aussi être dû aux paramètres de pénalisation, en effet si on change ces paramètres, on trouve des valeurs propres complètement différentes :
 
-\begin{center}
-\begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
-\alpha & \beta & \gamma & \lambda^2 & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} \\ \hline
-0 & 0 & 0 & 5.24707e-11 & 15.0503 & 0.477078 & 1.23413e-07 \\ \hline
-10^3 & 10^3 & 10^3 & 40.9302 & 0.00210937 & 0.0232026 & 0.185115 \\ \hline
-10^6 & 10^6 & 10^6 & 57.1154 & 0.000159613 & 0.000673913 & 0.466915 \\ \hline
-10^{10} & 10^{10} & 10^{10} & 61.731 & 1.3273e-06 & 6.06696e-06 & 0.847356 \\ \hline
-10^{15} & 10^{15} & 10^{15} & 1.36827 & 2.30829e-09 & 5.37688e-08 & 5.57285 \\ \hline
-10^{10} & 10^3 & 10^3 & 42.0751 & 6.2461e-09 & 0.0310199 & 0.299304 \\ \hline
-10^3 & 10^{10} & 10^3 & 42.0096 & 0.00280563 & 0.0302683 & 0.280824 \\ \hline
-10^3 & 10^3 & 10^{10} & 57.5605 & 0.00622557 & 1.23812e-06 & 0.621214
-\end{tabular}
-\end{center}
+%% \begin{center}
+%% \begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
+%% \alpha & \beta & \gamma & \lambda^2 & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} \\ \hline
+%% 0 & 0 & 0 & 5.24707e-11 & 15.0503 & 0.477078 & 1.23413e-07 \\ \hline
+%% 10^3 & 10^3 & 10^3 & 40.9302 & 0.00210937 & 0.0232026 & 0.185115 \\ \hline
+%% 10^6 & 10^6 & 10^6 & 57.1154 & 0.000159613 & 0.000673913 & 0.466915 \\ \hline
+%% 10^{10} & 10^{10} & 10^{10} & 61.731 & 1.3273e-06 & 6.06696e-06 & 0.847356 \\ \hline
+%% 10^{15} & 10^{15} & 10^{15} & 1.36827 & 2.30829e-09 & 5.37688e-08 & 5.57285 \\ \hline
+%% 10^{10} & 10^3 & 10^3 & 42.0751 & 6.2461e-09 & 0.0310199 & 0.299304 \\ \hline
+%% 10^3 & 10^{10} & 10^3 & 42.0096 & 0.00280563 & 0.0302683 & 0.280824 \\ \hline
+%% 10^3 & 10^3 & 10^{10} & 57.5605 & 0.00622557 & 1.23812e-06 & 0.621214
+%% \end{tabular}
+%% \end{center}
 
-Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème où la majorité des informations serait contenues dans les termes de pénalisation.\\
+%% Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème où la majorité des informations serait contenues dans les termes de pénalisation.\\
 
 \subsection{Temps de calculs}
 La figure \ref{tpsMode} montre les temps de calculs en fonction du nombre de modes propres, entre 1 et 100, pour différentes tailles de maillage.\\

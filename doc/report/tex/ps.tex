@@ -1,17 +1,18 @@
 \chapter{Problème spectral}
 On peut maintenant résoudre le problème \ref{fvc} :
-\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} + \sum_{i=1}^Mc_iR_{raij} = R_{fk} \]
+\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} + \sum_{i=1}^Mc_iR_{raij} = R_{fk}+R_{pk} \]
 où
 \begin{align*}
 R_{ijk} &= \lambda_i\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k} & R_{iak} &= \lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k}\\
-R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\bm{g_k}
+R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\bm{g_k}\\
+R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
 \end{align*}
 Cela nous permet de connaître les coefficients $c_i$ dans la décomposition $\bm{u}=\sum_{i=1}^M c_i\bm{g_i}$.\\
 
-Dans l'état actuel, comme nous n'avons pas encore déterminé comment relever $\alpha_2$, on veut faire porter sa contribution sur $\bm{f}$ et donc dans le terme $R_{fk}$. La conséquence est que $\bm{a}$ ne relève pas la condition $\rott\bm{v}\cdot\bm{n}=\alpha_2$, ainsi $\bm{a}=\grad\psi^0+\rot\bm{b}$.\\
+%% Dans l'état actuel, comme nous n'avons pas encore déterminé comment relever $\alpha_2$, on veut faire porter sa contribution sur $\bm{f}$ et donc dans le terme $R_{fk}$. La conséquence est que $\bm{a}$ ne relève pas la condition $\rott\bm{v}\cdot\bm{n}=\alpha_2$, ainsi $\bm{a}=\grad\psi^0+\rot\bm{b}$.\\
 
 De plus, dans le cylindre, comme $\alpha_1=0$, on a $\bm{a}=\grad\psi^0$ et donc comme le rotationnel d'un gradient est nul, $\rot \bm{a} = 0$. Ce qui amène le terme $R_{raij}$ à être nul. On a donc plus que :
-\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} = R_{fk} \]
+\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} = R_{fk}+R_{pk} \]
 
 \section{Navier-Stokes}
 \label{PSNewton}
@@ -21,7 +22,7 @@ qui est non linéaire. Ce problème s'écrit donc sous la forme :
 \[ F(c) = 0 \]
 où $F:\R^M\rightarrow\R^M$, $c=(c_1,\ldots, c_M)$ et :
 \begin{equation}\label{psf}
- F_k(c) = \frac{1}{Re} c_k\lambda_k^2 + \sum_i c_i R_{iak} + \sum_{i,j} c_i c_j R_{ijk} - R_{fk}
+ F_k(c) = \frac{1}{Re} c_k\lambda_k^2 + \sum_i c_i R_{iak} + \sum_{i,j} c_i c_j R_{ijk} - R_{fk} - R_{pk}
 \end{equation}
 
 On va utiliser une méthode de Newton pour résoudre ce problème, on cherche donc :
@@ -92,12 +93,12 @@ On itère ces étapes jusqu'à ce que la tolérance soit dépassée, ou que l'on
 \section{Stokes}
 \subsection{Implémentation}
 Si l'on supprime le terme non linéaire, l'équation s'écrit :
-\[ \sum_i c_iR_{iak} +\frac{1}{Re}c_k\lambda^2 = R_{fk} \]
+\[ \sum_i c_iR_{iak} +\frac{1}{Re}c_k\lambda^2 = R_{fk} + R_{pk} \]
 
 Ainsi, il suffit de résoudre l'équation $Ax=b$ où $A=(a_{ki})$ avec :
 \[ a_{ki} = \delta_{ki}\frac{\lambda^2}{Re} + R_{iak} \]
 et
-\[ b_k = R_{fk} \]
+\[ b_k = R_{fk} + R_{pk} \]
 
 Il faut donc créer la matrice $A$ à l'aide des $\lambda$ et de $R_{iak}$ :\\
 \lstinputlisting[linerange=StokesA]{../../src/spectralproblem.cpp}
