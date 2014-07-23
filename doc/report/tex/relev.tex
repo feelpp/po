@@ -1,11 +1,11 @@
 \chapter{Relèvement}
-\todo[inline]{intro ch + $\bm{e}$ ?? }
-Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc $\mathbf{a}=\grad\psi^0$.
+On implémente ici le relèvement introduit dans le chapitre \ref{relev}, $\bm{a}=\grad\psi^0+\rot\bm{b}+\bm{e}$. Comme pour le moment le système servant à relever la condition $\rott\bm{a}\cdot\bm{n}=\alpha_2$ n'est pas prêt, on suppose pour le moment que $\alpha_2=0$ et donc $\bm{e}=0$.\\
+De plus, dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc comme il ne reste plus que la condition $\bm{a}\cdot\bm{n}=\alpha_0$ à relever, on a \[ \mathbf{a}=\grad\psi^0 \]
 
 \section{Gradient dans $\HH^1$}
 \label{impGradh1}
 \subsection{Implémentation}
-Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors il faut utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$. Cela se traduit par le changement de formulation variationnelle suivant où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
+Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors en ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$ on doit utiliser des multiplicateurs de Lagrange. On utilise donc la formulation variationnelle suivante où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
 \[ \int_\Omega\grad \psi^0\grad\varphi + \int_\Omega \psi^0\nu + \int_\Omega \lambda\varphi = \int_{\partial\Omega} \alpha_0\varphi \]
 On va donc créé un espace de fonction produit correspondant à $\HH^1\times\R$.
 
@@ -38,7 +38,7 @@ Dans les figure \ref{az},\ref{aIn},\ref{aOut}, on peut observer $\bm{a}$ dans le
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.35]{az}
+\includegraphics[scale=0.3]{az}
 \caption{composante $z$ de $\bm{a}$}
 \label{az}
 \end{figure}

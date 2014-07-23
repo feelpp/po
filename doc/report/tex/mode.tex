@@ -1,8 +1,9 @@
 \chapter{Modes propres}
-\todo[inline]{intro ch + diff Curl/Lagrange}
+On peut maintenant implémenter le problème aux valeurs propres du chapitre \ref{eigen} afin de trouver les couples $(\lambda_i,\bm{g_i})$ tel que $\rot\bm{g_i}=\lambda_i\bm{g_i}$ pour $i=1,\dots,M$. Les fonctions propres seront la base sur laquelle on va projeter $\bm{u}$ pour la décomposition de Galerkin \[ \bm{u}=\sum_{i=1}^M c_i\bm{g_i} \]
+Comme les fonctions propres vivent dans $D^1$, un espace à divergence nulle, l'opérateur rotationnel et le laplacien sont identiques. Cependant, comme les fonctions tests implémentées dans Feel++ ne sont pas à divergence nulle, si on utilise le laplacien, il est nécessaire de rajouter une étape de tri pour avoir des fonctions à divergence nulle. Comme cela est très coûteux en temps de calcul, il vaut mieux utiliser directement l'opérateur rotationnel.
+
 \section{Cas général}
-\todo[inline]{reformulation : mieux :utiliser Nedelec, d'où Girault, avec avantages}
-Ici on veut utiliser les travaux de V. Girault \cite{girault90-1}, pour justifier l'utilisation des éléments de Nedelec. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
+Ici, on veut s'appuyer sur les travaux de V. Girault \cite{girault90-1}. Pour cela, on a besoin de définir l'espace \[X = \{\bm{v}\in H(rot)\ |\ (\rot\bm{v}\cdot\bm{n})\restr=0 \}\]
 On rappel les définitions suivantes :
 \begin{align*}
 L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
@@ -56,8 +57,8 @@ Trouver $((\bm{g},p),\lambda)\in H(rot) \times H^1 \times \R$ tel que $\forall (
 \end{equation}
 avec $\gamma$ une très grande valeur.\\
 
-Comme on cherche la solution dans l'espace $H(rot)$, nous devrions utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec.\\
-\todo[inline]{voir au dessus}
+Ainsi, la solution se trouvant dans $H(rot)$, la meilleure méthode serait d'utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec. Cela permettrait d'avoir $\rot\bm{g_i}\in L^2(\Omega)$. On gagnerait ainsi en régularité sur les fonctions propres.
+
 \subsection{Implémentation}
 
 Cependant, les éléments de Nedelec n'étant pas prêt dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\bm{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
@@ -85,12 +86,12 @@ Afin de pouvoir contrôler les paramètres de pénalisation, on les ajoute en ta
 \lstinputlisting[linerange=options]{../../src/eigenprob.cpp}
 On peut maintenant rajouter les trois termes de pénalisations :
 \lstinputlisting[linerange={divdiv,bccurln,bcn}]{../../src/eigenprob.cpp}
-Les deux matrices étant prêtes, on peut maintenant appeler une routine SLEPc pour résoudre le problème aux valeurs propres. Le solveurs et le pré-conditionneur sont définis en tant qu'options. Par défaut, on utilise un solveur de type Krylov-Schur (voir \ref{arnoldi}), avec une transformation de type \emph{shift and invert} qui facilite la recherche des valeurs propres de plus petites magnitudes.
+Les deux matrices étant prêtes, on peut maintenant appeler une routine SLEPc pour résoudre le problème aux valeurs propres.
 \lstinputlisting[linerange=eigen]{../../src/eigenprob.cpp}
-\todo[inline]{précision itératif/direct}
+Le solveur et le pré-conditionneur sont définis en tant qu'options, on peut donc les changer à l'exécution. Par défaut, on utilise un solveur itératif de type Krylov-Schur (voir \ref{arnoldi}), avec une transformation de type \emph{shift and invert} qui facilite la recherche des valeurs propres de plus petites magnitudes, cependant cette transformation est directe et risque donc de poser des problèmes lorsqu'on cherchera un très grand nombre de valeurs propres.
 
 \subsection{Résultats}
-Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$, les conditions imposées sont bien respectés, toutefois, la condition $\rot\bm{g}\cdot\bm{n}$ est plus difficile à imposer que les autres. Cela peut aussi être dû à des erreurs de calculs sur le rotationnel.
+Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$, les conditions imposées sont respectés.
 \begin{center}
 \begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
 \no & \lambda^2 & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} \\ \hline
@@ -100,6 +101,8 @@ Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$,
 45 & 90.406 & 0.00354548 & 0.0201967 & 0.32537
 \end{tabular}
 \end{center}
+
+La figure \ref{resultats} montre ces modes.
 
 \begin{figure}[H]
 	\makebox[\textwidth][c]{
@@ -114,7 +117,7 @@ Une fois les termes de pénalisation appliqués avec $\alpha=\beta=\gamma=1000$,
 	\label{resultats}
 \end{figure}
 
-Cependant, lorsqu'on calcul l'erreur entre le rotationnel du champ et le champ multiplier par sa valeur propre, on voit qu'il y a des erreurs, bien que la norme du rotationnel est bien $\lambda$ fois la norme du vecteur propre.
+Cependant, dû au manque de régularité de $\rot\bm{g_i}$, le calcul du rotationnel induit de grandes erreurs. Ainsi si on calcul l'erreur entre le rotationnel du champ et le champ multiplier par sa valeur propre, ou même lors du calcul de la condition $\rot\bm{g_i}\cdot\bm{n}$, on n'obtient pas les résultats escomptés :
 \begin{center}
 \begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
 \no & \lambda^2 & \lambda & \div\star & \star\cdot\bm{n} & \rot\star\cdot\bm{n} & ||\rot\star-\star|| & ||\star|| & ||\rot\star|| \\ \hline
@@ -132,8 +135,9 @@ De plus, en regardant les deux champs, on voit qu'ils n'ont pas la même forme. 
 	\caption{Différences entre les modes et leur rotationnel}
 	\label{eigendiff}
 \end{figure}
-\todo[inline]{problème calcul curl régularité pb ordre maillage, tant pis, utilisation de $\lambda\bm{g_i}$ à la place}
-Cela peut être dû aux paramètres de pénalisation, en effet si on change ces paramètres, on trouve des valeurs propres complètement différentes :
+Ces erreurs empêchent la vérification des résultats mais comme tous les calculs sur le rotationnel des modes propres sont remplacés par des calculs sur les fonctions propres multipliées par leur valeur propre respective, cela n'empêche pas la suite de la résolution du problème.\\
+
+Cela peut aussi être dû aux paramètres de pénalisation, en effet si on change ces paramètres, on trouve des valeurs propres complètement différentes :
 
 \begin{center}
 \begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
@@ -149,7 +153,7 @@ Cela peut être dû aux paramètres de pénalisation, en effet si on change ces 
 \end{tabular}
 \end{center}
 
-Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème avec seulement les termes de pénalisation.\\
+Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème où la majorité des informations serait contenues dans les termes de pénalisation.\\
 
 \subsection{Temps de calculs}
 La figure \ref{tpsMode} montre les temps de calculs en fonction du nombre de modes propres, entre 1 et 100, pour différentes tailles de maillage.\\

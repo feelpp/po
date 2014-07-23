@@ -128,10 +128,10 @@ On remplace maintenant $\mathbf{v}$ par $\mathbf{u}+\mathbf{a}$ dans (\ref{depar
 \[ \frac{\partial(\mathbf{u}+\mathbf{a})}{\partial t}+(\rot(\mathbf{u}+\mathbf{a}))\times(\mathbf{u}+\mathbf{a}) + \grad (\frac{|\mathbf{u}+\mathbf{a}|^2}{2}+p) + \frac{1}{Re}\rott(\mathbf{u}+\mathbf{a}) - \mathbf{f} = 0 \]
 Ce qui donne en notant $\pi_a=\frac{|\mathbf{u}+\mathbf{a}|^2}{2}+p$ :
 \[ \frac{\partial \mathbf{u}}{\partial t}+\frac{\partial \mathbf{a}}{\partial t} + (\rot \mathbf{u}+\rot \mathbf{a})\times(\mathbf{u}+\mathbf{a}) + \grad\pi_{\mathbf{a}} + \frac{1}{Re}(\rott \mathbf{u}+\rott \mathbf{a}) - \mathbf{f} = 0 \]
-Comme $\rott \mathbf{a} = 0$ et en notant $\mathbf{h_a}=\mathbf{f}-\frac{\partial \mathbf{a}}{\partial t} - (\rot \mathbf{a})\times \mathbf{a}$, on a le problème suivant :
+Comme $\rott \mathbf{a} = 0$ et en notant $\mathbf{f_a}=\mathbf{f}-\frac{\partial \mathbf{a}}{\partial t} - (\rot \mathbf{a})\times \mathbf{a}$, on a le problème suivant :
 \begin{equation}\label{pbu}
 \left\{\begin{aligned}
-&\frac{\partial \mathbf{u}}{\partial t} + (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} +(\rot \mathbf{a})\times \mathbf{u} + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \mathbf{u} - \mathbf{h_a} = 0\\
+&\frac{\partial \mathbf{u}}{\partial t} + (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} +(\rot \mathbf{a})\times \mathbf{u} + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \mathbf{u} - \mathbf{f_a} = 0\\
 &\div \mathbf{u} = 0\\
 &\mathbf{u}\big\rvert_{t=0} = \mathbf{v}_0 - \mathbf{a}(0,\cdot)\\
 &\mathbf{u}\cdot \mathbf{n}\restr = 0\\
@@ -143,19 +143,18 @@ Comme $\rott \mathbf{a} = 0$ et en notant $\mathbf{h_a}=\mathbf{f}-\frac{\partia
 En injectant (\ref{u}) dans l'équation précédente, on obtient :
 \begin{align*}
 \frac{\partial}{\partial t}\left(\sum_{i=1}^M c_i\bm{g_i}\right) &+ \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \mathbf{a}&\\
-&+ (\rot \mathbf{a})\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) - \mathbf{h_a} =0\\
+&+ (\rot \mathbf{a})\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) - \mathbf{f_a} =0\\
 \end{align*} 
 
 En utilisant la linéarité de la dérivée, ainsi que celle de l'opérateur rotationnel et le fait que les fonctions $\bm{g_i}$ soient les modes propres de cet opérateur, on a :
 \begin{equation}\label{pbc}
 \begin{aligned}
 \sum_{i=1}^M\frac{\partial c_i}{\partial t}\bm{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\bm{g_i}\times \bm{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\bm{g_i}\times \mathbf{a})\\
-& +  \sum_{i=1}^Mc_i((\rot\mathbf{a})\times \mathbf{g_i}) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\mathbf{g_i} - \mathbf{h_a} = 0\\
+& +  \sum_{i=1}^Mc_i((\rot\mathbf{a})\times \mathbf{g_i}) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\mathbf{g_i} - \mathbf{f_a} = 0\\
 \end{aligned}\end{equation}
 Comme les conditions aux bords sont respectées par tous les $\bm{g_i}$, $\bm{u}$, en tant que combinaison linéaire de ceux-ci, les respectent aussi.\\
 Il faut donc fournir les coefficients initiaux pour que 
 \[ \sum_{i=1}^M c_i(0)\bm{g_i} = \bm{v_0}-\bm{a}(0,\cdot) \]
-\todo[inline]{Ajouter simplification si $\alpha_1=0$ et $\alpha_2$ ?}
 
 Pour résumer, on doit donc :
 \begin{enumerate}
@@ -271,13 +270,17 @@ a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) \notag \\
 \fi
 \section{Relèvement}
 \label{relev}
-\todo[inline]{intro ch}
+On veut maintenant relever les conditions aux limites sur le bord du domaine. On écrit donc $\bm{v}=\bm{u}+\bm{a}$, où $\bm{a}$ contient toutes les informations sur le bord du domaine :
+\[ \bm{a}\cdot\bm{n}=\alpha_0\quad \rot\bm{a}\cdot\bm{n}=\alpha_1\quad \rott\bm{a}\cdot\bm{n}=\alpha_2 \]
+et il reste donc pour $\bm{u}$ les conditions traitées dans \cite{Penel2004}
+\[ \bm{u}\cdot\bm{n}=0\quad \rot\bm{u}\cdot\bm{n}=0\quad \rott\bm{u}\cdot\bm{n}=0 \]
+
+On écrit $\bm{a}=\grad\psi^0 + \rot\bm{b} + \bm{e}$.\\
+On va s'intéresser d'abord à $\grad\psi^0$ qui relève la condition $\bm{a}\cdot\bm{n}=\alpha_0$.\\
 
 \subsection{Gradient dans $H^1$}
 \label{secpsi0hdiv} \label{multLagrange}
-
-On cherche maintenant $\mathbf{a}$, on va donc s'intéresser d'abord à $\grad\psi^0$.\\
-Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord se placer dans $[H^1(\Omega)]^1$ et de résoudre :
+Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord se placer dans $[H^1(\Omega)]^1$ et résoudre :
 \begin{equation}\label{pbpsi0}
 \left\{\begin{aligned}
 &-\laplace\psi^0 = 0\\
@@ -285,7 +288,7 @@ Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord 
 \end{aligned}\right.
 \end{equation}
 
-Il faut faire attention au fait que $\int \alpha_0$ doit être égale à 0, en effet, on a :
+Il faut faire attention au fait que $\int_{\partial\Omega} \alpha_0$ doit être égale à 0, en effet, on a :
 \[ 0=\int_\Omega \laplace \psi^0 = \int_\Omega \div(\grad\psi^0) = \int_{\partial\Omega} \grad\psi^0\cdot \mathbf{n} = \int_{\partial\Omega} \alpha_0 \]
 
 Pour obtenir sa forme variationnelle, on multiplie par une fonction test $\varphi\in [H^1(\Omega)]^1$ et on intègre :
@@ -335,7 +338,7 @@ En insérant la condition au bord et la première équation, on obtient la formu
 Calculer $\grad\psi^0$ dans $H(div)$ a l'avantage de faire gagner un ordre à la régularité de $\grad\psi^0$ par rapport à résoudre le problème dans $H^1$ pour trouver $\psi^0$ et ensuite calculer son gradient.\\
 
 \subsection{Rotationnel dans $H(rot)$}
-
+On s'intéresse ensuite à $\rot\bm{b}$ qui relève la condition $\rot\bm{a}\cdot\bm{n}=\alpha_1$.\\
 Pour le problème (\ref{curlb}), on veut résoudre dans $[H(rot)]^3$ le problème mixte suivant : 
 \begin{equation}\label{pbbcurl}
 \left\{\begin{aligned}
@@ -354,59 +357,57 @@ En intégrant par partie le premier terme et en utilisant la formule de Green su
 \int_\Omega (\rot \mathbf{b})\cdot(\rot\bm{\varphi}) - \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot \mathbf{n}) + \int_\Omega \psi^1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot \mathbf{n}) = 0
 \end{equation}
 
-Comme on peut le voir dans la formulation, $\alpha_1$ n'apparaît pas, il faut donc chercher un autre problème. De plus, comme expliqué précédemment, $\bm{b}$ appartient à $D^1$, et ne peut donc pas satisfaire la condition $\rott\bm{b}\cdot \bm{n}$ :
+Comme on peut le voir dans la formulation, $\alpha_1$ n'apparaît pas, de plus, comme expliqué précédemment, $\bm{b}$ appartient à $D^1$, et ne peut donc pas satisfaire la condition $\rott\bm{b}\cdot \bm{n}$ :
 \[ \rott\bm{b}\cdot \bm{n} = \rott\left(\sum h_i \bm{g_i}\right)\cdot\bm{n} = \sum h_i \rott \bm{g_i}\cdot\bm{n} = \sum h_i\lambda^2 \underbrace{\bm{g_i}\cdot\bm{n}}_{=0} = 0 \]
-
-De même, il faut encore trouver un système permettant de relever la condition $\alpha_2$.
+il faudrait donc chercher un autre système pour relever la condition $\rot\bm{a}\cdot\bm{n}=\alpha_1$.
 
 \subsection{Relèvement de $\alpha_2$}
-\todo[inline]{ajout $\bm{e}$}
+De même, il faut encore trouver un système permettant de relever la condition $\rott\bm{a}\cdot\bm{n}=\alpha_2$.
 
 \section{Problème spectral}
 \label{spectre}
-\todo[inline]{intro ch}
-On cherche maintenant $\mathbf{u}\in [D^1(\Omega)]^3$ solution de (\ref{pbu}), on veut donc obtenir la forme variationnelle du problème, pour cela, on multiplie par une fonction test $\bm{\varphi}\in [D^1(\Omega)]^3$ et on intègre :
+Nous connaissons maintenant $\bm{a}$ et les couples $(\lambda_i,\bm{g_i})$, on a donc toutes les briques pour trouver les coefficients $c_i$ de la décomposition de $\bm{u}$ sur la base des fonctions propres de l'opérateur rotationnel. Pour cela, on utilise le problème (\ref{pbc}).
 \begin{align*}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} \\
-&+ \int_\Omega \grad\pi_{\mathbf{a}}\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rott \mathbf{u})\cdot\bm{\varphi} = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\bm{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\bm{g_i}\times \bm{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\bm{g_i}\times \mathbf{a})\\
+& +  \sum_{i=1}^Mc_i((\rot\mathbf{a})\times \mathbf{g_i}) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\mathbf{g_i} - \mathbf{f_a} = 0\\
 \end{align*}
-En utilisant une intégration par partie sur l'avant dernier terme et la même méthode que dans le chapitre \ref{eigen} pour le dernier terme du membre de gauche, on arrive à :
+Pour obtenir la forme variationnel du problème, on multiplie par une fonction test $\bm{\varphi}\in [D^1(\Omega)]^3$ et on intègre :
 \begin{align*}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} + \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi}\\
-&+ \int_\Omega \pi_{\mathbf{a}}(\div\bm{\varphi}) + \int_{\partial \Omega} \pi_{\mathbf{a}}(\bm{\varphi}\cdot \mathbf{n}) + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) -\frac{1}{Re}\int_{\partial\Omega} ((\rott \mathbf{u})\cdot \mathbf{n})\phi = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\bm{g_i}\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{\varphi}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{\varphi} + \int_\Omega\grad \pi_{\mathbf{a}}\cdot\bm{\varphi} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\int_\Omega\mathbf{g_i}\cdot\bm{\varphi} - \int_\Omega\mathbf{f_a}\cdot\bm{\varphi} = 0\\
 \end{align*}
-Où $\phi$ provient de la décomposition de la fonction de test en $\bm{\varphi}=\bm{\varphi}_0+\grad\phi$.\\
-Or, $\bm{\varphi}\in [D^1(\Omega)]^3$ donc $\div\bm{\varphi}=0$ et $\bm{\varphi}\cdot \mathbf{n}=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. De plus, $\rott \mathbf{u}\cdot \mathbf{n}=0$ sur $\partial\Omega$. On a donc :
-\begin{equation}\label{fvu}
-\begin{aligned}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
-&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
-\end{aligned}
-\end{equation}
 
-\label{discr}
-
-On cherche maintenant à exprimer $\mathbf{u}$ dans la base $(\mathbf{g_i})$, c'est-à-dire $\mathbf{u}=\sum_i c_ig_i$.\\
-De plus, prendre une fonction de test $\bm{\varphi}$ dans $[D^1(\Omega)]^3$ revient à prendre chaque fonction de la base que l'on a calculé dans le chapitre \ref{eigen}.\\
-On rappelle que $\rot \mathbf{g_i}=\lambda_i\mathbf{g_i}$. En notant $\int_\Omega \mathbf{f}\cdot\mathbf{g}=(f,g)$, on obtient pour le problème (\ref{fvu}), trouver $c_i$, $i=0\dots M$ tel que $\forall k=0\dots M$ :
+En utilisant une intégration par partie sur le terme contenant $\grad\pi_{\bm{a}}$, on arrive à :
 \begin{align*}
-\frac{\partial}{\partial t}\sum_i (c_i\mathbf{g_i}, \mathbf{g_k}) &+ \sum_i\sum_j (c_i\lambda_ic_j\mathbf{g_i}\times \mathbf{g_j},\mathbf{g_k}) + \sum_i(c_i\lambda_i\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
-&+ \sum_i ((\rot \mathbf{a})\times c_i\mathbf{g_i},\mathbf{g_k}) + \frac{1}{Re}\sum_i(c_i\lambda_i\mathbf{g_i}, \lambda_k\mathbf{g_k}) = (\mathbf{h_a},\mathbf{g_k})
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\bm{g_i}\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{\varphi}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{\varphi} + \int_\Omega\pi_{\mathbf{a}}\div\bm{\varphi} + \int_{\partial\Omega}\pi_{\bm{a}}(\bm{\varphi}\cdot\bm{n})\\
+& +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\int_\Omega\mathbf{g_i}\cdot\bm{\varphi} = \int_\Omega\mathbf{f_a}\cdot\bm{\varphi}\\
 \end{align*}
-Comme les termes $c_i$ ne porte que sur la dimension temporelle, on peut les
-sortir des intégrales, tout comme les $\lambda$.\\
 
-Par ailleurs, on rappel que la base $(\mathbf{g_i})$ est orthonormale. On obtient donc :
-\begin{equation}\label{fvspec}
-\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) + \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
-&+ \sum_i c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) + \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k})
-\end{aligned}
+Or, $\bm{\varphi}\in [D^1(\Omega)]^3$ donc $\div\bm{\varphi}=0$ et $\bm{\varphi}\cdot \mathbf{n}=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme.\\
+De plus, lorsqu'on prend une fonction de test dans $D^1$, on cherche à ce que l'équation soit vrai pour toutes les fonctions de $D^1$. Cela revient au même que de résoudre cette équation pour toutes les fonctions de la base de $D^1$. On utilise donc encore une fois les fonctions propres de l'opérateur rotationnel.\\
+On cherche donc $\forall k=1,\dots,M$ :
+\begin{align*}
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\bm{g_i}\cdot\bm{g_k} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\int_\Omega\mathbf{g_i}\cdot\bm{g_k} = \int_\Omega\mathbf{f_a}\cdot\bm{g_k}\\
+\end{align*}
+Comme la base $(\bm{g_i})$ est orthonormale, on a $\forall k=1,\dots,M$ :
+\begin{align*}
+\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k}\\
+& + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k} +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} = \int_\Omega\mathbf{f_a}\cdot\bm{g_k}\\
+\end{align*}
+En utilisant les notations suivantes :
+\begin{align*}
+R_{ijk} &= \lambda_i\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k} & R_{iak} &= \lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k}\\
+R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\bm{g_k}
+\end{align*}
+on doit résoudre le problème suivant $\forall k=1,\dots,M$ :
+\begin{equation}\label{fvc}
+\frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} + \sum_{i=1}^Mc_iR_{raij} = R_{hk}
 \end{equation}
 
 \section{Pression}
 \label{pression}
-\todo[inline]{intro ch}
 Pour retrouver la vitesse $\mathbf{v}$, il suffit maintenant d'additionner $\mathbf{a}$ et $\mathbf{u}$.\\
 Le terme correspondant à la pression ayant été relayé en post-traitement de la vitesse, il faut le recalculer à partir de l'équation (\ref{depart}).
 
@@ -447,7 +448,7 @@ Les différentes étapes pour résoudre le problème sont donc :
 \item résoudre (\ref{fvbcurl}) pour trouver $\rot\bm{b}$,
 \item résoudre un système à déterminer pour trouver $\bm{e}$,
 \item recomposer $\bm{a}$ grâce à $\psi^0$, $\rot\bm{b}$ et $\bm{e}$,
-\item résoudre le problème spectral (\ref{fvspec}) afin de trouver les coefficients $c_i$ pour $i=0\dots M$,
+\item résoudre le problème spectral (\ref{fvc}) afin de trouver les coefficients $c_i$ pour $i=0\dots M$,
 \item reconstruire $\bm{u}=\sum c_i \bm{g_i}$ et $\bm{v}=\bm{a}+\bm{u}$,
 \item calculer la pression en post-traitement avec (\ref{fvq}).
 \end{enumerate}
@@ -516,11 +517,11 @@ La figure \ref{org3} présente graphiquement les problèmes à résoudre.\\
 
 \node[draw,scale=\taille,fill=green!50] (f) at (8,-9) {$f$} ;
 \node[draw,scale=\taille,fill=green!50] (ck0) at (9,-9) {$c_k^0$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=3.2cm](\ref{fvspec})}] (pbs) at (9,-12)
+\node[draw,scale=\taille,fill=gray!50,label={[xshift=3.2cm](\ref{fvc})}] (pbs) at (9,-12)
 {$\begin{aligned}
 \frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \\
 &+ \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) + \sum_i c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) \\
-&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k})
+&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{f_a},\mathbf{g_k})
 \end{aligned}
 $} ;
 \node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
