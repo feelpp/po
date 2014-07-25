@@ -1,27 +1,30 @@
 \part{Problème}
 \label{partProb}
+
+\todo[inline]{espace [], bm mathbf, problème amsthm, hdiv, hrot, mathrm}
+
 Introduisons d'abord les notations utilisées par la suite :
 \begin{align*}
 gradient(v)&=(\partial_x v, \partial_y v, \partial_z v)=\grad v\\
-gradient(\bm{v})&=\begin{pmatrix}
-\partial_x \bm{v_x} & \partial_y \bm{v_x} & \partial_z \bm{v_x}\\
-\partial_x \bm{v_y} & \partial_y \bm{v_y} & \partial_z \bm{v_y}\\
-\partial_x \bm{v_z} & \partial_y \bm{v_z} & \partial_z \bm{v_z}
-\end{pmatrix}=\grad\bm{v}\\
+gradient(\mathbf{v})&=\begin{pmatrix}
+\partial_x v_x & \partial_y v_x & \partial_z v_x\\
+\partial_x v_y & \partial_y v_y & \partial_z v_y\\
+\partial_x v_z & \partial_y v_z & \partial_z v_z
+\end{pmatrix}=\grad\mathbf*{v}\\
 divergence(\mathbf{v})&=\frac{\partial v_x}{\partial x}+\frac{\partial v_y}{\partial y}+\frac{\partial v_z}{\partial z}=\div \mathbf{v}\\
-rot(\mathbf{v})&=\begin{pmatrix}
+rotationnel(\mathbf{v})&=\begin{pmatrix}
 \partial_y v_z - \partial_z v_y\\
 \partial_z v_x - \partial_x v_z\\
 \partial_x v_y - \partial_y v_x
 \end{pmatrix}=\rot \mathbf{v}\\
 rot(rot(\mathbf{v}))&=\rott \mathbf{v}\\
-H^1(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \grad \mathbf{v}\in L^2(\Omega)\}\\
-H^1_0(\Omega) &= \{\mathbf{v} \in H^1(\Omega)\ |\ \mathbf{v}\restr = 0\}\\
-H(div) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div\mathbf{v} \in L^2(\Omega) \}\\
-H(rot) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \rot\mathbf{v} \in L^2(\Omega) \}\\
-L^2_\sigma(\Omega) &= \{\mathbf{v} \in L^2(\Omega)\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
-D^1(\Omega) &=\{\bm{v}\in L^2(\Omega)\ |\ \grad\bm{v}\in L^2(\Omega),\ \div\bm{v}=0,\ \bm{v}\cdot\bm{n}\restr = 0,\ \rot\bm{v}\cdot\bm{n}\restr = 0\}\\
-&= \{\mathbf{v} \in H^1(\Omega)\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\\
+H^1(\Omega) &= \{v \in L^2(\Omega)\ |\ \grad v\in L^2(\Omega)\}\\
+H^1_0(\Omega) &= \{v \in H^1(\Omega)\ |\ v\restr = 0\}\\
+H(\mathrm{div}) &= \{\mathbf{v} \in [L^2(\Omega)]^3\ |\ \div\mathbf{v} \in L^2(\Omega) \}\\
+H(\mathrm{rot}) &= \{\mathbf{v} \in [L^2(\Omega)]^3\ |\ \rot\mathbf{v} \in L^2(\Omega) \}\\
+L^2_\sigma(\Omega) &= \{\mathbf{v} \in [L^2(\Omega)]^3\ |\ \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
+D^1(\Omega) &=\{\mathbf{v}\in [L^2(\Omega)]^3\ |\ \grad\mathbf{v}\in L^2(\Omega),\ \div\mathbf{v}=0,\ \mathbf{v}\cdot\mathbf{n}\restr = 0,\ \rot\mathbf{v}\cdot\mathbf{n}\restr = 0\}\\
+&= \{\mathbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\ |\ (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}\\
 &=\{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \}
 \end{align*}
 
@@ -37,12 +40,12 @@ Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et �
 \end{aligned}\right.
 \end{equation}
 où $q = \frac{|\mathbf{v}|^2}{2}+p$.\\
-
+\todo[inline]{cdt non standard, peu étudié + ref( éléctro, Girault, Perrier), intérêt PO : séparation des variables => gain de temps, suppr loi de paroi}
 On va maintenant expliquer la décomposition du problème en une suite de problème plus simple dans le chapitre \ref{local}, puis étudié plus en détail chacun de ces problèmes dans \ref{fv}.
 
-\chapter{Problème local}
+\chapter{Stratégie de résolution}
 \label{local}
-
+\todo[inline]{précision existence unicité}
 Afin d'utiliser les travaux de H. Bellout, J. Neustupa et P. Penel \cite{Penel2004} qui ont étudié ce type d'équations dans $D^1$, on cherche à écrire $\mathbf{v}=\mathbf{u}+\mathbf{a}$, tel que :\\
 \begin{equation}\label{v}
 \begin{array}{c|ccccc}
@@ -53,7 +56,7 @@ Afin d'utiliser les travaux de H. Bellout, J. Neustupa et P. Penel \cite{Penel20
 \rott\star\cdot \mathbf{n}\restr & \alpha_1 & & 0 & & \alpha_2
 \end{array}
 \end{equation}
-Ainsi, on a $\mathbf{u}\in [D^1(\Omega)]^3$ qui sert à définir la solution à l'intérieur du domaine et $\mathbf{a}\in [L_\sigma^2(\Omega)]^3$ qui sert à relever le problème sur les bords du domaine.
+Ainsi, on a $\mathbf{u}\in D^1(\Omega)$ qui sert à définir la solution à l'intérieur du domaine et $\mathbf{a}\in [L^2(\Omega)]^3$ qui sert à relever le problème sur les bords du domaine.
 
 On veut $\mathbf{a}$ tel que :
 \begin{equation}\label{a}
@@ -83,7 +86,7 @@ En utilisant la première et la deuxième ligne du tableau, on voit que $\psi^0$
 Ce problème permet de trouver $\psi^0$ à une constante près, on va donc utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int_\Omega \psi^0 = 0$, cette constante est sans importance car on cherche le gradient de $\psi^0$.\\
 Il y a plusieurs manières de résoudre le problème (\ref{psi0}), la solution choisie sera discutée plus loin.\\
 
-On cherche $b$ tel que :
+On cherche $\mathbf{b}$ tel que :
 \begin{equation}\label{curlb}
 \left\{\begin{aligned}
 &\rott \mathbf{b} = \grad\psi^1\\
@@ -94,7 +97,7 @@ On cherche $b$ tel que :
 \end{aligned}\right.
 \end{equation}
 
-Il reste encore plusieurs questions concernant la manière de relever $\alpha_1$. En effet, écris de cette manière, $\bm{b}\in [D^1(\Omega)]^3$ et donc si $\bm{b}\cdot\bm{n}=0$ alors $\rott\bm{b}\cdot\bm{n}=0$ aussi. Ce problème est donc encore ouvert.\\
+Il reste encore plusieurs questions concernant la manière de relever $\alpha_1$. En effet, écris de cette manière, $\mathbf{b}\in D^1(\Omega)$ et donc si $\mathbf{b}\cdot\mathbf{n}=0$ alors $\rott\mathbf{b}\cdot\mathbf{n}=0$ aussi. Ce problème est donc encore ouvert.\\
 
 Une fois $\grad\psi^0$, $\rot \mathbf{b}$ connus, on peut retrouver $\mathbf{a}$.\\
 
@@ -103,7 +106,7 @@ On cherche donc $\mathbf{u}=\mathbf{v}-\mathbf{a}$, et en utilisant la décompos
 \mathbf{u}(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)\mathbf{g_i}(\cdot)
 \end{equation}
 
-Comme $\mathbf{u}\in [D^1(\Omega)]^3=D(curl_{imperm})$, on peut choisir les fonctions de base
+Comme $\mathbf{u}\in D^1(\Omega)=D(\mathrm{rot}_{imperm})$, on peut choisir les fonctions de base
 $\mathbf{g_i}$ comme étant les fonctions propres de l'opérateur rotationnel. Ces
 fonctions sont les mêmes que celles de l'opérateur $\rott$.
 
@@ -111,7 +114,7 @@ En effet, soit $(\lambda_i,\mathbf{g_i})$ solutions de $\rot \mathbf{g_i} = \lam
 \[ \rott \mathbf{g_i} = \rot(\rot \mathbf{g_i})=\rot(\lambda_i\mathbf{g_i})=\lambda^2\mathbf{g_i} \]
 Par identification, on voit que $\mathbf{g_i}=\mathbf{G_i}$ et que $\lambda_i=\pm\sqrt\Lambda_i$. Pour n'avoir que des valeurs propres de multiplicité une, on ne garde que les valeurs propres positives, le signe étant porté par le coefficient $c_i$.
 
-On cherche donc $(\lambda_i,\mathbf{g_i})\in\R\times [D^1(\Omega)]^3$ solutions du problème suivant :
+On cherche donc $(\lambda_i,\mathbf{g_i})\in\R\times D^1(\Omega)$ solutions du problème suivant :
 \begin{equation}\label{curlcurl}
 \left\{\begin{aligned}
 &\rott  \mathbf{g_i} = \lambda_i^2 \mathbf{g_i}\\
@@ -140,42 +143,42 @@ Comme $\rott \mathbf{a} = 0$ et en notant $\mathbf{f_a}=\mathbf{f}-\frac{\partia
 En injectant (\ref{u}) dans l'équation précédente, on obtient :
 \begin{equation}\label{pbc}
 \begin{aligned}
-\frac{\partial}{\partial t}\left(\sum_{i=1}^M c_i\bm{g_i}\right) &+ \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \mathbf{a}&\\
+\frac{\partial}{\partial t}\left(\sum_{i=1}^M c_i\mathbf{g_i}\right) &+ \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \mathbf{a}&\\
 &+ (\rot \mathbf{a})\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) - \mathbf{f_a} =0\\
 \end{aligned}\end{equation} 
 
-%% Comme les conditions aux bords sont respectées par tous les $\bm{g_i}$, $\bm{u}$, en tant que combinaison linéaire de ceux-ci, les respectent aussi.\\
+%% Comme les conditions aux bords sont respectées par tous les $\mathbf{g_i}$, $\mathbf{u}$, en tant que combinaison linéaire de ceux-ci, les respectent aussi.\\
 Il faut donc fournir les coefficients initiaux tel que 
-\[ \sum_{i=1}^M c_i(0)\bm{g_i} = \bm{v_0}-\bm{a}(0,\cdot) \]
+\[ \sum_{i=1}^M c_i(0)\mathbf{g_i} = \mathbf{v_0}-\mathbf{a}(0,\cdot) \]
 
 Pour résumer, on doit donc :
 \begin{enumerate}
 \item générer la base $\mathbf{g_i}$ des fonctions propres de l'opérateur curl en résolvant l'équation (\ref{curlcurl}) comme expliqué dans le chapitre \ref{eigen}.
-\item trouver $\mathbf{a}$ pour pouvoir décomposer $\mathbf{v}$ en $\mathbf{u}+\mathbf{a}$, pour cela, on résout les équations (\ref{psi0}) et (\ref{curlb}) et un système encore à définir pour $\bm{e}$. Ce qui permet de trouver $\mathbf{a}$ grâce à (\ref{a}). Cette partie est détaillé dans \ref{relev}.
+\item trouver $\mathbf{a}$ pour pouvoir décomposer $\mathbf{v}$ en $\mathbf{u}+\mathbf{a}$, pour cela, on résout les équations (\ref{psi0}) et (\ref{curlb}) et un système encore à définir pour $\mathbf{e}$. Ce qui permet de trouver $\mathbf{a}$ grâce à (\ref{a}). Cette partie est détaillé dans \ref{relev}.
 \item résoudre l'équation (\ref{pbc}) pour trouver les coefficients $c_i$. Cela est expliqué dans \ref{spectre}.
 \item recomposer $\mathbf{v}=\mathbf{u}+\mathbf{a}$, et chercher $p$ pour avoir la solution du problème (\ref{depart}). Cette dernière partie est montré dans \ref{pression}.
 \end{enumerate}
 
-\chapter{Forme variationnelle}
+\chapter{Formulations variationnelles}
 \label{fv}
 \section{Problème aux valeurs propres}
 \label{eigen}
 On s'intéresse ici plus particulièrement au problème (\ref{curlcurl}),
 \begin{equation}\label{pbeigen}
-(\Lambda_i,\mathbf{g_i})\in\R\times [D^1(\Omega)]^3\quad \left\{\begin{aligned}
+(\Lambda_i,\mathbf{g_i})\in\R\times D^1(\Omega)\quad \left\{\begin{aligned}
 &\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}\\
 &\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
 &\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0
 \end{aligned}\right.
 \end{equation}
-qui va nous donner les valeurs et fonctions propres de l'opérateur rotationnel avec les conditions aux limites d'imperméabilité. Cela nous permettra ensuite d'exprimer $\bm{u}$ dans la base de $D^1$ formée par ces fonctions.\\
+qui va nous donner les valeurs et fonctions propres de l'opérateur rotationnel avec les conditions aux limites d'imperméabilité. Cela nous permettra ensuite d'exprimer $\mathbf{u}$ dans la base de $D^1$ formée par ces fonctions.\\
 
-On note d'abord que tout élément $\bm{\varphi}\in [D^1(\Omega)]^3$ peut s'écrire de la manière suivante :
+On note d'abord que tout élément $\bm{\varphi}\in D^1(\Omega)$ peut s'écrire de la manière suivante :
 \[ \bm{\varphi} = \bm{\varphi}_0 + \grad\phi\text{ et } \bm{\varphi}\restr = \grad\phi \]
 
 On va maintenant chercher la formulation variationnelle de ce problème.\\
-Soit $\mathbf{g}\in [D^1(\Omega)]^3$ solution de (6), alors pour tout $\bm{\varphi}\in [D^1(\Omega)]^3$ nous avons :
+Soit $\mathbf{g}\in D^1(\Omega)$ solution de (6), alors pour tout $\bm{\varphi}\in D^1(\Omega)$ nous avons :
 \[ \int_\Omega (\rott \mathbf{g})\cdot\bm{\varphi}\ dX = \int_\Omega\Lambda \mathbf{g}\cdot\bm{\varphi}\ dX \]
 puis en intégrant par partie :
 \[ \int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_{\partial\Omega} ((\rot \mathbf{g})\times \bm{\varphi})\cdot \mathbf{n}\ d\Gamma = \Lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX \]
@@ -189,12 +192,12 @@ Comme le rotationnel d'un gradient est nul, on a :
 \[ \int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_\Omega \grad\phi\cdot(\rott \mathbf{g})\ dX  = \Lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX \]
 En intégrant le deuxième terme par partie, on obtient :
 \[ \int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX + \int_{\partial\Omega} \phi((\rott \mathbf{g})\cdot \mathbf{n})\ d\Gamma - \int_\Omega \phi(\div(\rott \mathbf{g}))\ dX  = \Lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX \]
-Comme $\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0$, le deuxième terme s'annule et comme la divergence d'un rotationnel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\bm{\varphi}\in [D^1(\Omega)]^3$ :
+Comme $\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0$, le deuxième terme s'annule et comme la divergence d'un rotationnel est nulle, le troisième terme s'annule aussi, ce qui laisse pour tous $\bm{\varphi}\in D^1(\Omega)$ :
 \begin{equation}\label{fveigen}
 \int_\Omega (\rot \mathbf{g})\cdot(\rot\bm{\varphi})\ dX = \Lambda\int_\Omega \mathbf{g}\cdot\bm{\varphi}\ dX
 \end{equation}
 
-On obtient donc $(\Lambda_i,\mathbf{g_i})$, où $(\mathbf{g_i})$ forme une base de $[D^1(\Omega)]^3$.
+On obtient donc $(\Lambda_i,\mathbf{g_i})$, où $(\mathbf{g_i})$ forme une base de $D^1(\Omega)$.
 %\iffalse
 \section{Décomposition des $\mathbf{g_i}$}
 \label{decomp}
@@ -243,14 +246,14 @@ D'autre part, les deux dernières lignes du tableau nous donnent le problème de
 \grad\psi_i\cdot \mathbf{n}\restr &= 0
 \end{aligned}\right.
 \end{equation}
-Cette fois-ci, on cherche $\psi_i$ dans $[H^1(\Omega)]^1$. On a donc la forme variationnelle suivante :
+Cette fois-ci, on cherche $\psi_i$ dans $H^1(\Omega)$. On a donc la forme variationnelle suivante :
 \begin{equation}\label{fvpsi}
 \int_\Omega \grad\psi_i\cdot\grad\varphi = \int_\Omega (\div \mathbf{g_i^0})\varphi
 \end{equation}
 
 Ce problème permet de trouver $\psi_i$ seulement à une constante près, on va donc devoir imposer une constante de notre choix, par exemple pour que $\int_\Omega \psi_i = 0$. Ceci va donc créer une translation dans le résultat, qu'il va falloir corriger en post-traitement.\\
 Afin d'appliquer cette contrainte supplémentaire, on va utiliser la méthode des multiplicateurs de Lagrange.\\
-Si l'on note $V=[H^1(\Omega)]^1$, $a(u,v)=\int \grad u \cdot \grad v$, $l(v)=\int (\div \mathbf{g_i^0})v$ et $J(v)=\frac{1}{2}a(v,v)-l(v)$, alors résoudre l'équation \ref{fvpsi} revient à trouver $u$ tel que :
+Si l'on note $V=H^1(\Omega)$, $a(u,v)=\int \grad u \cdot \grad v$, $l(v)=\int (\div \mathbf{g_i^0})v$ et $J(v)=\frac{1}{2}a(v,v)-l(v)$, alors résoudre l'équation \ref{fvpsi} revient à trouver $u$ tel que :
 \[ J(u) = \min_{v\in V} J(v) \]
 Si l'on ajoute la contrainte $b(v) = \int v = 0$, alors, avec $\lambda$ un multiplicateur de Lagrange, le problème devient trouver $u$ tel que :
 \[ J(u) = \min_{v\in V} J(v) - \lambda b(v) \]
@@ -262,15 +265,15 @@ a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) \notag \\
 %\fi
 \section{Relèvement}
 \label{relev}
-On veut maintenant relever les conditions aux limites sur le bord du domaine. On écrit donc $\bm{v}=\bm{u}+\bm{a}$, où $\bm{a}$ contient les informations sur le bord du domaine :
-\[ \bm{a}\cdot\bm{n}=\alpha_0\quad \rot\bm{a}\cdot\bm{n}=\alpha_1 \]
+On veut maintenant relever les conditions aux limites sur le bord du domaine. On écrit donc $\mathbf{v}=\mathbf{u}+\mathbf{a}$, où $\mathbf{a}$ contient les informations sur le bord du domaine :
+\[ \mathbf{a}\cdot\mathbf{n}=\alpha_0\quad \rot\mathbf{a}\cdot\mathbf{n}=\alpha_1 \]
 
-On écrit $\bm{a}=\grad\psi^0 + \rot\bm{b}$.\\
-On va s'intéresser d'abord à $\grad\psi^0$ qui relève la condition $\bm{a}\cdot\bm{n}=\alpha_0$.\\
+On écrit $\mathbf{a}=\grad\psi^0 + \rot\mathbf{b}$.\\
+On va s'intéresser d'abord à $\grad\psi^0$ qui relève la condition $\mathbf{a}\cdot\mathbf{n}=\alpha_0$.\\
 
 \subsection{Gradient dans $H^1$}
 \label{secpsi0hdiv} \label{multLagrange}
-Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord se placer dans $[H^1(\Omega)]^1$ et résoudre :
+Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord se placer dans $H^1(\Omega)$ et résoudre :
 \begin{equation}\label{pbpsi0}
 \left\{\begin{aligned}
 &-\laplace\psi^0 = 0\\
@@ -281,7 +284,7 @@ Il y a plusieurs alternatives pour résoudre (\ref{psi0}), on peut tout d'abord 
 Il faut faire attention au fait que $\int_{\partial\Omega} \alpha_0$ doit être égale à 0, en effet, on a :
 \[ 0=\int_\Omega \laplace \psi^0 = \int_\Omega \div(\grad\psi^0) = \int_{\partial\Omega} \grad\psi^0\cdot \mathbf{n} = \int_{\partial\Omega} \alpha_0 \]
 
-Pour obtenir sa forme variationnelle, on multiplie par une fonction test $\varphi\in [H^1(\Omega)]^1$ et on intègre :
+Pour obtenir sa forme variationnelle, on multiplie par une fonction test $\varphi\in H^1(\Omega)$ et on intègre :
 \[ \int_\Omega \laplace\psi^0 \varphi = 0 \]
 On utilise ensuite la formule de Green pour parvenir à :
 \[ -\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_{\partial\Omega} \grad\psi^0\cdot \mathbf{n}\varphi = 0 \]
@@ -289,8 +292,8 @@ Or, $\grad\psi^0\cdot \mathbf{n} = \alpha_0$ sur $\partial\Omega$, on obtient do
 \begin{equation}\label{fvpsi0LM} -\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0
 \end{equation}
 
-Comme énoncé précédemment, on va devoir utiliser les multiplicateurs de Lagrange pour ajouter la contrainte $\int \psi^0=0$.
-Si l'on note $V=[H^1(\Omega)]^1$, $a(u,v)=\int \grad u \cdot \grad v$, $l(v)=\int \alpha_0v$ et $J(v)=\frac{1}{2}a(v,v)-l(v)$, alors résoudre l'équation \ref{fvpsi0LM} revient à trouver $u$ tel que :
+Comme énoncé précédemment, on va devoir utiliser les multiplicateurs de Lagrange pour ajouter la contrainte $\int \psi^0=0$.\\
+Si l'on note $V=H^1(\Omega)$, $a(u,v)=\int \grad u \cdot \grad v$, $l(v)=\int \alpha_0v$ et $J(v)=\frac{1}{2}a(v,v)-l(v)$, alors résoudre l'équation \ref{fvpsi0LM} revient à trouver $u$ tel que :
 \[ J(u) = \min_{v\in V} J(v) \]
 Si l'on ajoute la contrainte $b(v) = \int v = 0$, alors, avec $\lambda$ un multiplicateur de Lagrange, le problème devient trouver $u$ tel que :
 \[ J(u) = \min_{v\in V} J(v) - \lambda b(v) \]
@@ -300,9 +303,9 @@ a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) + m b(\mu) \notag \\
 \int_\Omega \grad\psi^0\cdot\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega \psi^0\mu &= \int_\Omega \alpha_0\varphi
 \end{align}
 
-\subsection{Gradient dans $H(div)$}
+\subsection{Gradient dans $H(\mathrm{div})$}
 
-L'autre possibilité pour trouver $\psi^0$ est de chercher $(\mathbf{w},\psi^0)\in [H(div)]^3\times [L^2(\Omega)]^1$ solution du problème de Darcy suivant :
+L'autre possibilité pour trouver $\psi^0$ est de chercher $(\mathbf{w},\psi^0)\in H(\mathrm{div})\times L^2(\Omega)$ solution du problème mixte suivant :
 \begin{equation}\label{pbpsidiv}
 \left\{\begin{aligned}
 \mathbf{w} &= \grad \psi^0\\
@@ -310,7 +313,7 @@ L'autre possibilité pour trouver $\psi^0$ est de chercher $(\mathbf{w},\psi^0)\
 \mathbf{w}\cdot \mathbf{n}\restr &= \alpha_0
 \end{aligned}\right.
 \end{equation}
-Pour obtenir la formulation faible du problème, on multiplie par une fonction test $(\bm{\varphi},\nu)\in [H(div)]^3\times [L^2(\Omega)]^1$ et on intègre les deux premières équations :
+Pour obtenir la formulation faible du problème, on multiplie par une fonction test $(\bm{\varphi},\nu)\in H(\mathrm{div})\times L^2(\Omega)$ et on intègre les deux premières équations :
 \begin{align*}
 \int_\Omega \mathbf{w}\cdot\bm{\varphi} &= \int_\Omega \grad\psi^0\cdot\bm{\varphi}\\
 \int_\Omega \div \mathbf{w}\ \nu &= 0
@@ -325,11 +328,11 @@ En insérant la condition au bord et la première équation, on obtient la formu
 -\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi} + \int_\Omega \lambda\varphi + \int_\Omega \psi^0\mu = \int_{\partial\Omega} \alpha_0\nu
 \end{equation}
 
-Calculer $\grad\psi^0$ dans $H(div)$ a l'avantage de faire gagner un ordre à la régularité de $\grad\psi^0$ par rapport à résoudre le problème dans $H^1$ pour trouver $\psi^0$ et ensuite calculer son gradient.\\
+Calculer $\grad\psi^0$ dans $H(\mathrm{div})$ a l'avantage de faire gagner un ordre à la régularité de $\grad\psi^0$ par rapport à résoudre le problème dans $H^1$ pour trouver $\psi^0$ et ensuite calculer son gradient.\\
 
-\subsection{Rotationnel dans $H(rot)$}
-On s'intéresse ensuite à $\rot\bm{b}$ qui relève la condition $\rot\bm{a}\cdot\bm{n}=\alpha_1$.\\
-Pour le problème (\ref{curlb}), on veut résoudre dans $[H(rot)]^3$ le problème mixte suivant : 
+\subsection{Rotationnel dans $H(\mathrm{rot})$}
+On s'intéresse ensuite à $\rot\mathbf{b}$ qui relève la condition $\rot\mathbf{a}\cdot\mathbf{n}=\alpha_1$.\\
+Pour le problème (\ref{curlb}), on veut résoudre dans $H(\mathrm{rot})$ le problème mixte suivant : 
 \begin{equation}\label{pbbcurl}
 \left\{\begin{aligned}
 &\rott \mathbf{b} = \grad\psi^1\\
@@ -340,69 +343,69 @@ Pour le problème (\ref{curlb}), on veut résoudre dans $[H(rot)]^3$ le problèm
 \end{aligned}\right.
 \end{equation}
 
-Pour avoir la formulation faible, on multiplie par une fonction test de $[H(rot)]^3$ et on intègre :
+Pour avoir la formulation faible, on multiplie par une fonction test de $H(\mathrm{rot})$ et on intègre :
 \[ \int_\Omega (\rott \mathbf{b})\cdot\bm{\varphi} = \int_\Omega (\grad\psi^1)\cdot\bm{\varphi} \]
 En intégrant par partie le premier terme et en utilisant la formule de Green sur le second, on obtient :
 \begin{equation} \label{fvbcurl}
 \int_\Omega (\rot \mathbf{b})\cdot(\rot\bm{\varphi}) - \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot \mathbf{n}) + \int_\Omega \psi^1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot \mathbf{n}) = 0
 \end{equation}
 
-%% Comme on peut le voir dans la formulation, $\alpha_1$ n'apparaît pas, de plus, comme expliqué précédemment, $\bm{b}$ appartient à $D^1$, et ne peut donc pas satisfaire la condition $\rott\bm{b}\cdot \bm{n}$ :
-%% \[ \rott\bm{b}\cdot \bm{n} = \rott\left(\sum h_i \bm{g_i}\right)\cdot\bm{n} = \sum h_i \rott \bm{g_i}\cdot\bm{n} = \sum h_i\lambda^2 \underbrace{\bm{g_i}\cdot\bm{n}}_{=0} = 0 \]
-%% il faudrait donc chercher un autre système pour relever la condition $\rot\bm{a}\cdot\bm{n}=\alpha_1$.
+%% Comme on peut le voir dans la formulation, $\alpha_1$ n'apparaît pas, de plus, comme expliqué précédemment, $\mathbf{b}$ appartient à $D^1$, et ne peut donc pas satisfaire la condition $\rott\mathbf{b}\cdot \mathbf{n}$ :
+%% \[ \rott\mathbf{b}\cdot \mathbf{n} = \rott\left(\sum h_i \mathbf{g_i}\right)\cdot\mathbf{n} = \sum h_i \rott \mathbf{g_i}\cdot\mathbf{n} = \sum h_i\lambda^2 \underbrace{\mathbf{g_i}\cdot\mathbf{n}}_{=0} = 0 \]
+%% il faudrait donc chercher un autre système pour relever la condition $\rot\mathbf{a}\cdot\mathbf{n}=\alpha_1$.
 
 %% \subsection{Relèvement de $\alpha_2$}
-%% De même, il faut encore trouver un système permettant de relever la condition $\rott\bm{a}\cdot\bm{n}=\alpha_2$.
+%% De même, il faut encore trouver un système permettant de relever la condition $\rott\mathbf{a}\cdot\mathbf{n}=\alpha_2$.
 
 \section{Problème spectral}
 \label{spectre}
-Nous connaissons maintenant $\bm{a}$ et les couples $(\lambda_i,\bm{g_i})$, on a donc toutes les briques pour trouver les coefficients $c_i$ de la décomposition de $\bm{u}$ sur la base des fonctions propres de l'opérateur rotationnel. Pour cela, on utilise le problème (\ref{pbc}).
+Nous connaissons maintenant $\mathbf{a}$ et les couples $(\lambda_i,\mathbf{g_i})$, on a donc toutes les briques pour trouver les coefficients $c_i$ de la décomposition de $\mathbf{u}$ sur la base des fonctions propres de l'opérateur rotationnel. Pour cela, on utilise le problème (\ref{pbc}).
 \begin{align*}
-\frac{\partial}{\partial t}\left(\sum_{i=1}^M c_i\bm{g_i}\right) &+ \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \mathbf{a}&\\
+\frac{\partial}{\partial t}\left(\sum_{i=1}^M c_i\mathbf{g_i}\right) &+ \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \left(\rot \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right)\right)\times \mathbf{a}&\\
 &+ (\rot \mathbf{a})\times \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\rott  \left(\sum_{i=1}^Mc_i\mathbf{g_i}\right) - \mathbf{f_a} =0\\
 \end{align*}
-En utilisant la linéarité de la dérivée, ainsi que celle de l'opérateur rotationnel et le fait que les fonctions $\bm{g_i}$ soient les modes propres de cet opérateur, on a :
+En utilisant la linéarité de la dérivée, ainsi que celle de l'opérateur rotationnel et le fait que les fonctions $\mathbf{g_i}$ soient les modes propres de cet opérateur, on a :
 %% \begin{equation}\label{pbc}
 %% \begin{aligned}
-%% \sum_{i=1}^M\frac{\partial c_i}{\partial t}\bm{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\bm{g_i}\times \bm{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\bm{g_i}\times \mathbf{a})\\
+%% \sum_{i=1}^M\frac{\partial c_i}{\partial t}\mathbf{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\mathbf{g_i}\times \mathbf{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\mathbf{g_i}\times \mathbf{a})\\
 %% & +  \sum_{i=1}^Mc_i((\rot\mathbf{a})\times \mathbf{g_i}) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\mathbf{g_i} - \mathbf{f_a} = 0\\
 %% \end{aligned}\end{equation}
 
 
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\bm{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\bm{g_i}\times \bm{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\bm{g_i}\times \mathbf{a})\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\mathbf{g_i} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j(\mathbf{g_i}\times \mathbf{g_j}) + \sum_{i=1}^Mc_i\lambda_i(\mathbf{g_i}\times \mathbf{a})\\
 & +  \sum_{i=1}^Mc_i((\rot\mathbf{a})\times \mathbf{g_i}) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\rott\mathbf{g_i} - \mathbf{f_a} = 0\\
 \end{align*}
-Pour obtenir la forme variationnel du problème, on multiplie par une fonction test $\bm{\varphi}\in [D^1(\Omega)]^3$ et on intègre :
+Pour obtenir la forme variationnel du problème, on multiplie par une fonction test $\bm{\varphi}\in D^1(\Omega)$ et on intègre :
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\bm{g_i}\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{\varphi}\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g_i}\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\bm{\varphi}\\
 & +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{\varphi} + \int_\Omega\grad \pi_{\mathbf{a}}\cdot\bm{\varphi} +\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\rott\mathbf{g_i}\cdot\bm{\varphi} - \int_\Omega\mathbf{f_a}\cdot\bm{\varphi} = 0\\
 \end{align*}
 
-En utilisant une intégration par partie sur le terme contenant $\grad\pi_{\bm{a}}$, on arrive à :
+En utilisant une intégration par partie sur le terme contenant $\grad\pi_{\mathbf{a}}$, on arrive à :
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\bm{g_i}\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{\varphi}\\
-& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{\varphi} + \int_\Omega\pi_{\mathbf{a}}\div\bm{\varphi} + \int_{\partial\Omega}\pi_{\bm{a}}(\bm{\varphi}\cdot\bm{n})\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g_i}\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\bm{\varphi}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{\varphi} + \int_\Omega\pi_{\mathbf{a}}\div\bm{\varphi} + \int_{\partial\Omega}\pi_{\mathbf{a}}(\bm{\varphi}\cdot\mathbf{n})\\
 & \frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\rott\mathbf{g_i}\cdot\bm{\varphi} = \int_\Omega\mathbf{f_a}\cdot\bm{\varphi}\\
 \end{align*}
 
-Or, $\bm{\varphi}\in [D^1(\Omega)]^3$ donc $\div\bm{\varphi}=0$ et $\bm{\varphi}\cdot \mathbf{n}=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme.\\
+Or, $\bm{\varphi}\in D^1(\Omega)$ donc $\div\bm{\varphi}=0$ et $\bm{\varphi}\cdot \mathbf{n}=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme.\\
 En utilisant la même méthode que dans le chapitre \ref{eigen}, le terme $\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\rott\mathbf{g_i}\cdot\bm{\varphi}$ devient $\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\rot\mathbf{g_i}\cdot\rot\bm{\varphi} -\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi$.\\
 De plus, lorsqu'on prend une fonction de test dans $D^1$, on cherche à ce que l'équation soit vrai pour toutes les fonctions de $D^1$. Cela revient au même que de résoudre cette équation pour toutes les fonctions de la base de $D^1$. On utilise donc encore une fois les fonctions propres de l'opérateur rotationnel.\\
 On cherche donc $\forall k=1,\dots,M$ :
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\bm{g_i}\cdot\bm{g_k} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k}\\
-& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i\lambda_k\int_\Omega\mathbf{g_i}\cdot\bm{g_k}-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi_k = \int_\Omega\mathbf{f_a}\cdot\bm{g_k}\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g_i}\cdot\mathbf{g_k} &+ \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i\lambda_k\int_\Omega\mathbf{g_i}\cdot\mathbf{g_k}-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi_k = \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
 \end{align*}
-Comme la base $(\bm{g_i})$ est orthonormale, on a $\forall k=1,\dots,M$ :
+Comme la base $(\mathbf{g_i})$ est orthonormale, on a $\forall k=1,\dots,M$ :
 \begin{align*}
-\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k}\\
-& + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k} +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} = \int_\Omega\mathbf{f_a}\cdot\bm{g_k}+\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi_k\\
+\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_i\lambda_ic_j\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k}\\
+& + \sum_{i=1}^Mc_i\lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k} +  \sum_{i=1}^Mc_i\int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} = \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}+\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi_k\\
 \end{align*}
 En utilisant les notations suivantes :
 \begin{align*}
-R_{ijk} &= \lambda_i\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k} & R_{iak} &= \lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k}\\
-R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\bm{g_k}\\
+R_{ijk} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
+R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
 R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
 \end{align*}
 on doit résoudre le problème suivant $\forall k=1,\dots,M$ :
@@ -448,13 +451,13 @@ Les différentes étapes pour résoudre le problème sont donc :
 \item trouver $\psi^0$, pour cela, on peut :
 \begin{itemize}
 \item résoudre (\ref{fvpsi0}) pour avoir $\psi^0\in H^1$,
-\item résoudre (\ref{fvpsidiv}) pour avoir $\psi^0\in H(div)$,
+\item résoudre (\ref{fvpsidiv}) pour avoir $\psi^0\in H(\mathrm{div})$,
 \end{itemize}
-\item résoudre (\ref{fvbcurl}) pour trouver $\rot\bm{b}$,
-%\item résoudre un système à déterminer pour trouver $\bm{e}$,
-\item recomposer $\bm{a}$ grâce à $\psi^0$ et $\rot\bm{b}$,
+\item résoudre (\ref{fvbcurl}) pour trouver $\rot\mathbf{b}$,
+%\item résoudre un système à déterminer pour trouver $\mathbf{e}$,
+\item recomposer $\mathbf{a}$ grâce à $\psi^0$ et $\rot\mathbf{b}$,
 \item résoudre le problème spectral (\ref{fvc}) afin de trouver les coefficients $c_i$ pour $i=0\dots M$,
-\item reconstruire $\bm{u}=\sum c_i \bm{g_i}$ et $\bm{v}=\bm{a}+\bm{u}$,
+\item reconstruire $\mathbf{u}=\sum c_i \mathbf{g_i}$ et $\mathbf{v}=\mathbf{a}+\mathbf{u}$,
 \item calculer la pression en post-traitement avec (\ref{fvq}).
 \end{enumerate}
 
@@ -474,11 +477,11 @@ La figure \ref{org3} présente graphiquement les problèmes à résoudre.\\
 \node[draw,scale=\taille,fill=red!50] (sf) at (3,4) {Solutions finales} ;
 \node[scale=\taille,text width=10cm] (coblig) at (15,8) {Chemins obligatoires} ;
 \node[scale=\taille,text width=10cm] (cpurple) at (15,7.5) {{\color{purple} Chemins pour $\psi^0\in H^1$}} ;
-\node[scale=\taille,text width=10cm] (cgreen) at (15,7) {{\color{green} Chemins pour $\psi^0\in H(div)$}} ;
-\node[scale=\taille,text width=10cm] (cmagenta) at (15,6.5) {{\color{magenta} Chemins pour $\rot \mathbf{b} \in H(rot)$}} ;
+\node[scale=\taille,text width=10cm] (cgreen) at (15,7) {{\color{green} Chemins pour $\psi^0\in H(\mathrm{div})$}} ;
+\node[scale=\taille,text width=10cm] (cmagenta) at (15,6.5) {{\color{magenta} Chemins pour $\rot \mathbf{b} \in H(\mathrm{rot})$}} ;
 \node[scale=\taille,text width=10cm] (ccyan) at (15,6) {{\color{cyan} Chemins pour $\rot \mathbf{b} \in D^1$}} ;
 \node[scale=\taille,text width=10cm] (cred) at (15,5.5) {{\color{red} Chemins pour $\psi^1 \in H^1$}} ;
-\node[scale=\taille,text width=10cm] (corange) at (15,5) {{\color{orange} Chemins pour $\psi^1 \in H(div)$}} ;
+\node[scale=\taille,text width=10cm] (corange) at (15,5) {{\color{orange} Chemins pour $\psi^1 \in H(\mathrm{div})$}} ;
 
 \node[draw,scale=\taille,fill=green!50] (a0) at (0.75,2) {$\alpha_0$} ;
 \node[draw,scale=\taille,fill=gray!50,label={[xshift=-0.7cm](\ref{pbpsi0})}] (pbpsi0lp) at (-0.5,-2)
@@ -519,7 +522,9 @@ La figure \ref{org3} présente graphiquement les problèmes à résoudre.\\
 \mathbf{w}\cdot \mathbf{n} &= \alpha_1
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=blue!50] (gradpsi1) at (8.25,-6) {$\grad\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.5cm,yshift=-0.1cm](\ref{discbd1})}] (pbb) at (8,-7.5) 
+\node[draw,scale=\taille,fill=gray!50,
+%label={[xshift=-1.5cm,yshift=-0.1cm](\ref{discbd1})}
+] (pbb) at (8,-7.5) 
 {$
 d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 $} ;
@@ -640,7 +645,7 @@ $} ;
 %% \node[draw,scale=\taille,fill=yellow!50] (sim) at (12,2) {Sol. inter. dép. de la géométrie} ;
 %% \node[draw,scale=\taille,fill=red!50] (sf) at (12,1) {Solutions finales} ;
 %% \node[scale=\taille,text width=10cm] (ccyan) at (5,4) {{\color{cyan} Chemins pour $\psi^0\in H^1$}} ;
-%% \node[scale=\taille,text width=10cm] (cmagenta) at (5,3.5) {{\color{magenta} Chemins pour $\psi^0\in H(div)$}} ;
+%% \node[scale=\taille,text width=10cm] (cmagenta) at (5,3.5) {{\color{magenta} Chemins pour $\psi^0\in H(\mathrm{div})$}} ;
 
 %% \node[draw,scale=\taille,fill=green!50] (a0) at (0.75,2) {$\alpha_0$} ;
 %% \node[draw,scale=\taille,fill=gray!50,label={[xshift=-0.7cm](\ref{pbpsi0})}] (pbpsi0lp) at (-0.5,-2)
@@ -672,9 +677,9 @@ $} ;
 %% \node[draw,scale=\taille,fill=green!50] (a2) at (8,2) {$\alpha_2$} ;
 %% \node[draw,scale=\taille,fill=gray!50] (pbe) at (8,-2)
 %% {{\Huge ?}} ;
-%% \node[draw,scale=\taille,fill=blue!50] (e) at (8,-6.5) {$\bm{e}$} ;
+%% \node[draw,scale=\taille,fill=blue!50] (e) at (8,-6.5) {$\mathbf{e}$} ;
 
-%% \node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.3cm](\ref{a})}] (pba) at (3,-9) {$\mathbf{a} = \grad\psi^0 + \rot \mathbf{b} + \bm{e}$} ;
+%% \node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.3cm](\ref{a})}] (pba) at (3,-9) {$\mathbf{a} = \grad\psi^0 + \rot \mathbf{b} + \mathbf{e}$} ;
 %% \node[draw,scale=\taillem,fill=blue!50] (a) at (3,-12) {$\mathbf{a}$} ;
 
 %% \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.0cm](\ref{pbeigen})}] (pbeigen) at (11.5,-2)

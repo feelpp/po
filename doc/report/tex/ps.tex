@@ -3,16 +3,20 @@ On peut maintenant résoudre le problème \ref{fvc} :
 \[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} + \sum_{i=1}^Mc_iR_{raij} = R_{fk}+R_{pk} \]
 où
 \begin{align*}
-R_{ijk} &= \lambda_i\int_\Omega(\bm{g_i}\times \bm{g_j})\cdot\bm{g_k} & R_{iak} &= \lambda_i\int_\Omega(\bm{g_i}\times \mathbf{a})\cdot\bm{g_k}\\
-R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\bm{g_k} & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\bm{g_k}\\
+R_{ijk} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
+R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
 R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
 \end{align*}
-Cela nous permet de connaître les coefficients $c_i$ dans la décomposition $\bm{u}=\sum_{i=1}^M c_i\bm{g_i}$.\\
+Cela nous permet de connaître les coefficients $c_i$ dans la décomposition $\mathbf{u}=\sum_{i=1}^M c_i\mathbf{g_i}$.\\
 
-%% Dans l'état actuel, comme nous n'avons pas encore déterminé comment relever $\alpha_2$, on veut faire porter sa contribution sur $\bm{f}$ et donc dans le terme $R_{fk}$. La conséquence est que $\bm{a}$ ne relève pas la condition $\rott\bm{v}\cdot\bm{n}=\alpha_2$, ainsi $\bm{a}=\grad\psi^0+\rot\bm{b}$.\\
+%% Dans l'état actuel, comme nous n'avons pas encore déterminé comment relever $\alpha_2$, on veut faire porter sa contribution sur $\mathbf{f}$ et donc dans le terme $R_{fk}$. La conséquence est que $\mathbf{a}$ ne relève pas la condition $\rott\mathbf{v}\cdot\mathbf{n}=\alpha_2$, ainsi $\mathbf{a}=\grad\psi^0+\rot\mathbf{b}$.\\
 
-De plus, dans le cylindre, comme $\alpha_1=0$, on a $\bm{a}=\grad\psi^0$ et donc comme le rotationnel d'un gradient est nul, $\rot \bm{a} = 0$. Ce qui amène le terme $R_{raij}$ à être nul. On a donc plus que :
+De plus, dans le cylindre, comme $\alpha_1=0$, on a $\mathbf{a}=\grad\psi^0$ et donc comme le rotationnel d'un gradient est nul, $\rot \mathbf{a} = 0$. Ce qui amène le terme $R_{raij}$ à être nul. On a donc plus que :
 \[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} = R_{fk}+R_{pk} \]
+
+
+
+\todo[inline]{pression comme second membre, $\alpha_2$ dépend de $\delta p$}
 
 \section{Navier-Stokes}
 \label{PSNewton}
@@ -58,8 +62,8 @@ Par exemple, si on a un vecteur de la librairie standard contenant les différen
 \lstinputlisting[linerange=lambda]{../../src/spectralproblem.cpp}
 où $M$ est le nombre de valeurs propres que l'on a précédemment calculées. On remarque aussi que l'on peut accéder aux éléments du vecteur avec l'opérateur \texttt{()}.\\
 
-Chaque somme de l'équation \ref{fvc} peut être considérée comme un élément de la librairie Eigen. Ainsi $R_{iak}=\lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément d'une matrice, celui de la $i$\ieme\ ligne et $k$\ieme\ colonne.\\
-$R_{fk} = \int \bm{f_a}\cdot\bm{g_k}$ est un vecteur et $R_{ijk} = \lambda_i\int (\bm{g_i}\times\bm{a})\cdot\bm{g_k}$ est un élément en 3 dimensions, donc un vecteur de matrices. On a ainsi les déclarations suivantes :\\
+Chaque somme de l'équation \ref{fvc} peut être considérée comme un élément de la librairie Eigen. Ainsi $R_{iak}=\lambda_i\int (\mathbf{g_i}\times\mathbf{a})\cdot\mathbf{g_k}$ est un élément d'une matrice, celui de la $i$\ieme\ ligne et $k$\ieme\ colonne.\\
+$R_{fk} = \int \mathbf{f_a}\cdot\mathbf{g_k}$ est un vecteur et $R_{ijk} = \lambda_i\int (\mathbf{g_i}\times\mathbf{a})\cdot\mathbf{g_k}$ est un élément en 3 dimensions, donc un vecteur de matrices. On a ainsi les déclarations suivantes :\\
 \lstinputlisting[linerange=ri]{../../src/spectralproblem.hpp}
 
 On initialise d'abord la mémoire nécessaire pour contenir le vecteur, puis on initialise chaque élément de la matrice $R_{iak}$ à l'aide de deux boucles imbriquées :\\

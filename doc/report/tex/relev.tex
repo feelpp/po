@@ -1,13 +1,13 @@
 \chapter{Relèvement}
-On implémente ici le relèvement introduit dans le chapitre \ref{relev}, $\bm{a}=\grad\psi^0+\rot\bm{b}$.\\
-Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc comme il ne reste plus que la condition $\bm{a}\cdot\bm{n}=\alpha_0$ à relever, on a \[ \mathbf{a}=\grad\psi^0 \]
+On implémente ici le relèvement introduit dans le chapitre \ref{relev}, $\mathbf{a}=\grad\psi^0+\rot\mathbf{b}$.\\
+Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc comme il ne reste plus que la condition $\mathbf{a}\cdot\mathbf{n}=\alpha_0$ à relever, on a \[ \mathbf{a}=\grad\psi^0 \]
 
-\section{Gradient dans $\HH^1$}
+\section{Gradient dans $H^1$}
 \label{impGradh1}
 \subsection{Implémentation}
-Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $\HH^1$, alors en ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$ on doit utiliser des multiplicateurs de Lagrange. On utilise donc la formulation variationnelle suivante où l'on cherche $(\psi^0,\lambda)\in \HH^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
+Si l'on veut utiliser le problème (\ref{pbpsi0}) dans $H^1$, alors en ajouter une contrainte sur $\psi^0$, par exemple $\int \psi^0 = 0$ on doit utiliser des multiplicateurs de Lagrange. On utilise donc la formulation variationnelle suivante où l'on cherche $(\psi^0,\lambda)\in H^1\times\R$ et où $(\varphi,\nu)$ est la fonction de test :
 \[ \int_\Omega\grad \psi^0\grad\varphi + \int_\Omega \psi^0\nu + \int_\Omega \lambda\varphi = \int_{\partial\Omega} \alpha_0\varphi \]
-On va donc créé un espace de fonction produit correspondant à $\HH^1\times\R$.
+On va donc créé un espace de fonction produit correspondant à $H^1\times\R$.
 
 \lstinputlisting[linerange={space}]{../../src/psi0.hpp}
 
@@ -26,12 +26,12 @@ On veut que ce qui rentre du cylindre par l'entrée, correspondant à la partie 
 \lstinputlisting[linerange={rhs}]{../../src/psi0.cpp}
 
 Une fois le problème résolut, on veut projeter le gradient de $\psi^0$ sur $\LL^2$. Pour cela on résout le problème simple $u=\grad\psi^0$ qui mène à la forme variationnelle suivante :
-\[ \int_\Omega \bm{u}\cdot\bm{v} = \int_\Omega \grad\psi^0\cdot\bm{v} \]
+\[ \int_\Omega \mathbf{u}\cdot\mathbf{v} = \int_\Omega \grad\psi^0\cdot\mathbf{v} \]
 
 \lstinputlisting[linerange={gradpsi0}]{../../src/psi0.cpp}
 
 \subsection{Résultats}
-Dans les figure \ref{az},\ref{aIn},\ref{aOut}, on peut observer $\bm{a}$ dans le cylindre. Ici, $\alpha_1=0$ et 
+Dans les figure \ref{az},\ref{aIn},\ref{aOut}, on peut observer $\mathbf{a}$ dans le cylindre. Ici, $\alpha_1=0$ et 
 \[ \alpha_0(x,y)= \begin{cases} -2\times v\times\left(1-\frac{x^2+y^2}{r^2}\right) &\mbox{sur } \Gamma_1\\
 2\times v\times\left(1-\frac{x^2+y^2}{r^2}\right)&\mbox{sur } \Gamma_2\\
 0 &\mbox{sur } \Gamma_3 \end{cases} \]
@@ -39,7 +39,7 @@ Dans les figure \ref{az},\ref{aIn},\ref{aOut}, on peut observer $\bm{a}$ dans le
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.3]{az}
-\caption{composante $z$ de $\bm{a}$}
+\caption{composante $z$ de $\mathbf{a}$}
 \label{az}
 \end{figure}
 \begin{figure}[H]
@@ -55,7 +55,7 @@ Dans les figure \ref{az},\ref{aIn},\ref{aOut}, on peut observer $\bm{a}$ dans le
 \label{aOut}
 \end{figure}
 
-%\section{Gradient dans $\HH(div)$}
+%\section{Gradient dans $\HH(\mathrm{div})$}
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
