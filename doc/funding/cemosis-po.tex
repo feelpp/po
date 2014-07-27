@@ -59,19 +59,19 @@ logiciel Freefem++, mais le nombre de modes à résoudre et la taille des matric
 demandent une décomposition et une résolution sur plusieurs processeurs avec des
 algorithmes itératifs disponibles uniquement dans Feel++.
 
-Feel++\footnote{\url{http://www.feelpp.org}} (Finite Element Embedded Library in C++,
-\cite{prud2012feel++,feelpp098:10046} ) est une librairie C++,
-dont le responsable est C. Prud'homme, permettant la résolution d'une très large
-gamme d'équations aux dérivées partielles par des méthodes de Galerkin continue
-et discontinue en 1D, 2D et 3D. Elle permet d'écrire via un language permettant
-de manipuler les formulations variationnelles ainsi que les objets afférents
-(mailage, espaces de functions, matrices, vecteurs...) de manière très proche
-des mathématiques. Cette librairie offre un parallélisme transparent et a déjà
-été utilisé pour des simulations sur plusieurs miliers de coeurs de calcul avec
-les bonnes propriétés de scalabilité. Enfin Feel++ s'appuie sur PETSc pour les
-structures matrices/vecteurs, solveurs linéaires et non-linéaires ainsi que
-préconditionneurs et SLEPc pour les solveurs de problèmes aux valeurs propres
-standards et généralisés (qui s'appuie sur PETSc).
+Feel++\footnote{\url{http://www.feelpp.org}, \url{https://github.com/feelpp/feelpp}} (Finite Element Embedded Library in
+C++, \cite{prud2012feel++,feelpp098:10046} ) est une librairie C++ sous licence
+libre (LGPL), dont le responsable est C. Prud'homme, permettant la résolution
+d'une très large gamme d'équations aux dérivées partielles par des méthodes de
+Galerkin continue et discontinue en 1D, 2D et 3D. Elle permet d'écrire via un
+language permettant de manipuler les formulations variationnelles ainsi que les
+objets afférents (mailage, espaces de functions, matrices, vecteurs...) de
+manière très proche des mathématiques. Cette librairie offre un parallélisme
+transparent et a déjà été utilisé pour des simulations sur plusieurs miliers de
+coeurs de calcul avec les bonnes propriétés de scalabilité. Enfin Feel++
+s'appuie sur PETSc pour les structures matrices/vecteurs, solveurs linéaires et
+non-linéaires ainsi que préconditionneurs et SLEPc pour les solveurs de
+problèmes aux valeurs propres standards et généralisés (qui s'appuie sur PETSc).
 
 Concernant le dernier point, au coeur de la nouvelle stratégie un grand nombre
 de modes propres sont à calculer pour le problème de Stokes suivant: soit
@@ -148,6 +148,11 @@ ingénieurs de recherche y sont actuellement dédiés et travaillents sur des
 projets collaboratifs avec d'autres disciplines (bio-médical et ingénierie) et
 avec des entreprises.
 
+Du point de vue logiciel, le principe général qui guide la collaboration est de
+contribuer aux changements génériques nécessaires (calcul haute performance,
+maillage, solveurs, ...) du noyau de calcul Feel++ sous licence libre. Par
+contre les développements spécifiques pour le projet resteront privés.
+
 \subsection{Ressources existentes}
 
 Pour ce projet, Plastic Omnium propose en terme de ressource de dédier 30\%
@@ -172,10 +177,10 @@ Dans le cadre du projet, nous demandons la subvention suivante:
 \begin{itemize}
 \item Personnel: embauche pour un an d'un ingénieur, 37123 Euros
 \item Missions : 5000 Euros
-\item Fonctionnement  : 5000 Euros
+\item Fonctionnement  : 4800 Euros
 \item Sous traitance en valorisation et propriété intellectuelle : 3000 Euros.
 \end{itemize}
-Soit un total de \textbf{50123} Euros.
+Soit un total de \textbf{49923} Euros.
 
 Concernant le poste d'ingénieur, nous aimerions recruter Romain Hild qui
 obtiendra son master de mathématiques appliquées (Calcul Scientifique et
