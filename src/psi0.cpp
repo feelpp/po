@@ -15,13 +15,16 @@
 
 #include "psi0.hpp"
 
+
 Psi0::Psi0(mesh_ptrtype mesh, std::string g_s):super()
 {
     this->mesh = mesh;
     this->g_s = g_s;
+
     Xh = space_type::New( mesh );
     gradu = Xh->element();
 }
+
 
 void
 Psi0::run()
@@ -31,6 +34,7 @@ Psi0::run()
         std::cout << g_s << std::endl;
     }
 
+
     // [option]
     auto vars = Symbols{ "x", "y", "radius", "speed" };
     auto g_e = parse( this->g_s, vars );
@@ -39,6 +43,7 @@ Psi0::run()
             { "radius", doption( _name="radius" ) },
                 { "speed", doption( _name="speed" ) } } );
     // [option]
+
 
     auto Vh = mlSpace_type::New( mesh );
     auto U = Vh->element();
@@ -67,12 +72,14 @@ Psi0::run()
     }
 
 
-
-    // [bilinear]
+    // [bilinearA]
     auto a = form2( _trial=Vh, _test=Vh );
     a = integrate( _range=elements(mesh),
-                   _expr=inner(gradt(u),grad(v)) + id( v )*idt( lambda ) + idt( u )*id( nu ) );
-    // [bilinear]
+                   _expr=inner(gradt(u),grad(v))
+                   // [bilinearA]
+                   // [bilinearB]
+                   + id( v )*idt( lambda ) + idt( u )*id( nu ) );
+    // [bilinearB]
 
     // [rhs]
     auto l = form1( _test=Vh );
@@ -86,6 +93,7 @@ Psi0::run()
 
     a.solve( _name="psi0", _rhs=l, _solution=U );
 
+
     // [gradpsi0]
     auto b = form2( _trial=Xh, _test=Xh );
     b = integrate( _range=elements(mesh),
@@ -94,6 +102,7 @@ Psi0::run()
     k = integrate( _range=elements(mesh),
                    _expr=inner(trans(gradv( U.template element<0>() )),id(gradu)) );
     // [gradpsi0]
+
     // gradu is the L2 projection of grad(psi0) over Xh
     b.solve( _name="gradpsi0", _rhs=k, _solution=gradu );
 }

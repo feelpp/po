@@ -11,29 +11,37 @@
 #include <feel/feelcore/application.hpp>
 #include <feel/feeldiscr/functionspace.hpp>
 
+
 using namespace Feel;
 using namespace Feel::vf;
+
 
 class Psi0 : public Application
 {
     typedef Application super;
+
+    static const uint16_type Order = 3;
+
  public:
     typedef Mesh<Simplex<3> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
     // [space]
-    typedef FunctionSpace<mesh_type, bases<Lagrange<3, Scalar>, Lagrange<0, Scalar> > > mlSpace_type;
+    typedef FunctionSpace<mesh_type, bases<Lagrange<Order, Scalar>, Lagrange<0, Scalar> > > mlSpace_type;
     // [space]
 
-    typedef FunctionSpace<mesh_type, bases<Lagrange<3, Vectorial> > > space_type;
+    typedef FunctionSpace<mesh_type, bases<Lagrange<Order, Vectorial> > > space_type;
     typedef boost::shared_ptr<space_type> space_ptrtype;
     typedef space_type::element_type element_type;
     typedef boost::shared_ptr<element_type> element_ptrtype;
 
+
     element_type gradu;
+
 
     Psi0(mesh_ptrtype, std::string);
     void run();
+
 
  private:
     mesh_ptrtype mesh;

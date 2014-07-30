@@ -1,4 +1,5 @@
 \chapter{Modes propres}
+\todo[inline]{discrétisation, matrice}
 On peut maintenant implémenter le problème aux valeurs propres du chapitre \ref{eigen} afin de trouver les couples $(\lambda_i,\mathbf{g_i})$ tel que $\rot\mathbf{g_i}=\lambda_i\mathbf{g_i}$ pour $i=1,\dots,M$. Les fonctions propres seront la base sur laquelle on va projeter $\mathbf{u}$ pour la décomposition de Galerkin \[ \mathbf{u}=\sum_{i=1}^M c_i\mathbf{g_i} \]
 Comme les fonctions propres vivent dans $D^1$, un espace à divergence nulle, l'opérateur rotationnel et le laplacien sont identiques. Cependant, comme les fonctions tests implémentées dans Feel++ ne sont pas à divergence nulle, si on utilise le laplacien, il est nécessaire de rajouter une étape de tri pour avoir des fonctions à divergence nulle. Comme cela est très coûteux en temps de calcul, il vaut mieux utiliser directement l'opérateur rotationnel.
 
@@ -57,10 +58,9 @@ Trouver $((\mathbf{g},p),\lambda)\in H(\mathrm{rot}) \times H^1 \times \R$ tel q
 \end{equation}
 avec $\gamma$ une très grande valeur.\\
 
-Ainsi, la solution se trouvant dans $H(\mathrm{rot})$, la meilleure méthode serait d'utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec. Cela permettrait d'avoir $\rot\mathbf{g_i}\in L^2(\Omega)$. On gagnerait ainsi en régularité sur les fonctions propres.
+Ainsi, la solution se trouvant dans $H(\mathrm{rot})$, la meilleure méthode serait d'utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec. Cela permettrait d'avoir $\rot\mathbf{g_i}\in [L^2(\Omega)]^3$. On gagnerait ainsi en régularité sur les fonctions propres.
 
 \subsection{Implémentation}
-
 Cependant, les éléments de Nedelec n'étant pas prêt dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\mathbf{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
 
 Ces erreurs mènent à une divergence non nulle, on utilise donc un terme de pénalisation en plus afin de forcer la divergence. On résout donc le système suivant :
@@ -116,9 +116,8 @@ La figure \ref{resultats} montre ces modes.
 	\caption{Modes propres}
 	\label{resultats}
 \end{figure}
-\todo[inline]{explication modes corrects :\\
-lien avec laplacien, les erreurs proviennent de l'implémentation de l'opérateur curl}
-Cependant, dû au manque de régularité de $\rot\mathbf{g_i}$, le calcul du rotationnel induit des erreurs. Ainsi si on calcul l'erreur entre le rotationnel du champ et le champ multiplier par sa valeur propre, ou même lors du calcul de la condition $\rot\mathbf{g_i}\cdot\mathbf{n}$, on n'obtient pas les résultats escomptés :
+
+Cependant, dû au manque de puissance de ma machine de travail, je ne peux travailler sur un nombre élevé de maille, ce qui induit un manque de précision dans les calculs, et donc une faible régularité des fonctions calculées. L'opérateur rotationnel induit donc des erreurs. Ainsi, si on calcul l'erreur entre le rotationnel du champ et le champ multiplier par sa valeur propre, ou même lors du calcul de la condition $\rot\mathbf{g_i}\cdot\mathbf{n}$, nous n'obtenons pas les résultats escomptés :
 \begin{center}
 \begin{tabular}{ >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} | >{$}c<{$} }
 \no & \lambda^2 & \lambda & \div\star & \star\cdot\mathbf{n} & \rot\star\cdot\mathbf{n} & ||\rot\star-\star|| & ||\star|| & ||\rot\star|| \\ \hline

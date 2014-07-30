@@ -3,8 +3,7 @@
 
 Une fois les différents problèmes correctement posés, il s'agit d'implémenter un code pour les résoudre. Ceci est fait avec la bibliothèque Feel++, qui permet de manipuler en C++ des objets permettant la résolution d'équations aux dérivées partielles par des méthodes de Galerkin continues et discontinues (voir \ref{eltfinis}). Ces objets peuvent correspondre au maillage, aux formes variationnelles ainsi que plusieurs solveurs linéaires et pré-conditionneurs grâce à PETSc \cite{petsc-web-page,petsc-user-ref,petsc-efficient} et des solveurs de problèmes aux valeurs propres grâce à SLEPc \cite{Hernandez:2005:SSF}.\\
 
-D'abord, il faut choisir une géométrie sur laquelle travaillé. On prend donc un cylindre de diamètre 1 et de longueur 5, orienté dans l'axe $z$. La géométrie est notée $\Omega$ et le bord de la géométrie est noté $\Gamma$ ou $\partial\Omega$. $\Gamma$ se décompose en trois partie, l'entrée $\Gamma_1$,  la sortie $\Gamma_2$ et le tour noté $\Gamma_3$, comme montré dans la figure \ref{figMesh}\\
-
+D'abord, il faut choisir une géométrie sur laquelle travaillé. On prend donc un cylindre de diamètre 1 et de longueur 5, orienté dans l'axe $z$. La géométrie est notée $\Omega$ et le bord de la géométrie est noté $\Gamma$ ou $\partial\Omega$. $\Gamma$ se décompose en trois partie, l'entrée $\Gamma_1$,  la sortie $\Gamma_2$ et le tour noté $\Gamma_3$, comme montré dans la figure \ref{figMesh}, sa conception est détaillé dans l'annexe \ref{mesh}.\\
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -40,8 +39,19 @@ D'abord, il faut choisir une géométrie sur laquelle travaillé. On prend donc 
 \caption{Géométrie utilisée}
 \label{figMesh}
 \end{figure}
-
-Sa conception est détaillé dans l'annexe \ref{mesh}.
+En notant le rayon du cylindre $R$, le vecteur normal unitaire $\mathbf{n}$ est égal à :
+\[ \mathbf{n}\big\rvert_{\Gamma_1}=\begin{pmatrix}0\\0\\-1\end{pmatrix},\quad \mathbf{n}\big\rvert_{\Gamma_2}=\begin{pmatrix}0\\0\\1\end{pmatrix},\quad \mathbf{n}\big\rvert_{\Gamma_3}=\begin{pmatrix}
+x/R\\y/R\\0\end{pmatrix} \]
+On veut simuler un écoulement de Poiseuille dans le cylindre. On a donc que $\mathbf{v}$ est unidirectionnel en $z$ et que sur $\Gamma_1$ et $\Gamma_2$, c'est une parabole de maximum $2v$. Comme les composantes en $x$ et en $y$ de $\mathbf{v}$ sont nulles, $\mathbf{v}\cdot\mathbf{n}\big\rvert_{\Gamma_3}=0$. On prend donc :
+\begin{equation}\label{alpha0}
+ \alpha_0(x,y)= \begin{cases} -2v\left(1-\frac{x^2+y^2}{R^2}\right) &\mbox{sur } \Gamma_1\\
+2v\left(1-\frac{x^2+y^2}{R^2}\right)&\mbox{sur } \Gamma_2\\
+0 &\mbox{sur } \Gamma_3 \end{cases} \end{equation}
+Si on prend $\mathbf{v}\restr=(0,0,\alpha_0)$, alors on a 
+\[ \rot\mathbf{v}\restr = \begin{pmatrix}\frac{-4v}{R^2}y\\\frac{4v}{R^2}x\\0\end{pmatrix}\mbox{ et } \alpha_1=\rot\mathbf{v}\cdot\mathbf{n}\restr = 0 \]
+Et
+\[ \rott\mathbf{v}\restr = \begin{pmatrix}0\\0\\8v/R^2\end{pmatrix}\mbox{ et } \alpha_2=\rott\mathbf{v}\cdot\mathbf{n}\restr = \begin{cases} -8v/R^2 &\mbox{sur } \Gamma_1\\
+8v/R^2 &\mbox{sur } \Gamma_2\\ 0 &\mbox{sur } \Gamma_3 \end{cases} \]
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
