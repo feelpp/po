@@ -20,7 +20,7 @@ class Psi0 : public Application
 {
     typedef Application super;
 
-    static const uint16_type Order = 3;
+    static const uint16_type Order = 2;
 
  public:
     typedef Mesh<Simplex<3> > mesh_type;

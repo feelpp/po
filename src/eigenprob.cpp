@@ -31,10 +31,12 @@ EigenProb::EigenProb( mesh_ptrtype mesh ):super()
 
     this->mesh = mesh;
 
+
     // H1^3
     this->Vh = space_vtype::New( mesh );
     // H1
     this->Sh = space_stype::New( mesh );
+
 
     this->g = std::vector<element_vtype>(nev, Vh->element() );
     this->psi = std::vector<element_stype>(nev, Sh->element() );
@@ -44,7 +46,6 @@ EigenProb::EigenProb( mesh_ptrtype mesh ):super()
     this->g0 = std::vector<element_vtype>(nev, Vh->element() );
     this->gradu = std::vector<element_vtype>(nev, Vh->element() );
     this->modebis = std::vector<element_vtype>(nev, Vh->element() );
-
 }
 
 
@@ -58,6 +59,7 @@ EigenProb::run()
     }
     else
         load_eigens();
+
 
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- End Eigen -----" << std::endl;
@@ -77,13 +79,16 @@ EigenProb::compute_eigens()
         std::cout << "number of column vector = " << ioption(_name="solvereigen.ncv") <<std::endl;
     }
 
+
     boost::mpi::timer t;
+
 
     // [options]
     double alpha = doption(_name="parameters.alpha");
     double beta = doption(_name="parameters.beta");
     double gamma = doption(_name="parameters.gamma");
     // [options]
+
 
     // H1^3xH1
     auto Xh = space_ptype::New( mesh );
@@ -122,6 +127,7 @@ EigenProb::compute_eigens()
 
     // g[i] = mode.second.element<0>();
 
+
     // LOG(INFO) << "----- Vh -----\n";
     // LOG(INFO) << "[dof] number of dof: " << Vh->nDof() << "\n";
     // LOG(INFO) << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
@@ -141,6 +147,7 @@ EigenProb::compute_eigens()
     // auto a = form2( _test=Vh, _trial=Vh);
     // auto b = form2( _test=Vh, _trial=Vh);
 
+
     if( boption( "useCurl" ) )
         // [acurl]
         a = integrate( elements( mesh ),
@@ -157,11 +164,13 @@ EigenProb::compute_eigens()
         a += integrate( elements(mesh),
                         divt(u)*id(q) + div(v)*idt(p) );
         // [presdiv]
+
     if( boption( "usePresGrad" ) )
         // [presgrad]
         a += integrate( elements(mesh),
                         grad(q)*idt(u) + gradt(p)*id(v) );
         // [presgrad]
+
 
     if( boption("useDiric" ) )
         a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u, _expr=zero<3>() );
@@ -181,22 +190,28 @@ EigenProb::compute_eigens()
         a += integrate( boundaryfaces(mesh), gamma*(trans(idt(u))*N())*(trans(id(v))*N()) );
         // [bcn]
 
+
     // [rhsB]
     b = integrate( elements(mesh), inner(idt(u),id(v)) );
     // [rhsB]
+
 
     LOG(INFO) << "elt = " << t.elapsed() << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "elt = " << t.elapsed() << " sec" << std::endl;
 
 
+    Environment::logMemoryUsage("memory usage before:");
     // [eigen] resolution of the eigen problem
     auto modes = veigs( _formA=a, _formB=b );
     // [eigen]
+    Environment::logMemoryUsage("memory usage after:");
 
-    LOG(INFO) << "eigen = " << t.elapsed() << " sec" << std::endl;
+
+    auto endEigen = t.elapsed();
+    LOG(INFO) << "eigen = " << endEigen << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "eigen = " << t.elapsed() << " sec" << std::endl;
+        std::cout << "eigen = " << endEigen << " sec" << std::endl;
 
 
     auto cu = Vh->element();
@@ -222,8 +237,13 @@ EigenProb::compute_eigens()
 
     for( auto const& mode : modes )
     {
+        // bcu = integrate(elements(mesh),
+        //                 inner(idv(mode.second.element<0>()), id(cu)) );
+        // acu.solve(_rhs=bcu, _solution=g[i], _name="gi0" );
+
         g[i] = mode.second.element<0>();
         lambda[i] = mode.first;
+
 
         // [store] storing g and lambda
         std::string path = (boost::format("mode-%1%")%i).str();
@@ -231,6 +251,7 @@ EigenProb::compute_eigens()
         if ( Environment::worldComm().isMasterRank() )
             s << lambda[i] << std::endl;
         // [store]
+
 
         if( boption(_name="needDebug")){
 
@@ -267,23 +288,26 @@ EigenProb::compute_eigens()
         }
 
 
-        gradu[i] = cu;
-        g0[i] = ccu;
+        // gradu[i] = cu;
+        // g0[i] = ccu;
+
 
         if ( Environment::worldComm().isMasterRank() && boption("needDebug") )
             std::cout << std::endl;
+
 
         i++;
         if(i>=nev)
             break;
     }
 
+
     if( boption( "needDebug" ) ){
         LOG(INFO) << "debug = " << t.elapsed() << " sec" << std::endl;
-        LOG(INFO) << "debug/mode = " << t.elapsed()/nev << " sec" << std::endl;
+        LOG(INFO) << "debug/mode = " << (t.elapsed()-endEigen)/nev << " sec" << std::endl;
         if ( Environment::worldComm().isMasterRank() ){
             std::cout << "debug = " << t.elapsed() << " sec" << std::endl;
-            std::cout << "debug/mode = " << t.elapsed()/nev << " sec" << std::endl;
+            std::cout << "debug/mode = " << (t.elapsed()-endEigen)/nev << " sec" << std::endl;
         }
     }
 
@@ -411,12 +435,14 @@ EigenProb::load_eigens()
         std::cout << "number of eigenvalues = " << nev <<std::endl;
     }
 
+
     std::fstream s;
     s.open ("lambda", std::fstream::in);
     if( !s.is_open() ){
         std::cout << "Eigen values not found\ntry to launch with --computeEigen=true" << std::endl;
         exit(0);
     }
+
 
     int i;
     for( i=0; i<nev && s.good(); i++ ){
@@ -428,6 +454,7 @@ EigenProb::load_eigens()
 
         s >> lambda[i];
     }
+
 
     s.close();
 

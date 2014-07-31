@@ -11,31 +11,36 @@
 #include <feel/feeldiscr/functionspace.hpp>
 #include <Eigen/Dense>
 
+
 using namespace Feel;
 using namespace Feel::vf;
 using namespace Eigen;
+
 
 class SpectralProblem : public Application
 {
     typedef Application super;
 
+    static const uint16_type Order = 2;
+
     typedef Simplex<3> convex_type;
     typedef Mesh<convex_type> mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-    typedef bases<Lagrange<3, Vectorial> > basis_vtype;
+    typedef bases<Lagrange<Order, Vectorial> > basis_vtype;
     typedef FunctionSpace<mesh_type, basis_vtype > space_vtype;
     typedef boost::shared_ptr<space_vtype> space_ptrvtype;
     typedef space_vtype::element_type element_vtype;
 
-    //typedef bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > basis_stype; // ML
-    typedef bases<Lagrange<3, Scalar> > basis_stype;
+    //typedef bases<Lagrange<Order, Scalar>, Lagrange<0, Scalar> > basis_stype; // ML
+    typedef bases<Lagrange<Order, Scalar> > basis_stype;
     typedef FunctionSpace<mesh_type, basis_stype > space_stype;
     typedef boost::shared_ptr<space_stype> space_ptrstype;
     typedef space_stype::element_type element_stype;
 
     typedef std::vector<element_vtype> vector_vtype;
     typedef std::vector<element_stype> vector_stype;
+
 
     mesh_ptrtype mesh;
     space_ptrvtype Vh;
@@ -57,8 +62,8 @@ class SpectralProblem : public Application
     MatrixXd Riak;
     Matrix<MatrixXd, Dynamic, 1 > Rijk;
     VectorXd Rfk;
-    // [ri]
     VectorXd Rpk;
+    // [ri]
 
     void initRiak();
     void initRijk();
@@ -69,6 +74,7 @@ class SpectralProblem : public Application
     SpectralProblem( mesh_ptrtype );
     void init( vector_vtype, vector_stype, std::vector<double>, element_vtype );
     void run();
+
 
     VectorXd c;
     element_vtype u;

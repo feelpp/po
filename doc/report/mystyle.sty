@@ -2,26 +2,17 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[francais]{babel}
+\usepackage{enumitem}
 \usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{amsthm}
-\usepackage{amsfonts,amssymb}
-\usepackage{verbatim}
-\usepackage{listings}
-\usepackage{color}
-\usepackage{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{verbatim,listings}
 \usepackage{dsfont}
-\usepackage{fancyhdr}
-\usepackage{lastpage}
-\usepackage{here}
-\usepackage{caption}
-\usepackage{subfig}
+\usepackage{color,geometry,fancyhdr,lastpage,fancyvrb}
+\usepackage{here,caption,subfig}
 \usepackage[colorlinks=true,urlcolor=blue]{hyperref}
-\usepackage{fancyvrb}
 \usepackage{tikz}
 \usepackage{bm}
-\usepackage{multirow}
-\usepackage{array}
+\usepackage{multirow,array}
 \usepackage{todonotes}
 
 \newtheorem{mydef}{Définition}
@@ -46,7 +37,9 @@
 \newcommand{\taillem}{0.9}
 \newcommand{\tailleg}{1.1}
 
-%listins
+\graphicspath{{Images/}}
+
+% listings
 \lstset{
 language=C++,
 frame=single,
@@ -61,17 +54,12 @@ rangeprefix={\/\/\ [},
 rangesuffix={]},
 includerangemarker=false}
 
-%en tete et pied de page
+% en tete et pied de page
 \geometry{hmargin=2.5cm,vmargin=2.5cm}
-\fvset{tabsize=4}
 \pagestyle{fancy}
-\renewcommand\headrulewidth{1pt}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{}
 \renewcommand\footrulewidth{1pt}
-\lhead{\leftmark}
-\rhead{\rightmark}
 \lfoot{Romain Hild\\Stage}
 \cfoot{\thepage/\pageref{LastPage}}
 \rfoot{Christophe Prud'homme\\Philippe Gilotte \& Benjamin Surowiec}
-\setlength{\headheight}{15pt}
-
-\graphicspath{{Images/}}

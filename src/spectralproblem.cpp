@@ -16,7 +16,9 @@
 
 #include "spectralproblem.hpp"
 
+
 using namespace Eigen;
+
 
 SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
 {
@@ -45,6 +47,7 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
         std::cout << "----- alpha2 = " << alpha2 << " -----" << std::endl;
     }
 
+
     // [lambda]
     lambda = VectorXd(M);
 
@@ -59,7 +62,7 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
     initRiak();
     // initRijk();
     initRfk();
-    // initRpk();
+    initRpk();
 
     c = VectorXd::Ones(M);
 }
@@ -123,21 +126,25 @@ void SpectralProblem::initRpk()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Rpk -----" << std::endl;
 
-    auto vars = Symbols{ "radius", "speed" };
-    auto a2_e = parse( this->alpha2, vars );
-    auto a2 = expr( a2_e, vars );
-    a2.setParameterValues( {
-            { "speed", doption( _name="speed" ) },
-                { "radius", doption( _name="radius" ) } } );
+    // auto vars = Symbols{ "radius", "speed" };
+    // auto a2_e = parse( this->alpha2, vars );
+    // auto a2 = expr( a2_e, vars );
+    // a2.setParameterValues( {
+    //         { "speed", doption( _name="speed" ) },
+    //             { "radius", doption( _name="radius" ) } } );
 
+    // 1e4 sur 1, 0 sur 2 decroit sur 3
     // [rpk]
+    auto a2 = expr( alpha2 );
     Rpk = VectorXd(M);
     for(int k = 0; k < M; k++){
-        Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
+        Rpk(k) = integrate( _range=boundaryfaces(mesh),
                             _expr=a2*idv(psi[k]) ).evaluate()(0,0);
-        Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
-                             _expr=a2*idv(psi[k]) ).evaluate()(0,0);
         // [rpk]
+        // Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
+        //                     _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+        // Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
+        //                      _expr=a2*idv(psi[k]) ).evaluate()(0,0);
         if ( Environment::worldComm().isMasterRank() )
             std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
     }
@@ -148,6 +155,7 @@ void SpectralProblem::run()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Start Spectral Problem -----" << std::endl;
 
+
     // [StokesA]
     MatrixXd A = MatrixXd(M,M);
     A = Riak;
@@ -156,7 +164,7 @@ void SpectralProblem::run()
 
     // [StokesB]
     VectorXd b = VectorXd(M);
-    b = Rfk;
+    b = Rfk + Rpk;
     // [StokesB]
 
     // [StokesSolve]
@@ -173,6 +181,7 @@ void SpectralProblem::run()
     }
     u += vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a) );
 
+
     // // [NSInit]
     // VectorXd dc = VectorXd::Matrix(M);
     // double tol = 1.e-6;
@@ -181,10 +190,8 @@ void SpectralProblem::run()
     // HouseholderQR<MatrixXd> qr(M,M);
     // // [NSSys1]
 
-    // // [NSNewton1]
     // int i=0;
     // do{
-    //     // [NSNewton1]
     //     // [NSMatF]
     //     f = c.cwiseProduct(lambda)/Re + Riak*c - Rfk;
     //     for (int k = 0; k < M; k++)
@@ -197,7 +204,7 @@ void SpectralProblem::run()
     //     j += Riak;
     //     j += lambda.asDiagonal();
     //     // [NSMatJ]
-    //     // [NSNewton2]
+
     //     if ( Environment::worldComm().isMasterRank() )
     //         std::cout << "j = " << j << std::endl << "f = " << f << std::endl;
 
@@ -220,7 +227,7 @@ void SpectralProblem::run()
 
     // if(i==10)
     //     std::cout << "Newton does not converge\n";
-    // // [NSNewton2]
+
     // else{
     //     for( i = 0; i < M; i++){
     //         u += vf::project( _space=Vh, _range=elements(mesh),

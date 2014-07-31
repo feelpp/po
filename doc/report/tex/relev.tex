@@ -3,8 +3,7 @@ On implémente ici le relèvement introduit dans le chapitre \ref{relev}, $\math
 Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \mathbf{b}=0$ et donc comme il ne reste plus que la condition $\mathbf{a}\cdot\mathbf{n}=\alpha_0$ à relever, on a \[ \mathbf{a}=\grad\psi^0 \]
 
 \section{$\psi^0$ dans $H^1$}
-\label{impGradh1}
-\subsection{Discrétisation}
+\subsection{Discrétisation}\label{discGradh1}
 Pour discrétiser le problème, on doit tout d'abord créer un maillage $\mathcal{T}_h$ de $\Omega$. Dans le volume on utilise des tétraèdres et sur les surfaces, pour un maillage conforme, on utilise des triangles. On a donc $\mathcal{T}_h=\{K_e\}_{e=1,\dots,N_e}$ où $N_e$ est le nombre d'éléments du maillage.\\
 Si l'on veut résoudre le problème \ref{psi0} dans $H^1$, on va devoir utiliser des éléments de Lagrange (voir \ref{eltLagrange}) pour discrétiser $\psi^0$. On introduit donc l'espace
 \[   P^k_{c,h} = \{ q_h \in C^0(\Omega) \; |\; q_h{}_{|_K} \in \mathbb{P}_k\; \forall\; K \in \mathcal{T}_h\} \subset H^1 \]
@@ -32,7 +31,7 @@ Alors la forme matricielle du problème \ref{dcpsi0} est :
 avec $A\in M(\R)^{N_{hk}\times N_{hk}}$, $B\in M(\R)^{N_{hk}\times 1}$ et $F=\R^{N_{hk}}$ où :
 \[ A_{ij} = a(\phi_i,\phi_j)\quad B_{i1} b(\phi_i,1)\quad F=f(\phi_i) \]
 
-\subsection{Implémentation}
+\subsection{Implémentation}\label{impGradh1}
 Pour résoudre le problème \ref{dcpsi0}, on doit d'abord choisir l'ordre $k$ de l'espace $P_{c,h}^k$. Ici on va prendre 2.\\
 Pour utiliser un réel, on va prendre un élément de $P_{c,h}^0$, en effet, ce sont des fonctions continues et des polynômes de degré 0, des constantes sur chaque maille, ce sont donc des constantes sur le domaine.\\
 On utilise le mot clé \texttt{FunctionSpace} pour créer un espace de fonctions, on lui donne le domaine sur lequel ces fonctions s'appliquent, et la base utilisée en paramètres. Ici, on utilise une base de lagrange d'ordre 2, scalaire, et une base de Lagrange d'ordre 0 scalaire pour créer $P^2_{c,h}\times P^0_{c,h}$.\\

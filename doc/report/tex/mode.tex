@@ -1,9 +1,9 @@
-\chapter{Modes propres}
-\todo[inline]{discrétisation, matrice}
+\chapter{Problème aux valeurs propres}
 On peut maintenant implémenter le problème aux valeurs propres du chapitre \ref{eigen} afin de trouver les couples $(\lambda_i,\mathbf{g_i})$ tel que $\rot\mathbf{g_i}=\lambda_i\mathbf{g_i}$ pour $i=1,\dots,M$. Les fonctions propres seront la base sur laquelle on va projeter $\mathbf{u}$ pour la décomposition de Galerkin \[ \mathbf{u}=\sum_{i=1}^M c_i\mathbf{g_i} \]
 Comme les fonctions propres vivent dans $D^1$, un espace à divergence nulle, l'opérateur rotationnel et le laplacien sont identiques. Cependant, comme les fonctions tests implémentées dans Feel++ ne sont pas à divergence nulle, si on utilise le laplacien, il est nécessaire de rajouter une étape de tri pour avoir des fonctions à divergence nulle. Comme cela est très coûteux en temps de calcul, il vaut mieux utiliser directement l'opérateur rotationnel.
 
-\section{Cas général}
+\section{Utilisation des éléments de Nedelec}
+\subsection{Formulation variationnelle}
 Ici, on veut s'appuyer sur les travaux de V. Girault \cite{girault90-1}. Pour cela, on a besoin de définir l'espace \[X = \{\mathbf{v}\in H(\mathrm{rot})\ |\ (\rot\mathbf{v}\cdot\mathbf{n})\restr=0 \}\]
 On rappel les définitions suivantes :
 \begin{align*}
@@ -22,7 +22,7 @@ D^1(\Omega) &= \{\mathbf{v}\in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\ |\ (\rot 
 &=X\cap L^2_\sigma(\Omega)&
 \end{align*}
 
-Le problème aux valeurs propres est :\\
+Le problème aux valeurs propres \ref{curlcurl} est donc :\\
 Trouver $(\mathbf{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que :
 \begin{align}
 \rott\mathbf{g}&=\lambda^2\mathbf{g} \label{impPb1}\\
@@ -31,9 +31,9 @@ Trouver $(\mathbf{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que :
 (\rot\mathbf{g}\cdot\mathbf{n})\restr&=0 \label{impPb4}\\
 (\rott\mathbf{g}\cdot\mathbf{n})\restr&=0 \label{impPb5}
 \end{align}
-Mais les conditions (\ref{impPb2}-\ref{impPb3}) sont satisfaites par le fait que $\mathbf{g}\in L^2_\sigma$ et la condition (\ref{impPb4}) par l'appartenance à $X$.\\
+Les conditions (\ref{impPb2}-\ref{impPb3}) sont satisfaites par le fait que $\mathbf{g}\in L^2_\sigma$ et la condition (\ref{impPb4}) par l'appartenance à $X$.\\
 
-En passant à la forme variationnelle, et en suivant les mêmes étapes que dans le chapitre (\ref{eigen}), on impose la condition (\ref{impPb5}) :
+En passant à la forme variationnelle, et en suivant les mêmes étapes que dans le chapitre \ref{eigen}, on impose la condition (\ref{impPb5}) :
 \[ \int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi(\underbrace{(\rott \mathbf{g})\cdot\mathbf{n}}_{=0})= \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi} \]
 On a donc le problème suivant :\\
 Trouver $(\mathbf{g},\lambda)\in X\cap L^2_\sigma\times\R$ tel que $\forall \bm{\varphi}\in X\cap L^2_\sigma$ :
@@ -51,32 +51,92 @@ On peut donc imposer les contraintes (\ref{impPb2}-\ref{impPb3}), liées à $L^2
 Trouver $((\mathbf{g},p),\lambda)\in X \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in X \times H^1$ :
 \[ \int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi} \]
 
-Pour imposer la condition (\ref{impPb4}), on utilise une méthode de pénalisation, le problème devient donc :
+Pour imposer la condition (\ref{impPb4}), on utilise une méthode de pénalisation, le problème \ref{curlcurl} devient donc :
+\begin{pb}\label{pbeigenrot}
 Trouver $((\mathbf{g},p),\lambda)\in H(\mathrm{rot}) \times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in H(\mathrm{rot}) \times H^1$ :
-\begin{equation}\label{impFvEigen}
-\int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q + \gamma\int_{\partial\Omega}(\rot\mathbf{g_i}\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi}
-\end{equation}
-avec $\gamma$ une très grande valeur.\\
+\begin{equation*}
+\int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q + \gamma\int_{\partial\Omega}(\rot\mathbf{g}\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi}
+\end{equation*}
+avec $\gamma$ une très grande valeur.
+\end{pb}
 
-Ainsi, la solution se trouvant dans $H(\mathrm{rot})$, la meilleure méthode serait d'utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec. Cela permettrait d'avoir $\rot\mathbf{g_i}\in [L^2(\Omega)]^3$. On gagnerait ainsi en régularité sur les fonctions propres.
+\subsection{Discrétisation}
+Ainsi, la solution se trouvant dans $H(\mathrm{rot})$, la meilleure méthode serait d'utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec. Cela permettrait d'avoir $\rot\mathbf{g_i}\in [L^2(\Omega)]^3$. On gagnerait ainsi en régularité sur les fonctions propres.\\
 
-\subsection{Implémentation}
+En utilisant le même maillage que dans \ref{discGradh1}, on discrétise le problème en utilisant des éléments finis conformes au rotationnel, de degré $k$, nommés éléments de Nedelec (voir \ref{eltNedelec}) et notés $\mathbb{N}_k$. Ceci nous permet d'introduire le sous-espace de $H(\mathrm{rot})$ suivant :
+\[ N^k_h = \{ \mathbf{v}_h \in H(\mathrm{rot}) \; |\; \mathbf{v}_h{}_{|_K} \in \mathbb{N}_k\; \forall\; K \in \mathcal{T}_h\}\]
+
+Le problème \ref{pbeigenrot} est donc approché par le problème discret :
+\begin{pb}
+Trouver $((\mathbf{g}_h,p_h),\lambda)\in N^0_h\times P_{c,h}^1 \times \R$ tel que $\forall  (\bm{\varphi}_h,q_h)\in N^0_h\times P_{c,h}^1$ :
+\begin{equation*}
+\int_\Omega (\rot\mathbf{g}_h)\cdot(\rot\bm{\varphi}_h) + \int_\Omega\bm{\varphi}_h\grad p_h + \int_\Omega \mathbf{g}_h\grad q_h + \gamma\int_{\partial\Omega}(\rot\mathbf{g}_h\cdot\mathbf{n})(\rot\bm{\varphi}_h\cdot\mathbf{n}) = \lambda^2\int_\Omega \mathbf{g}_h\cdot\bm{\varphi}_h
+\end{equation*}
+avec $\gamma$ une très grande valeur.
+\end{pb}
+
+\section{Utilisation des éléments de Lagrange}
+\subsection{Formulation variationnelle}
 Cependant, les éléments de Nedelec n'étant pas prêt dans Feel++, on se place dans un espace plus large, $H^1$, et on utilise des éléments de Lagrange. Cela implique que $\rot\mathbf{g}$ n'appartient pas forcément à $L^2$. Cette méthode est donc moins précise et elle introduit de nouvelles erreurs de calcul.\\
 
-Ces erreurs mènent à une divergence non nulle, on utilise donc un terme de pénalisation en plus afin de forcer la divergence. On résout donc le système suivant :
-\[ \int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q + \gamma\int_{\partial\Omega}(\rot\mathbf{g_i}\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) + \alpha\int_\Omega \div\mathbf{g}\div\bm{\varphi} = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi} \]
+Ces erreurs mènent à une divergence non nulle, en reprenant l'équation du problème \ref{pbeigenrot}, on ajoute un terme de pénalisation en plus afin de forcer la divergence. On résout donc le système suivant :
+\[ \int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q + \gamma\int_{\partial\Omega}(\rot\mathbf{g}\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) + \alpha\int_\Omega \div\mathbf{g}\div\bm{\varphi} = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi} \]
 
-Cependant, on a toujours la condition $\mathbf{g}\cdot\mathbf{n}$ qui n'est pas respecter. On ajoute donc un troisième terme de pénalisation :
+Cependant, on a toujours la condition $\mathbf{g}\cdot\mathbf{n}$ qui n'est pas respecter. On ajoute donc un troisième terme de pénalisation et on résout le problème :
+\begin{pb}\label{pbeigenh1}
+Trouver $((\mathbf{g},p),\lambda)\in [H^1(\Omega)]^3\times H^1 \times \R$ tel que $\forall (\bm{\varphi},q)\in [H^1(\Omega)]^3\times H^1$ :
 \begin{align*}
 \int_\Omega (\rot\mathbf{g})\cdot(\rot\bm{\varphi}) &+ \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q & \\
-&+ \gamma\int_{\partial\Omega}(\rot\mathbf{g_i}\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) & (\ref{impPb4})\\
+&+ \gamma\int_{\partial\Omega}(\rot\mathbf{g}\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) & (\ref{impPb4})\\
 & + \alpha\int_\Omega \div\mathbf{g}\div\bm{\varphi} & (\ref{impPb2})\\
-&+ \beta\int_{\partial\Omega}\mathbf{g_i}\cdot\mathbf{n})(\bm{\varphi}\cdot\mathbf{n})  = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi} & (\ref{impPb3})
-\end{align*}
+&+ \beta\int_{\partial\Omega}(\mathbf{g}\cdot\mathbf{n})(\bm{\varphi}\cdot\mathbf{n})  = \lambda^2\int_\Omega \mathbf{g}\cdot\bm{\varphi} & (\ref{impPb3})
+\end{align*} \end{pb}
 
-Comme on cherche les solutions dans $[H^1(\Omega)]^3$, on utilise des éléments de Lagrange et non de Nedelec pour approcher les $\mathbf{g_i}$. Pour le terme de pression fictif, on utilise aussi des éléments de Lagrange, scalaire et d'ordre 1.\\ 
+\subsection{Discrétisation}
+Toujours avec le même maillage, on réutilise l'espace $P^k_{c,h}$ introduit dans \ref{discGradh1}. On utilise des éléments d'ordre 2 pour les $\mathbf{g}$ et d'ordre 1 pour $p$. Ce qui donne le problème discret suivant :
+\begin{pb}\label{disceigenh1}
+Trouver $((\mathbf{g}_h,p_h),\lambda)\in [P^2_{c,h}]^3\times P^1_{c,h} \times \R$ tel que $\forall (\bm{\varphi}_h,q_h)\in [P^2_{c,h}]^3\times P^1_{c,h}$ :
+\begin{align*}
+\int_\Omega (\rot\mathbf{g}_h)\cdot(\rot\bm{\varphi}_h) &+ \int_\Omega\bm{\varphi}_h\grad p_h + \int_\Omega \mathbf{g}_h\grad q_h \\
+&+ \gamma\int_{\partial\Omega}(\rot\mathbf{g}_h\cdot\mathbf{n})(\rot\bm{\varphi}_h\cdot\mathbf{n})\\
+& + \alpha\int_\Omega \div\mathbf{g}_h\div\bm{\varphi}_h \\
+&+ \beta\int_{\partial\Omega}(\mathbf{g}_h\cdot\mathbf{n})(\bm{\varphi}_h\cdot\mathbf{n})  = \lambda^2\int_\Omega \mathbf{g}_h\cdot\bm{\varphi}_h
+\end{align*} \end{pb}
+
+En notant :
+\begin{itemize}
+\item $N_{h1}$ la dimension de $P^1_{c,h}$,
+\item $\{\phi^1_i\}_{i=1,\dots,N_{h1}}$ une base de $P^1_{c,h}$,
+\item pour tout $P^1_{c,h}\ni p_h=\sum_{i=1}^{N_{h1}} p_i\phi^1_i$, $P=(p_1,\dots,p_{N_{h1}})^T$,
+\item $N_{h2}$ la dimension de $[P^2_{c,h}]^3$,
+\item $\{\bm{\phi^2}_i\}_{i=1,\dots,N_{h2}}$ une base de $[P^2_{c,h}]^3$,
+\item pour tout $[P^2_{c,h}]^3\ni \mathbf{u}_h=\sum_{i=1}^{N_{h2}} u_i\bm{\phi^2}_i$, $U=(u_1,\dots,u_{N_{h2}})^T$,
+\item $a$ une forme bilinéaire de $[P^2_{c,h}]^3\times [P^2_{c,h}]^3$ tel que : 
+\[ a(\mathbf{u},\mathbf{v})=\int_\Omega \rot \mathbf{u}\cdot \rot \mathbf{v} + \alpha\int_\Omega \div\mathbf{u}\div\mathbf{v} + \beta\int_{\partial\Omega}(\mathbf{u}\cdot\mathbf{n})(\mathbf{v}\cdot\mathbf{n}) + \gamma\int_{\partial\Omega}(\rot\mathbf{u}\cdot\mathbf{n})(\rot\mathbf{v}\cdot\mathbf{n}) \]
+\item $b$ une forme bilinéaire de $[P^2_{c,h}]^3\times P^1_{c,h}$ tel que : \[ b(\mathbf{u},p) = \int_\Omega \mathbf{u}\cdot\grad p \]
+\item $m$ une forme bilinéaire de $[P^2_{c,h}]^3\times [P^2_{c,h}]^3$ tel que : \[ m(\mathbf{u},\mathbf{v})=\int_\Omega \mathbf{u}\cdot\mathbf{v} \]
+\end{itemize}
+
+Alors la forme matricielle du problème \ref{disceigenh1} est :
+\[ \begin{pmatrix} \tilde{A} & B^T\\ B & 0\end{pmatrix}\begin{pmatrix}U\\ P\end{pmatrix} = \lambda\begin{pmatrix} \tilde{M} & 0\\0 & 0 \end{pmatrix}\begin{pmatrix}U\\ P\end{pmatrix} \]
+soit le problème aux valeurs propres hermitien généralisé :
+\[ A X = \lambda M X \]
+avec 
+\begin{itemize}[label=\textbullet]
+\item $\tilde{A}\in M(\R)^{N_{h2}\times N_{h2}}$ et $\tilde{A}_{ij} = a(\bm{\phi^2}_i,\bm{\phi^2}_j)$,
+\item $B\in M(\R)^{N_{h2}\times N_{h1}}$ et $B_{ij}=b(\bm{\phi^2}_i,\phi^1_j)$,
+\item $\tilde{M}=M(\R)^{N_{h2}\times N_{h2}}$ et $\tilde{M}=m(\bm{\phi^2}_i,\bm{\phi^2}_j)$,
+\item $A\in M(\R)^{(N_{h2}+N_{h1})\times(N_{h2}+N_{h1})}$ et $A=\begin{pmatrix} \tilde{A} & B^T\\ B & 0\end{pmatrix}$,
+\item $M\in M(\R)^{(N_{h2}+N_{h1})\times(N_{h2}+N_{h1})}$ et $M=\begin{pmatrix} \tilde{M} & 0\\0 & 0 \end{pmatrix}$,
+\item $X\in \R^{N_{h2}+N_{h1})}$ et $X=\begin{pmatrix}U\\ P\end{pmatrix}$.
+\end{itemize}
+
+
+\subsection{Implémentation}
+
+Comme on cherche les solutions dans $[P^2_{c,h}]^3$, on utilise des éléments de Lagrange et non de Nedelec pour approcher les $\mathbf{g_i}$. Pour le terme de pression fictif, on utilise aussi des éléments de Lagrange, scalaire et d'ordre 1.\\ 
 \lstinputlisting[linerange=space]{../../src/eigenprob.hpp}
-Pour résoudre le problème $Ax=\lambda Bx$, on initialise $B$ comme une matrice de masse. On utilise pour cela une forme bilinéaire :\\
+Pour résoudre le problème $AX=\lambda MX$, on initialise $M$ comme une matrice de masse. On utilise pour cela une forme bilinéaire :\\
 \lstinputlisting[linerange=rhsB]{../../src/eigenprob.cpp}
 On ajoute maintenant les termes 
 \[ \int_\Omega \rot \mathbf{g}\cdot\rot\bm{\varphi} + \int_\Omega\bm{\varphi}\grad p + \int_\Omega \mathbf{g}\grad q \]
@@ -156,25 +216,57 @@ Ces erreurs empêchent la vérification des résultats mais comme tous les calcu
 %% Il y a donc un problème dans la méthode de pénalisation. Une explication pourrait être que les différents termes de pénalisation sont largement supérieurs aux termes correspondant au problème aux valeurs propres, et donc on ne résoudrait plus ce problème, mais un problème où la majorité des informations serait contenues dans les termes de pénalisation.\\
 
 \subsection{Temps de calculs}
-La figure \ref{tpsMode} montre les temps de calculs en fonction du nombre de modes propres, entre 1 et 100, pour différentes tailles de maillage.\\
-Ces tests on été effectués sur une machine virtuelle Linux Debian 6, invitée sur un ordinateur avec 4 processeurs Intel Xeon cadencés à 2,4 GHz et 64 Go de RAM, mais avec seulement 47 Go de RAM alloués à la machine virtuelle.\\
-J'ai effectué les tests sur les maillages suivants avec des éléments de Lagrange d'ordre 3 vectoriel pour $\mathbf{g}$ et d'ordre 1 scalaire pour $p$. \\
+Les tests on été effectués sur une machine virtuelle Linux Debian 6, invitée sur un ordinateur avec 4 processeurs Intel Xeon cadencés à 2,4 GHz et 64 Go de RAM, mais avec seulement 47 Go de RAM alloués à la machine virtuelle.\\
+
+J'ai effectué les tests sur les maillages suivants avec des éléments de Lagrange d'ordre 2 vectoriel pour $\mathbf{g}$ et d'ordre 1 scalaire pour $p$. \\
 
 \begin{center}
+\begin{tabular}{c|c|c|c|c|c}
+h & éléments & DDL & DDL/2 & DDL/3 & DDL/4\\ \hline
+0,15 & 5000 & 25000 & 12500 & 8500 & 6250\\ \hline
+0.125 & 7500 & 40000 & 20000 & 13500 & 10000\\ \hline
+0.1 & 12500 & 65000 & 32500 & 22000 & 16250
+\end{tabular}
+\end{center}
+
+La figure \ref{timeM} montre les temps de calculs en fonction du nombre de modes propres, entre 1 et 150, pour différentes tailles de maillage et différents nombres de processeurs.\\
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{timeM}
+\caption{Temps de calcul en fonction du nombre de modes propres}
+\label{timeM}
+\end{figure}
+Comme on s'y attend, le temps de calcul augmente en fonction du modes calculés. On voit que plus la taille de maillage est faible, plus le temps de calcul augmente rapidement. Toutefois, l'exécution en parallèle permet de réduire cette augmentation, comme le montre la figure \ref{timeNP}.
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{timeNP}
+\caption{Temps de calcul en fonction du nombre de processeurs}
+\label{timeNP}
+\end{figure}
+On peut voir un net gain de temps entre l'exécution en séquentiel et en parallèle avec juste 2 processeurs. Même si en augmentant le nombre de processeurs on continue de diminuer le temps de calcul, le gain n'est plus aussi significatif, au fur et à mesure que la communication entre les processeurs augmente, alors que le temps de résolution des systèmes ne change pas.\\
+
+On présente dans la figure \ref{timeH} le temps de calcul en fonction de la taille du maillage. Ces tests sont effectués avec 4 processeurs, pour 50 modes et des fonctions d'ordre 2 et 3 sur les maillages suivants :
+\begin{center}
 \begin{tabular}{c|c|c|c}
-taille du maillage & nombre d'éléments & Degré de liberté & Degré de liberté/proc\\ \hline
-0,15 & 5000 & 80000 & 20000\\ \hline
-0.125 & 7500 & 125000 & 30000\\ \hline
-0.1 & 12500 & 200000 & 50000
+h & éléments & DDL Ordre 2 & DDL  Ordre 3\\ \hline
+0.2 & 2000 & 11500 & 35000 \\ \hline
+0.175 & 3000 & 17500 & 50000 \\ \hline
+0,15 & 5000 & 25000 & 80000 \\ \hline
+0.125 & 7500 & 40000 & 120000 \\ \hline
+0.1 & 12500 & 65000 & 200000 \\ \hline
+0.75 & 26500 & 135000 & 400000
 \end{tabular}
 \end{center}
 
 \begin{figure}[H]
 \centering
-\includegraphics{tpsMode}
-\caption{Temps de calcul en fonction du nombre de modes propres}
-\label{tpsMode}
+\includegraphics[scale=0.8]{timeH}
+\caption{Temps de calcul en fonction de la taille de maillage}
+\label{timeH}
 \end{figure}
+
+Comme on le voit, le temps de calcul augmente exponentiellement, ce qui a même empêché d'arriver au bout du calcul pour $h=0.1$ en ordre 3. Cependant, comme vu plus haut, plus le nombre de degré de liberté augmente, plus l'utilisation d'un grand nombre de processeurs est utile. On peut donc espérer qu'avec un nombre de processeurs bien supérieur, on puisse résoudre des problèmes de manière précise. 
 
 % \section{Composante $z$}
 % \subsection{Implémentation}

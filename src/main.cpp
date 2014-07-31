@@ -70,7 +70,7 @@ makeAbout()
 boost::shared_ptr<Mesh<Simplex<3> > >
 load_mesh()
 {
-    fs::path mypath(soption( _name="gmsh.filename" ));
+    Feel::fs::path mypath(soption( _name="gmsh.filename" ));
     std::string mesh_name = ( boost::format( "%1%.msh" )
                                  %mypath.stem().string() ).str();
 

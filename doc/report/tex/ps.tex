@@ -63,7 +63,7 @@ Par exemple, si on a un vecteur de la librairie standard contenant les différen
 où $M$ est le nombre de valeurs propres que l'on a précédemment calculées. On remarque aussi que l'on peut accéder aux éléments du vecteur avec l'opérateur \texttt{()}.\\
 
 Chaque somme de l'équation \ref{fvc} peut être considérée comme un élément de la librairie Eigen. Ainsi $R_{iak}=\lambda_i\int (\mathbf{g_i}\times\mathbf{a})\cdot\mathbf{g_k}$ est un élément d'une matrice, celui de la $i$\ieme\ ligne et $k$\ieme\ colonne.\\
-$R_{fk} = \int \mathbf{f_a}\cdot\mathbf{g_k}$ est un vecteur et $R_{ijk} = \lambda_i\int (\mathbf{g_i}\times\mathbf{a})\cdot\mathbf{g_k}$ est un élément en 3 dimensions, donc un vecteur de matrices. On a ainsi les déclarations suivantes :\\
+$R_{fk} = \int \mathbf{f_a}\cdot\mathbf{g_k}$ et $R_{pk} = \int_{\partial\Omega}\alpha_2\psi_k$ sont des vecteurs et $R_{ijk} = \lambda_i\int (\mathbf{g_i}\times\mathbf{a})\cdot\mathbf{g_k}$ est un élément en 3 dimensions, donc un vecteur de matrices. On a ainsi les déclarations suivantes :\\
 \lstinputlisting[linerange=ri]{../../src/spectralproblem.hpp}
 
 On initialise d'abord la mémoire nécessaire pour contenir le vecteur, puis on initialise chaque élément de la matrice $R_{iak}$ à l'aide de deux boucles imbriquées :\\
@@ -71,6 +71,9 @@ On initialise d'abord la mémoire nécessaire pour contenir le vecteur, puis on 
 
 De même, on initialise la mémoire utilisée par la matrice, puis chaque élément du vecteur $R_{fk}$ avec une boucle :\\
 \lstinputlisting[linerange=rfk]{../../src/spectralproblem.cpp}
+
+On procède pareil pour $R_{pk}$ en ayant pris le soin de créer une expression avec $\alpha_2$, rentré en paramètre :\\
+\lstinputlisting[linerange=rpk]{../../src/spectralproblem.cpp}
 
 Pour $R_{ijk}$, on doit tout d'abord initialiser le vecteur contenant les matrices, puis pour chaque élément de ce vecteur, initialisé la mémoire de la matrice elle-même. Ensuite seulement, on peut initialiser chaque élément de $R_{ijk}$ :\\
 \lstinputlisting[linerange=rijk]{../../src/spectralproblem.cpp}
