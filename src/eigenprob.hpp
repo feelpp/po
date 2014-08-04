@@ -62,8 +62,9 @@ class EigenProb : public Application
 
  private:
     void compute_eigens();
-    void decomp();
+    void compute_decomp();
     void load_eigens();
+    void load_decomp();
 
 
     mesh_ptrtype mesh;

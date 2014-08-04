@@ -55,11 +55,17 @@ EigenProb::run()
     if( boption( _name="computeEigen") ){
         compute_eigens();
         if( boption( "needDecomp" ) )
-            decomp();
+            compute_decomp();
     }
-    else
+    else {
         load_eigens();
-
+        if( boption( "needDecomp") ){
+            if( boption( "computeDecomp") )
+                compute_decomp();
+            else
+                load_decomp();
+        }
+    }
 
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- End Eigen -----" << std::endl;
@@ -318,7 +324,7 @@ EigenProb::compute_eigens()
 
 
 void
-EigenProb::decomp()
+EigenProb::compute_decomp()
 {
     // preparation for the decomposition
 
@@ -387,7 +393,7 @@ EigenProb::decomp()
 
 
         // right side of psi
-        double meanPsi = doption(_name="c");
+        double meanPsi = doption(_name="meanPsi");
 
         l3 = integrate( _range=elements(mesh),
                         _expr=divv(g0[i])*id(psii)
@@ -449,9 +455,6 @@ EigenProb::load_eigens()
         std::string path = (boost::format("mode-%1%")%i).str();
         g[i].load(_path=path);
 
-        std::string pathPsi = (boost::format("psi-%1%")%i).str();
-        psi[i].load(_path=pathPsi);
-
         s >> lambda[i];
     }
 
@@ -463,3 +466,13 @@ EigenProb::load_eigens()
         exit(0);
     }
 }
+
+void
+EigenProb::load_decomp()
+{
+    for( int i = 0; i < nev; i ++ ){
+        std::string pathPsi = (boost::format("psi-%1%")%i).str();
+        psi[i].load(_path=pathPsi);
+    }
+}
+

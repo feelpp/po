@@ -19,19 +19,12 @@ makeOptions()
 {
     po::options_description myappOptions( "PlasticOmnium options" );
     myappOptions.add_options()
+        ( "needP0", po::value<bool>()->default_value( true ), "need to compute psi0" )
         ( "radius", po::value<double>()->default_value( 0.5 ), "cylinder's radius" )
         ( "speed", po::value<double>()->default_value( 1 ), "average speed" )
-        ( "nu", po::value<double>()->default_value( 1 ), "viscosity" )
-        ( "f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
         ( "alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius" )
-        ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
-        ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
-        ( "needP0", po::value<bool>()->default_value( true ), "need to compute psi0" )
         ( "needEigen", po::value<bool>()->default_value( true ), "need the eigen modes" )
         ( "computeEigen", po::value<bool>()->default_value( true ), "compute the eigen modes or load them" )
-        ( "needPS", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
-        ( "needDecomp", po::value<bool>()->default_value( true ), "need to decompose the eigen modes" )
-        ( "needDebug", po::value<bool>()->default_value( false ), "debug" )
         ( "useCurl", po::value<bool>()->default_value( true ), "use curl or grad form" )
         ( "usePresDiv", po::value<bool>()->default_value( false ), "use a pressure term in div form" )
         ( "usePresGrad", po::value<bool>()->default_value( true ), "use a pressure term in grad form" )
@@ -39,11 +32,23 @@ makeOptions()
         ( "bccurln", po::value<bool>()->default_value( true ), "need boundary condition curl g.n (eigenlap)" )
         ( "bcn", po::value<bool>()->default_value( true ), "need boundary condition1 g.n (eigenlap)" )
         ( "divdiv", po::value<bool>()->default_value( true ), "need divdiv term" )
+        ( "needDebug", po::value<bool>()->default_value( false ), "debug" )
+        ( "needDecomp", po::value<bool>()->default_value( true ), "need to decompose the eigen modes" )
+        ( "computeDecomp", po::value<bool>()->default_value( true ), "compute the decomposition of the modes or load them" )
+        ( "meanPsi", po::value<double>()->default_value( 1. ), "psi average" )
+        ( "needPS", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
+        ( "computeRijk", po::value<bool>()->default_value( false ), "compute or load Rijk" )
+        ( "computeRiak", po::value<bool>()->default_value( false ), "compute or load Riak" )
+        ( "computeRfk", po::value<bool>()->default_value( false ), "compute or load Rfk" )
+        ( "f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
+        ( "computeRpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
+        ( "nu", po::value<double>()->default_value( 1 ), "viscosity" )
+        ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
+        ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
         ( "testCurl", po::value<bool>()->default_value( true ), "test curl")
         ( "t", po::value<std::string>()->default_value( "{x*x+2*y*y+3*z*z,2*x*x+3*y*y+z*z,3*x*x+y*y+2*z*z}:x:y:z" ), "pol order 2" )
         ( "t1", po::value<std::string>()->default_value( "{2*y-2*z,6*z-6*x,4*x-4*y}:x:y:z" ), "curl(t)" )
-        ( "t2", po::value<std::string>()->default_value( "{-10,-6,-8}:x:y:z" ), "curl2(t)" )
-        ( "c", po::value<double>()->default_value( 1. ), "psi average" );
+        ( "t2", po::value<std::string>()->default_value( "{-10,-6,-8}:x:y:z" ), "curl2(t)" );
     return myappOptions;
 }
 
@@ -137,7 +142,7 @@ main( int argc, char **argv )
 
     if( boption(_name="needP0") || boption(_name="needPS") ){
         p0.run();
-        e->add( "psi0", p0.gradu );
+        e->add( "a", p0.gradu );
     }
 
     if( boption(_name="needEigen") || boption(_name="needPS") ){
@@ -158,7 +163,8 @@ main( int argc, char **argv )
     if( boption(_name="needPS") ){
         sp.init( eig.g, eig.psi, eig.lambda, p0.gradu );
         sp.run();
-        e->add( "v", sp.u );
+        e->add( "u", sp.u );
+        e->add( "v", sp.v );
     }
 
     if( boption(_name="testCurl") ){

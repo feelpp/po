@@ -35,8 +35,9 @@ SpectralProblem::SpectralProblem( mesh_ptrtype mesh ):super()
     double r = doption( _name="radius" );
     double s = doption( _name="speed" );
     double n = doption( _name="nu" );
-    Re = r*s/n;
+    Re = 2*r*s/n;
     u = Vh->element();
+    v = Vh->element();
 }
 
 void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> L, element_vtype A )
@@ -72,35 +73,85 @@ void SpectralProblem::initRiak()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Riak -----" << std::endl;
 
-    // [riak]
+    // [riakInit]
     Riak = MatrixXd(M,M);
-    for(int i = 0; i< M ; i++)
-        for(int k = 0; k < M; k++){
-            Riak(k,i) = integrate( _range=elements( mesh ),
-                                   _expr=inner(cross(idv(g[i]), idv(a)),idv(g[k])) ).evaluate()(0,0)*sqrt(lambda(i));
-            // [riak]
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << "Rki(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
+    // [riakInit]
+    if( boption("computeRiak") ){
+        std::fstream s;
+        if ( Environment::worldComm().isMasterRank() )
+            s.open ("riak", std::fstream::out);
+        // [riakComp]
+        for(int i = 0; i< M ; i++){
+            for(int k = 0; k < M; k++){
+                Riak(k,i) = integrate( _range=elements( mesh ),
+                                       _expr=inner( cross( idv(g[i]),idv(a) ), idv(g[k])) ).evaluate()(0,0) * sqrt(lambda(i));
+                // [riakComp]
+                if ( Environment::worldComm().isMasterRank() ){
+                    std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
+                    s << Riak(k,i) << std::endl;
+                }
+            }
         }
+        if ( Environment::worldComm().isMasterRank() )
+            s.close();
+    }
+    else {
+        std::fstream s;
+        s.open ("riak", std::fstream::in);
+        if( !s.is_open() ){
+            std::cout << "Riak not found\ntry to launch with --computeRiak=true" << std::endl;
+            exit(0);
+        }
+        for(int i = 0; i< M ; i++)
+            for(int k = 0; k < M; k++)
+                s >> Riak(k,i);
+        s.close();
+    }
 }
 
 void SpectralProblem::initRijk()
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Rijk -----" << std::endl;
-
-    // [rijk]
+    // [rijkInit]
     Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
-    for(int k = 0; k < M; k++){
+    for(int k = 0; k < M; k++)
         Rijk(k) = MatrixXd(M,M);
-        for(int i = 0; i < M; i++)
-            for(int j = 0; j < M; j++){
-                Rijk(k)(i,j) = integrate( _range=elements( mesh ),
-                                          _expr=inner(cross( idv(g[i]), idv(g[j]) ), idv(g[k]) ) ).evaluate()(0,0)*sqrt(lambda[i]);
-                // [rijk]
-                if ( Environment::worldComm().isMasterRank() )
-                    std::cout << "Rkij(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
+    // [rijkInit]
+    if( boption("computeRijk") ){
+        std::fstream s;
+        if ( Environment::worldComm().isMasterRank() )
+            s.open ("rijk", std::fstream::out);
+
+        // [rijkCompute]
+        for(int k = 0; k < M; k++){
+            for(int i = 0; i < M; i++){
+                for(int j = 0; j < M; j++){
+                    Rijk(k)(i,j) = integrate( _range=elements( mesh ),
+                                              _expr=inner( cross( idv(g[i]),idv(g[j]) ), idv(g[k]) ) ).evaluate()(0,0) * sqrt(lambda[i]);
+                    // [rijkCompute]
+                    if ( Environment::worldComm().isMasterRank() ){
+                        std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
+                        s << Rijk(k,i) << std::endl;
+                    }
+                }
             }
+        }
+        if ( Environment::worldComm().isMasterRank() )
+            s.close();
+    }
+    else {
+        std::fstream s;
+        s.open ("rijk", std::fstream::in);
+        if( !s.is_open() ){
+            std::cout << "Rijk not found\ntry to launch with --computeRijk=true" << std::endl;
+            exit(0);
+        }
+        for(int k = 0; k < M; k++)
+            for(int i = 0; i < M; i++)
+                for(int j = 0; j < M; j++)
+                    s >> Rijk(k)(i,j);
+        s.close();
     }
 }
 
@@ -109,15 +160,38 @@ void SpectralProblem::initRfk()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Rfk -----" << std::endl;
 
-    auto ff = expr<3,1>(soption(_name="f"));
-    // [rfk]
+    // [rfkInit]
     Rfk = VectorXd(M);
-    for(int k = 0; k < M; k++){
-        Rfk(k) = integrate( _range=elements( mesh ),
-                            _expr=trans(ff)*idv(g[k]) ).evaluate()(0,0);
-    // [rfk]
+    // [rfkInit]
+    if( boption("computeRfk") ){
+        std::fstream s;
         if ( Environment::worldComm().isMasterRank() )
-            std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
+            s.open ("rfk", std::fstream::out);
+
+        // [rfkComp]
+        auto ff = expr<3,1>(soption(_name="f"));
+        for(int k = 0; k < M; k++){
+            Rfk(k) = integrate( _range=elements( mesh ),
+                                _expr=trans(ff)*idv(g[k]) ).evaluate()(0,0);
+            // [rfkComp]
+            if ( Environment::worldComm().isMasterRank() ){
+                std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
+                s << Rfk(k) << std::endl;
+            }
+        }
+        if ( Environment::worldComm().isMasterRank() )
+            s.close();
+    }
+    else {
+        std::fstream s;
+        s.open ("rfk", std::fstream::in);
+        if( !s.is_open() ){
+            std::cout << "Rfk not found\ntry to launch with --computeRfk=true" << std::endl;
+            exit(0);
+        }
+        for(int k = 0; k < M; k++)
+            s >> Rfk(k);
+        s.close();
     }
 }
 
@@ -134,19 +208,44 @@ void SpectralProblem::initRpk()
     //             { "radius", doption( _name="radius" ) } } );
 
     // 1e4 sur 1, 0 sur 2 decroit sur 3
-    // [rpk]
-    auto a2 = expr( alpha2 );
+
+    // [rpkInit]
     Rpk = VectorXd(M);
-    for(int k = 0; k < M; k++){
-        Rpk(k) = integrate( _range=boundaryfaces(mesh),
-                            _expr=a2*idv(psi[k]) ).evaluate()(0,0);
-        // [rpk]
-        // Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
-        //                     _expr=a2*idv(psi[k]) ).evaluate()(0,0);
-        // Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
-        //                      _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+    // [rpkInit]
+    if( boption("computeRpk") ){
+        std::fstream s;
         if ( Environment::worldComm().isMasterRank() )
-            std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
+            s.open ("rpk", std::fstream::out);
+
+        // [rpkComp]
+        //auto a2 = expr( alpha2 );
+        auto a2 = 32;
+        for(int k = 0; k < M; k++){
+            //Rpk(k) = integrate( _range=boundaryfaces(mesh),
+            //                    _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+            // [rpkComp]
+            Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
+                                _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+            Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
+                                 _expr=-a2*idv(psi[k]) ).evaluate()(0,0);
+            if ( Environment::worldComm().isMasterRank() ){
+                std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
+                s << Rpk(k) << std::endl;
+            }
+        }
+        if ( Environment::worldComm().isMasterRank() )
+            s.close();
+    }
+    else {
+        std::fstream s;
+        s.open ("rpk", std::fstream::in);
+        if( !s.is_open() ){
+            std::cout << "Rpk not found\ntry to launch with --computeRpk=true" << std::endl;
+            exit(0);
+        }
+        for(int k = 0; k < M; k++)
+            s >> Rpk(k);
+        s.close();
     }
 }
 
@@ -179,7 +278,7 @@ void SpectralProblem::run()
         u += vf::project( _space=Vh, _range=elements(mesh),
                           _expr = c(i)*idv(g[i]) );
     }
-    u += vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a) );
+    v = vf::project( _space=Vh, _range=elements(mesh), _expr = idv(a)+idv(u) );
 
 
     // // [NSInit]
