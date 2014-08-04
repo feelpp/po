@@ -88,7 +88,7 @@ load_mesh()
         mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
                          _filename=mesh_name );
 
-
+#ifndef PO_TRAVIS
     LOG(INFO) << " - mesh entities" << std::endl;
     LOG(INFO) << " number of elements : " << mesh->numGlobalElements() << std::endl;
     LOG(INFO) << " number of faces : " << mesh->numGlobalFaces() << std::endl;
@@ -115,7 +115,7 @@ load_mesh()
         std::cout << " h avg : " << mesh->hAverage() << std::endl;
         std::cout << " measure : " << mesh->measure() << std::endl;
     }
-
+#endif
 
     return mesh;
 }
