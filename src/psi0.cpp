@@ -34,7 +34,14 @@ Psi0::run()
         std::cout << g_s << std::endl;
     }
 
+    if( boption("computeP0") )
+        compute_psi0();
+    else
+        load_psi0();
+}
 
+void
+Psi0::compute_psi0() {
     // [option]
     auto vars = Symbols{ "x", "y", "radius", "speed" };
     auto g_e = parse( this->g_s, vars );
@@ -105,4 +112,14 @@ Psi0::run()
 
     // gradu is the L2 projection of grad(psi0) over Xh
     b.solve( _name="gradpsi0", _rhs=k, _solution=gradu );
+
+    std::string path = "psi0";
+    gradu.save(_path=path);
+
+}
+
+void
+Psi0::load_psi0() {
+    std::string path = "psi0";
+    gradu.load(_path=path);
 }

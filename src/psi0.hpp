@@ -41,7 +41,8 @@ class Psi0 : public Application
 
     Psi0(mesh_ptrtype, std::string);
     void run();
-
+    void compute_psi0();
+    void load_psi0();
 
  private:
     mesh_ptrtype mesh;
