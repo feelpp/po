@@ -70,6 +70,10 @@ tabsize=2}
 \titlepage
 \end{frame}
 
+\begin{frame}
+Présentation PO
+\end{frame}
+
 \section{Problème}
 \begin{frame}{Problème}
 \begin{block}{On cherche $(\mathbf{v},p)$ solution de :}
@@ -88,24 +92,36 @@ où $q = \frac{|\mathbf{v}|^2}{2}+p$.
 \end{block}
 \end{frame}
 
+\begin{frame}
+séparation des variables et conditions aux bords
+\end{frame}
+
 \begin{frame}{Décomposition}
 \begin{block}{Décomposition des problèmes}
 \begin{center}
 \begin{tabular}{|c|c|c|}
 \hline
 Variables & Problèmes & Espaces\\ \hline
-$\mathbf{v}$ & $\mathbf{a} + \mathbf{u}$ & $ L^2_\sigma$\\ \hline
-$\mathbf{a}$ & $\grad\psi_0 + \rot \mathbf{b}$ & $ L^2_\sigma$\\ \hline
-$\psi_0$ & $-\laplace\psi_0 = 0$ & $ H^1/ H(div)$\\ \hline
-$(\mathbf{b},\psi_1)$ & $\rott \mathbf{b}= \grad\psi_1$ & $ H(rot)/ D^1$ \\ \hline
-$\mathbf{u}$ & $\sum_i c_i\mathbf{g_i}$ & $ D^1$\\ \hline
-$(\lambda_i,\mathbf{g_i})$ & $\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}$ & $ D^1$ \\ \hline
-$\mathbf{\mathbf{g_i}^0}$ & $\grad(\div \mathbf{\mathbf{g_i}^0}) - \laplace \mathbf{\mathbf{g_i}^0} = \Lambda_i \mathbf{g_i}$ & $ H^1_0$\\ \hline
-$\psi_i$ & $-\laplace \psi_i = 0$ & $ H^1$\\ \hline
+$\mathbf{v}$ & $\mathbf{u} + \mathbf{a}$ & $ L^2_\sigma$\\ \hline
+$\mathbf{u}$ & $\sum_i c_i\mathbf{g}_i$ & $ D^1$\\ \hline
+$(\lambda_i,\mathbf{g}_i)$ & $\rott  \mathbf{g}_i = \Lambda_i \mathbf{g}_i$ & $ D^1$ \\ \hline
+% $\mathbf{\mathbf{g}_i^0}$ & $\grad(\div \mathbf{\mathbf{g}_i^0}) - \laplace \mathbf{\mathbf{g}_i^0} = \Lambda_i \mathbf{g}_i$ & $ H^1_0$\\ \hline
+% $\psi_i$ & $-\laplace \psi_i = 0$ & $ H^1$\\ \hline
+$\mathbf{a}$ & $\grad\psi^0 + \rot \mathbf{b}$ & $ [L^2(\Omega)]^3$\\ \hline
+$\psi^0$ & $-\laplace\psi^0 = 0$ & $ H^1/ H(\mathrm{div})$\\ \hline
+$(\mathbf{b},\psi^1)$ & $\rott \mathbf{b}= \grad\psi^1$ & $ H(\mathrm{rot})/ D^1$ \\ \hline
 \end{tabular}
 \end{center}
-La partie difficile est donc repoussé à trouver les coefficients $c_i$. 
 \end{block}
+Les difficultés résident donc dans
+\begin{itemize}
+\item le problème aux valeurs propres
+\item la résolution du problème spectral pour trouver les coefficients $c_i$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Graph
 \end{frame}
 
 \begin{frame}{$\mathbf{v}=\mathbf{a}+\mathbf{u}$}
@@ -120,10 +136,12 @@ $\rott\star\cdot \mathbf{n}\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \end{tabular}
 \end{center}
 \end{block}
+Ajout explications
+
 \end{frame}
 
-\section{Galerkin}
-\begin{frame}{$\mathbf{u}=\sum c_i\mathbf{g_i}$}
+\section{Fonctions propres}
+\begin{frame}{$\mathbf{u}=\sum c_i\mathbf{g}_i$}
 \begin{block}{Décomposition de Galerkin généralisée}
 \begin{itemize}
 \item les coefficients $c_i$ portent la dimension temporelle.
@@ -137,87 +155,94 @@ $\rott\star\cdot \mathbf{n}\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$
 \end{block}
 \end{frame}
 
-\section{Fonctions propres}
-\begin{frame}{$\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}$}
-\begin{block}{Fonctions propres de $\rott\star$}
-\begin{itemize}
-\item Problème :
+\begin{frame}{Problème aux valeurs propres}
+\begin{block}{Trouver $(\mathbf{g},\lambda)\in D^1\times \mathbb{R}$ tel que}
 \[\left\{\begin{aligned}
-&\rott  \mathbf{g_i} = \Lambda_i \mathbf{g_i}\\
-&\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-&\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-&\rott  \mathbf{g_i}\cdot \mathbf{n}\restr = 0
+&\rott  \mathbf{g}_i = \Lambda_i \mathbf{g}_i\\
+&\div \mathbf{g}_i = 0\\
+&\mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
+&\rot \mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
+&\rott  \mathbf{g}_i\cdot \mathbf{n}\restr = 0
 \end{aligned}\right.\]
-\item Formulation variationnelle :
+\end{block}
+Formulation variationnelle dans $D^1$ :
+\begin{block}{Trouver $(\mathbf{g},\lambda)\in D^1\times \mathbb{R}$ tel que $\forall \varphi\in D^1$ :}
 \[ \int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \Lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX \]
-\end{itemize}
 \end{block}
 \end{frame}
 
+\begin{frame}
+Ajout H1 et terme de pénalisation\\
+Résultats
+\end{frame}
+
 \begin{frame}{Décomposition des fonctions propres}
-\begin{block}{Décomposition des $\mathbf{g_i}$}
+\begin{block}{Décomposition des $\mathbf{g}_i$}
 \begin{center}
 \begin{tabular}{c|ccccc}
-& $\mathbf{g_i}$ & = & $\mathbf{\mathbf{g_i}^0}$ & + & $\grad\psi_i$ \\ \hline
-$\rott\star$ & $\Lambda_i \mathbf{g_i}$ & & $\grad(\div \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0}$ & & 0\\ \hline
-$\div\star$ & 0 & & $\div \mathbf{\mathbf{g_i}^0}$ & & $\laplace\psi_i$\\ \hline
+& $\mathbf{g}_i$ & = & $\mathbf{\mathbf{g}_i^0}$ & + & $\grad\psi_i$ \\ \hline
+$\rott\star$ & $\Lambda_i \mathbf{g}_i$ & & $\grad(\div \mathbf{\mathbf{g}_i^0})-\laplace \mathbf{\mathbf{g}_i^0}$ & & 0\\ \hline
+$\div\star$ & 0 & & $\div \mathbf{\mathbf{g}_i^0}$ & & $\laplace\psi_i$\\ \hline
 $\star\cdot \mathbf{n}\restr$ & 0 & & 0 & & 0
 \end{tabular}
 \end{center}
 \end{block}
-\begin{block}{$\mathbf{g_i}=\mathbf{\mathbf{g_i}^0}+\grad\psi_i$}
+\begin{block}{$\mathbf{g}_i=\mathbf{\mathbf{g}_i^0}+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
 \[\left\{\begin{aligned}
-\grad(\div \mathbf{\mathbf{g_i}^0})-\laplace \mathbf{\mathbf{g_i}^0} &= \Lambda_i \mathbf{g_i}\\
-\mathbf{\mathbf{g_i}^0}\restr &= 0
+\grad(\div \mathbf{\mathbf{g}_i^0})-\laplace \mathbf{\mathbf{g}_i^0} &= \Lambda_i \mathbf{g}_i\\
+\mathbf{\mathbf{g}_i^0}\restr &= 0
 \end{aligned}\right.\]
 \item Formulation variationnelle :
-\[ -\int_\Omega (\div \mathbf{\mathbf{g_i}^0})(\div\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g_i}^0}\grad\bm{\varphi} = \int_\Omega \Lambda_i\mathbf{g_i}\bm{\varphi} \]
+\[ -\int_\Omega (\div \mathbf{\mathbf{g}_i^0})(\div\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g}_i^0}\grad\bm{\varphi} = \int_\Omega \Lambda_i\mathbf{g}_i\bm{\varphi} \]
 \end{itemize}
 \end{block}
 \end{frame}
 
 \begin{frame}{Décomposition des fonctions propres}
-\begin{block}{$\mathbf{g_i}=\mathbf{\mathbf{g_i}^0}+\grad\psi_i$}
+\begin{block}{$\mathbf{g}_i=\mathbf{\mathbf{g}_i^0}+\grad\psi_i$}
 \begin{itemize}
 \item Problème :
 \[\left\{\begin{aligned}
--\laplace\psi_i &= \div \mathbf{\mathbf{g_i}^0}\\
+-\laplace\psi_i &= \div \mathbf{\mathbf{g}_i^0}\\
 \grad\psi_i\cdot \mathbf{n}\restr &= 0
 \end{aligned}\right.\]
 \item Formulation variationnelle :
-\[ \int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\div \mathbf{\mathbf{g_i}^0})\varphi \]
+\[ \int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\div \mathbf{\mathbf{g}_i^0})\varphi \]
 \end{itemize}
 \end{block}
+modifier decomposition\\
+cite Penel, constante près,...
 \end{frame}
 
 \section{Relèvement}
-\begin{frame}{$\mathbf{a}=\grad\psi_0+\rot \mathbf{b}$}
+\begin{frame}{Relèvement}
 \label{psi0}
 \begin{block}{Décomposition de $\mathbf{a}$}
 \begin{center}
 \begin{tabular}{c|ccccc}
-& $\mathbf{a}$ & = & $\grad\psi_0$ & + & $\rot \mathbf{b}$ \\ \hline
-$\div\star$ & 0 & & $\laplace\psi_0$ & & 0\\ \hline
+& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\rot \mathbf{b}$ \\ \hline
+$\div\star$ & 0 & & $\laplace\psi^0$ & & 0\\ \hline
 $\star\cdot \mathbf{n}\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
 $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{tabular}
 \end{center}
 \end{block}
+2 choix pour le relèvement de $\alpha_0$ par $\grad\psi^0$ :
 \begin{columns}[t]
 \begin{column}{5cm}
 \begin{block}{Problème dans $ H^1$}
 \[\left\{\begin{aligned}
-&-\laplace\psi_0 = 0\\
-&\grad\psi_0\cdot \mathbf{n}\restr=\alpha_0
+&-\laplace\psi^0 = 0\\
+&\grad\psi^0\cdot \mathbf{n}\restr=\alpha_0
 \end{aligned}\right.\]
 \end{block}
 \end{column}
 \begin{column}{5cm}
-\begin{block}{Problème dans $ H(div)$}
+\begin{block}{Problème dans $ H(\mathrm{div})$}
 \[\left\{\begin{aligned}
-\mathbf{w} &= \grad \psi_0\\
+\mathbf{w} &= \grad \psi^0\\
 \div \mathbf{w} &= 0\\
 \mathbf{w}\cdot \mathbf{n}\restr &= \alpha_0
 \end{aligned}\right.\]
@@ -226,16 +251,16 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{columns}
 \end{frame}
 
-\begin{frame}{$\grad\psi_0$}
-\begin{block}{Problème dans $ H^1$}
+\begin{frame}{Relèvement de $\alpha_0$}
+\begin{block}{Problème dans $H^1$}
 \begin{itemize}
 \item Problème :
 \[\left\{\begin{aligned}
-&-\laplace\psi_0 = 0\\
-&\grad\psi_0\cdot \mathbf{n}\restr=\alpha_0
+&-\laplace\psi^0 = 0\\
+&\grad\psi^0\cdot \mathbf{n}\restr=\alpha_0
 \end{aligned}\right.\]
 \item Formulation variationnelle :
-\[ -\int_\Omega \grad\psi_0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0 \]
+\[ -\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0 \]
 \end{itemize}
 \end{block}
 \begin{columns}[t]
@@ -256,8 +281,12 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{columns}
 \end{frame}
 
-\begin{frame}{$\grad\psi_0$}
-\begin{block}{Problème dans $ H(div)$}
+\begin{frame}
+Résultats
+\end{frame}
+
+\begin{frame}{Relèvement de $\alpha_0$}
+\begin{block}{Problème dans $ H(\mathrm{div})$}
 \begin{itemize}
 \item Problème :
 \[\left\{\begin{aligned}
@@ -281,49 +310,50 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \begin{alertblock}{Inconvénients}
 \begin{itemize}
 \item[$-$] Utilisation des éléments de Raviert-Thomas en 3D
-\item[$-$] Problème bien posé ?
 \end{itemize}
 \end{alertblock}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{$\rot \mathbf{b}$}
+\begin{frame}{Relèvement de $\alpha_1$}
+2 choix aussi pour le relèvement de $\alpha_1$ par $\rot\mathbf{b}$ :
 \begin{columns}[t]
 \begin{column}{5cm}
-\begin{block}{Problème dans $ H(rot)$}
+\begin{block}{Problème dans $ H(\mathrm{rot})$}
 \[\left\{\begin{aligned}
-&\rott \mathbf{b} = \grad\psi_1\\
+&\rott \mathbf{b} = \grad\psi^1\\
 &\div \mathbf{b} = 0\\
 &\mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{b}\cdot \mathbf{n}\restr = 0\\
-&\grad\psi_1\cdot \mathbf{n}\restr = \alpha_1
+&\grad\psi^1\cdot \mathbf{n}\restr = \alpha_1
 \end{aligned}\right.\]
 \end{block}
 \end{column}
 \begin{column}{5cm}
-\begin{block}{$ D^1$}
+\begin{block}{Problème dans $D^1$}
 \[\left\{\begin{aligned}
-&\rott \mathbf{b} = \grad\psi_1\\
+&\rott \mathbf{b} = \grad\psi^1\\
 &\mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{b}\cdot \mathbf{n}\restr = 0\\
 &\rott b\cdot \mathbf{n}\restr = \alpha_1
 \end{aligned}\right.\]
-où $\psi^1$ solution de
+\end{block}
+\begin{block}{où $\psi^1$ solution de}
 \[\left\{\begin{aligned}
-&-\laplace\psi_1 = 0\\
-&\grad\psi_1\cdot \mathbf{n}\restr=\alpha_1
+&-\laplace\psi^1 = 0\\
+&\grad\psi^1\cdot \mathbf{n}\restr=\alpha_1
 \end{aligned}\right.\]
 \end{block}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{$\rot \mathbf{b}$}
-\begin{block}{Formulation variationnelle dans $ H(rot)$}
+\begin{frame}{Relèvement de $\alpha_1$}
+\begin{block}{Formulation variationnelle dans $ H(\mathrm{rot})$}
 \begin{align*}
 \int_\Omega (\rot \mathbf{b})(\rot\bm{\varphi}) &- \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot \mathbf{n}) \\
-&+\int_\Omega \psi_1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi_1(\bm{\varphi}\cdot \mathbf{n}) = 0
+&+\int_\Omega \psi^1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot \mathbf{n}) = 0
 \end{align*}
 \end{block}
 \begin{columns}[t]
@@ -337,21 +367,21 @@ où $\psi^1$ solution de
 \begin{column}{5cm}
 \begin{alertblock}{Inconvénients}
 \begin{itemize}
-\item[$-$] Besoin de changer la formulation faible de $u$
+\item[$-$] Perte de régularité sur $\mathbf{a}$
 \end{itemize}
 \end{alertblock}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{$\rot \mathbf{b}$}
+\begin{frame}{Relèvement de $\alpha_1$}
 \begin{block}{Problème dans $ D^1$}
 \begin{itemize}
 \item Formulation faible
-\[ \int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi_1\cdot\bm{\varphi} \]
+\[ \int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi^1\cdot\bm{\varphi} \]
 \item Discrétisation $\mathbf{b}=\sum d_ig_i$
 \begin{align*}
-d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
+d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g}_k) - \langle\alpha_1,\psi_k\rangle
 \end{align*}
 \end{itemize}
 \end{block}
@@ -360,7 +390,7 @@ d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 \begin{exampleblock}{Avantages}
 \begin{itemize}
 \item[+] Gain de régularité sur $\rot \mathbf{b}$
-\item[+] Réutilisation de la base $\mathbf{g_i}$ 
+\item[+] Réutilisation de la base $\mathbf{g}_i$ 
 \end{itemize}
 \end{exampleblock}
 \end{column}
@@ -376,10 +406,11 @@ d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 
 \section{Problème spectral}
 \begin{frame}{Problème spectral}
+phrase intro
 \begin{block}{Problème dans $ D^1$}
 \[\left\{\begin{aligned}
 &\frac{\partial \mathbf{u}}{\partial t} + (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} + \left(\rot \mathbf{a}\right)\times \mathbf{u} \\
-&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{h_a} = 0\\
+&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{f_a} = 0\\
 &\div \mathbf{u} = 0\\
 &\mathbf{u}\cdot \mathbf{n}\restr = 0\\
 &(\rot \mathbf{u})\cdot \mathbf{n}\restr = 0\\
@@ -393,47 +424,63 @@ d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 \begin{align*}
 \int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
 &+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) \\
-&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{h_a}\cdot\bm{\varphi}
+&-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{f_a}\cdot\bm{\varphi}
 \end{align*}
 \end{block}
-On peut maintenant utiliser la relation 
-\[ \mathbf{u}\approx\sum_{i=1}^M c_i\mathbf{g_i} \]
+Le terme de pression n'apparaît plus dans cette formulation.\\
+Calcul de ce terme en post-traitement de la vitesse.
 \end{frame}
 
 \begin{frame}{Problème spectral}
+On peut maintenant utiliser la relation 
+\[ \mathbf{u}\approx\sum_{i=1}^M c_i\mathbf{g}_i \]
+ainsi que la linéarité de l'opérateur rotationnel et l'orthonormalité de la base.
 \begin{block}{Discrètisation}
 \begin{align*}
-\sum \frac{\partial c_i}{\partial t}(\mathbf{g_i},\mathbf{g_k}) &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \\
-&+ \sum c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) + \sum c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) \\
-&+ \frac{1}{Re}\sum c_i\lambda_i\lambda_k(\mathbf{g_i},\mathbf{g_k}) = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
+\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_i\sum_j c_i c_j\lambda_i(\mathbf{g}_i\times \mathbf{g}_j, \mathbf{g}_k)\\
+& + \sum c_i\lambda_i(\mathbf{g}_i\times \mathbf{a},\mathbf{g}_k) + \sum c_i((\rot \mathbf{a})\times \mathbf{g}_i, \mathbf{g}_k)\\
+& = (\mathbf{f_a},\mathbf{g}_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
 \end{align*}
-Orthonormalisation de la base $(\mathbf{g_i})$ : $(\mathbf{g_i},\mathbf{g_k})=\delta_{ik}$
-\begin{eqnarray*}
-\frac{\partial c_k}{\partial t} + \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) + \sum c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k})\\
-+ \sum c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) + \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
-\end{eqnarray*}
 \end{block}
 \end{frame}
 
+\begin{frame}{Problème spectral}
+En notant :
+\begin{align*}
+R_{ijk} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
+R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
+R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
+\end{align*}
+On a :
+\begin{block}{Trouver $(c_i)_{i=1,\dots,M}$ tel que $\forall k=1,\dots,M$ :}
+\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i,j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_i\left(R_{iak} + R_{raij}\right) = R_{hk} + \frac{1}{Re}R_{pk} \]
+\end{block}
+\end{frame}
+
+\begin{frame}
+Stokes,stationnaire,alpha2\\
+Résultats
+\end{frame}
+
 \section{Synthèse}
-\begin{frame}{Organigramme}
+\begin{frame}{Organigramme Avec Résultats !!}
 \begin{figure}
 \centering
 \begin{tikzpicture}[scale=0.4] 
 \node[draw,scale=\taille,fill=gray!50] (pbeigen) at (9,-0.5)
 {$\begin{aligned}
-\rott \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
-\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rott \mathbf{g_i}\cdot \mathbf{n}\restr = 0
+\rott \mathbf{g}_i = \Lambda_i\mathbf{g}_i\\
+\mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
+\rot \mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
+\rott \mathbf{g}_i\cdot \mathbf{n}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=green!50] (a0) at (0,-1.5) {$\alpha_0$} ;
 \node[draw,scale=\taille,fill=green!50] (a1) at (4,-1.5) {$\alpha_1$} ;
 \node[draw,scale=\taille,fill=yellow!50] (lambda) at (8,-3) {$\Lambda_i$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi) at (10,-3) {$\mathbf{g_i}$} ;
+\node[draw,scale=\taille,fill=yellow!50] (gi) at (10,-3) {$\mathbf{g}_i$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (14,-3)
 {$\begin{aligned}
-\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \Lambda_i \mathbf{g_i}\\
+\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \Lambda_i \mathbf{g}_i\\
 \mathbf{g_i^0}\restr = 0
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-3.5)
@@ -459,7 +506,7 @@ l^1\cdot \mathbf{n}\restr &= \alpha_1
 \node[draw,scale=\taille,fill=yellow!50] (psi) at (14,-7.5) {$\psi_i$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbb) at (4,-7.5) 
 {$
-d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
+d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g}_k) - \langle\alpha_1,\psi_k\rangle
 $} ;
 \node[draw,scale=\taille,fill=blue!50] (b) at (4,-8.5) {$\rot \mathbf{b}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pba) at (2,-10.5) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi^0$} ;
@@ -469,9 +516,9 @@ $} ;
 \node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$\mathbf{a}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbs) at (9,-12)
 {$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g_i}\times \mathbf{g_j}, \mathbf{g_k}) \\
-&+ \sum_i c_i\lambda_i(\mathbf{g_i}\times \mathbf{a},\mathbf{g_k}) + \sum_i c_i((\rot \mathbf{a})\times \mathbf{g_i}, \mathbf{g_k}) \\
-&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{h_a},\mathbf{g_k}) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
+\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g}_i\times \mathbf{g}_j, \mathbf{g}_k) \\
+&+ \sum_i c_i\lambda_i(\mathbf{g}_i\times \mathbf{a},\mathbf{g}_k) + \sum_i c_i((\rot \mathbf{a})\times \mathbf{g}_i, \mathbf{g}_k) \\
+&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{f_a},\mathbf{g}_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
 &c_k(0)=c_k^0
 \end{aligned}
 $} ;
@@ -498,111 +545,82 @@ $} ;
 \end{figure}
 \end{frame}
 
-\begin{frame}{$P_\sigma(H^1_0)$}
-On sait que
-\[ D^1 = \{\mathbf{v}=\mathbf{v_0}+\grad\phi\ |\ \mathbf{v_0}\in H^1_0(\Omega),\ -\laplace\phi=\div\bm{v_0},\ \grad\phi\cdot \mathbf{n}\restr = 0 \} \]
-En notant $P_\sigma = I + \grad(-\laplace)^{-1}\div$ alors
-\[ D^1 = P_\sigma(H^1_0) \]
-Comme les valeurs propres $(g_0^i)$ de
-\[\left\{\begin{aligned}
--\laplace\bm{g_0} = \beta\bm{g_0}\\
-\bm{g_0} = 0 \text{ sur } \partial\Omega
-\end{aligned}\right.\]
-sont une base de $H^1_0$, $P_\sigma(g_0^i)$ est une base de $D^1$.
+% \section{Stokes-Curl}
+% \begin{frame}{Stokes-Curl}
+% %\begin{block}{On résout le problème suivant :}
+% \begin{align}
+% \rott \mathbf{g}_i &= \lambda^2\mathbf{g}_i\label{sc1}\\
+% \div \mathbf{g}_i &= 0\label{sc2}\\
+% \mathbf{g}_i\cdot\mathbf{n}&=0\\
+% \rot\mathbf{g}_i\cdot\mathbf{n}&=0
+% \end{align}
+% %\end{block}
+% De plus, on utilise un terme de pression pour imposer (\ref{sc2}). On a donc le problème :
+% \begin{align}
+% \rott \mathbf{g}_i + \grad p &= \lambda^2_i\mathbf{g}_i\label{sc11}\\
+% \div\mathbf{g}_i &= 0\label{sc22}\\
+% \mathbf{g}_i\cdot\mathbf{n}&=0\\
+% \rot\mathbf{g}_i\cdot\mathbf{n}&=0
+% \end{align}
+% \end{frame}
+
+% \begin{frame}{Forme variationnelle}
+% On multiplie (\ref{sc11}) par $\bm{\varphi}\in H(\mathrm{rot})$ et on intègre :
+% \[ (\rott\mathbf{g}_i,\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\mathbf{g}_i,\bm{\varphi}) \]
+% On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
+% \[ (\div\mathbf{g}_i,q) = 0 \]
+% \begin{block}{En intégrant par partie et en additionnant :}
+% \[ (\rot\mathbf{g}_i,\rot\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\mathbf{g}_i,q) = \lambda^2(\mathbf{g}_i,\bm{\varphi}) \]
+% \end{block}
+% \end{frame}
+
+% \begin{frame}{Conditions aux bords}
+% En intégrant par partie $(\div\mathbf{g}_i,q)$, on a :
+% \[ (\div\mathbf{g}_i,q) = (\mathbf{g}_i,\grad q) - \langle \underbrace{\mathbf{g}_i\cdot \mathbf{n}}_{=0}, q \rangle \] 
+% Pour imposer $\rot\mathbf{g}_i\cdot\mathbf{n}=0$ on utilise une méthode de pénalisation, on ajoute donc :
+% \[ \gamma\int_\Omega (\rot\mathbf{g}_i\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) \]
+% \begin{block}{Ce qui donne la forme variationnelle :}
+% \[\begin{aligned}
+% (\rot\mathbf{g}_i,\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\mathbf{g}_i, \grad q)\\
+% &+ \gamma(\rot\mathbf{g}_i\cdot\mathbf{n},\rot\bm{\varphi}\cdot\mathbf{n}) = \lambda^2(\mathbf{g}_i,\bm{\varphi})
+% \end{aligned}\]
+% \end{block}
+% \end{frame}
+
+% \begin{frame}{Ajustements}
+% Avec cette formulation, on a : $||\div\mathbf{g}||_{L^2(\Omega)}=415.271$  $||\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=6.10952$ $||\rot\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=5.56388e-08$\\
+
+% On ajoute donc deux termes de pénalisation afin de forcer la divergence et la condition de bord $\rot\mathbf{g}\cdot\mathbf{n} = 0$ :
+% \[\begin{aligned}
+% (\rot\mathbf{g}_i,\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\mathbf{g}_i, \grad q)\\
+% &+ \gamma(\rot\mathbf{g}_i\cdot\mathbf{n},\rot\bm{\varphi}\cdot\mathbf{n})\\
+% &+ \alpha(\div\mathbf{g}_i)(\div\bm{\varphi})\\
+% &+ \beta(\mathbf{g}_i\cdot\mathbf{n},\bm{\varphi}\cdot\mathbf{n}) = \lambda^2(\mathbf{g}_i,\bm{\varphi})
+% \end{aligned}\]
+% En prenant $\alpha=\beta=\gamma=1000$, on a :
+% $||\div\mathbf{g}||_{L^2(\Omega)}=0.0371$  $||\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=0.0844$ $||\rot\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=0.00035$
+% \end{frame}
+
+% \begin{frame}{Modes}
+% \begin{figure}[H]
+% 	\makebox[\textwidth][c]{
+% 		\subfloat[mode 0]{\includegraphics[scale=0.12]{glyphMode0}}\ 
+% 		\subfloat[mode 5]{\includegraphics[scale=0.12]{glyphMode5}}
+% 	}\\
+% 	\makebox[\textwidth][c]{
+% 		\subfloat[mode 10]{\includegraphics[scale=0.12]{glyphMode10}}\ 
+% 		\subfloat[mode 14]{\includegraphics[scale=0.12]{glyphMode14}}
+% 	}
+% 	\caption{Modes propres}
+% 	\label{resultats}
+% \end{figure}
+% \end{frame}
+
+\begin{frame}
+supp psi0 in H(div)\\
+fusion relev alpha1(2-3)\\
+remerciements
 \end{frame}
 
-\begin{frame}{$P_\sigma(H^1_0)$}
-\begin{alertblock}{Problèmes}
-\begin{itemize}
-\item $\div\bm{g} = \div (\bm{g_0}+\grad\psi) = \div\bm{g_0} + \laplace\psi \ne 0$
-\item On veut une base $(\bm{g_i})$ de $D^1$ particulière, celle telle que 
-\[ \rot\bm{g_i} = \lambda\bm{g_i} \]
-or $(g_i)\ne(g_o^i)$
-\end{itemize}
-\end{alertblock}
-\end{frame}
-
-\section{Stokes-Curl}
-\begin{frame}{Stokes-Curl}
-%\begin{block}{On résout le problème suivant :}
-\begin{align}
-\rott \bm{g_i} &= \lambda^2\bm{g_i}\label{sc1}\\
-\div \bm{g_i} &= 0\label{sc2}\\
-\bm{g_i}\cdot\bm{n}&=0\\
-\rot\bm{g_i}\cdot\bm{n}&=0
-\end{align}
-%\end{block}
-De plus, on utilise un terme de pression pour imposer (\ref{sc2}). On a donc le problème :
-\begin{align}
-\rott \bm{g_i} + \grad p &= \lambda^2_i\bm{g_i}\label{sc11}\\
-\div\bm{g_i} &= 0\label{sc22}\\
-\bm{g_i}\cdot\bm{n}&=0\\
-\rot\bm{g_i}\cdot\bm{n}&=0
-\end{align}
-\end{frame}
-
-\begin{frame}{Forme variationnelle}
-On multiplie (\ref{sc11}) par $\bm{\varphi}\in H(rot)$ et on intègre :
-\[ (\rott\bm{g_i},\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\bm{g_i},\bm{\varphi}) \]
-On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
-\[ (\div\bm{g_i},q) = 0 \]
-\begin{block}{En intégrant par partie et en additionnant :}
-\[ (\rot\bm{g_i},\rot\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\bm{g_i},q) = \lambda^2(\bm{g_i},\bm{\varphi}) \]
-\end{block}
-\end{frame}
-
-\begin{frame}{Conditions aux bords}
-En intégrant par partie $(\div\bm{g_i},q)$, on a :
-\[ (\div\bm{g_i},q) = (\bm{g_i},\grad q) - \langle \underbrace{\bm{g_i}\cdot \bm{n}}_{=0}, q \rangle \] 
-Pour imposer $\rot\bm{g_i}\cdot\bm{n}=0$ on utilise une méthode de pénalisation, on ajoute donc :
-\[ \gamma\int_\Omega (\rot\bm{g_i}\cdot\bm{n})(\rot\bm{\varphi}\cdot\bm{n}) \]
-\begin{block}{Ce qui donne la forme variationnelle :}
-\[\begin{aligned}
-(\rot\bm{g_i},\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
-&+ \gamma(\rot\bm{g_i}\cdot\bm{n},\rot\bm{\varphi}\cdot\bm{n}) = \lambda^2(\bm{g_i},\bm{\varphi})
-\end{aligned}\]
-\end{block}
-\end{frame}
-
-\begin{frame}{Ajustements}
-Avec cette formulation, on a : $||\div\bm{g}||_{L^2(\Omega)}=415.271$  $||\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=6.10952$ $||\rot\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=5.56388e-08$\\
-
-On ajoute donc deux termes de pénalisation afin de forcer la divergence et la condition de bord $\rot\bm{g}\cdot\bm{n} = 0$ :
-\[\begin{aligned}
-(\rot\bm{g_i},\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\bm{g_i}, \grad q)\\
-&+ \gamma(\rot\bm{g_i}\cdot\bm{n},\rot\bm{\varphi}\cdot\bm{n})\\
-&+ \alpha(\div\bm{g_i})(\div\bm{\varphi})\\
-&+ \beta(\bm{g_i}\cdot\bm{n},\bm{\varphi}\cdot\bm{n}) = \lambda^2(\bm{g_i},\bm{\varphi})
-\end{aligned}\]
-En prenant $\alpha=\beta=\gamma=1000$, on a :
-$||\div\bm{g}||_{L^2(\Omega)}=0.0371$  $||\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=0.0844$ $||\rot\bm{g}\cdot\bm{n}||_{L^2(\partial\Omega)}=0.00035$
-\end{frame}
-
-\begin{frame}{Modes}
-\begin{figure}[H]
-	\makebox[\textwidth][c]{
-		\subfloat[mode 0]{\includegraphics[scale=0.12]{glyphMode0}}\ 
-		\subfloat[mode 5]{\includegraphics[scale=0.12]{glyphMode5}}
-	}\\
-	\makebox[\textwidth][c]{
-		\subfloat[mode 10]{\includegraphics[scale=0.12]{glyphMode10}}\ 
-		\subfloat[mode 14]{\includegraphics[scale=0.12]{glyphMode14}}
-	}
-	\caption{Modes propres}
-	\label{resultats}
-\end{figure}
-\end{frame}
-
-\begin{frame}{Problème spectral}
-On observe que $\int_\Omega g^z = 0$, d'où, avec $\bm{f}=(0,0,9.81)$, on a
-\[ R_{fk}=\int_\Omega \bm{f}\cdot\bm{g}=0 \]
-
-De plus, $R_{pk}=\int_{\partial\Omega} \alpha_2\psi_k$, donc si $\psi$ est de moyenne nulle,
-\[ R_{pk}=0 \]
-
-On pose $\bm{c} = (c_0,c_1,\dots,c_M)$ et $A=\frac{\lambda^2}{Re}I+R_{iak}$, alors on résout
-\[ Ac = R_{fk}+\frac{R_{pk}}{Re} = 0 \]
-On cherche donc $\psi$ de moyenne non nulle.
-\end{frame}
 
 \end{document}
