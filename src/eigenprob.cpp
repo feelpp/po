@@ -52,18 +52,41 @@ EigenProb::EigenProb( mesh_ptrtype mesh ):super()
 void
 EigenProb::run()
 {
+    boost::mpi::timer t;
+
     if( boption( _name="computeEigen") ){
+
         compute_eigens();
-        if( boption( "needDecomp" ) )
+
+        LOG(INFO) << "eigen = " << t.elapsed() << " sec" << std::endl;
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "eigen = " << t.elapsed() << " sec" << std::endl;
+        t.restart();
+
+        if( boption( "needDecomp" ) ){
+
             compute_decomp();
+
+            LOG(INFO) << "decomp = " << t.elapsed() << " sec" << std::endl;
+            if ( Environment::worldComm().isMasterRank() )
+                std::cout << "decomp = " << t.elapsed() << " sec" << std::endl;
+        }
     }
     else {
         load_eigens();
         if( boption( "needDecomp") ){
-            if( boption( "computeDecomp") )
+            if( boption( "computeDecomp") ){
+
+                t.restart();
                 compute_decomp();
-            else
+
+                LOG(INFO) << "decomp = " << t.elapsed() << " sec" << std::endl;
+                if ( Environment::worldComm().isMasterRank() )
+                    std::cout << "decomp = " << t.elapsed() << " sec" << std::endl;
+            }
+            else {
                 load_decomp();
+            }
         }
     }
 
@@ -84,9 +107,6 @@ EigenProb::compute_eigens()
         std::cout << "number of eigenvalues computed = " << nev <<std::endl;
         std::cout << "number of column vector = " << ioption(_name="solvereigen.ncv") <<std::endl;
     }
-
-
-    boost::mpi::timer t;
 
 
     // [options]
@@ -202,22 +222,11 @@ EigenProb::compute_eigens()
     // [rhsB]
 
 
-    LOG(INFO) << "elt = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "elt = " << t.elapsed() << " sec" << std::endl;
-
-
     Environment::logMemoryUsage("memory usage before:");
     // [eigen] resolution of the eigen problem
     auto modes = veigs( _formA=a, _formB=b );
     // [eigen]
     Environment::logMemoryUsage("memory usage after:");
-
-
-    auto endEigen = t.elapsed();
-    LOG(INFO) << "eigen = " << endEigen << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "eigen = " << endEigen << " sec" << std::endl;
 
 
     auto cu = Vh->element();
@@ -234,11 +243,6 @@ EigenProb::compute_eigens()
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
         s.open ("lambda", std::fstream::out);
-
-
-    LOG(INFO) << "prep = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "prep = " << t.elapsed() << " sec" << std::endl;
 
 
     for( auto const& mode : modes )
@@ -305,16 +309,6 @@ EigenProb::compute_eigens()
         i++;
         if(i>=nev)
             break;
-    }
-
-
-    if( boption( "needDebug" ) ){
-        LOG(INFO) << "debug = " << t.elapsed() << " sec" << std::endl;
-        LOG(INFO) << "debug/mode = " << (t.elapsed()-endEigen)/nev << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() ){
-            std::cout << "debug = " << t.elapsed() << " sec" << std::endl;
-            std::cout << "debug/mode = " << (t.elapsed()-endEigen)/nev << " sec" << std::endl;
-        }
     }
 
 

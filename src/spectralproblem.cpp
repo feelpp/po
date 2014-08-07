@@ -1,6 +1,8 @@
 #include <boost/fusion/tuple.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/algorithm.hpp>
+#include <boost/mpi/timer.hpp>
+
 #include <feel/feelcore/feel.hpp>
 #include <feel/feelvf/detail/gmc.hpp>
 #include <feel/feelvf/expr.hpp>
@@ -60,10 +62,34 @@ void SpectralProblem::init( vector_vtype G, vector_stype P, std::vector<double> 
     psi = P;
     a = A;
 
+    boost::mpi::timer t;
+
     initRiak();
+
+    LOG(INFO) << "Riak = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "Riak = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
     // initRijk();
+
+    LOG(INFO) << "Rijk = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "Rijk = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
     initRfk();
+
+    LOG(INFO) << "Rfk = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "Rfk = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
     initRpk();
+
+    LOG(INFO) << "Rpk = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "Rpk = " << t.elapsed() << " sec" << std::endl;
 
     c = VectorXd::Ones(M);
 }
@@ -207,8 +233,6 @@ void SpectralProblem::initRpk()
     //         { "speed", doption( _name="speed" ) },
     //             { "radius", doption( _name="radius" ) } } );
 
-    // 1e4 sur 1, 0 sur 2 decroit sur 3
-
     // [rpkInit]
     Rpk = VectorXd(M);
     // [rpkInit]
@@ -218,16 +242,17 @@ void SpectralProblem::initRpk()
             s.open ("rpk", std::fstream::out);
 
         // [rpkComp]
-        //auto a2 = expr( alpha2 );
-        auto a2 = 32;
+        auto a2 = expr( alpha2 );
         for(int k = 0; k < M; k++){
-            //Rpk(k) = integrate( _range=boundaryfaces(mesh),
-            //                    _expr=a2*idv(psi[k]) ).evaluate()(0,0);
-            // [rpkComp]
             Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
                                 _expr=a2*idv(psi[k]) ).evaluate()(0,0);
-            Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
-                                 _expr=-a2*idv(psi[k]) ).evaluate()(0,0);
+            Rpk(k) -= integrate( _range=markedfaces( mesh, 2 ),
+                                 _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+            // [rpkComp]
+
+            //Rpk(k) = integrate( _range=boundaryfaces(mesh),
+            //                    _expr=a2*idv(psi[k]) ).evaluate()(0,0);
+
             if ( Environment::worldComm().isMasterRank() ){
                 std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
                 s << Rpk(k) << std::endl;
@@ -254,6 +279,7 @@ void SpectralProblem::run()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Start Spectral Problem -----" << std::endl;
 
+    boost::mpi::timer t;
 
     // [StokesA]
     MatrixXd A = MatrixXd(M,M);
@@ -271,6 +297,11 @@ void SpectralProblem::run()
     qr.compute(A);
     c = qr.solve(b);
     // [StokesSolve]
+
+    LOG(INFO) << "stokes = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "stokes = " << t.elapsed() << " sec" << std::endl;
+
 
     for(int i=0; i<M; i++){
         if ( Environment::worldComm().isMasterRank() )
