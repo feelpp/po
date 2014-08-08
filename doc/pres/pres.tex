@@ -29,6 +29,14 @@ tabsize=2}
 
 \beamertemplatenavigationsymbolsempty
 
+\AtBeginSection[]
+  {
+     \begin{frame}<beamer>
+     \frametitle{Plan}
+     \tableofcontents[currentsection]
+     \end{frame}
+  }
+
 \definecolor{bleufonce}{rgb}{0.1,0.1,0.8}
 \definecolor{grisbleu}{rgb}{0.8,0.8,0.9}
 \definecolor{rougefonce}{rgb}{0.8,0.1,0.1}
@@ -56,6 +64,9 @@ tabsize=2}
 \newcommand{\taille}{0.4}
 \newcommand{\taillem}{0.5}
 \newcommand{\tailleg}{0.7}
+\newcommand{\Ctaille}{0.5}
+\newcommand{\Ctaillem}{0.6}
+\newcommand{\Ctailleg}{0.8}
 
 \title[Stage]{Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
 \subtitle{Plastic Omnium, M2 CSMI}
@@ -70,14 +81,30 @@ tabsize=2}
 \titlepage
 \end{frame}
 
-\begin{frame}
-Présentation PO
+\begin{frame}{Plastic Omnium}
+\begin{itemize}
+\item Société fondée en 1946 par Pierre Burelle.
+\item Transforme et commercialise des matières plastiques.
+\item Scindée en deux entités :
+\begin{itemize}
+\item Plastic Omnium Environnement
+\item Plastic Omnium Automobile
+\end{itemize}
+\item Objectifs :
+\begin{itemize}
+\item réduire le poids
+\item augmenter l'aérodynamisme
+\item équiper les véhicules hybrides et électriques
+\end{itemize}
+\end{itemize}
+\centering
+\includegraphics[scale=0.5]{sigma}
 \end{frame}
 
 \section{Problème}
 \begin{frame}{Problème}
 \begin{block}{On cherche $(\mathbf{v},p)$ solution de :}
-\begin{eqnarray}
+\begin{equation}
 \label{depart}
 \left\{\begin{aligned}
 &\frac{\partial \mathbf{v}}{\partial t} + (\rot  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\rott  \mathbf{v}-\mathbf{f} = 0\\
@@ -87,133 +114,92 @@ Présentation PO
 &(\rot  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_1\\
 &(\rott  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_2
 \end{aligned}\right.
-\end{eqnarray}
+\end{equation}
 où $q = \frac{|\mathbf{v}|^2}{2}+p$.
 \end{block}
-\end{frame}
-
-\begin{frame}
-séparation des variables et conditions aux bords
-\end{frame}
-
-\begin{frame}{Décomposition}
-\begin{block}{Décomposition des problèmes}
-\begin{center}
-\begin{tabular}{|c|c|c|}
-\hline
-Variables & Problèmes & Espaces\\ \hline
-$\mathbf{v}$ & $\mathbf{u} + \mathbf{a}$ & $ L^2_\sigma$\\ \hline
-$\mathbf{u}$ & $\sum_i c_i\mathbf{g}_i$ & $ D^1$\\ \hline
-$(\lambda_i,\mathbf{g}_i)$ & $\rott  \mathbf{g}_i = \Lambda_i \mathbf{g}_i$ & $ D^1$ \\ \hline
-% $\mathbf{\mathbf{g}_i^0}$ & $\grad(\div \mathbf{\mathbf{g}_i^0}) - \laplace \mathbf{\mathbf{g}_i^0} = \Lambda_i \mathbf{g}_i$ & $ H^1_0$\\ \hline
-% $\psi_i$ & $-\laplace \psi_i = 0$ & $ H^1$\\ \hline
-$\mathbf{a}$ & $\grad\psi^0 + \rot \mathbf{b}$ & $ [L^2(\Omega)]^3$\\ \hline
-$\psi^0$ & $-\laplace\psi^0 = 0$ & $ H^1/ H(\mathrm{div})$\\ \hline
-$(\mathbf{b},\psi^1)$ & $\rott \mathbf{b}= \grad\psi^1$ & $ H(\mathrm{rot})/ D^1$ \\ \hline
-\end{tabular}
-\end{center}
-\end{block}
-Les difficultés résident donc dans
+Conditions aux bords :
 \begin{itemize}
-\item le problème aux valeurs propres
-\item la résolution du problème spectral pour trouver les coefficients $c_i$.
+\item condition d'ordre 2
+\item composante normale nulle
+\item composante tangentielle libre
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Problème}
+\begin{block}{Séparation des variables}
+On veut exprimer la solution sous la forme
+\[ \sum_i c_i(t) \mathbf{g}_i(x,y,z) \]
+\begin{itemize}
+\item les coefficients $c_i$ portent la dimension temporelle.
+\item les fonctions de base $(\mathbf{g}_i)$ portent la dimension spatiale.
+\end{itemize}
+\end{block}
+Utilisation des travaux de P. Penel :
+\begin{itemize}
+\item $D^1(\Omega) = \{\mathbf{v} \in [H^1(\Omega)]^3\; |\; \div\mathbf{v}=0,\nabla^k\times \mathbf{v}\cdot \mathbf{n} = 0, k=0,1 \}$
+\item engendré par les fonctions propres de l'opérateur rotationnel
+\item relèvement des conditions aux limites,
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-Graph
-\end{frame}
+\centering
+\begin{tikzpicture}
+\node[draw,fill=green!50] (alpha0) at (0,10) {$\alpha_0$};
+\node[draw,fill=gray!50,align=center] (pbpsi0) at (0,8.5) {Problème\\ Poisson} ;
+\node[draw,fill=blue!50] (gradpsi0) at (0,7) {$\grad\psi^0$} ;
+\node[draw,fill=green!50] (alpha1) at (2.5,10) {$\alpha_1$};
+\node[draw,fill=gray!50,align=center] (pbcurlb) at (2.5,8.5) {Problème\\ mixte} ;
+\node[draw,fill=blue!50] (curlb) at (2.5,7) {$(\rot\mathbf{b},\grad\psi^1)$} ;
+\node[draw,fill=gray!50] (pba) at (1.25,6) {$\mathbf{a}=\grad\psi^0+\rot\mathbf{b}$};
+\node[draw,fill=blue!50] (a) at (1.25,5) {$\mathbf{a}$} ;
+\node[draw=red,align=center,fill=gray!50] (pbeigen) at (7.5,8.5) {Problème\\ aux valeurs\\ propres} ;
+\node[draw,fill=yellow!50] (lambdagi) at (7.5, 7) {$(\Lambda_i,\mathbf{g_i})$} ;
+\node[draw,fill=green!50] (alpha2) at (4.25,7) {$\alpha_2$};
+\node[draw,fill=green!50] (f) at (5,7) {$\mathbf{f}$};
+\node[draw,fill=green!50] (c0) at (6,7) {$c_i(0)$};
+\node[draw=red,align=center,fill=gray!50] (pbc) at (6,5) {Problème spectral};
+\node[draw,fill=blue!50] (u) at (5,3.75) {$\mathbf{u}$} ;
+\node[draw,fill=gray!50] (pbv) at (3,3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
+\node[draw,fill=red!50] (v) at (3,2) {$(\mathbf{v},p)$} ;
 
-\begin{frame}{$\mathbf{v}=\mathbf{a}+\mathbf{u}$}
-\begin{block}{Relèvement par $\mathbf{a}$ pour utiliser les travaux de P. Penel}
-\begin{center}
-\begin{tabular}{c|ccccc}
-& $\mathbf{v}$ & = & $\mathbf{a}$ & + & $\mathbf{u}$ \\ \hline
-$\div\star$ & 0 & & 0 & & 0\\ \hline
-$\star\cdot \mathbf{n}\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
-$\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & $\alpha_1$ & & 0\\\hline
-$\rott\star\cdot \mathbf{n}\restr$ & $\alpha_2$ & & 0 & & $\alpha_2$ 
-\end{tabular}
-\end{center}
-\end{block}
-Ajout explications
-
+\draw[->,>=latex] (alpha0) -- (pbpsi0); \draw[->,>=latex] (pbpsi0) -- (gradpsi0); \draw[->,>=latex] (alpha1) -- (pbcurlb); \draw[->,>=latex] (pbcurlb) -- (curlb); \draw[->,>=latex] (gradpsi0) -- (pba); \draw[->,>=latex] (curlb) -- (pba); \draw[->,>=latex] (pba) -- (a); \draw[->,>=latex] (pbeigen) -- (lambdagi); \draw[->,>=latex] (a) -- (pbc); \draw[->,>=latex] (alpha2) -- (pbc); \draw[->,>=latex] (f) -- (pbc); \draw[->,>=latex] (c0) -- (pbc); \draw[->,>=latex] (lambdagi) -- (pbc); \draw[->,>=latex] (pbc) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv); \draw[->,>=latex] (pbv) -- (v);
+\end{tikzpicture}
 \end{frame}
 
 \section{Fonctions propres}
-\begin{frame}{$\mathbf{u}=\sum c_i\mathbf{g}_i$}
-\begin{block}{Décomposition de Galerkin généralisée}
+\begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
+\begin{block}{Propriétés des modes propres}
 \begin{itemize}
-\item les coefficients $c_i$ portent la dimension temporelle.
-\item les fonctions de base de $D^1$ portent la dimension spatiale.
-\item $D^1$ est engendré par les fonctions propres de l'opérateur rotationnel.
 \item les fonctions propres de $\rot\star$ sont aussi celles de $\rott\star$.
 \item les valeurs propres de $\rot\star$ sont les racines carrées de celles de $\rott\star$.
 \item pour ne pas avoir de multiplicité > 1, on ne garde que les positives : $\lambda_i=\sqrt{\Lambda_i}$
 \item le signe est porté par le coefficient $c_k$.
 \end{itemize}
 \end{block}
-\end{frame}
-
-\begin{frame}{Problème aux valeurs propres}
 \begin{block}{Trouver $(\mathbf{g},\lambda)\in D^1\times \mathbb{R}$ tel que}
 \[\left\{\begin{aligned}
-&\rott  \mathbf{g}_i = \Lambda_i \mathbf{g}_i\\
-&\div \mathbf{g}_i = 0\\
+&\rott  \mathbf{g}_i = \lambda_i^2 \mathbf{g}_i\\
+&(\div \mathbf{g}_i = 0)\\
 &\mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
 &\rot \mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
-&\rott  \mathbf{g}_i\cdot \mathbf{n}\restr = 0
+&(\rott  \mathbf{g}_i\cdot \mathbf{n}\restr = 0)
 \end{aligned}\right.\]
-\end{block}
-Formulation variationnelle dans $D^1$ :
-\begin{block}{Trouver $(\mathbf{g},\lambda)\in D^1\times \mathbb{R}$ tel que $\forall \varphi\in D^1$ :}
-\[ \int_\Omega (\rot \mathbf{g})(\rot\bm{\varphi})\ dX = \Lambda\int_\Omega \mathbf{g}\bm{\varphi}\ dX \]
 \end{block}
 \end{frame}
 
-\begin{frame}
-Ajout H1 et terme de pénalisation\\
-Résultats
-\end{frame}
+\begin{frame}{Résultats}
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 0]{\includegraphics[scale=0.15,trim=0mm 10mm 0mm 40mm,clip]{curl-grad-1e3-mode0}}\ 
+		\subfloat[mode 45]{\includegraphics[scale=0.15,trim=0mm 10mm 0mm 40mm,clip]{curl-grad-1e3-mode45}}
+	}
+	\makebox[\textwidth][c]{
+		\subfloat[tps/nombre de modes]{\includegraphics[scale=0.3]{timeM}}\ 
+		\subfloat[tps/taille maillage]{\includegraphics[scale=0.3]{timeH}}
+	}
+\end{figure}
 
-\begin{frame}{Décomposition des fonctions propres}
-\begin{block}{Décomposition des $\mathbf{g}_i$}
-\begin{center}
-\begin{tabular}{c|ccccc}
-& $\mathbf{g}_i$ & = & $\mathbf{\mathbf{g}_i^0}$ & + & $\grad\psi_i$ \\ \hline
-$\rott\star$ & $\Lambda_i \mathbf{g}_i$ & & $\grad(\div \mathbf{\mathbf{g}_i^0})-\laplace \mathbf{\mathbf{g}_i^0}$ & & 0\\ \hline
-$\div\star$ & 0 & & $\div \mathbf{\mathbf{g}_i^0}$ & & $\laplace\psi_i$\\ \hline
-$\star\cdot \mathbf{n}\restr$ & 0 & & 0 & & 0
-\end{tabular}
-\end{center}
-\end{block}
-\begin{block}{$\mathbf{g}_i=\mathbf{\mathbf{g}_i^0}+\grad\psi_i$}
-\begin{itemize}
-\item Problème :
-\[\left\{\begin{aligned}
-\grad(\div \mathbf{\mathbf{g}_i^0})-\laplace \mathbf{\mathbf{g}_i^0} &= \Lambda_i \mathbf{g}_i\\
-\mathbf{\mathbf{g}_i^0}\restr &= 0
-\end{aligned}\right.\]
-\item Formulation variationnelle :
-\[ -\int_\Omega (\div \mathbf{\mathbf{g}_i^0})(\div\bm{\varphi}) + \int_\Omega \grad \mathbf{\mathbf{g}_i^0}\grad\bm{\varphi} = \int_\Omega \Lambda_i\mathbf{g}_i\bm{\varphi} \]
-\end{itemize}
-\end{block}
-\end{frame}
-
-\begin{frame}{Décomposition des fonctions propres}
-\begin{block}{$\mathbf{g}_i=\mathbf{\mathbf{g}_i^0}+\grad\psi_i$}
-\begin{itemize}
-\item Problème :
-\[\left\{\begin{aligned}
--\laplace\psi_i &= \div \mathbf{\mathbf{g}_i^0}\\
-\grad\psi_i\cdot \mathbf{n}\restr &= 0
-\end{aligned}\right.\]
-\item Formulation variationnelle :
-\[ \int_\Omega \grad\psi_i\grad\varphi = \int_\Omega (\div \mathbf{\mathbf{g}_i^0})\varphi \]
-\end{itemize}
-\end{block}
-modifier decomposition\\
-cite Penel, constante près,...
 \end{frame}
 
 \section{Relèvement}
@@ -230,396 +216,241 @@ $\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{center}
 \end{block}
 2 choix pour le relèvement de $\alpha_0$ par $\grad\psi^0$ :
-\begin{columns}[t]
-\begin{column}{5cm}
-\begin{block}{Problème dans $ H^1$}
-\[\left\{\begin{aligned}
-&-\laplace\psi^0 = 0\\
-&\grad\psi^0\cdot \mathbf{n}\restr=\alpha_0
-\end{aligned}\right.\]
-\end{block}
-\end{column}
-\begin{column}{5cm}
-\begin{block}{Problème dans $ H(\mathrm{div})$}
-\[\left\{\begin{aligned}
-\mathbf{w} &= \grad \psi^0\\
-\div \mathbf{w} &= 0\\
-\mathbf{w}\cdot \mathbf{n}\restr &= \alpha_0
-\end{aligned}\right.\]
-\end{block}
-\end{column}
-\end{columns}
+\begin{itemize}
+\item Laplacien dans $H^1$
+\item Problème mixte dans $H(\mathrm{div})$
+\end{itemize}
+2 choix pour le relèvement de $\alpha_1$ par $\rot\mathbf{b}$ :
+\begin{itemize}
+\item Problème mixte dans $H(\mathrm{rot})$
+\item utilisation de la base $(\mathbf{g}_i)$ dans $D^1$
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Relèvement de $\alpha_0$}
-\begin{block}{Problème dans $H^1$}
-\begin{itemize}
-\item Problème :
-\[\left\{\begin{aligned}
-&-\laplace\psi^0 = 0\\
-&\grad\psi^0\cdot \mathbf{n}\restr=\alpha_0
-\end{aligned}\right.\]
-\item Formulation variationnelle :
-\[ -\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0 \]
-\end{itemize}
-\end{block}
-\begin{columns}[t]
-\begin{column}{5cm}
-\begin{exampleblock}{Avantages}
-\begin{itemize}
-\item[+] Plus simple
-\end{itemize}
-\end{exampleblock}
-\end{column}
-\begin{column}{5cm}
-\begin{alertblock}{Inconvénients}
-\begin{itemize}
-\item[$-$] Perte de régularité sur $\grad\psi^0$
-\end{itemize}
-\end{alertblock}
-\end{column}
-\end{columns}
-\end{frame}
-
-\begin{frame}
-Résultats
-\end{frame}
-
-\begin{frame}{Relèvement de $\alpha_0$}
-\begin{block}{Problème dans $ H(\mathrm{div})$}
-\begin{itemize}
-\item Problème :
-\[\left\{\begin{aligned}
-\mathbf{w} &= \grad \psi^0\\
-\div\mathbf{w} &= 0\\
-\mathbf{w}\cdot \mathbf{n}\restr &= \alpha_0
-\end{aligned}\right.\]
-\item Formulation variationnelle :
-\[ -\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi}  = \int_{\partial\Omega} \alpha_0\nu \]
-\end{itemize}
-\end{block}
-\begin{columns}[t]
-\begin{column}{5cm}
-\begin{exampleblock}{Avantages}
-\begin{itemize}
-\item[+] Gain d'un ordre de régularité sur $\grad\psi^0$
-\end{itemize}
-\end{exampleblock}
-\end{column}
-\begin{column}{5cm}
-\begin{alertblock}{Inconvénients}
-\begin{itemize}
-\item[$-$] Utilisation des éléments de Raviert-Thomas en 3D
-\end{itemize}
-\end{alertblock}
-\end{column}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Relèvement de $\alpha_1$}
-2 choix aussi pour le relèvement de $\alpha_1$ par $\rot\mathbf{b}$ :
-\begin{columns}[t]
-\begin{column}{5cm}
-\begin{block}{Problème dans $ H(\mathrm{rot})$}
-\[\left\{\begin{aligned}
-&\rott \mathbf{b} = \grad\psi^1\\
-&\div \mathbf{b} = 0\\
-&\mathbf{b}\cdot \mathbf{n}\restr = 0\\
-&\rot \mathbf{b}\cdot \mathbf{n}\restr = 0\\
-&\grad\psi^1\cdot \mathbf{n}\restr = \alpha_1
-\end{aligned}\right.\]
-\end{block}
-\end{column}
-\begin{column}{5cm}
-\begin{block}{Problème dans $D^1$}
-\[\left\{\begin{aligned}
-&\rott \mathbf{b} = \grad\psi^1\\
-&\mathbf{b}\cdot \mathbf{n}\restr = 0\\
-&\rot \mathbf{b}\cdot \mathbf{n}\restr = 0\\
-&\rott b\cdot \mathbf{n}\restr = \alpha_1
-\end{aligned}\right.\]
-\end{block}
-\begin{block}{où $\psi^1$ solution de}
-\[\left\{\begin{aligned}
-&-\laplace\psi^1 = 0\\
-&\grad\psi^1\cdot \mathbf{n}\restr=\alpha_1
-\end{aligned}\right.\]
-\end{block}
-\end{column}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Relèvement de $\alpha_1$}
-\begin{block}{Formulation variationnelle dans $ H(\mathrm{rot})$}
-\begin{align*}
-\int_\Omega (\rot \mathbf{b})(\rot\bm{\varphi}) &- \int_{\partial\Omega} (\rot \mathbf{b})(\bm{\varphi}\cdot \mathbf{n}) \\
-&+\int_\Omega \psi^1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot \mathbf{n}) = 0
-\end{align*}
-\end{block}
-\begin{columns}[t]
-\begin{column}{5cm}
-\begin{exampleblock}{Avantages}
-\begin{itemize}
-\item[+] Problème plus simple
-\end{itemize}
-\end{exampleblock}
-\end{column}
-\begin{column}{5cm}
-\begin{alertblock}{Inconvénients}
-\begin{itemize}
-\item[$-$] Perte de régularité sur $\mathbf{a}$
-\end{itemize}
-\end{alertblock}
-\end{column}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Relèvement de $\alpha_1$}
-\begin{block}{Problème dans $ D^1$}
-\begin{itemize}
-\item Formulation faible
-\[ \int_\Omega (\rot\mathbf{b})\cdot(\rot\bm{\varphi}) + \int_{\partial\Omega} \phi\alpha_1 = \int_\Omega \grad\psi^1\cdot\bm{\varphi} \]
-\item Discrétisation $\mathbf{b}=\sum d_ig_i$
-\begin{align*}
-d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g}_k) - \langle\alpha_1,\psi_k\rangle
-\end{align*}
-\end{itemize}
-\end{block}
-\begin{columns}[t]
-\begin{column}{5cm}
-\begin{exampleblock}{Avantages}
-\begin{itemize}
-\item[+] Gain de régularité sur $\rot \mathbf{b}$
-\item[+] Réutilisation de la base $\mathbf{g}_i$ 
-\end{itemize}
-\end{exampleblock}
-\end{column}
-\begin{column}{5cm}
-\begin{alertblock}{Inconvénients}
-\begin{itemize}
-\item[$-$] Utilisation des éléments de Nedelec en 3D
-\end{itemize}
-\end{alertblock}
-\end{column}
-\end{columns}
+\begin{frame}{Résultats}
+\centering
+\includegraphics[scale=0.2]{psi0-clip}
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[entrée]{\includegraphics[scale=0.15]{aIn}}\ 
+		\subfloat[sortie]{\includegraphics[scale=0.15]{aOut}}
+	}
+\end{figure}
 \end{frame}
 
 \section{Problème spectral}
 \begin{frame}{Problème spectral}
-phrase intro
-\begin{block}{Problème dans $ D^1$}
-\[\left\{\begin{aligned}
-&\frac{\partial \mathbf{u}}{\partial t} + (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} + \left(\rot \mathbf{a}\right)\times \mathbf{u} \\
-&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{f_a} = 0\\
-&\div \mathbf{u} = 0\\
-&\mathbf{u}\cdot \mathbf{n}\restr = 0\\
-&(\rot \mathbf{u})\cdot \mathbf{n}\restr = 0\\
-&(\rott \mathbf{u})\cdot \mathbf{n}\restr = \alpha_2
-\end{aligned}\right.\]
-\end{block}
-\end{frame}
-
-\begin{frame}{Problème spectral}
-\begin{block}{Forme variationnelle}
+En utilisant $\mathbf{v}=\mathbf{u}+\mathbf{a}$ dans (\ref{depart}), on obtient :
+\begin{align*}
+\frac{\partial \mathbf{u}}{\partial t} &+ (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} + \left(\rot \mathbf{a}\right)\times \mathbf{u} \\
+&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{f_a} = 0
+\end{align*}
+où : $\pi_a=\frac{|\mathbf{u}+\mathbf{a}|^2}{2}$ et $\mathbf{f_a}=\mathbf{f}-\frac{\partial \mathbf{a}}{\partial t}-(\rot\mathbf{a})\times\mathbf{a}$.
+\begin{block}{Trouver $\mathbf{u}\in D^1$ tel que $\forall \bm{\varphi}=\bm{\varphi}_0+\grad\phi\in D^1$ :}
 \begin{align*}
 \int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
 &+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) \\
 &-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{f_a}\cdot\bm{\varphi}
 \end{align*}
 \end{block}
-Le terme de pression n'apparaît plus dans cette formulation.\\
-Calcul de ce terme en post-traitement de la vitesse.
 \end{frame}
 
-\begin{frame}{Problème spectral}
-On peut maintenant utiliser la relation 
-\[ \mathbf{u}\approx\sum_{i=1}^M c_i\mathbf{g}_i \]
-ainsi que la linéarité de l'opérateur rotationnel et l'orthonormalité de la base.
-\begin{block}{Discrètisation}
-\begin{align*}
-\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_i\sum_j c_i c_j\lambda_i(\mathbf{g}_i\times \mathbf{g}_j, \mathbf{g}_k)\\
-& + \sum c_i\lambda_i(\mathbf{g}_i\times \mathbf{a},\mathbf{g}_k) + \sum c_i((\rot \mathbf{a})\times \mathbf{g}_i, \mathbf{g}_k)\\
-& = (\mathbf{f_a},\mathbf{g}_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle
-\end{align*}
-\end{block}
-\end{frame}
-
-\begin{frame}{Problème spectral}
-En notant :
+\begin{frame}{Discrétisation}
+En utilisant $\mathbf{u}_M=\sum_{i=1}^M c_i\mathbf{g}_i$ et en notant :
 \begin{align*}
 R_{ijk} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
 R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
 R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
 \end{align*}
-On a :
+On a le problème suivant :
 \begin{block}{Trouver $(c_i)_{i=1,\dots,M}$ tel que $\forall k=1,\dots,M$ :}
 \[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i,j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_i\left(R_{iak} + R_{raij}\right) = R_{hk} + \frac{1}{Re}R_{pk} \]
 \end{block}
 \end{frame}
 
-\begin{frame}
-Stokes,stationnaire,alpha2\\
-Résultats
+\begin{frame}{Résultats}
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+      \subfloat{\includegraphics[scale=0.15,trim=0mm 20mm 0mm 20mm,clip]{v100modes}}\ 
+		\subfloat{\includegraphics[scale=0.15,trim=0mm 20mm 0mm 30mm,clip]{vGradPression32-32}}
+	}
+\caption{M = 50}
+\end{figure}
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+      \subfloat[M=10]{\includegraphics[scale=0.25,trim=100mm 20mm 100mm 20mm,clip]{vIn10}}\ 
+		\subfloat[M=100]{\includegraphics[scale=0.25,trim=100mm 20mm 100mm 20mm,clip]{vIn100}}
+	}
+\end{figure}
 \end{frame}
 
-\section{Synthèse}
-\begin{frame}{Organigramme Avec Résultats !!}
+\section{Conclusion}
+\begin{frame}
 \begin{figure}
 \centering
 \begin{tikzpicture}[scale=0.4] 
-\node[draw,scale=\taille,fill=gray!50] (pbeigen) at (9,-0.5)
+\node[draw,scale=\taille,fill=green!50] (a0) at (0.75,2) {$\alpha_0$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbpsi0lp) at (-0.5,-2)
 {$\begin{aligned}
-\rott \mathbf{g}_i = \Lambda_i\mathbf{g}_i\\
-\mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
-\rot \mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
-\rott \mathbf{g}_i\cdot \mathbf{n}\restr = 0
+-\laplace\psi^0&=0\\
+\grad\psi^0\cdot \mathbf{n} &= \alpha_0
 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=green!50] (a0) at (0,-1.5) {$\alpha_0$} ;
-\node[draw,scale=\taille,fill=green!50] (a1) at (4,-1.5) {$\alpha_1$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambda) at (8,-3) {$\Lambda_i$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi) at (10,-3) {$\mathbf{g}_i$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgi0) at (14,-3)
+\node[draw,scale=\taille,fill=blue!50] (psi0) at (-0.5,-3.5) {$\psi^0$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbgradpsi0) at (-0.5,-4.75) {$w=\grad\psi^0$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbpsi0div) at (2,-2)
 {$\begin{aligned}
-\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \Lambda_i \mathbf{g}_i\\
-\mathbf{g_i^0}\restr = 0
+\mathbf{w}&=\grad\psi^0\\
+\div\mathbf{w}&=0\\
+\mathbf{w}\cdot \mathbf{n} &= \alpha_0
 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi0) at (0,-3.5)
+\node[draw,scale=\taille,fill=blue!50] (gradpsi0) at (0.75,-8.75) {$\grad\psi^0$} ;
+\node (psi0Im) at (-3.5,-8.75) {\includegraphics[scale=0.1,angle=90,trim=35mm 0mm 80mm 0mm,clip]{psi0-clip}} ;
+
+\node[draw,scale=\taille,fill=green!50] (a1) at (5.5,2) {$\alpha_1$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbbcurl) at (4,-5)
 {$\begin{aligned}
-l^0=\grad\psi^0\\
-\div\psi^0=0\\
-l^0\cdot \mathbf{n}\restr &= \alpha_0
+\rott \mathbf{b} &= \grad\psi^1\\
+\div \mathbf{b} &=0\\
+\mathbf{b}\cdot \mathbf{n} &= 0\\
+\rot \mathbf{b}\cdot \mathbf{n} &= 0\\
+\grad \psi^1\cdot \mathbf{n} &= \alpha_1
 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi1) at (4,-3.5)
+\node[draw,scale=\taille,fill=gray!50] (pbpsi1lp) at (7,-2)
 {$\begin{aligned}
-l^1=\grad\psi^1\\
-\div\psi^1=0\\
-l^1\cdot \mathbf{n}\restr &= \alpha_1
+-\laplace\psi^1&=0\\
+\grad\psi^1\cdot \mathbf{n} &= \alpha_1
 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi0) at (14,-4.5) {$\mathbf{g_i^0}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi0) at (0,-5.5) {$\grad\psi^0$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi1) at (4,-5.5) {$\grad\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi) at (14,-6)
+\node[draw,scale=\taille,fill=blue!50] (psi1) at (7,-3.5) {$\psi^1$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbgradpsi1) at (7,-4.75) {$w=\grad\psi^1$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbpsi1div) at (9.5,-2)
+{$\begin{aligned}
+\mathbf{w}&=\grad\psi^1\\
+\div \mathbf{w}&=0\\
+\mathbf{w}\cdot \mathbf{n} &= \alpha_1
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=blue!50] (gradpsi1) at (8.25,-6) {$\grad\psi^1$} ;
+\node[draw,scale=\taille,fill=gray!50
+] (pbb) at (8,-7.5) 
+{$
+d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
+$} ;
+\node[draw,scale=\taille,fill=blue!50] (b) at (5.5,-8.75) {$\rot \mathbf{b}$} ;
+
+\node[draw,scale=\taille,fill=gray!50] (pbeigen) at (13.5,2)
+{$\begin{aligned}
+\rott \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
+\div\mathbf{g_i} = 0\\
+\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
+\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
+(\rott \mathbf{g_i}\cdot \mathbf{n}\restr = 0)
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (13.5,-0.5) {$(\Lambda_i,\mathbf{g_i})$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbgi0) at (13.5,-3)
+{$\begin{aligned}
+\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} &= \Lambda_i\mathbf{g_i}\\
+\mathbf{g_i^0} &= 0
+\end{aligned}$} ;
+\node[draw,scale=\taille,fill=yellow!50] (gi0) at (13.5,-4.5) {$\mathbf{g_i^0}$} ;
+\node[draw,scale=\taille,fill=gray!50] (pbpsi) at (13,-6)
 {$\begin{aligned}
 -\laplace\psi_i = \div \mathbf{g_i^0}\\
 \grad\psi_i\cdot \mathbf{n}\restr = 0
 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (psi) at (14,-7.5) {$\psi_i$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbb) at (4,-7.5) 
-{$
-d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g}_k) - \langle\alpha_1,\psi_k\rangle
-$} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (4,-8.5) {$\rot \mathbf{b}$} ;
+\node[draw,scale=\taille,fill=yellow!50] (psi) at (12.5,-7.5) {$\psi_i$} ;
+
 \node[draw,scale=\taille,fill=gray!50] (pba) at (2,-10.5) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi^0$} ;
-\node[draw,scale=\taille,fill=green!50] (f) at (6,-9) {$f$} ;
-\node[draw,scale=\taille,fill=green!50] (a2) at (7,-9) {$\alpha_2$} ;
-\node[draw,scale=\taille,fill=green!50] (ck0) at (8,-9) {$c_k^0$} ;
 \node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$\mathbf{a}$} ;
+
+\node[draw,scale=\taille,fill=green!50] (f) at (7,-9) {$f$} ;
+\node[draw,scale=\taille,fill=green!50] (a2) at (8,-9) {$\alpha_2$} ;
+\node[draw,scale=\taille,fill=green!50] (ck0) at (9,-9) {$c_k^0$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbs) at (9,-12)
 {$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i\lambda_i c_j(\mathbf{g}_i\times \mathbf{g}_j, \mathbf{g}_k) \\
-&+ \sum_i c_i\lambda_i(\mathbf{g}_i\times \mathbf{a},\mathbf{g}_k) + \sum_i c_i((\rot \mathbf{a})\times \mathbf{g}_i, \mathbf{g}_k) \\
-&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{f_a},\mathbf{g}_k) + \frac{1}{Re}\langle\alpha_2,\psi_k\rangle\\
-&c_k(0)=c_k^0
+\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_i\sum_j c_i c_j R_{ijk}\\
+&+ \sum_i c_i R_{iak} + \sum_i c_i R_{raik} = R_{fk} + \frac{1}{Re}R_{pk}
 \end{aligned}
 $} ;
-\node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbu) at (9,-16) {$\mathbf{u}=\sum c_kg_k$} ;
-\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$\mathbf{u}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbv) at (3,-17.5) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (3,-18.5) {$\mathbf{v}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbq) at (9,-18.5)
-{$\begin{aligned}
--\laplace q = \div((\rot \mathbf{v})\times \mathbf{v}) - \div \mathbf{f}\\
-\grad q\cdot \mathbf{n}\restr =  \mathbf{f}\cdot \mathbf{n}\restr - \frac{\partial\alpha_0}{\partial t} - ((\rot \mathbf{v})\times \mathbf{v})\cdot \mathbf{n}\restr - \frac{\alpha_2}{Re}
-\end{aligned}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (q) at(15,-18.5) {$p$} ;
+\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-14.5) {$\mathbf{u}$} ;
+\node (uIm) at (15,-15) {\includegraphics[scale=0.1,trim=0mm 40mm 20mm 15mm,clip]{u-clip}} ;
+\node[draw,scale=\tailleg,fill=red!50] (v) at (5,-16) {$(\mathbf{v},p)$} ;
+\node (vIm) at (-1,-16) {\includegraphics[scale=0.1,trim=0mm 30mm 20mm 30mm,clip]{v100modes}} ;
 
-\draw[->,>=latex] (a0) -- (pbpsi0); \draw[->,>=latex] (a1) -- (pbpsi1); \draw[->,>=latex] (pbpsi0) -- (psi0); \draw[->,>=latex] (pbpsi1) -- (psi1); \draw[->,>=latex] (psi1) -- (pbb);
-\draw[->,>=latex] (psi) -- (pbb); \draw[->,>=latex] (lambda) -- (pbb); \draw[->,>=latex] (gi) -- (pbb); \draw[->,>=latex] (pbb) -- (b); \draw[->,>=latex] (b) -- (pba);
-\draw[->,>=latex] (psi0) -- (pba); \draw[->,>=latex] (pba) -- (a); \draw[->,>=latex] (pbeigen) -- (lambda); \draw[->,>=latex] (pbeigen) -- (gi); \draw[->,>=latex] (gi) -- (pbgi0);
-\draw[->,>=latex] (pbgi0) -- (gi0); \draw[->,>=latex] (gi0) -- (pbpsi); \draw[->,>=latex] (pbpsi) -- (psi); \draw[->,>=latex] (a) -- (pbs); \draw[->,>=latex] (f) -- (pbs);
-\draw[->,>=latex] (a2) -- (pbs); \draw[->,>=latex] (ck0) -- (pbs); \draw[->,>=latex] (lambda) -- (pbs); \draw[->,>=latex] (gi) -- (pbs);\draw[->,>=latex] (psi) -- (pbs);
-\draw[->,>=latex] (pbs) -- (ck); \draw[->,>=latex] (ck) -- (pbu); \draw[->,>=latex] (pbu) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv);
-\draw[->,>=latex] (pbv) -- (v); \draw[->,>=latex] (v) -- (pbq); \draw[->,>=latex] (pbq) -- (q);
+\draw (a0) -- (0.75,0);
+\draw[->,>=latex] (gradpsi0) -- (pba) ;
+\draw[->,>=latex,purple] (0.75,0) -| (pbpsi0lp) ;
+\draw[->,>=latex,purple] (pbpsi0lp) -- (psi0) ;
+\draw[->,>=latex,purple] (psi0) -- (pbgradpsi0) ;
+\draw[->,>=latex,purple] (pbgradpsi0) -- (gradpsi0) ;
+\draw[->,>=latex,green] (0.75,0) -| (pbpsi0div) ;
+\draw[->,>=latex,green] (pbpsi0div) -- (gradpsi0) ;
+\draw[<->,>=latex] (gradpsi0) -- (psi0Im) ;
+
+\draw (a1) -- (5.5,1);
+\draw[->,>=latex,magenta] (5.5,1) -| (pbbcurl) ;
+\draw[->,>=latex,magenta] (pbbcurl) -- (b) ;
+\draw[cyan] (5.5,1) -| (8.25,0);
+\draw[->,>=latex,orange] (8.25,0) -| (pbpsi1div);
+\draw[->,>=latex,red] (8.25,0) -| (pbpsi1lp);
+\draw[->,>=latex,red] (pbpsi1lp) -- (psi1);
+\draw[->,>=latex,red] (psi1) -- (pbgradpsi1);
+\draw[->,>=latex,red] (pbgradpsi1) -- (gradpsi1);
+\draw[->,>=latex,orange] (pbpsi1div) -- (gradpsi1);
+\draw[->,>=latex,cyan] (gradpsi1) -- (pbb);
+\draw[->,>=latex,cyan] (psi) -- (pbb);
+\draw[->,>=latex,cyan] (lambdagi) to[out=180,in=40] (pbb.15);
+\draw[->,>=latex,cyan] (pbb) -- (b);
+\draw[->,>=latex] (b) -- (pba);
+
+\draw[->,>=latex] (pba) -- (a);
+\draw[->,>=latex] (pbeigen) -- (lambdagi);
+\draw[->,>=latex] (lambdagi) -- (pbgi0);
+\draw[->,>=latex] (pbgi0) -- (gi0);
+\draw[->,>=latex] (gi0) -- (pbpsi);
+\draw[->,>=latex] (pbpsi) -- (psi);
+\draw[->,>=latex] (a) -- (pbs);
+\draw[->,>=latex] (f) -- (pbs);
+\draw[->,>=latex] (a2) -- (pbs);
+\draw[->,>=latex] (ck0) -- (pbs);
+\draw[->,>=latex] (lambdagi) to[out=-10,in=20] (pbs.east);
+\draw[->,>=latex] (psi) -- (pbs);
+\draw[->,>=latex] (pbs) -- (u);
+\draw[<->,>=latex] (u) -- (uIm) ;
+\draw[->,>=latex] (u) -- (v);
+\draw[->,>=latex] (a) -- (v);
+\draw[<->,>=latex] (v) -- (vIm) ;
 \end{tikzpicture}
 \end{figure}
 \end{frame}
 
-% \section{Stokes-Curl}
-% \begin{frame}{Stokes-Curl}
-% %\begin{block}{On résout le problème suivant :}
-% \begin{align}
-% \rott \mathbf{g}_i &= \lambda^2\mathbf{g}_i\label{sc1}\\
-% \div \mathbf{g}_i &= 0\label{sc2}\\
-% \mathbf{g}_i\cdot\mathbf{n}&=0\\
-% \rot\mathbf{g}_i\cdot\mathbf{n}&=0
-% \end{align}
-% %\end{block}
-% De plus, on utilise un terme de pression pour imposer (\ref{sc2}). On a donc le problème :
-% \begin{align}
-% \rott \mathbf{g}_i + \grad p &= \lambda^2_i\mathbf{g}_i\label{sc11}\\
-% \div\mathbf{g}_i &= 0\label{sc22}\\
-% \mathbf{g}_i\cdot\mathbf{n}&=0\\
-% \rot\mathbf{g}_i\cdot\mathbf{n}&=0
-% \end{align}
-% \end{frame}
+\begin{frame}{Temps de calcul}
+\centering
+\includegraphics[scale=0.6]{histo}
+\end{frame}
 
-% \begin{frame}{Forme variationnelle}
-% On multiplie (\ref{sc11}) par $\bm{\varphi}\in H(\mathrm{rot})$ et on intègre :
-% \[ (\rott\mathbf{g}_i,\bm{\varphi})+(\grad p,\bm{\varphi}) = \lambda^2_i (\mathbf{g}_i,\bm{\varphi}) \]
-% On multiplie (\ref{sc22}) par $q\in H^1(\Omega)$ et on intègre :
-% \[ (\div\mathbf{g}_i,q) = 0 \]
-% \begin{block}{En intégrant par partie et en additionnant :}
-% \[ (\rot\mathbf{g}_i,\rot\bm{\varphi}) + (\grad p, \bm{\varphi}) + (\div\mathbf{g}_i,q) = \lambda^2(\mathbf{g}_i,\bm{\varphi}) \]
-% \end{block}
-% \end{frame}
-
-% \begin{frame}{Conditions aux bords}
-% En intégrant par partie $(\div\mathbf{g}_i,q)$, on a :
-% \[ (\div\mathbf{g}_i,q) = (\mathbf{g}_i,\grad q) - \langle \underbrace{\mathbf{g}_i\cdot \mathbf{n}}_{=0}, q \rangle \] 
-% Pour imposer $\rot\mathbf{g}_i\cdot\mathbf{n}=0$ on utilise une méthode de pénalisation, on ajoute donc :
-% \[ \gamma\int_\Omega (\rot\mathbf{g}_i\cdot\mathbf{n})(\rot\bm{\varphi}\cdot\mathbf{n}) \]
-% \begin{block}{Ce qui donne la forme variationnelle :}
-% \[\begin{aligned}
-% (\rot\mathbf{g}_i,\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\mathbf{g}_i, \grad q)\\
-% &+ \gamma(\rot\mathbf{g}_i\cdot\mathbf{n},\rot\bm{\varphi}\cdot\mathbf{n}) = \lambda^2(\mathbf{g}_i,\bm{\varphi})
-% \end{aligned}\]
-% \end{block}
-% \end{frame}
-
-% \begin{frame}{Ajustements}
-% Avec cette formulation, on a : $||\div\mathbf{g}||_{L^2(\Omega)}=415.271$  $||\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=6.10952$ $||\rot\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=5.56388e-08$\\
-
-% On ajoute donc deux termes de pénalisation afin de forcer la divergence et la condition de bord $\rot\mathbf{g}\cdot\mathbf{n} = 0$ :
-% \[\begin{aligned}
-% (\rot\mathbf{g}_i,\rot\bm{\varphi}) &+ (\grad p, \bm{\varphi}) + (\mathbf{g}_i, \grad q)\\
-% &+ \gamma(\rot\mathbf{g}_i\cdot\mathbf{n},\rot\bm{\varphi}\cdot\mathbf{n})\\
-% &+ \alpha(\div\mathbf{g}_i)(\div\bm{\varphi})\\
-% &+ \beta(\mathbf{g}_i\cdot\mathbf{n},\bm{\varphi}\cdot\mathbf{n}) = \lambda^2(\mathbf{g}_i,\bm{\varphi})
-% \end{aligned}\]
-% En prenant $\alpha=\beta=\gamma=1000$, on a :
-% $||\div\mathbf{g}||_{L^2(\Omega)}=0.0371$  $||\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=0.0844$ $||\rot\mathbf{g}\cdot\mathbf{n}||_{L^2(\partial\Omega)}=0.00035$
-% \end{frame}
-
-% \begin{frame}{Modes}
-% \begin{figure}[H]
-% 	\makebox[\textwidth][c]{
-% 		\subfloat[mode 0]{\includegraphics[scale=0.12]{glyphMode0}}\ 
-% 		\subfloat[mode 5]{\includegraphics[scale=0.12]{glyphMode5}}
-% 	}\\
-% 	\makebox[\textwidth][c]{
-% 		\subfloat[mode 10]{\includegraphics[scale=0.12]{glyphMode10}}\ 
-% 		\subfloat[mode 14]{\includegraphics[scale=0.12]{glyphMode14}}
-% 	}
-% 	\caption{Modes propres}
-% 	\label{resultats}
-% \end{figure}
-% \end{frame}
+\begin{frame}{Perspectives}
+\begin{itemize}
+\item Tests sur une machine plus puissante
+\begin{itemize}
+\item Plus de modes
+\item Taille de mailles plus petites
+\end{itemize}
+\item Utilisation des éléments conformes
+\begin{itemize}
+\item Nedelec
+\item $D^1$
+\end{itemize}
+\item Relèvement de $\alpha_2$
+\begin{itemize}
+\item Décomposition des modes inutiles
+\end{itemize}
+\item Géométries industrielles
+\end{itemize}
+\end{frame}
 
 \begin{frame}
-supp psi0 in H(div)\\
-fusion relev alpha1(2-3)\\
-remerciements
+\begin{center}
+Merci de votre attention !
+\end{center}
 \end{frame}
 
 
