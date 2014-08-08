@@ -42,7 +42,7 @@ D'abord, il faut choisir une géométrie sur laquelle travaillé. On prend donc 
 En notant le rayon du cylindre $R$, le vecteur normal unitaire $\mathbf{n}$ est égal à :
 \[ \mathbf{n}\big\rvert_{\Gamma_1}=\begin{pmatrix}0\\0\\-1\end{pmatrix},\quad \mathbf{n}\big\rvert_{\Gamma_2}=\begin{pmatrix}0\\0\\1\end{pmatrix},\quad \mathbf{n}\big\rvert_{\Gamma_3}=\begin{pmatrix}
 x/R\\y/R\\0\end{pmatrix} \]
-On veut simuler un écoulement de Poiseuille dans le cylindre. On a donc que $\mathbf{v}$ est unidirectionnel en $z$ et que sur $\Gamma_1$ et $\Gamma_2$, c'est une parabole de maximum $2v$. Comme les composantes en $x$ et en $y$ de $\mathbf{v}$ sont nulles, $\mathbf{v}\cdot\mathbf{n}\big\rvert_{\Gamma_3}=0$. On prend donc :
+On veut simuler un écoulement de Poiseuille dans le cylindre. On a donc que $\mathbf{v}$ est unidirectionnel en $z$ et que sur $\Gamma_1$ et $\Gamma_2$, $\mathbf{v}$ est une parabole de maximum $2v$. Comme les composantes en $x$ et en $y$ de $\mathbf{v}$ sont nulles, $\mathbf{v}\cdot\mathbf{n}\big\rvert_{\Gamma_3}=0$. On prend donc :
 \begin{equation}\label{alpha0}
  \alpha_0(x,y)= \begin{cases} -2v\left(1-\frac{x^2+y^2}{R^2}\right) &\mbox{sur } \Gamma_1\\
 2v\left(1-\frac{x^2+y^2}{R^2}\right)&\mbox{sur } \Gamma_2\\

@@ -14,10 +14,6 @@ Cela nous permet de connaître les coefficients $c_i$ dans la décomposition $\m
 De plus, dans le cylindre, comme $\alpha_1=0$, on a $\mathbf{a}=\grad\psi^0$ et donc comme le rotationnel d'un gradient est nul, $\rot \mathbf{a} = 0$. Ce qui amène le terme $R_{raij}$ à être nul. On a donc plus que :
 \[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} = R_{fk}+R_{pk} \]
 
-
-
-\todo[inline]{pression comme second membre, $\alpha_2$ dépend de $\delta p$}
-
 \section{Navier-Stokes}
 \label{PSNewton}
 Cette équation comporte le terme
@@ -98,8 +94,20 @@ Il suffit maintenant d'additionner $c^{(l)}$ et $c^{(l+1)}$ pour obtenir la solu
 On itère ces étapes jusqu'à ce que la tolérance soit dépassée, ou que l'on pense que la méthode diverge.
 
 \section{Stokes}
+\label{stokes}
+Si l'on supprime le terme non linéaire et que l'on se place dans un cas stationnaire, l'équation du problème \ref{depart} devient :
+\begin{equation}\label{stokesEq} \grad q + \rott\mathbf{v} = \mathbf{f} \end{equation}
+Or $q = \frac{\mathbf{v}\cdot\mathbf{v}}{2} + p$, et $\mathbf{v}\cdot\mathbf{v}\restr=\alpha_0^2$, d'où $\grad q\restr = (\partial_x(\alpha_0^2), \partial_y(\alpha_0^2), \partial_z(\alpha_0^2)) + \grad p\restr =  \grad p\restr$.\\
+De plus, pour un écoulement de Poiseuille dans un cylindre, on a : \[ v_{max} = \frac{R^2}{4\nu}\left\lvert\frac{\partial p}{\partial z}\right\rvert \mbox{ d'où } \left\lvert\frac{\partial p}{\partial z}\right\rvert = v_{max}\frac{4\nu}{R^2} \]
+Or, dans un écoulement de Poiseuille, la pression est linéaire et dépendante uniquement de $z$. On a donc que \[ \grad p = ( 0, 0, \partial_z p) = (0,0,\pm v_{max}\frac{4\nu}{R^2}) \]
+Le problème ayant été adimensionnalisé, on a $v_{max}=2,\, R=0,5\mbox{ et } \nu=1$, de plus, on veut que l'écoulement soit dans le sens positif, donc que $p$ soit décroissant.\\
+On a donc :
+\[ \grad p = (0,0, 32) \]
+En prenant la composante normale de l'équation (\ref{stokesEq}), on obtient :
+\[ \alpha_2 = \rott\mathbf{v}\cdot\mathbf{n}\restr = \mathbf{f}\cdot\mathbf{n}\restr - \grad p\cdot\mathbf{n}\restr = \begin{cases} 31 & \mbox{ sur } \Gamma_1\\ -31 & \mbox{ sur } \Gamma_2\\ 0 & \mbox{ sur }\Gamma_3\end{cases} \]
+
 \subsection{Implémentation}
-Si l'on supprime le terme non linéaire, l'équation s'écrit :
+L'équation du problème \ref{fvc} s'écrit alors :
 \[ \sum_i c_iR_{iak} +\frac{1}{Re}c_k\lambda^2 = R_{fk} + R_{pk} \]
 
 Ainsi, il suffit de résoudre l'équation $Ax=b$ où $A=(a_{ki})$ avec :
@@ -116,10 +124,47 @@ Puis, on résout le système de la même manière que précédemment :\\
 \lstinputlisting[linerange=StokesSolve]{../../src/spectralproblem.cpp}
 
 \subsection{Résultats}
+Dans la figure \ref{vitesse}, on voit la vitesse $\mathbf{v}=\mathbf{a}+\mathbf{u}$ obtenue en utilisant $\mathbf{f}=(0,0,1)$, correspondant à la gravité adimensionnalisée, et $\alpha_2$ tel que défini dans \ref{stokes}.
+\begin{figure}[H]
+  \makebox[\textwidth][c]{
+    \subfloat[écoulement au centre]{\label{vGradPression}\includegraphics[scale=0.3,trim=0mm 0mm 0mm 11mm,clip]{vGradPression32-32}}\ 
+    \subfloat[magnitude dans le plan]{\label{v100modes}\includegraphics[scale=0.3]{v100modes}}
+  }
+\caption{Vitesse dans le cylindre}\label{vitesse}
+\end{figure}
 
-% \section{Composante $z$}
-% \subsection{Implémentation}
-% \subsection{Résultats}
+Les résultats ci-dessus ont été obtenus avec 50 modes et 3 processeurs, on voit d'ailleurs dans la figure \ref{vGradPression} qu'aux mailles correspondantes à la jointure des partitions, le champ n'est pas régulier. Cela peut être dû au faible nombre de mailles utilisé.\\
+L'image \ref{v100modes} montre que l'écoulement n'est pas exactement un écoulement de Poiseuille, la vitesse dépendant de $z$, et les composantes $\mathbf{v}_x$ et $\mathbf{v}_y$ n'étant pas tout à fait nulles. Cependant, comme le montre la figure \ref{tendto}, on peut voir que cela est dépendant du nombre $M$ de modes utilisés, plus ce nombre est grand plus ce phénomène tend à disparaître.\\
+
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+      \subfloat[M=10]{\includegraphics[scale=0.5,trim=100mm 20mm 100mm 20mm,clip]{vIn10}}\ 
+		\subfloat[M=100]{\includegraphics[scale=0.5,trim=100mm 20mm 100mm 20mm,clip]{vIn100}}
+	}
+\caption{Composantes $x$ et $y$ à l'entrée du cylindre}\label{tendto}
+\end{figure}
+
+\subsection{Temps de calcul}
+La figure \ref{histo} montre le temps de calcul pour les différentes étapes du problème. Les étapes sont :
+\begin{enumerate}
+\item Eigen : trouver les modes propres (problème \ref{disceigenh1})
+\item Decomp : décomposer les fonctions propres (problèmes \ref{fvgi0} et \ref{fvpsiml})
+\item Riak : calculer la matrice $R_{iak}$ pour $i,k=1,\dots,M$
+\item Rfk : calculer le vecteur $R_{fk}$ pour $k=1,\dots,M$
+\item Rpk : calculer le vecteur $R_{pk}$ pour $k=1,\dots,M$
+\item Stokes : résoudre le problème de Stokes
+\end{enumerate}
+Ces tests ont été effectué sur le cluster \texttt{irma-hpc2}, équipé de 24 processeurs AMD Opteron cadencés à 2812 MHz et 110 GB de RAM, mais en utilisant seulement 10 processeurs.\\
+
+On peut voir que si pour un faible nombre de modes propres, le problème aux valeurs propres est ce qui coûte le plus de temps, dès que ce nombre accroît, la partie la plus chère en temps de calcul est la détermination des coefficients $R_{iak}$.\\
+De plus, dans le problème de Stokes, on a supprimé le besoin de calculer les coefficients $R_{ijk}$, alors que ce sont ces coefficients qui doivent prendre le plus de temps de calcul. En effet, si pour $R_{fk}$ et $R_{pk}$ on doit calculer $M$ coefficients, pour $R_{iak}$, il y a $M^2$ coefficients et pour $R_{ijk}$, il y a $M^3$ coefficients à calculer.\\
+Pour $M=100$, on a donc $10300$ coefficients à calculer pour le problème de Stokes, contre $1010300$ pour Navier-Stokes.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.9]{histo}
+\caption{Temps de calcul des différentes étapes du problème}\label{histo}
+\end{figure}
 
 
 %%% Local Variables:
