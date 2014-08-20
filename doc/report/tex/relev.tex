@@ -5,7 +5,7 @@ Dans le cas du cylindre, on a $\alpha_1=0$, ce qui conduit à ce que $\rot \math
 \section{$\psi^0$ dans $H^1$}
 \subsection{Discrétisation}\label{discGradh1}
 Pour discrétiser le problème, on doit tout d'abord créer un maillage $\mathcal{T}_h$ de $\Omega$. Dans le volume on utilise des tétraèdres et sur les surfaces, pour un maillage conforme, on utilise des triangles. On a donc $\mathcal{T}_h=\{K_e\}_{e=1,\dots,N_e}$ où $N_e$ est le nombre d'éléments du maillage.\\
-Si l'on veut résoudre le problème \ref{psi0} dans $H^1$, on va devoir utiliser des éléments de Lagrange (voir \ref{eltLagrange}) pour discrétiser $\psi^0$. On introduit donc l'espace
+Si l'on veut résoudre le problème \ref{psi0} dans $H^1$, on va devoir utiliser des éléments de Lagrange (\cite{Courant1943}) pour discrétiser $\psi^0$. On introduit donc l'espace
 \[   P^k_{c,h} = \{ q_h \in C^0(\Omega) \; |\; q_h{}_{|_K} \in \mathbb{P}_k\; \forall\; K \in \mathcal{T}_h\} \subset H^1 \]
 des fonctions continues, polynomial de degré $k$ sur chaque maille du maillage.\\
 Cet espace est un sous-espace vectoriel de $H^1$, et donc lui-même un espace de Hilbert, mais il est de dimension finie.\\

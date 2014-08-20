@@ -63,7 +63,7 @@ avec $\gamma$ une très grande valeur.
 \subsection{Discrétisation}
 Ainsi, la solution se trouvant dans $H(\mathrm{rot})$, la meilleure méthode serait d'utiliser des éléments conformes à cet espace, à savoir les éléments de Nedelec. Cela permettrait d'avoir $\rot\mathbf{g_i}\in [L^2(\Omega)]^3$. On gagnerait ainsi en régularité sur les fonctions propres.\\
 
-En utilisant le même maillage que dans \ref{discGradh1}, on discrétise le problème en utilisant des éléments finis conformes au rotationnel, de degré $k$, nommés éléments de Nedelec (voir \ref{eltNedelec}) et notés $\mathbb{N}_k$. Ceci nous permet d'introduire le sous-espace de $H(\mathrm{rot})$ suivant :
+En utilisant le même maillage que dans \ref{discGradh1}, on discrétise le problème en utilisant des éléments finis conformes au rotationnel, de degré $k$, nommés éléments de Nedelec (\cite{Nedelec80,Nedelec86}) et notés $\mathbb{N}_k$. Ceci nous permet d'introduire le sous-espace de $H(\mathrm{rot})$ suivant :
 \[ N^k_h = \{ \mathbf{v}_h \in H(\mathrm{rot}) \; |\; \mathbf{v}_h{}_{|_K} \in \mathbb{N}_k\; \forall\; K \in \mathcal{T}_h\}\]
 
 Le problème \ref{pbeigenrot} est donc approché par le problème discret :

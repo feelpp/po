@@ -1,7 +1,6 @@
 \chapter{Algorithmes}
 
 \section{Méthode des éléments finis}
-\subsection{Principe général}
 \label{eltfinis}
 Le principe de la méthode des éléments finis pour résoudre un problème aux équations dérivées partielles sur un domaine $\Omega$ est de regarder un problème proche dont les solutions sont les mêmes que celles du problème d'origine, mais qui est plus facile à résoudre. Ce problème est appelé la formulation faible du problème EDP. Elle s'obtient en multipliant l'équation par une fonction test et en intégrant sur $\Omega$. On peut l'exprimer sous la forme :
 \[ \mbox{Trouver } u \in V \mbox{ tel que } a(u,v)=l(v)\quad \forall v\in V \]
@@ -56,15 +55,16 @@ Afin d'utiliser des algorithmes connus, on veut ordonner les $\varphi_i$ de tell
 On peut ramener les intégrales à une somme d'intégrales sur chaque mailles du domaine. Toutes ces mailles sont identiques à une transformation affine près, ainsi, tous les calculs d'intégrales peuvent se ramener sur une maille de référence par un changement de variable. On a donc $\mathcal{T}_h=\{\psi_e(\hat{K})\}_{e=1,\dots,N_e}$ où $\hat{K}$ est la maille de référence et $\psi_e$ sont des transformations affines.\\
 
 Pour choisir les fonctions de base de $V_h$, on trouve des degrés de liberté, tel que leur donnée détermine toute fonction de $V_h$ de manière unique. C'est le principe d'unisolvance.\\
-Les fonctions $\varphi_i$ sont  définies telles que $\varphi_i(ddl_j)=\delta_{ij}$ où $ddl_j$ est le $j$\ieme\ degré de liberté et $\delta_{ij}$ est le symbole de Kronecker.
-\todo[inline]{élts Lagrange, Nedelec, Raviart-Thomas}
+Les fonctions $\varphi_i$ sont  définies telles que $\varphi_i(ddl_j)=\delta_{ij}$ où $ddl_j$ est le $j$\ieme\ degré de liberté et $\delta_{ij}$ est le symbole de Kronecker.\\
+Il existe plusieurs familles d'éléments finis, les plus utilisés sont les éléments de Lagrange :
+\begin{mydef} Un élément fini de Lagrange est un triplet $(K,\Sigma,P)$ tel que
+\begin{itemize}
+\item $K$ est un élément géométrique de $\R^n$, compact, connexe, et d'intérieur non vide.
+\item $\Sigma = \{a_i\}_{i=1,\dots,N}$ est un ensemble fini de N points distincts de $K$.
+\item $P$ est un espace vectoriel de dimension finie de fonctions réelles définies sur $K$ et tel que $\Sigma$ soit $P$-unisolvant.
+\end{itemize}
+\end{mydef}
 
-\subsection{Éléments de Lagrange}
-\label{eltLagrange}\cite{Courant1943}
-\subsection{Éléments de Nedelec}
-\label{eltNedelec}\cite{Nedelec80,Nedelec86}
-\subsection{Éléments de Raviart-Thomas}
-\label{eltRT}\cite{Raviart77}
 
 \section{Méthode d'Arnoldi}
 \label{arnoldi}
