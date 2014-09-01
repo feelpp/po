@@ -73,12 +73,34 @@ s'appuie sur PETSc pour les structures matrices/vecteurs, solveurs linéaires et
 non-linéaires ainsi que préconditionneurs et SLEPc pour les solveurs de
 problèmes aux valeurs propres standards et généralisés (qui s'appuie sur PETSc).
 
+Dans notre cas, le problème aux valeurs propres est celui de l'opérateur rotationnel 
+associé à des conditions aux limites homogènes d'imperméabilité généralisée introduite 
+par P.Penel et J. Neustupa\cite{Penel2004}: soit
+$\Omega \subset \mathbb{R}^3$, trouver $(\mathbf{g},\lambda)$ tels que
+\footnote{L'équation (1) implique directement l'équation (2)}
+\footnote{Les fonctions propres des opérateurs $\nabla \times$ et $\nabla^2 \times$
+sont identiques}
+%\footnote{L'utilisation des éléments de Nedelec pour la résolution du problème nous éviterait d'imposer par des méthodes de pénalisation l'équation (2) et les 
+%conditions aux limites (3a) et (3b)}
+\begin{align}
+\label{eq:0}
+\nabla^2 \times \mathbf{g} &= \lambda \mathbf{g},\quad \mbox{ dans } \Omega\\
+(\nabla \cdot \mathbf{g} &= 0,\quad \mbox{ dans } \Omega )\\
+\curlk{} \mathbf{g} \cdot \mathbf{n} &= 0,\, k=0,1,2,\quad \mbox{ sur
+} \partial \Omega
+\end{align}
+où $\mathbf{g}$ et $\lambda$ sont respectivement les fonctions propres et les
+ vecteurs propres de l'opérateur $\nabla^2 \times$ et avec la convention 
+$\curlk[0]{} = Id$.
+
+
 Concernant le dernier point, au coeur de la nouvelle stratégie un grand nombre
-de modes propres sont à calculer pour le problème de Stokes suivant: soit
-$\Omega \subset \mathbb{R}^3$, trouver $(\mathbf{u},p)$ tels que
+de modes propres sont à calculer pour le problème de Navier-Stokes à faible
+Reynolds un premier temps: soit $\Omega
+\subset \mathbb{R}^3$, trouver $(\mathbf{u},p)$ tels que
 \begin{align}
   \label{eq:1}
-  -\Delta \mathbf{u} + \nabla p &= \mathbf{f},\quad \mbox{ dans } \Omega\\
+  - \nu \Delta \mathbf{u} + (\mathbf{u} \cdot \nabla)\mathbf{u} + \nabla p &= \mathbf{f},\quad \mbox{ dans } \Omega\\
   \nabla \cdot \mathbf{u} &= 0,\quad \mbox{ dans } \Omega\\
   \curlk{} \mathbf{u} \cdot \mathbf{n} &= 0,\, k=0,1,2,\quad \mbox{ sur
   } \partial \Omega
