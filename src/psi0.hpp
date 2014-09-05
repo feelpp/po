@@ -26,11 +26,12 @@ using namespace Feel::vf;
  */
 class Psi0 : public Application
 {
+    /// Inherits Application
     typedef Application super;
 
+    /// Order of the function space
     static const uint16_type Order = 2;
 
- public:
     /// Mesh of dimension 3
     typedef Mesh<Simplex<3> > mesh_type;
     /// Pointer on the mesh
@@ -50,10 +51,11 @@ class Psi0 : public Application
     /// Pointer on the element
     typedef boost::shared_ptr<element_type> element_ptrtype;
 
+ public:
     /// \f$ \grad u\f$
     element_type gradu;
 
-  /** \brief Initializer
+  /** \brief Construct an object of type Psi0
       \param mesh the pointer on the mesh
       \param g the the boundary condition g
   */
@@ -65,6 +67,16 @@ class Psi0 : public Application
       else, launch load_psi0()
   */
     void run();
+
+ private:
+    /// The mesh used for the application
+    mesh_ptrtype mesh;
+
+    /// The string containing the boundary condition
+    std::string g_s;
+
+    /// The function space used
+    space_ptrtype Xh;
 
   /** \brief Compute \f$ \grad u\f$
 
@@ -79,10 +91,6 @@ class Psi0 : public Application
   */
     void load_psi0();
 
- private:
-    mesh_ptrtype mesh;
-    std::string g_s;
-    space_ptrtype Xh;
 };
 
 #endif

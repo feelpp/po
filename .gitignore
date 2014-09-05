@@ -8,6 +8,8 @@
 /doc/**/*.toc
 /doc/**/*.snm
 /doc/**/*.nav
+/doc/documentation/html/
+/doc/documentation/latex/
 *~
 \#*\#
 .\#*
