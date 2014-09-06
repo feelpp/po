@@ -1,5 +1,5 @@
 /** \file eigenprob.cpp
-    Source file for the class EigenProb
+    \brief Source file for the class EigenProb
 */
 
 #include <boost/fusion/tuple.hpp>

@@ -1,5 +1,5 @@
 /** \file eigenprob.hpp
-    Header file for the class EigenProb
+    \brief Header file for the class EigenProb
 */
 
 #ifndef EIGENPROB_H
@@ -118,17 +118,20 @@ class EigenProb : public Application
       Depend on the options useCurl, usePresDiv, usePresGrad, useDiric, bccurln, bcn, divdiv
   */
     void compute_eigens();
+
   /** \brief Compute the decomposition of the eigen functions
 
       Resolves the two system in order to write \f$\mathbf{g}=\mathbf{g_0}+\grad \psi\f$\n
       Depend on the option meanPsi
    */
     void compute_decomp();
+
   /** \brief Load the eigen modes.
 
       Load the eigen modes from the disk, the partition mesh and the number of eigen modes need to be identical
   */
     void load_eigens();
+
   /** \brief Load the \f$\psi\f$ of the decomposition
 
       Load the \f$\psi\f$ of the decomposition from the disk, the partition mesh and the number of eigen modes need to be identical
