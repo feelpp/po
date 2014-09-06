@@ -1,3 +1,7 @@
+/** \file eigenprob.cpp
+    Source file for the class EigenProb
+*/
+
 #include <boost/fusion/tuple.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/algorithm.hpp>

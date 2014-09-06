@@ -38,11 +38,11 @@ class Psi0 : public Application
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
     // [space]
-    /// Function space \f$P_2\times P_0\f$ on the mesh
+    /// Function space \f$P_{Order}\times P_0\f$ on the mesh
     typedef FunctionSpace<mesh_type, bases<Lagrange<Order, Scalar>, Lagrange<0, Scalar> > > mlSpace_type;
     // [space]
 
-    /// Function space \f$[P_2]^3\f$ on the mesh
+    /// Function space \f$[P_{Order}]^3\f$ on the mesh
     typedef FunctionSpace<mesh_type, bases<Lagrange<Order, Vectorial> > > space_type;
     /// Pointer on the function space
     typedef boost::shared_ptr<space_type> space_ptrtype;
@@ -52,7 +52,7 @@ class Psi0 : public Application
     typedef boost::shared_ptr<element_type> element_ptrtype;
 
  public:
-    /// \f$ \grad u\f$
+    /// \f$ \grad u \in [P_{Order}]^3\f$
     element_type gradu;
 
   /** \brief Construct an object of type Psi0
