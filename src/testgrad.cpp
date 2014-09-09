@@ -1,3 +1,7 @@
+/** \file testgrad.cpp
+    \brief Main file for the class TestGrad
+*/
+
 #include <feel/options.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelfilters/exporter.hpp>
@@ -7,37 +11,61 @@
 using namespace Feel;
 using namespace Feel::vf;
 
+/** \brief Test the operator grad
+
+    Test the modes of the laplacian and the operators div and grad
+*/
 class TestGrad
 :
 public Simget
 {
+    /// Inherits Simget
     typedef Simget super;
+    /// Dimension of the domain
     static const uint16_type Dim = 3;
+    /// Order of the function space
     static const uint16_type Order = 3;
  public:
+    /// Simplex of dimension Dim
     typedef Simplex<Dim> convex_type;
+    /// Mesh of the type convex_type
     typedef Mesh<convex_type> mesh_type;
+    /// Pointer on the mesh
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-
+    /// Basis of \f$ [P_{Order}]^3 \f$
     typedef bases<Lagrange<Order, Vectorial> > basis_vtype;
+    /// Function space \f$ [P_{Order}]^3 \f$ on the mesh
     typedef FunctionSpace<mesh_type, basis_vtype > space_vtype;
+    /// Element of \f$ [P_{Order}]^3 \f$
     typedef typename space_vtype::element_type element_vtype;
+    /// Pointer on the function space \f$ [P_{Order}]^3 \f$
     typedef boost::shared_ptr<space_vtype> space_vptrtype;
 
+    /// Basis of \f$ P_{Order} \f$
     typedef bases<Lagrange<Order, Scalar> > basis_stype;
+    /// Function space \f$ P_{Order} \f$ on the mesh
     typedef FunctionSpace<mesh_type, basis_stype > space_stype;
+    /// Element of \f$ P_{Order} \f$
     typedef typename space_stype::element_type element_stype;
+    /// Pointer on the function space \f$ P_{Order} \f$
     typedef boost::shared_ptr<space_stype> space_sptrtype;
 
-
+    /// Constructs an object of type TestGrad.
     TestGrad( mesh_ptrtype );
+    /// If option testG is set to true, launch test(), else launch prob()
     void run();
+    /// Test the eigen modes of the laplacian
     void prob();
+    /// Test the operator div(grad()) and hermitian()
     void test();
+
  private:
+    /// The mesh used for the application
     mesh_ptrtype mesh;
+    /// The scalar function space used
     space_sptrtype Vh;
+    /// The vectorial function space used
     space_vptrtype Vh2;
 };
 

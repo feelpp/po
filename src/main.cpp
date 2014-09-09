@@ -1,3 +1,7 @@
+/** \file main.cpp
+    \brief Main function to resolves the problem
+*/
+
 #include <feel/feelcore/feel.hpp>
 #include <feel/feelcore/about.hpp>
 #include <feel/options.hpp>
@@ -12,7 +16,41 @@
 using namespace Feel;
 using namespace Eigen;
 
+/** \brief Add the option to the application
 
+    Here is the list of the options :
+    - needP0 : need to compute psi0
+    - computeP0 : compute psi0 or load it
+    - radius : cylinder's radius
+    - speed : average speed
+    - alpha0 : alpha0, depends on x,y,radius
+    - needEigen : need the eigen modes
+    - computeEigen : compute the eigen modes or load them
+    - useCurl : use curl or grad form
+    - usePresDiv : use a pressure term in div form
+    - usePresGrad : use a pressure term in grad form
+    - useDiric : use Dirichlet condition
+    - bccurln : need boundary condition curl g.n
+    - bcn : need boundary condition1 g.n
+    - divdiv : need divdiv term
+    - needDecomp : need to decompose the eigen modes
+    - computeDecomp : compute the decomposition of the modes or load them
+    - meanPsi : psi average
+    - needDebug : debug
+    - needPS : need to run the spectral problem
+    - computeRijk : compute or load Rijk
+    - computeRiak : compute or load Riak
+    - computeRfk : compute or load Rfk
+    - f : f
+    - computeRpk : compute or load Rpk
+    - nu : viscosity
+    - alpha2 : alpha2, depends on speed and radius
+    - alpha1 : alpha1, (0.)
+    - testCurl : test curl
+    - t : pol order 2
+    - t1 : curl(t)
+    - t2 : curl2(t)
+*/
 inline
 po::options_description
 makeOptions()
@@ -57,7 +95,7 @@ makeOptions()
     return myappOptions;
 }
 
-
+/// Add the options of Feel++ to the application
 po::options_description
 makeLibOptions()
 {
@@ -67,7 +105,7 @@ makeLibOptions()
     return libOptions.add( feel_options() );
 }
 
-
+/// Add the info to the application
 AboutData
 makeAbout()
 {
@@ -76,7 +114,11 @@ makeAbout()
     return about;
 }
 
+/** \brief Load the mesh
 
+    If the option computeEigen is set to true and if the option gmsh.filename's extension is .msh, rebuid the mesh with the correct number of partition\n
+    else, load the mesh with the extension .msh
+    */
 boost::shared_ptr<Mesh<Simplex<3> > >
 load_mesh()
 {
@@ -125,6 +167,18 @@ load_mesh()
     return mesh;
 }
 
+/** \brief Main function of the application
+
+    Put in place the environment for the application\n
+    Load the mesh
+
+    If the option needP0 is set to true, run Psi0\n
+    If the option needEigen is set to true, run EigenProb\n
+    If the option needPS is set to true, run Psi0, EigenProb and SpectralProblem
+    If the option testCurl is set to true, run TestCurl
+
+    Export the elements needed
+*/
 int
 main( int argc, char **argv )
 {
@@ -193,3 +247,7 @@ main( int argc, char **argv )
 
     return 0;
 }
+
+/** \mainpage Non Standard Navier-Stokes equations for large scale computational fluid dynamics in Feel++.
+
+*/

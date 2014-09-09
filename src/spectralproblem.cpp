@@ -1,3 +1,7 @@
+/** \file spectralproblem.cpp
+    \brief Source file for the class SpectralProblem
+*/
+
 #include <boost/fusion/tuple.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/algorithm.hpp>
