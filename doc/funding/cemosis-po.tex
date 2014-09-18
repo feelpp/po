@@ -73,14 +73,14 @@ s'appuie sur PETSc pour les structures matrices/vecteurs, solveurs linéaires et
 non-linéaires ainsi que préconditionneurs et SLEPc pour les solveurs de
 problèmes aux valeurs propres standards et généralisés (qui s'appuie sur PETSc).
 
-Dans notre cas, le problème aux valeurs propres est celui de l'opérateur rotationnel 
-associé à des conditions aux limites homogènes d'imperméabilité généralisée introduite 
+Dans notre cas, le problème aux valeurs propres est celui de l'opérateur rotationnel
+associé à des conditions aux limites homogènes d'imperméabilité généralisée introduite
 par P.Penel et J. Neustupa\cite{Penel2004}: soit
 $\Omega \subset \mathbb{R}^3$, trouver $(\mathbf{g},\lambda)$ tels que
 \footnote{L'équation (1) implique directement l'équation (2)}
 \footnote{Les fonctions propres des opérateurs $\nabla \times$ et $\nabla^2 \times$
 sont identiques}
-%\footnote{L'utilisation des éléments de Nedelec pour la résolution du problème nous éviterait d'imposer par des méthodes de pénalisation l'équation (2) et les 
+%\footnote{L'utilisation des éléments de Nedelec pour la résolution du problème nous éviterait d'imposer par des méthodes de pénalisation l'équation (2) et les
 %conditions aux limites (3a) et (3b)}
 \begin{align}
 \label{eq:0}
@@ -90,7 +90,7 @@ sont identiques}
 } \partial \Omega
 \end{align}
 où $\mathbf{g}$ et $\lambda$ sont respectivement les fonctions propres et les
- vecteurs propres de l'opérateur $\nabla^2 \times$ et avec la convention 
+ vecteurs propres de l'opérateur $\nabla^2 \times$ et avec la convention
 $\curlk[0]{} = Id$.
 
 
