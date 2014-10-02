@@ -199,7 +199,7 @@ EigenProb::compute_eigens()
 
 
     if( boption("useDiric" ) )
-        a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u, _expr=zero<3>() );
+        a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u, _expr=zero<3,1>() );
 
     if( boption(_name="divdiv") )
         // [divdiv]
@@ -381,7 +381,7 @@ EigenProb::compute_decomp()
                         _expr=lambda[i]*inner(idv(g[i]),id(vg0)) );
 
         a2+= on( _range=boundaryfaces(mesh),
-                 _element=vg0, _rhs=l2, _expr=zero<3>() );
+                 _element=vg0, _rhs=l2, _expr=zero<3,1>() );
 
         a2.solve( _name="gi0", _rhs=l2, _solution=g0[i] );
 
