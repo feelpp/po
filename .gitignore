@@ -11,6 +11,7 @@
 /doc/documentation/html/
 /doc/documentation/latex/
 *~
+*.DS_Store
 \#*\#
 .\#*
 /doc/report/auto/mystyle.el

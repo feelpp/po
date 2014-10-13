@@ -250,4 +250,38 @@ main( int argc, char **argv )
 
 /** \mainpage Non Standard Navier-Stokes equations for large scale computational fluid dynamics in Feel++.
 
+ Notations :
+ \f{align*}
+ gradient(v)&=(\partial_x v, \partial_y v, \partial_z v)=\grad v\\
+ gradient(\mathbf{v})&=\begin{pmatrix}
+\partial_x v_x & \partial_y v_x & \partial_z v_x\\
+\partial_x v_y & \partial_y v_y & \partial_z v_y\\
+\partial_x v_z & \partial_y v_z & \partial_z v_z
+\end{pmatrix}=\grad\mathbf*{v}\\
+divergence(\mathbf{v})&==\frac{\partial v_x}{\partial x}+\frac{\partial v_y}{\partial y}+\frac{\partial v_z}{\partial z}=\div \mathbf{v}\\
+curl(\mathbf{v})&=\begin{pmatrix}
+\partial_y v_z - \partial_z v_y\\
+\partial_z v_x - \partial_x v_z\\
+\partial_x v_y - \partial_y v_x
+\end{pmatrix}=\rot \mathbf{v}\\
+curl(curl(\mathbf{v}))&=\rott \mathbf{v}\\
+H^1(\Omega) &= \{v \in L^2(\Omega)\;|\; \grad v\in L^2(\Omega)\}\\
+H^1_0(\Omega) &= \{v \in H^1(\Omega)\; |\; v\restr = 0\}\\
+H(\mathrm{div}) &= \{\mathbf{v} \in [L^2(\Omega)]^3\; |\; \div\mathbf{v} \in L^2(\Omega) \}\\
+H(\mathrm{rot}) &= \{\mathbf{v} \in [L^2(\Omega)]^3\; |\; \rot\mathbf{v} \in L^2(\Omega) \}\\
+L^2_\sigma(\Omega) &= \{\mathbf{v} \in [L^2(\Omega)]^3\; |\; \div \mathbf{v} = 0\text{ et }\mathbf{v}\cdot \mathbf{n}\restr = 0 \}\\
+D^1(\Omega) &= \{\mathbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\; |\; (\rot \mathbf{v}\cdot \mathbf{n})\restr = 0  \}
+ \f}
+
+We are looking for the couple \f$(\mathbf{v},p)\f$, respectively the speed and the pressure which are solutions of the incompressible Navier-Stokes equation in \f$Q_T=\Omega\times[0,T]\f$, where \f$\Omega\f$ is an open set in \f$\R^3\f$ and \f$\partial\Omega\f$ is its boundary.
+\f{pb}
+We are looking for \f$(\mathbf{v},p)\f$ such as :
+\begin{equation*}
+\left\{\begin{aligned}
+&\frac{\partial\mathbf{v}}{\partial t} + (\rot \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\rott \mathbf{v}=\mathbf{f} = 0\\
+
+\end{aligned}\right.
+\end{equation*}
+where \f$q=\frac{\mathbf{v}\cdot\mathbf{v}}{2}+p\f$
+\f}
 */
