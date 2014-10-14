@@ -9,6 +9,7 @@
 /doc/**/*.snm
 /doc/**/*.nav
 *~
+*.DS_Store
 \#*\#
 .\#*
 /doc/report/auto/mystyle.el

@@ -24,3 +24,4 @@
 feelpp_add_application( po_app SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp testCurl.hpp testCurl.cpp CFG po_app.cfg )
 feelpp_add_application( po_testgrad SRCS testgrad.cpp CFG po_testgrad.cfg )
 feelpp_add_application( po_app_travis SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp testCurl.hpp testCurl.cpp DEFS PO_TRAVIS )
+feelpp_add_application( po_testD1 SRCS testD1.cpp CFG po_testD1.cfg )
