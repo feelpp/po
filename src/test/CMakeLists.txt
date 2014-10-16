@@ -21,6 +21,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-feelpp_add_application( po_app SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp CFG po_app.cfg )
-feelpp_add_application( po_app_travis SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp DEFS PO_TRAVIS )
-add_subdirectory( test )
+feelpp_add_application( po_testcurl SRCS testcurl.cpp CFG po_testcurl.cfg )
+feelpp_add_application( po_testgrad SRCS testgrad.cpp CFG po_testgrad.cfg )
+feelpp_add_application( po_testD1 SRCS testD1.cpp CFG po_testD1.cfg )

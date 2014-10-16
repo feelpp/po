@@ -7,7 +7,6 @@
 #include "psi0.hpp"
 #include "eigenprob.hpp"
 #include "spectralproblem.hpp"
-#include "testCurl.hpp"
 
 using namespace Feel;
 using namespace Eigen;
@@ -48,12 +47,7 @@ makeOptions()
         ( "nu", po::value<double>()->default_value( 1 ), "viscosity" )
         ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
 
-        ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
-
-        ( "testCurl", po::value<bool>()->default_value( true ), "test curl")
-        ( "t", po::value<std::string>()->default_value( "{x*x+2*y*y+3*z*z,2*x*x+3*y*y+z*z,3*x*x+y*y+2*z*z}:x:y:z" ), "pol order 2" )
-        ( "t1", po::value<std::string>()->default_value( "{2*y-2*z,6*z-6*x,4*x-4*y}:x:y:z" ), "curl(t)" )
-        ( "t2", po::value<std::string>()->default_value( "{-10,-6,-8}:x:y:z" ), "curl2(t)" );
+        ( "alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" );
     return myappOptions;
 }
 
@@ -140,7 +134,6 @@ main( int argc, char **argv )
     Psi0 p0 = Psi0( mesh, soption( _name="alpha0" ) );
     EigenProb eig = EigenProb( mesh );
     SpectralProblem sp = SpectralProblem( mesh );
-    TestCurl tc = TestCurl( mesh );
 
     auto e = exporter( _mesh=mesh );
 
@@ -172,18 +165,7 @@ main( int argc, char **argv )
         e->add( "v", sp.v );
     }
 
-    if( boption(_name="testCurl") ){
-        tc.run();
-        e->add( "t", tc.test[0] );
-        e->add( "curl(t)", tc.test[1] );
-        e->add( "curl2(t)", tc.test[2] );
-        e->add( "projCurl", tc.test[3] );
-        e->add( "projCurl2", tc.test[4] );
-        e->add( "sysCurl", tc.test[5] );
-        e->add( "sysCurl2", tc.test[6] );
-    }
-
-    if( boption(_name="needPS") || boption(_name="needEigen") || boption(_name="needP0") || boption("testCurl") )
+    if( boption(_name="needPS") || boption(_name="needEigen") || boption(_name="needP0") )
         e->save();
 
 

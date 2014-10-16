@@ -10,6 +10,7 @@
 /doc/**/*.nav
 *~
 *.DS_Store
+*.AppleDouble
 \#*\#
 .\#*
 /doc/report/auto/mystyle.el

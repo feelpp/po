@@ -1,37 +1,46 @@
-#include <boost/fusion/tuple.hpp>
-#include <boost/fusion/sequence.hpp>
-#include <boost/fusion/algorithm.hpp>
-#include <boost/mpi/timer.hpp>
-
+#include <feel/options.hpp>
+#include <feel/feelfilters/loadmesh.hpp>
+#include <feel/feelfilters/exporter.hpp>
 #include <feel/feelalg/solvereigen.hpp>
-#include <feel/feelcore/feel.hpp>
-#include <feel/feelvf/detail/gmc.hpp>
-#include <feel/feelvf/expr.hpp>
-#include <feel/feelvf/cst.hpp>
-#include <feel/feelvf/trans.hpp>
-#include <feel/feelvf/operations.hpp>
-#include <feel/feelvf/operators.hpp>
-#include <feel/feelvf/geometricdata.hpp>
-#include <feel/feelvf/inner.hpp>
-#include <feel/feelvf/integrate.hpp>
-#include <feel/feelvf/ones.hpp>
-#include <feel/feelvf/matvec.hpp>
-#include <feel/feelvf/form.hpp>
-#include <feel/feelvf/norml2.hpp>
-#include <feel/feelvf/on.hpp>
-#include <feel/feelvf/projectors.hpp>
-#include <feel/feelvf/ginac.hpp>
+#include <feel/feelvf/vf.hpp>
 
-#include "testCurl.hpp"
+using namespace Feel;
+using namespace Feel::vf;
+
+class TestCurl:public Simget
+{
+    static const uint16_type Dim = 3;
+    static const uint16_type Order = 3;
+
+public:
+    typedef Simplex<Dim> convex_type;
+    typedef Mesh<convex_type> mesh_type;
+    typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
+
+
+    //typedef bases<Nedelec<0,NedelecKind::NED1> > basis_nedtype;
+    typedef bases<Lagrange<Order, Vectorial> > basis_type;
+    typedef FunctionSpace<mesh_type, basis_type > space_type;
+    typedef typename space_type::element_type element_type;
+    typedef boost::shared_ptr<space_type> space_ptrtype;
+
+    std::vector<element_type> test;
+
+    TestCurl( mesh_ptrtype );
+    void run();
+ private:
+
+    mesh_ptrtype mesh;
+    space_ptrtype Vh;
+};
 
 
 TestCurl::TestCurl( mesh_ptrtype mesh )
 {
     this->mesh = mesh;
     this->Vh = space_type::New( mesh );
-    this->test = std::vector<element_type>(15, Vh->element() );
+    this->test = std::vector<element_type>(15, Vh->element() );    
 }
-
 
 void
 TestCurl::run()
@@ -130,4 +139,39 @@ TestCurl::run()
     test[5] = cu;
     test[6] = ccu;
 
+}
+
+inline
+po::options_description
+makeOptions()
+{
+    po::options_description myappOptions( "PlasticOmnium options" );
+    myappOptions.add_options()
+        ( "t", po::value<std::string>()->default_value( "{x*x+2*y*y+3*z*z,2*x*x+3*y*y+z*z,3*x*x+y*y+2*z*z}:x:y:z" ), "pol order 2" )
+        ( "t1", po::value<std::string>()->default_value( "{2*y-2*z,6*z-6*x,4*x-4*y}:x:y:z" ), "curl(t)" )
+        ( "t2", po::value<std::string>()->default_value( "{-10,-6,-8}:x:y:z" ), "curl2(t)" );
+    return myappOptions;
+}
+
+
+int
+main( int argc, char** argv )
+{
+    using namespace Feel;
+
+    Environment env( _argc=argc, _argv=argv,
+                     _desc=makeOptions(),
+                     _desc_lib=feel_options().add( backend_options("curl") ).add ( backend_options("curl2") ),
+                     _about=about(_name="po_testcurl",
+                                  _author="Romain Hild",
+                                  _email="romain.hild@plasticomnium.com") );
+
+    Application app;
+
+    auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
+
+    app.add( new TestCurl(mesh) );
+    app.run();
+
+    return 0;
 }
