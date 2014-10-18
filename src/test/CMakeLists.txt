@@ -23,4 +23,5 @@
 #
 feelpp_add_application( po_testcurl SRCS testcurl.cpp CFG po_testcurl.cfg )
 feelpp_add_application( po_testgrad SRCS testgrad.cpp CFG po_testgrad.cfg )
-feelpp_add_application( po_testD1 SRCS testD1.cpp CFG po_testD1.cfg )
+feelpp_add_application( po_testD1_cyl SRCS testD1.cpp DEFS PO_CYL CFG po_testD1_cyl.cfg GEO cylCooCyl.geo  )
+feelpp_add_application( po_testD1_car SRCS testD1.cpp CFG po_testD1_car.cfg GEO cylCooCar.geo  )
