@@ -87,7 +87,7 @@ load_mesh()
         mesh = loadMesh( _mesh=new Mesh<Simplex<3> >,
                          _filename=mesh_name );
 
-#ifndef PO_TRAVIS
+#if FEELPP_VERSION_GREATER_THAN(0,98,0)
     LOG(INFO) << " - mesh entities" << std::endl;
     LOG(INFO) << " number of elements : " << mesh->numGlobalElements() << std::endl;
     LOG(INFO) << " number of faces : " << mesh->numGlobalFaces() << std::endl;

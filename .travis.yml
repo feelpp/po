@@ -17,7 +17,8 @@ install:
   fi
 - mkdir opt && cd opt && ../configure -f
 script:
-- make feelpp_po_app_travis
+- make
+- cd test && make
 branches:
   only:
   - master
