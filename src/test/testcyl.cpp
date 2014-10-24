@@ -16,13 +16,13 @@ int main(int argc, char** argv)
 		     _desc=feel_options(),
                      _about=about(_name=
 #if PO_CYL
-				  "po_testD1_cyl",
+				  "po_test_cyl",
 #else
-				  "po_testD1_car",
+				  "po_test_car",
 #endif
                                   _author="Feel++ Consortium",
                                   _email="feelpp-devel@feelpp.org"));
-    
+
     auto mesh = loadMesh( _mesh=new Mesh<Simplex<3> > );
 
     auto Vh = Pch<1>( mesh );
