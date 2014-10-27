@@ -18,7 +18,6 @@ install:
 - mkdir opt && cd opt && ../configure -f
 script:
 - make
-- cd test && make
 branches:
   only:
   - master
