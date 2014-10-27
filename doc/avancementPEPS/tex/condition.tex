@@ -28,7 +28,7 @@ D^1(\Omega) &= \{\mbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\; |\; (\curl
 
 \subsection{Problem}
 We consider the following problem :
-\begin{pb}\label{pb1}
+\begin{pb}\label{pbstart}
 Find $\lambda\in\CC$ and $\mbf{u}\ne 0$ such that
 \begin{align}
 \curl\mbf{u} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
@@ -39,7 +39,7 @@ Find $\lambda\in\CC$ and $\mbf{u}\ne 0$ such that
 
 According to R. Rodriguez and P. Venegas in \cite{Venegas2013}, this problem, for $\lambda\ne 0$, is
 equivalent to :
-\begin{pb}\label{pb2}
+\begin{pb}\label{pbcond}
 Find $\lambda\in\CC$ and $\mbf{u}\in
   H(\mathrm{curl};\Omega),\mbf{u}\ne 0$ such that
 \begin{align}
@@ -59,8 +59,8 @@ We have the follwing property for all $\mbf{u},\mbf{v}\in\ZZ$ :
 \mbf{u}\cdot\left(\curl\mbf{v}\right) = 0 \]
 Then, by applying it twice and using
 $\curl\mbf{u}=\lambda\mbf{u}$, we obtain the following
-variationnal form of the Problem \ref{pb1} :
-\begin{pb}\label{pb3}
+variationnal form of the Problem \ref{pbstart} :
+\begin{pb}\label{pbweak}
 Find $\lambda\in\CC$ and $\mbf{u}\in\ZZ$, $\mbf{u}\ne 0$, such
 that
 \[ \int_\Omega \curl\mbf{u}\cdot\curl\mbf{v} =
@@ -68,22 +68,22 @@ that
 \mbf{v}\in\ZZ \]
 \end{pb}
 
-If $(\lambda,\mbf{u})$ is a solution of Problem \ref{pb1}, then it is a
-solution of Problem \ref{pb3}. But the contrary is not always true,
+If $(\lambda,\mbf{u})$ is a solution of Problem \ref{pbstart}, then it is a
+solution of Problem \ref{pbweak}. But the contrary is not always true,
 see \cite{Venegas2013} Corollary 3.10 :\\
 
-If $\nu\ne 0$ is a solution of Problem \ref{pb3} and $\bm{\mathcal{E}}$ the
+If $\nu\ne 0$ is a solution of Problem \ref{pbweak} and $\bm{\mathcal{E}}$ the
 corresponding eigenspace, then there exists an eigenvalue $\lambda$ of
-Problem \ref{pb1} such that $\nu=\lambda^2$ and $\bm{\mathcal{E}}$ is an
-invariant subspace of Problem \ref{pb1}.\\
+Problem \ref{pbstart} such that $\nu=\lambda^2$ and $\bm{\mathcal{E}}$ is an
+invariant subspace of Problem \ref{pbstart}.\\
 
-In fact, the eigenfunctions of Problem \ref{pb3} are not necessarily
-eigenfunctions of Problem \ref{pb1}. If both $\lambda$ and $-\lambda$
-are eigenvalues of Problem \ref{pb1}, the $\lambda^2$ is an eigenvalue
-of Problem \ref{pb3} with multiplicity equal to the sum of those of
-$\lambda$ and $-\lambda$. And the eigenfunction of Problem \ref{pb3}
+In fact, the eigenfunctions of Problem \ref{pbweak} are not necessarily
+eigenfunctions of Problem \ref{pbstart}. If both $\lambda$ and $-\lambda$
+are eigenvalues of Problem \ref{pbstart}, the $\lambda^2$ is an eigenvalue
+of Problem \ref{pbweak} with multiplicity equal to the sum of those of
+$\lambda$ and $-\lambda$. And the eigenfunction of Problem \ref{pbweak}
 corresponding to $\lambda^2$ would be a linear combination of the
-eigenfunctions of Problem \ref{pb1} associated to $\lambda$ and
+eigenfunctions of Problem \ref{pbstart} associated to $\lambda$ and
 $-\lambda$.\\
 
 \begin{rk}
@@ -108,8 +108,8 @@ From now on, we'll use the following notations :
 \curl\mbf{v}_h\cdot\mbf{n} = 0 \}
 \end{align*}
 
-The Galerkin approximation of Problem \ref{pb3} reads :
-\begin{pb}\label{pb4}
+The Galerkin approximation of Problem \ref{pbweak} reads :
+\begin{pb}\label{pbdiscr}
 Find $\lambda_h\in\CC$ and $\mbf{u}_h\in\ZZ_h$, $\mbf{u}_h\ne
 0$, such that
 \[\int_\Omega \curl\mbf{u}_h\cdot\curl\mbf{v}_h =
@@ -123,6 +123,7 @@ condition by a penalization method. But this was difficult, because we had to
 find the proper parameter.\\
 
 \subsubsection{A new basis}
+\label{base}
 In \cite{Venegas2013}, following the method used in
 \cite{Meddahi2003,Salgado2005}, they propose a basis to the space $\ZZ_h$.
 Since it is based on the work of A. Buffa in \cite{Buffa2002845}, we need to
@@ -143,7 +144,7 @@ and since $\mathrm{Ker(curl}_\Gamma)=\grad_\Gamma H^1(\Gamma)$ we have
 \[ \curl\mbf{u}_h\cdot\mbf{n}=0\mbox{ on }\Gamma \iff
 \exists\varphi_h\in H^1(\Gamma) \mbox{ such that
 }\mbf{n}\times\mbf{u}_h\times\mbf{n} = \grad_\Gamma\varphi_h \]
-In fact, by \cite{}Remark 5.29, we know that 
+In fact, by \cite{Monk2003} Remark 5.29, we know that 
 \[\varphi_h\in\LLL_h^\Gamma = \{\psi_h\in\mathcal{C}(\Gamma) \,|\,
 \psi_h\restr{\Gamma}\in\PP_k(F) \quad \forall F\in\TT_h^\Gamma \}\]
 the set of continuous functions which are piecewise polynomial on the faces of
@@ -173,7 +174,48 @@ Then the set $\{\phi_m\}_{m=1}^N\cup  \{\grad_\Gamma\varphi_j\}_{j=1}^L$
 is a basis of $\ZZ_h$.
 
 \subsubsection{An algebraic solution}
+In the case of the lowest order Nedelec elements, there is a way to impose the
+condition $\curl\mbf{u}_h\cdot\mbf{n}=0$ without computing the basis seen in
+  \ref{base}.\\
+In the case of the lowest order, the degrees of freedom of the Nedelec elements
+are \[\alpha_m=\int_{e_m} \mbf{u}_h\cdot\mbf{t}_m \quad m=1,\dots,M\] where $\{e_1,\dots,e_M\}$ is the set
+of all edges in $\TT_h$ and $\mbf{t}_m$ is a unit vector tangent to $e_m$. The
+direction of this vector depends on ...\\
+Then we have \[\mbf{u}_h = \sum_{m=1}^M \alpha_m\phi_m\]
 
+Let $\{P_j\}_{j=1}^J$ be the set of vertices of $\TT_h^\Gamma$, and
+$\{\varphi_j\}_{j=1}^J$ be the basis of $\LLL_h^\Gamma$, where the last $I$
+functions are choses on a different connected component of $\Gamma$. Then, we have also :
+\[ \mbf{u}_h = \sum_{m=1}^M \alpha_m'\phi_m + \sum_{j=1}^L
+\beta_j\grad_\Gamma\varphi_j \]
+By identification, we obtain :
+\[
+\alpha_m=\begin{cases}
+\alpha_m', &\mbox{if } e_m\cap\Gamma = \emptyset,\\
+\alpha_m'\pm \beta_j, &\mbox{if } e_m\cap\Gamma = \{P_j\},\\
+\alpha_m'\pm (\beta_j-\beta_k), &\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
+(e_m\notin\Gamma),\\
+\pm (\beta_j-\beta_k), &\mbox{if } e_m=[P_j,P_k]\subset\Gamma
+\end{cases}
+\]
+the signs depend on the direction of $t_m$.\\
+
+We note $\bm{\alpha}=(\alpha_1,\dots,\alpha_M)^t$ and
+$\widehat{\bm{\alpha}}=(\alpha_1',\dots,\alpha_M',\beta_1,\dots,\beta_J)^t$ and
+then we can define a matrix $\mbf{C}\in\R^{M\times(N+L)}$ such that $\bm{\alpha}=\mbf{C}\widehat{\bm{\alpha}}$.\\
+
+Let $\mbf{A}=(A_{ij})$ and $\mbf{B}=(B_{ij})$ be the $M\times M$ matrices defined
+by 
+\[A_{ij}=\int_\Omega \curl\phi_j\cdot\curl\phi_i \quad\mbox{and}\quad
+B_{ij}=\int_\Omega\phi_j\cdot\phi_i\quad i,j=1,\dots,M \]
+Then, by changing the basis, we have the following matrix form of Problem
+\ref{pbdiscr} :
+\begin{pb}\label{pbmat}
+Find $\lambda_h\in\R$ and $\widehat{\bm{\alpha}}\in\R^{N+L}$ such that
+\[ \widehat{\mbf{A}}\widehat{\bm{\alpha}} =
+\lambda_h^2\widehat{\mbf{B}}\widehat{\bm{\alpha}} \]
+where $\widehat{\mbf{A}}=\mbf{C}^t\mbf{A}\mbf{C}$ and $\widehat{\mbf{B}}=\mbf{C}^t\mbf{B}\mbf{C}$
+\end{pb}
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
