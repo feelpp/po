@@ -1,0 +1,224 @@
+\section{The condition $\curl \mbf{u}_h\cdot\mbf{n}=0$ on $\Gamma$}
+Let $\Omega\subset\R^3$ be a bounded simply-connected domain with a
+Lipschitz continuous boundary $\Gamma$. Let $\Gamma_0,\dots,\Gamma_I$
+be the connected components of $\Gamma$.\\
+
+We will use the following notations :
+\begin{align*}
+gradient(v)&=(\partial_x v, \partial_y v, \partial_z v)=\grad v\\
+gradient(\mbf{v})&=\begin{pmatrix}
+\partial_x v_x & \partial_y v_x & \partial_z v_x\\
+\partial_x v_y & \partial_y v_y & \partial_z v_y\\
+\partial_x v_z & \partial_y v_z & \partial_z v_z
+\end{pmatrix}=\grad\mbf{v}\\
+divergence(\mbf{v})&=\frac{\partial v_x}{\partial x}+\frac{\partial v_y}{\partial y}+\frac{\partial v_z}{\partial z}=\div \mbf{v}\\
+rotationnel(\mbf{v})&=\begin{pmatrix}
+\partial_y v_z - \partial_z v_y\\
+\partial_z v_x - \partial_x v_z\\
+\partial_x v_y - \partial_y v_x
+\end{pmatrix}=\curl \mbf{v}\\
+bcurl(curl(\mbf{v}))&=\curll \mbf{v}\\
+H^1(\Omega) &= \{v \in L^2(\Omega)\;|\; \grad v\in L^2(\Omega)\}\\
+H^1_0(\Omega) &= \{v \in H^1(\Omega)\; |\; v\restr{\Gamma} = 0\}\\
+H(\mathrm{div};\Omega) &= \{\mbf{v} \in [L^2(\Omega)]^3\; |\; \div\mbf{v} \in L^2(\Omega) \}\\
+H(\mathrm{curl};\Omega) &= \{\mbf{v} \in [L^2(\Omega)]^3\; |\; \curl\mbf{v} \in L^2(\Omega) \}\\
+L^2_\sigma(\Omega) &= \{\mbf{v} \in [L^2(\Omega)]^3\; |\; \div \mbf{v} = 0\text{ et }\mbf{v}\cdot \mbf{n}\restr{\Gamma} = 0 \}\\
+D^1(\Omega) &= \{\mbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\; |\; (\curl \mbf{v}\cdot \mbf{n})\restr{\Gamma} = 0  \}
+\end{align*}
+
+\subsection{Problem}
+We consider the following problem :
+\begin{pb}\label{pbstart}
+Find $\lambda\in\CC$ and $\mbf{u}\ne 0$ such that
+\begin{align}
+\curl\mbf{u} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
+\div\mbf{u} = 0 & \quad \mbox{in }\Omega\\
+\mbf{u}\cdot \mbf{n} = 0 & \quad \mbox{on }\Gamma
+\end{align}
+\end{pb}
+
+According to R. Rodriguez and P. Venegas in \cite{Venegas2013}, this problem, for $\lambda\ne 0$, is
+equivalent to :
+\begin{pb}\label{pbcond}
+Find $\lambda\in\CC$ and $\mbf{u}\in
+  H(\mathrm{curl};\Omega),\mbf{u}\ne 0$ such that
+\begin{align}
+\curl \mbf{u} = \lambda \mbf{u} & \quad \mbox{in }\Omega\\
+\curl \mbf{u}\cdot\mbf{n} = 0 & \quad \mbox{on }\Gamma
+\end{align}
+\end{pb}
+The solution of this problem belongs to $\ZZ=\{\mbf{v}\in
+H(\mathrm{curl};\Omega \,|\, \curl\mbf{v}\cdot\mbf{n}=0 \mbox{
+  on } \Gamma \}$.\\
+
+Next, we multiply by $\mbf{v}\in\ZZ$ and integrate :
+\[ \int_\Omega \curl\mbf{u}\cdot\mbf{v} = \lambda\int_\Omega
+\mbf{u}\cdot\mbf{v} \]
+We have the follwing property for all $\mbf{u},\mbf{v}\in\ZZ$ :
+\[ \int_\Omega \left(\curl\mbf{u}\right)\cdot\mbf{v} -
+\mbf{u}\cdot\left(\curl\mbf{v}\right) = 0 \]
+Then, by applying it twice and using
+$\curl\mbf{u}=\lambda\mbf{u}$, we obtain the following
+variationnal form of the Problem \ref{pbstart} :
+\begin{pb}\label{pbweak}
+Find $\lambda\in\CC$ and $\mbf{u}\in\ZZ$, $\mbf{u}\ne 0$, such
+that
+\[ \int_\Omega \curl\mbf{u}\cdot\curl\mbf{v} =
+\lambda^2\int_\Omega \mbf{u}\cdot\mbf{v} \quad \forall
+\mbf{v}\in\ZZ \]
+\end{pb}
+
+If $(\lambda,\mbf{u})$ is a solution of Problem \ref{pbstart}, then it is a
+solution of Problem \ref{pbweak}. But the contrary is not always true,
+see \cite{Venegas2013} Corollary 3.10 :\\
+
+If $\nu\ne 0$ is a solution of Problem \ref{pbweak} and $\bm{\mathcal{E}}$ the
+corresponding eigenspace, then there exists an eigenvalue $\lambda$ of
+Problem \ref{pbstart} such that $\nu=\lambda^2$ and $\bm{\mathcal{E}}$ is an
+invariant subspace of Problem \ref{pbstart}.\\
+
+In fact, the eigenfunctions of Problem \ref{pbweak} are not necessarily
+eigenfunctions of Problem \ref{pbstart}. If both $\lambda$ and $-\lambda$
+are eigenvalues of Problem \ref{pbstart}, the $\lambda^2$ is an eigenvalue
+of Problem \ref{pbweak} with multiplicity equal to the sum of those of
+$\lambda$ and $-\lambda$. And the eigenfunction of Problem \ref{pbweak}
+corresponding to $\lambda^2$ would be a linear combination of the
+eigenfunctions of Problem \ref{pbstart} associated to $\lambda$ and
+$-\lambda$.\\
+
+\begin{rk}
+In our case, we are mainly interested by the eigenspace, since the
+eigen functions span the space $D^1(\Omega)$. We use the fact that
+$\curl\mbf{u}=\lambda\mbf{u}$ but it is a convenience, we could
+also compute $\curl\mbf{u}$.
+\end{rk}
+
+\subsection{Discretization}
+From now on, we'll use the following notations :
+\begin{align*}
+&\TT_h\mbox{ the set of tetrahedra } T \mbox{ such that }
+\mbox{ such that } \Omega=\cup_{T\in\TT}T\\
+&\TT_h^\Gamma =\{F\mbox{ faces of } T\in \TT_h \,|\, F\subset \Gamma
+\}\\
+&\NN^k(T)=\PP_{k-1}(T)^3\oplus\{\mbf{p}\in\PP_k(T)^3 \,|\,
+\mbf{p(x)}\cdot\mbf{x}=0 \}\\
+&\NN_h=\{\mbf{v}_h\in H(\mathrm{curl};\Omega) \,|\,
+\mbf{v}_h\restr{T}\in\NN^k(T)\, \forall T\in \TT_h \}\\
+&\ZZ_h=\NN_h\cap\ZZ=\{\mbf{v}_h\in\NN_h \,|\,
+\curl\mbf{v}_h\cdot\mbf{n} = 0 \}
+\end{align*}
+
+The Galerkin approximation of Problem \ref{pbweak} reads :
+\begin{pb}\label{pbdiscr}
+Find $\lambda_h\in\CC$ and $\mbf{u}_h\in\ZZ_h$, $\mbf{u}_h\ne
+0$, such that
+\[\int_\Omega \curl\mbf{u}_h\cdot\curl\mbf{v}_h =
+\lambda_h^2\int_\Omega \mbf{u}_h\cdot\mbf{v}_h \quad\quad
+\forall\mbf{v}_h\in\ZZ_h \]
+\end{pb}
+
+The issue is to impose the condition
+$\curl\mbf{u}_h\cdot\mbf{n}=0$ on $\Gamma$. Before, we tried to apply this
+condition by a penalization method. But this was difficult, because we had to
+find the proper parameter.\\
+
+\subsubsection{A new basis}
+\label{base}
+In \cite{Venegas2013}, following the method used in
+\cite{Meddahi2003,Salgado2005}, they propose a basis to the space $\ZZ_h$.
+Since it is based on the work of A. Buffa in \cite{Buffa2002845}, we need to
+define some operators before we go on.
+\begin{align*}
+\pi_\tau(u) &= \mbf{n}\times\mbf{u}\times\mbf{n}\restr{\Gamma} &\mbox{the projection on
+  the tangential plane}\\
+\gamma_\tau(u) &= \mbf{u}\times\mbf{n}\restr{\Gamma} &\mbox{the tangential
+  trace}\\
+\grad_\Gamma(\varphi) &= \pi_\tau(\grad\varphi) &\mbox{the tangential gradient}\\
+\mathrm{curl}_\Gamma(\varphi) &= \gamma_\tau(\grad\varphi) &\mbox{the tangential curl}
+\end{align*}
+
+Then, we have the equivalence :
+\[ \curl\mbf{u}_h\cdot\mbf{n}=0\mbox{ on }\Gamma \iff
+\mathrm{curl}_\Gamma(\pi_\tau(\mbf{u}_h))=0\quad \mbox{ on } \Gamma \]
+and since $\mathrm{Ker(curl}_\Gamma)=\grad_\Gamma H^1(\Gamma)$ we have 
+\[ \curl\mbf{u}_h\cdot\mbf{n}=0\mbox{ on }\Gamma \iff
+\exists\varphi_h\in H^1(\Gamma) \mbox{ such that
+}\mbf{n}\times\mbf{u}_h\times\mbf{n} = \grad_\Gamma\varphi_h \]
+In fact, by \cite{Monk2003} Remark 5.29, we know that 
+\[\varphi_h\in\LLL_h^\Gamma = \{\psi_h\in\mathcal{C}(\Gamma) \,|\,
+\psi_h\restr{\Gamma}\in\PP_k(F) \quad \forall F\in\TT_h^\Gamma \}\]
+the set of continuous functions which are piecewise polynomial on the faces of
+the boundary.\\
+
+The idea for creating the basis of $\ZZ_h$ is to take the basis of $\NN_h$, keep
+only the functions define on the internal elements of the mesh and replace the
+elements of the boundary by a basis of $\LLL_h^\Gamma$.\\
+
+Let \[ \LLL_h=\{\psi\in\mathcal{C}(\Omega) \,|\,
+\phi\restr{T}\in\PP_k(T)\,\forall T\in\TT_h^\} \]
+and $\{\varphi_j\}_{j=1}^K$ be the nodal basis of $\LLL_h$.\\
+We assume that the first J of them correspond to all the nodal values on the
+boundary $\Gamma$. Then $\{\varphi_j\restr{\Gamma}\}_{j=1}^J$ is a
+basis of $\LLL_h^\Gamma$ and
+$\left\langle\{\grad_\Gamma\varphi_j\}_{j=1}^J\right\rangle=\grad_\Gamma(\LLL_h^\Gamma)$.\\
+In order to have a basis, we have to choose one vertex on each connected
+compoenent $\Gamma_0,\dots,\Gamma_I$ and remove the basis functions
+corresponding. Assume that those functions are the last ones, then if
+$L=J-(I+1)$, $\{\grad_\Gamma\varphi_j\}_{j=1}^L$ is a basis of
+$\grad_\Gamma(\LLL_h^\Gamma)$.\\
+Let $\{\phi_m\}_{m=1}^M$ be the basis of $\NN_h$, where the last ones
+correspond to the degrees of freedom related to the faces or edges on
+$\Gamma$. We have that $\{\phi_m\}_{m=1}^N$ lie in $\ZZ_h$.\\
+
+Then the set $\{\phi_m\}_{m=1}^N\cup  \{\grad_\Gamma\varphi_j\}_{j=1}^L$
+is a basis of $\ZZ_h$.
+
+\subsubsection{An algebraic solution}
+In the case of the lowest order Nedelec elements, there is a way to impose the
+condition $\curl\mbf{u}_h\cdot\mbf{n}=0$ without computing the basis seen in
+  \ref{base}.\\
+In the case of the lowest order, the degrees of freedom of the Nedelec elements
+are \[\alpha_m=\int_{e_m} \mbf{u}_h\cdot\mbf{t}_m \quad m=1,\dots,M\] where $\{e_1,\dots,e_M\}$ is the set
+of all edges in $\TT_h$ and $\mbf{t}_m$ is a unit vector tangent to $e_m$. The
+direction of this vector depends on ...\\
+Then we have \[\mbf{u}_h = \sum_{m=1}^M \alpha_m\phi_m\]
+
+Let $\{P_j\}_{j=1}^J$ be the set of vertices of $\TT_h^\Gamma$, and
+$\{\varphi_j\}_{j=1}^J$ be the basis of $\LLL_h^\Gamma$, where the last $I$
+functions are choses on a different connected component of $\Gamma$. Then, we have also :
+\[ \mbf{u}_h = \sum_{m=1}^M \alpha_m'\phi_m + \sum_{j=1}^L
+\beta_j\grad_\Gamma\varphi_j \]
+By identification, we obtain :
+\[
+\alpha_m=\begin{cases}
+\alpha_m', &\mbox{if } e_m\cap\Gamma = \emptyset,\\
+\alpha_m'\pm \beta_j, &\mbox{if } e_m\cap\Gamma = \{P_j\},\\
+\alpha_m'\pm (\beta_j-\beta_k), &\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
+(e_m\notin\Gamma),\\
+\pm (\beta_j-\beta_k), &\mbox{if } e_m=[P_j,P_k]\subset\Gamma
+\end{cases}
+\]
+the signs depend on the direction of $t_m$.\\
+
+We note $\bm{\alpha}=(\alpha_1,\dots,\alpha_M)^t$ and
+$\widehat{\bm{\alpha}}=(\alpha_1',\dots,\alpha_M',\beta_1,\dots,\beta_J)^t$ and
+then we can define a matrix $\mbf{C}\in\R^{M\times(N+L)}$ such that $\bm{\alpha}=\mbf{C}\widehat{\bm{\alpha}}$.\\
+
+Let $\mbf{A}=(A_{ij})$ and $\mbf{B}=(B_{ij})$ be the $M\times M$ matrices defined
+by 
+\[A_{ij}=\int_\Omega \curl\phi_j\cdot\curl\phi_i \quad\mbox{and}\quad
+B_{ij}=\int_\Omega\phi_j\cdot\phi_i\quad i,j=1,\dots,M \]
+Then, by changing the basis, we have the following matrix form of Problem
+\ref{pbdiscr} :
+\begin{pb}\label{pbmat}
+Find $\lambda_h\in\R$ and $\widehat{\bm{\alpha}}\in\R^{N+L}$ such that
+\[ \widehat{\mbf{A}}\widehat{\bm{\alpha}} =
+\lambda_h^2\widehat{\mbf{B}}\widehat{\bm{\alpha}} \]
+where $\widehat{\mbf{A}}=\mbf{C}^t\mbf{A}\mbf{C}$ and $\widehat{\mbf{B}}=\mbf{C}^t\mbf{B}\mbf{C}$
+\end{pb}
+
+%%% Local Variables:
+%%% TeX-master: "../peps.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "english"
+%%% End:
