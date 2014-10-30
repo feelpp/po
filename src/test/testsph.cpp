@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     auto Jacmattransinv = inv(Jacmattrans);
 
 
-    auto uexact = 1./2*pow(eta1,doption("parameters.p"));
+    auto uexact = 1./6*pow(eta1,doption("parameters.p"))*sin(eta2);
     std::cout << "int(u) = " << integrate(elements(mesh), uexact*Jac).evaluate() << std::endl;
 
 
