@@ -1,0 +1,33 @@
+\section{Solution anaylique}
+In order to check the validity of our results, we need a function which lies in
+$\ZZ$. We turn to J.~Cantarella in \cite{Cantarella2000} to find it, in fact,
+the function defined in it is a solution of our eigenproblem in a sphere.\\
+The
+function $V$ is defined in the spherical coordinates $(r,\theta,\phi)$, where
+$r$ is the radial distance, $\theta$ the polar angle and $\phi$ the azimuth 
+angle, by :
+\[ V(r,\theta,\phi) = u(r,\theta)\hat{r} + v(r,\theta)\hat{\theta} + w(r,\theta)\hat{\phi} \]
+with
+\begin{gather*}
+u(r,\theta) =
+\frac{2\lambda}{r^2}\left(\frac{\lambda}{r}\sin(r/\lambda)-\cos(r/\lambda)\right)\cos\theta\\
+v(r,\theta) = -\frac{1}{r}\left(\frac{\lambda}{r}\cos(r/\lambda) -
+  \frac{\lambda^2}{r^2}\sin(r/\lambda) + \sin(r/\lambda)\right)\sin(\theta)\\
+w(r,\theta) = \frac{1}{r}\left(\frac{\lambda}{r}\sin(r/\lambda) - \cos(r/\lambda)\right)\sin\theta
+\end{gather*}
+where $\lambda$ is the eigenvalue associated, and is equal to the first positive
+solution of the equation $x=\tan x$ ($\approx$ 4.4934) for a sphere of radius 1.\\
+
+Unfortunately, at the origin, the function is not define. We have to use a Taylor series around $r=0$. We have then :
+\begin{gather*}
+u(r,\theta) = -\frac{r^2}{12\lambda}\cos\theta +o(r^4)\\
+v(r,\theta) = \left(\frac{2}{3\lambda}-\frac{2r^3}{15\lambda^3}\right)\sin\theta + o(r^4)\\
+w(r,\theta) =
+\left(\frac{r}{3\lambda^2}-\frac{r^3}{30\lambda^4}\right)\sin\theta + o(r^4)
+\end{gather*} 
+
+%%% Local Variables:
+%%% TeX-master: "../peps.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "english"
+%%% End:
