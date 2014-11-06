@@ -1,13 +1,15 @@
-h1=0.01;
+h1 = 1;
+a = 0.1;
+b = 1;
 
 // sphere interieure
 Point(1) = {0,0,0,h1};
-Point(2) = {0.1,0,0,h1};
-Point(3) = {0,0.1,0,h1};
-Point(4) = {0,0,0.1,h1};
-Point(5) = {-0.1,0,0,h1};
-Point(6) = {0,-0.1,0,h1};
-Point(7) = {0,0,-0.1,h1};
+Point(2) = {a,0,0,h1};
+Point(3) = {0,a,0,h1};
+Point(4) = {0,0,a,h1};
+Point(5) = {-a,0,0,h1};
+Point(6) = {0,-a,0,h1};
+Point(7) = {0,0,-a,h1};
 
 Circle(1) = {2,1,3};
 Circle(2) = {3,1,5};
@@ -41,20 +43,18 @@ Ruled Surface(7) = {7};
 Ruled Surface(8) = {8};
 
 Surface Loop(1) = {1,2,3,4,5,6,7,8};
-
 Volume(1) = {1};
-Physical Volume("int") = {1};
 
 // sphere exterieure
-h=0.1;
+h = 1;
 
 Point(8) = {0,0,0,h};
-Point(9) = {1,0,0,h};
-Point(10) = {0,1,0,h};
-Point(11) = {0,0,1,h};
-Point(12) = {-1,0,0,h};
-Point(13) = {0,-1,0,h};
-Point(14) = {0,0,-1,h};
+Point(9) = {b,0,0,h};
+Point(10) = {0,b,0,h};
+Point(11) = {0,0,b,h};
+Point(12) = {-b,0,0,h};
+Point(13) = {0,-b,0,h};
+Point(14) = {0,0,-b,h};
 
 Circle(13) = {9,8,10};
 Circle(14) = {10,8,12};
@@ -87,7 +87,13 @@ Ruled Surface(14) = {14};
 Ruled Surface(15) = {15};
 Ruled Surface(16) = {16};
 
-Surface Loop(2) = {9,10,11,12,13,14,15,16};
+Surface Loop(2)     = {9,10,11,12,13,14,15,16};
+Volume(2) = {2,-1};
 
-Volume(2) = {1,2};
+// Physical entities
+Physical Surface("sint") = {1,2,3,4,5,6,7,8};
+Physical Volume("int") = {1};
+
+Physical Surface("sext") = {9,10,11,12,13,14,15,16};
+
 Physical Volume("ext") = {2};
