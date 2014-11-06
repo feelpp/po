@@ -217,6 +217,100 @@ Find $\lambda_h\in\R$ and $\widehat{\bm{\alpha}}\in\R^{N+L}$ such that
 where $\widehat{\mbf{A}}=\mbf{C}^t\mbf{A}\mbf{C}$ and $\widehat{\mbf{B}}=\mbf{C}^t\mbf{B}\mbf{C}$
 \end{pb}
 
+\subsubsection{Example}
+If we take for an element the following tetrahedron :
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[line join = round, line cap = round]
+\coordinate [label=left:$a_1$] (A) at (0,0,0);
+\coordinate [label=right:$a_2$] (B) at (3,0,0);
+\coordinate [label=above:$a_3$] (C) at (0,3,0);
+\coordinate [label=below:$a_4$] (D) at (0,0,3);
+\foreach \i in {A,B,C,D}
+    \draw[dashed] (0,0)--(\i);
+\draw[-] (A)--(D)--(B)--cycle;
+\draw[-] (A) --(D)--(C)--cycle;
+\draw[-] (B)--(D)--(C)--cycle;
+
+\draw[->] (-4,0) -- (-3,0,0) node[right] {$x$};
+\draw[->] (-4,0) -- (-4,1,0) node[above] {$y$};
+\draw[->] (-4,0) -- (-4,0,1) node[below left] {$z$};
+\end{tikzpicture}
+\end{figure}
+with
+\begin{align*}
+a_1 &= (0,0,0) & a_2 &= (1,0,0)\\
+a_3 &= (0,1,0) & a_4 &= (0,0,1)
+\end{align*}
+\begin{align*}
+e_1 &= [a_4,a_1] & e_2 &= [a_4,a_2] & e_3 &= [a_4,a_3]\\
+e_4 &= [a_1,a_2] & e_5 &= [a_2,a_3] & e_6 &= [a_3,a_1]
+\end{align*}
+We also assume that $\Gamma=\{z=0\}$.\\
+
+Then we have that $\{\varphi_j\}_{j=1}^4$ is a basis of $\LLL_h$, with :
+\begin{align*}
+\varphi_1(x,y,z) &= 1-x-y-z & \varphi_2(x,y,z) &= x\\
+\varphi_3(x,y,z) &= y & \varphi_4(x,y,z) &= z\\
+\end{align*}
+Then $\left\langle\{\varphi_j\}_{j=1}^3\right\rangle=\LLL_h^\Gamma$ and
+$n=(0,0,-1)$, which leads to :
+\begin{gather*}
+\grad_\Gamma \varphi_1(x,y,z) = (-1,-1,0)\\
+\grad_\Gamma \varphi_2(x,y,z) = (1,0,0)\\
+\grad_\Gamma \varphi_3(x,y,z) = (0,0,0)
+\end{gather*}
+We have to remove a function corresponding to the only connected component of
+$\Gamma$, so we remove $\grad_\Gamma \varphi_3$.\\
+Then $\{\grad_\Gamma \varphi_j\}_{j=1}^2$ is a basis of
+$\grad_\Gamma(\LLL_h^\Gamma)$.\\
+
+For the basis of $\NN_h$, we have to remove the three last functions and then we
+should have \[ \{\phi_m\}_{m=1}^3\cup\{\grad_\Gamma\varphi_j\}_{j=1}^2 \mbox{ is
+  a basis of } \ZZ_h \]
+And
+\begin{align*}
+\mbf{u}_h &= \sum_{m=1}^6 \left(\int_{e_m} \mbf{u}_h\cdot\tau_m\right) \phi_m = \sum_{m=1}^6 \alpha_m \phi_m\\
+&= \sum_{m=1}^3 \alpha_m'\phi_m + \sum_{j=1}^2 \beta_j\grad_\Gamma\varphi_j
+\end{align*}
+With
+\[ \begin{pmatrix}
+\alpha_1\\\alpha_2\\\alpha_3\\\alpha_4\\\alpha_5\\\alpha_6
+\end{pmatrix} = \begin{pmatrix}
+1 & 0 & 0 & \pm 1 & 0\\
+0 & 1 & 0 & 0 & \pm 1\\
+0 & 0 & 1 & 0 & 0\\
+0 & 0 & 0 & \pm 1 & \mp 1\\
+0 & 0 & 0 & 0 & \pm 1\\
+0 & 0 & 0 & \pm 1 & 0\\
+\end{pmatrix} \begin{pmatrix}
+\alpha_1'\\\alpha_2'\\\alpha_3'\\\beta_1\\\beta_1
+\end{pmatrix} \]
+Then
+\begin{align*} \widehat{A}=\begin{pmatrix}
+a_{11} & a_{12} & a_{13} & \pm d_1(A) & \pm e_1(A)\\
+a_{21} & a_{22} & a_{23} & \pm d_2(A) & \pm e_2(A)\\
+a_{31} & a_{32} & a_{33} & \pm d_3(A) & \pm e_3(A)\\
+\pm f_1(A) & \pm f_2(A) & \pm f_3(A) & \pm \delta_{44}(A) & \pm \delta_{45}(A)\\
+\pm g_1(A) & \pm g_2(A) & \pm g_3(A) & \pm \delta_{54}(A) & \pm \delta_{55}(A)
+\end{pmatrix}\\
+\widehat{B}=\begin{pmatrix}
+b_{11} & b_{12} & b_{13} & \pm d_1(B) & \pm e_1(B)\\
+b_{21} & b_{22} & b_{23} & \pm d_2(B) & \pm e_2(B)\\
+b_{31} & b_{32} & b_{33} & \pm d_3(B) & \pm e_3(B)\\
+\pm f_1(B) & \pm f_2(B) & \pm f_3(B) & \pm \delta_{44}(B) & \pm \delta_{45}(B)\\
+\pm g_1(B) & \pm g_2(B) & \pm g_3(B) & \pm \delta_{54}(B) & \pm \delta_{55}(B)
+\end{pmatrix}
+\end{align*}
+with 
+\begin{align*}
+d_k(X) &= x_{k1}+x_{k4}+x_{k6} & e_k(X) &= x_{k2}+x_{k4}+x_{k5}\\
+f_k(X) &= x_{1k}+x_{4k}+x_{6k} & g_k(X) &= x_{2k}+x_{4k}+x_{5k}\\
+\delta_{44}(X) &= f_1(X) + f_4(X) + f_6(X) & \delta_{45}(X) &= f_2(X) + f_4(X) + f_5(X) \\
+\delta_{54}(X) &= g_1(X) + g_4(X) + g_6(X) & \delta_{45}(X) &= g_2(X) + g_4(X) + g_5(X)
+\end{align*}
+
+
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
 %%% eval: (flyspell-mode 1)
