@@ -28,3 +28,4 @@ feelpp_add_application( po_test_car SRCS testcyl.cpp CFG po_test_car.cfg GEO cyl
 feelpp_add_application( po_testsph_sph SRCS testsph.cpp DEFS PO_SPH CFG po_testsph_sph.cfg GEO sphCooSph.geo  )
 feelpp_add_application( po_testsph_car SRCS testsph.cpp CFG po_testsph_car.cfg GEO sphCooCar.geo  )
 feelpp_add_application( po_spheromak SRCS spheromak.cpp CFG po_spheromak.cfg GEO doubleSphere.geo )
+feelpp_add_application( po_eigencube SRCS eigencube.cpp CFG po_eigencube.cfg GEO cubepi.geo )
