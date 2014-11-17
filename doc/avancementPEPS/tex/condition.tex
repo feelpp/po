@@ -190,13 +190,13 @@ functions are choses on a different connected component of $\Gamma$. Then, we ha
 \beta_j\grad_\Gamma\varphi_j \]
 By identification, we obtain :
 \[
-\alpha_m=\begin{cases}
-\alpha_m', &\mbox{if } e_m\cap\Gamma = \emptyset,\\
-\alpha_m'\pm \beta_j, &\mbox{if } e_m\cap\Gamma = \{P_j\},\\
-\alpha_m'\pm (\beta_j-\beta_k), &\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
-(e_m\notin\Gamma),\\
-\pm (\beta_j-\beta_k), &\mbox{if } e_m=[P_j,P_k]\subset\Gamma
-\end{cases}
+\alpha_m=\left\{\begin{aligned}
+&\alpha_m', &&\mbox{if } e_m\cap\Gamma = \emptyset, &\texttt{internalelements}\\
+&\alpha_m'\pm \beta_j, &&\mbox{if } e_m\cap\Gamma = \{P_j\},& \texttt{boundaryelements}\backslash\texttt{boundaryedges}\\
+&\alpha_m'\pm (\beta_j-\beta_k), &&\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
+(e_m\notin\Gamma),& \texttt{boundaryelements}\backslash\texttt{boundaryedges}\\
+&\pm (\beta_j-\beta_k), &&\mbox{if } e_m=[P_j,P_k]\subset\Gamma & \texttt{boundaryedges}
+\end{aligned}\right.
 \]
 the signs depend on the direction of $t_m$.\\
 
@@ -308,6 +308,7 @@ And
 \mbf{u}_h &= \sum_{m=0}^5 \sigma_m(\mbf{u}_h) \bm{\phi}_m = \sum_{m=1}^6 \alpha_m \bm{\phi}_m\\
 &= \sum_{m=0}^2 \alpha_m'\bm{\phi}_m + \sum_{j=0}^2 \beta_j\grad_\Gamma\varphi_j
 \end{align*}
+with $\beta_2 = 0$.\\
 
 We also have the following relations :
 \begin{align*}

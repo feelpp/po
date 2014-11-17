@@ -1,22 +1,89 @@
-\section{Solution anaylique}
+\section{Analytical solution}
+\subsection{Sphere}
 In order to check the validity of our results, we need a function which lies in
 $\ZZ$. We turn to J.~Cantarella in \cite{Cantarella2000} to find it, in fact,
 the function defined in it is a solution of our eigenproblem in a sphere.\\
-The
-function $V$ is defined in the spherical coordinates $(r,\theta,\phi)$, where
+The function $\mbf{V}$ is defined in the spherical coordinates $(r,\theta,\phi)$, where
 $r$ is the radial distance, $\theta$ the polar angle and $\phi$ the azimuth 
 angle, by :
-\[ V(r,\theta,\phi) = u(r,\theta)\hat{r} + v(r,\theta)\hat{\theta} + w(r,\theta)\hat{\phi} \]
+\begin{equation} \mbf{V}(r,\theta,\phi) = u(r,\theta)\hat{r} + v(r,\theta)\hat{\theta} + w(r,\theta)\hat{\phi} \end{equation}
 with
-\begin{gather*}
+\begin{gather}
 u(r,\theta) =
 \frac{2\lambda}{r^2}\left(\frac{\lambda}{r}\sin(r/\lambda)-\cos(r/\lambda)\right)\cos\theta\\
 v(r,\theta) = -\frac{1}{r}\left(\frac{\lambda}{r}\cos(r/\lambda) -
   \frac{\lambda^2}{r^2}\sin(r/\lambda) + \sin(r/\lambda)\right)\sin(\theta)\\
 w(r,\theta) = \frac{1}{r}\left(\frac{\lambda}{r}\sin(r/\lambda) - \cos(r/\lambda)\right)\sin\theta
-\end{gather*}
+\end{gather}
 where $\lambda$ is the eigenvalue associated, and is equal to the first positive
-solution of the equation $x=\tan x$ ($\approx$ 4.4934) for a sphere of radius 1.\\
+solution of the equation $x=\tan x$ ($\approx$ 4.4934) for a sphere of radius
+1.\\
+
+We have \[ \mbf{V}\cdot\mbf{n} = 0 \iff u(1,\theta)=0 \iff \lambda\sin 1/\lambda
+= \cos 1/\lambda \]
+
+Besides, we have the following formula for the divergence :
+\[ \div \mbf{V} = \frac{1}{r^2}\frac{\partial}{\partial
+  r}\left(r^2\,u\right) +
+\frac{1}{r\sin\theta}\frac{\partial}{\partial\theta}\left(\sin\theta\,v\right)
++ \frac{1}{r\sin\theta}\frac{\partial w}{\partial\phi} \]
+Using 
+\begin{align*}
+\frac{\partial}{\partial r}\left(r^2\,u\right) &= \frac{\partial}{\partial
+  r}\left(
+  2\lambda\left(\frac{\lambda}{r}\sin(r/\lambda)-\cos(r/\lambda)\right)\cos\theta\right)\\
+&=
+2\lambda\left(\frac{-\lambda}{r^2}\sin(r/\lambda) + \frac{\lambda}{r\lambda}\cos(r/\lambda)
+  + \frac{1}{\lambda}\sin(r/\lambda)\right)\\
+\frac{\partial}{\partial\theta}\left(\sin\theta\,v\right) &=
+\frac{\partial}{\partial\theta}\left(
+  -\frac{1}{r}\left(\frac{\lambda}{r}\cos(r/\lambda) -
+    \frac{\lambda^2}{r^2}\sin(r/\lambda) +
+    \sin(r/\lambda)\right)\sin^2(\theta)\right)\\
+&= -\frac{1}{r}\left(\frac{\lambda}{r}\cos(r/\lambda) -
+    \frac{\lambda^2}{r^2}\sin(r/\lambda) +
+    \sin(r/\lambda)\right)2\cos\theta\sin\theta\\
+\frac{\partial w}{\partial\phi} = 0
+\end{align*}
+
+We have \begin{equation} \div\mbf{V} = 0 \end{equation}
+
+We also have this formula for the curl :
+\[\curl\mbf{V} = \begin{pmatrix}
+\frac{1}{r\sin\theta}\left(\frac{\partial}{\partial\theta}(w\sin\theta) -
+  \frac{\partial v}{\partial\phi}\right)\\
+\frac{1}{r}\left(\frac{1}{\sin\theta}\frac{\partial u}{\partial\phi} -
+  \frac{\partial}{\partial r}(r\,w)\right)\\
+\frac{1}{r}\left(\frac{\partial}{\partial r}(r\,v) - \frac{\partial u}{\partial\theta}\right)
+\end{pmatrix}\]
+Using
+\begin{align*}
+\frac{1}{r\sin\theta}\left(\frac{\partial}{\partial\theta}(w\sin\theta)\right)
+&= \frac{1}{r\sin\theta}\left(\frac{1}{r}\left(\frac{\lambda}{r}\sin(r/\lambda)
+    - \cos(r/\lambda)\right)2\cos\theta\sin\theta\right)\\
+&= \frac{2}{r^2}\left(\frac{\lambda}{r}\sin(r/\lambda)
+    - \cos(r/\lambda)\right)\cos\theta\\
+\frac{\partial v}{\partial\phi} &= 0\\
+\frac{\partial u}{\partial\phi} &= 0\\
+\frac{-1}{r}\frac{\partial}{\partial r}(r\,w) &=
+\frac{-1}{r}\left(\frac{\lambda}{r\lambda}\cos(r/\lambda)-\frac{\lambda}{r^2}\sin(r/\lambda)+\frac{1}{\lambda}\sin(r/\lambda)\right)\sin\theta\\
+\frac{1}{r}\frac{\partial}{\partial r}(r\,v) &= \frac{1}{r}\left(
+  \frac{\lambda}{r^2}\cos(r/\lambda) + \frac{\lambda}{r\lambda}\sin(r/\lambda) -
+  \frac{2\lambda^2}{r^3}\sin(r/\lambda)
+  +\frac{\lambda^2}{r^2\lambda}\cos(r/\lambda) +
+  \frac{1}{\lambda}\cos(r/\lambda) \right) \sin\theta\\
+\frac{1}{r}\frac{\partial u}{\partial \theta} &= \frac{-2\lambda}{r^2}\left(
+  \frac{\lambda}{r}\sin(r/\lambda) - \cos(r/\lambda)\right)\sin\theta
+\end{align*}
+
+We obtain 
+\begin{equation} \curl\mbf{V} = \begin{pmatrix}
+\frac{1}{\lambda}\frac{2\lambda}{r^2}\left(\frac{\lambda}{r}\sin(r/\lambda)-\cos(r/\lambda)\right)\cos\theta\\
+\frac{1}{\lambda}\frac{-1}{r}\left(\frac{\lambda}{r}\cos(r/\lambda) -
+  \frac{\lambda^2}{r^2}\sin(r/\lambda) + \sin(r/\lambda)\right)\sin(\theta)\\
+\frac{1}{\lambda}\frac{1}{r}\left(\frac{\lambda}{r}\sin(r/\lambda) -
+  \cos(r/\lambda)\right)\sin\theta
+\end{pmatrix} = \frac{1}{\lambda}\mbf{V} \end{equation}
 
 Unfortunately, at the origin, the function is not define. We have to use a Taylor series around $r=0$. We have then :
 \begin{gather*}
@@ -25,6 +92,40 @@ v(r,\theta) = \left(\frac{2}{3\lambda}-\frac{2r^3}{15\lambda^3}\right)\sin\theta
 w(r,\theta) =
 \left(\frac{r}{3\lambda^2}-\frac{r^3}{30\lambda^4}\right)\sin\theta + o(r^4)
 \end{gather*} 
+
+\subsection{Cube}
+Another solution described in \cite{Penel2004} lies in the cube $(-\pi,\pi)^3$,
+and is defined by :
+\begin{align*}
+\mbf{u} &= \sum_{j=1}^4
+(\mbf{a}_j+\mathrm{i}\mbf{b}_j)\mathrm{e}^{\mathrm{i}\mbf{x}\cdot\mbf{k}_j} +
+(\mbf{a}_j-\mathrm{i}\mbf{b}_j)\mathrm{e}^{-\mathrm{i}\mbf{x}\cdot\mbf{k}_j}\\
+&= 2\sum_{j=1}^4 \mbf{a}_j\cos(\mbf{x}\cdot\mbf{k}_j) - \mbf{b}_j\sin(\mbf{x}\cdot\mbf{k}_j)
+\end{align*}
+With :
+\begin{align*}
+\mbf{k}_1 &= (2,3,1) & \mbf{a}_1 &= (0.0113,0.0000,-0.0219) & \mbf{b}_1 &=
+(0.0175,-0.0089,0.0111)\\
+\mbf{k}_2 &= (2,3,-1) & \mbf{a}_2 &= (0.0004,0.0000,0.0219) & \mbf{b}_2 &=
+(-0.0175,0.0320,-0.0111)\\
+\mbf{k}_3 &= (2,-3,1) & \mbf{a}_3 &= (-0.0004,0.0000,-0.0219) & \mbf{b}_3 &=
+(-0.0175,0.0089,-0.0034)\\
+\mbf{k}_4 &= (-2,3,1) & \mbf{a}_4 &= (-0.0113,0.0000,0.0219) & \mbf{b}_4 &=
+(-0.0175,0.0320,-0.0034)\\
+\end{align*}
+
+On the boundary, we have $\mbf{x}$ equals either
+$\pm(\pi,0,0),\pm(0,\pi,0),\pm(0,0,\pi)$, so
+\[\mbf{x}\cdot\mbf{k}_j = \pm\{1,2,3\}\pi\quad \forall j=1,\dots,4\]
+This leads to $\sin(\mbf{x}\cdot\mbf{k}_j)=0$ and
+$\cos(\mbf{x}\cdot\mbf{k}_j)=\pm 1$ depending on $\mbf{x}$ not on $j$, $\quad\forall j=1,\dots,4$\\
+We have then :
+\begin{gather}
+\mbf{u}\cdot\mbf{n} = \pm 2 \sum_{j=1}^4 \mbf{a}_j = 0\\
+\div\mbf{u} = -2\sum_{j=1}^4
+\mbf{k}_j\cdot(\mbf{a}_j\cos(\mbf{x}\cdot\mbf{k}_j)+\mbf{b}_j\sin(\mbf{x}\cdot\mbf{k}_j))\\
+\curl\mbf{u} = 2\sum_{j=1}^4(\mbf{a}_j\times\mbf{k}_j)\sin(\mbf{x}\cdot\mbf{k}_j) + (\mbf{b}_j\times\mbf{k}_j)\cos(\mbf{x}\cdot\mbf{k}_j)
+\end{gather}
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
