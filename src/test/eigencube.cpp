@@ -2,6 +2,7 @@
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelvf/ginac.hpp>
 #include <feel/feeldiscr/pchv.hpp>
+#include <feel/feeldiscr/pch.hpp>
 #include <feel/feelfilters/exporter.hpp>
 #include <feel/feelvf/vf.hpp>
 
@@ -20,12 +21,14 @@ int main(int argc, char** argv)
     auto mesh = loadMesh( _mesh=new Mesh<Simplex<3> > );
 
     auto Vh = Pchv<2>( mesh );
+    auto Sh = Pch<1>( mesh );
 
     if ( Environment::isMasterRank() )
         std::cout << "[dof] number of dof: " << Vh->nDof() << std::endl;
 
-    auto ur = Vh->element("0");
-    auto ui = Vh->element("0");
+    auto u = Vh->element("0");
+    auto cu = Vh->element("0");
+    auto du = Sh->element("0");
 
     auto a1 = vec(cst(0.0113),cst(0.),cst(-0.0219));
     auto a2 = vec(cst(-0.0004),cst(0.),cst(0.0219));
@@ -47,30 +50,50 @@ int main(int argc, char** argv)
 
 
     for( int i = 0; i < 4; i++ ) {
-        ur += project(_range=elements(mesh), _space=Vh,
-                      _expr=a[i]*cos(inner(P(),k[i])) - b[i]*sin(inner(P(),k[i])) );
-        ui += project(_range=elements(mesh), _space=Vh,
-                      _expr=a[i]*sin(inner(P(),k[i])) + b[i]*cos(inner(P(),k[i])) );
+        u += project(_range=elements(mesh), _space=Vh,
+                      _expr=2*(a[i]*cos(inner(P(),k[i]))
+			       - b[i]*sin(inner(P(),k[i]))) );
+
+	du += project(_range=elements(mesh), _space=Sh,
+		      _expr=-2*(inner(k[i],a[i])*sin(inner(P(),k[i]))
+				+ inner(k[i],b[i])*cos(inner(P(),k[i]))) );
+	cu += project(_range=elements(mesh), _space=Vh,
+		      _expr=2*(cross(a[i],k[i])*sin(inner(P(),k[i]))
+			       + cross(b[i],k[i])*cos(inner(P(),k[i]))) );
     }
 
 
-    auto errR = normL2(_range=elements(mesh), _expr=curlv(ur)-std::sqrt(14)*idv(ur) );
-    auto errI = normL2(_range=elements(mesh), _expr=curlv(ui)-std::sqrt(14)*idv(ui) );
-    auto norR = normL2(_range=elements(mesh), _expr=inner(idv(ur),N()) );
-    auto norI = normL2(_range=elements(mesh), _expr=inner(idv(ui),N()) );
-    auto divR = normL2(_range=elements(mesh), _expr=divv(ur) );
-    auto divI = normL2(_range=elements(mesh), _expr=divv(ui) );
+    auto nor = normL2(_range=elements(mesh), _expr=inner(idv(u),N()) );
+    auto norCu = normL2(_range=elements(mesh), _expr=inner(curlv(u),N()) );
+    auto norCuAna = normL2(_range=elements(mesh), _expr=inner(idv(cu),N()) );
+
+    auto div = normL2(_range=elements(mesh), _expr=divv(u) );
+    auto divAna = normL2(_range=elements(mesh), _expr=idv(du) );
+    auto errD = normL2(_range=elements(mesh),
+		       _expr=divv(u)-idv(du) );
+
+    auto err = normL2(_range=elements(mesh),
+		      _expr=curlv(u)-std::sqrt(14)*idv(u) );
+    auto errC = normL2(_range=elements(mesh),
+		       _expr=curlv(u)-idv(cu) );
+    auto errCEig = normL2(_range=elements(mesh),
+			  _expr=idv(cu)-std::sqrt(14)*idv(u) );
 
     if ( Environment::isMasterRank() ) {
-        std::cout << "nR : " << norR << "\nnI : " << norI << std::endl;
-        std::cout << "eR : " << errR << "\neI : " << errI << std::endl;
-        std::cout << "dR : " << divR << "\ndI : " << divI << std::endl;
+        std::cout << "normale : " << nor << std::endl;
+        std::cout << "normaleCurl : " << norCu << std::endl;
+        std::cout << "normaleCurlAna : " << norCuAna << std::endl;
+        std::cout << "divergence : " << div << std::endl;
+	std::cout << "divergence analytique : " << divAna << std::endl;
+        std::cout << "err(divv-divAna) : " << errD << std::endl;
+        std::cout << "err(curlv-eigen) : " << err << std::endl;
+        std::cout << "err(curlv-curlAna) : " << errC << std::endl;
+        std::cout << "err(curlAna-eigen) : " << errCEig << std::endl;
     }
 
 
     auto e = exporter( mesh );
-    e->add( "Re(u)", ur);
-    e->add( "Im(u)", ui);
+    e->add( "u", u);
     e->save();
 
 }
