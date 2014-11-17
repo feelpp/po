@@ -166,11 +166,11 @@ compoenent $\Gamma_0,\dots,\Gamma_I$ and remove the basis functions
 corresponding. Assume that those functions are the last ones, then if
 $L=J-(I+1)$, $\{\grad_\Gamma\varphi_j\}_{j=1}^L$ is a basis of
 $\grad_\Gamma(\LLL_h^\Gamma)$.\\
-Let $\{\phi_m\}_{m=1}^M$ be the basis of $\NN_h$, where the last ones
+Let $\{\bm{\phi}_m\}_{m=1}^M$ be the basis of $\NN_h$, where the last ones
 correspond to the degrees of freedom related to the faces or edges on
-$\Gamma$. We have that $\{\phi_m\}_{m=1}^N$ lie in $\ZZ_h$.\\
+$\Gamma$. We have that $\{\bm{\phi}_m\}_{m=1}^N$ lie in $\ZZ_h$.\\
 
-Then the set $\{\phi_m\}_{m=1}^N\cup  \{\grad_\Gamma\varphi_j\}_{j=1}^L$
+Then the set $\{\bm{\phi}_m\}_{m=1}^N\cup  \{\grad_\Gamma\varphi_j\}_{j=1}^L$
 is a basis of $\ZZ_h$.
 
 \subsubsection{An algebraic solution}
@@ -181,22 +181,22 @@ In the case of the lowest order, the degrees of freedom of the Nedelec elements
 are \[\alpha_m=\int_{e_m} \mbf{u}_h\cdot\mbf{t}_m \quad m=1,\dots,M\] where $\{e_1,\dots,e_M\}$ is the set
 of all edges in $\TT_h$ and $\mbf{t}_m$ is a unit vector tangent to $e_m$. The
 direction of this vector depends on ...\\
-Then we have \[\mbf{u}_h = \sum_{m=1}^M \alpha_m\phi_m\]
+Then we have \[\mbf{u}_h = \sum_{m=1}^M \alpha_m\bm{\phi}_m\]
 
 Let $\{P_j\}_{j=1}^J$ be the set of vertices of $\TT_h^\Gamma$, and
 $\{\varphi_j\}_{j=1}^J$ be the basis of $\LLL_h^\Gamma$, where the last $I$
 functions are choses on a different connected component of $\Gamma$. Then, we have also :
-\[ \mbf{u}_h = \sum_{m=1}^M \alpha_m'\phi_m + \sum_{j=1}^L
+\[ \mbf{u}_h = \sum_{m=1}^N \alpha_m'\bm{\phi}_m + \sum_{j=1}^L
 \beta_j\grad_\Gamma\varphi_j \]
 By identification, we obtain :
 \[
-\alpha_m=\begin{cases}
-\alpha_m', &\mbox{if } e_m\cap\Gamma = \emptyset,\\
-\alpha_m'\pm \beta_j, &\mbox{if } e_m\cap\Gamma = \{P_j\},\\
-\alpha_m'\pm (\beta_j-\beta_k), &\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
-(e_m\notin\Gamma),\\
-\pm (\beta_j-\beta_k), &\mbox{if } e_m=[P_j,P_k]\subset\Gamma
-\end{cases}
+\alpha_m=\left\{\begin{aligned}
+&\alpha_m', &&\mbox{if } e_m\cap\Gamma = \emptyset, &\texttt{internalelements}\\
+&\alpha_m'\pm \beta_j, &&\mbox{if } e_m\cap\Gamma = \{P_j\},& \texttt{boundaryelements}\backslash\texttt{boundaryedges}\\
+&\alpha_m'\pm (\beta_j-\beta_k), &&\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
+(e_m\notin\Gamma),& \texttt{boundaryelements}\backslash\texttt{boundaryedges}\\
+&\pm (\beta_j-\beta_k), &&\mbox{if } e_m=[P_j,P_k]\subset\Gamma & \texttt{boundaryedges}
+\end{aligned}\right.
 \]
 the signs depend on the direction of $t_m$.\\
 
@@ -206,8 +206,8 @@ then we can define a matrix $\mbf{C}\in\R^{M\times(N+L)}$ such that $\bm{\alpha}
 
 Let $\mbf{A}=(A_{ij})$ and $\mbf{B}=(B_{ij})$ be the $M\times M$ matrices defined
 by 
-\[A_{ij}=\int_\Omega \curl\phi_j\cdot\curl\phi_i \quad\mbox{and}\quad
-B_{ij}=\int_\Omega\phi_j\cdot\phi_i\quad i,j=1,\dots,M \]
+\[A_{ij}=\int_\Omega \curl\bm{\phi}_j\cdot\curl\bm{\phi}_i \quad\mbox{and}\quad
+B_{ij}=\int_\Omega\bm{\phi}_j\cdot\bm{\phi}_i\quad i,j=1,\dots,M \]
 Then, by changing the basis, we have the following matrix form of Problem
 \ref{pbdiscr} :
 \begin{pb}\label{pbmat}
@@ -222,92 +222,166 @@ If we take for an element the following tetrahedron :
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[line join = round, line cap = round]
-\coordinate [label=left:$a_1$] (A) at (0,0,0);
+\coordinate [label=left:$a_0$] (A) at (0,0,0);
+\coordinate [label=below:$a_1$] (D) at (0,0,3);
 \coordinate [label=right:$a_2$] (B) at (3,0,0);
 \coordinate [label=above:$a_3$] (C) at (0,3,0);
-\coordinate [label=below:$a_4$] (D) at (0,0,3);
 \foreach \i in {A,B,C,D}
     \draw[dashed] (0,0)--(\i);
 \draw[-] (A)--(D)--(B)--cycle;
 \draw[-] (A) --(D)--(C)--cycle;
 \draw[-] (B)--(D)--(C)--cycle;
 
-\draw[->] (-4,0) -- (-3,0,0) node[right] {$x$};
-\draw[->] (-4,0) -- (-4,1,0) node[above] {$y$};
-\draw[->] (-4,0) -- (-4,0,1) node[below left] {$z$};
+\draw[->] (-4,0) -- (-4,0,1) node[below left] {$x$};
+\draw[->] (-4,0) -- (-3,0,0) node[right] {$y$};
+\draw[->] (-4,0) -- (-4,1,0) node[above] {$z$};
 \end{tikzpicture}
 \end{figure}
 with
 \begin{align*}
-a_1 &= (0,0,0) & a_2 &= (1,0,0)\\
-a_3 &= (0,1,0) & a_4 &= (0,0,1)
+a_0 &= (-1,-1,-1) & a_1 &= (1,-1,-1)\\
+a_2 &= (-1,1,-1) & a_3 &= (-1,-1,1)
 \end{align*}
 \begin{align*}
-e_1 &= [a_4,a_1] & e_2 &= [a_4,a_2] & e_3 &= [a_4,a_3]\\
-e_4 &= [a_1,a_2] & e_5 &= [a_2,a_3] & e_6 &= [a_3,a_1]
+e_0 &= [a_3,a_0] & e_1 &= [a_3,a_1] & e_2 &= [a_3,a_2]\\
+e_3 &= [a_2,a_0] & e_4 &= [a_0,a_1] & e_5 &= [a_1,a_2]
 \end{align*}
-We also assume that $\Gamma=\{z=0\}$.\\
 
-Then we have that $\{\varphi_j\}_{j=1}^4$ is a basis of $\LLL_h$, with :
-\begin{align*}
-\varphi_1(x,y,z) &= 1-x-y-z & \varphi_2(x,y,z) &= x\\
-\varphi_3(x,y,z) &= y & \varphi_4(x,y,z) &= z\\
-\end{align*}
-Then $\left\langle\{\varphi_j\}_{j=1}^3\right\rangle=\LLL_h^\Gamma$ and
-$n=(0,0,-1)$, which leads to :
+The tangent are then :
+\[ \mbf{t}_0=\begin{pmatrix}0\\0\\1\end{pmatrix}\;
+\mbf{t}_1=\begin{pmatrix}-1\\0\\1\end{pmatrix}\;
+\mbf{t}_2=\begin{pmatrix}0\\-1\\1\end{pmatrix}\;
+\mbf{t}_3=\begin{pmatrix}0\\-1\\0\end{pmatrix}\;
+\mbf{t}_4=\begin{pmatrix}1\\0\\0\end{pmatrix}\;
+\mbf{t}_5=\begin{pmatrix}-1\\1\\0\end{pmatrix}\;
+\]
+And the degrees of freedom are :
 \begin{gather*}
-\grad_\Gamma \varphi_1(x,y,z) = (-1,-1,0)\\
-\grad_\Gamma \varphi_2(x,y,z) = (1,0,0)\\
-\grad_\Gamma \varphi_3(x,y,z) = (0,0,0)
+\sigma_0(\mbf{u}) = \int_{e_0} \mbf{t}_0\cdot\mbf{u} =
+\int_{x_1=-1}\int_{x_2=-1}\int_{x_3=-1}^1 (0,0,1)^T\cdot\mbf{u}\\
+\sigma_1(\mbf{u}) = \int_{e_1} \mbf{t}_1\cdot\mbf{u} =
+\int_{x_1=-1}^1\int_{x_2=-1}\int_{x_3=-x_1} (-1,0,1)^T\cdot\mbf{u}\\
+\sigma_2(\mbf{u}) = \int_{e_2} \mbf{t}_2\cdot\mbf{u} =
+\int_{x_1=-1}\int_{x_2=-1}^1\int_{x_3=-x_2} (0,-1,1)^T\cdot\mbf{u}\\
+\sigma_3(\mbf{u}) = \int_{e_3} \mbf{t}_3\cdot\mbf{u} =
+\int_{x_1=-1}\int_{x_2=-1}^1\int_{x_3=-1} (0,-1,0)^T\cdot\mbf{u}\\
+\sigma_4(\mbf{u}) = \int_{e_4} \mbf{t}_4\cdot\mbf{u} =
+\int_{x_1=-1}^1\int_{x_2=-1}\int_{x_3=-1} (1,0,0)^T\cdot\mbf{u}\\
+\sigma_5(\mbf{u}) = \int_{e_5} \mbf{t}_5\cdot\mbf{u} =
+\int_{x_1=-1}^1\int_{x_2=-x_1}\int_{x_3=-1} (-1,1,0)^T\cdot\mbf{u}
 \end{gather*}
+To determine the basis $\{\bm{\phi}_i\}_{i=0}^5$ of $\NN_h$ we use the fact that
+$\sigma_i(\bm{\phi}_j) = \delta_{ij}$, and we find that :
+\begin{align*}
+\bm{\phi}_0 &= \frac{1}{4}\begin{pmatrix}1+x_3\\1+x_3\\-x_1-x_2\end{pmatrix} &
+\bm{\phi}_1 &= \frac{1}{4}\begin{pmatrix}-1-x_3\\0\\1+x_1\end{pmatrix} \\
+\bm{\phi}_2 &= \frac{1}{4}\begin{pmatrix}0\\-1-x_3\\1+x_2\end{pmatrix} &
+\bm{\phi}_3 &= \frac{1}{4}\begin{pmatrix}-1-x_2\\x_1+x_3\\-1-x_2\end{pmatrix}\\
+\bm{\phi}_4 &= \frac{1}{4}\begin{pmatrix}-x_2-x_3\\1+x_1\\1+x_1\end{pmatrix} &
+\bm{\phi}_5 &= \frac{1}{4}\begin{pmatrix}-1-x_2\\1+x_1\\0\end{pmatrix}
+\end{align*}
+
+If we assume that $\Gamma=\{z=0\}$, then $N=2$ and $J=2$.
+
+Then we have that $\{\varphi_j\}_{j=0}^3$ is a basis of $\LLL_h$, with :
+\begin{align*}
+\varphi_0(x,y,z) &= \frac{-1}{8}(4+4x+4y+4z) &
+\varphi_1(x,y,z) &= \frac{x+1}{2}\\
+\varphi_2(x,y,z) &= \frac{y+1}{2} & \varphi_3(x,y,z) &= \frac{z+1}{2}\\
+\end{align*}
+Then $\left\langle\{\varphi_j\}_{j=0}^2\right\rangle=\LLL_h^\Gamma$ and
+$n=(0,0,-1)$, which leads to :
+\[
+\grad_\Gamma \varphi_0(x,y,z) = \begin{pmatrix}-1/2\\1/2\\0\end{pmatrix},\quad
+\grad_\Gamma \varphi_1(x,y,z) = \begin{pmatrix}1/2\\0\\0\end{pmatrix},\quad
+\grad_\Gamma \varphi_2(x,y,z) = \begin{pmatrix}0\\1/2\\0\end{pmatrix}
+\]
 We have to remove a function corresponding to the only connected component of
-$\Gamma$, so we remove $\grad_\Gamma \varphi_3$.\\
-Then $\{\grad_\Gamma \varphi_j\}_{j=1}^2$ is a basis of
+$\Gamma$, so we remove $\grad_\Gamma \varphi_2$.\\
+Then $\{\grad_\Gamma \varphi_j\}_{j=0}^1$ is a basis of
 $\grad_\Gamma(\LLL_h^\Gamma)$.\\
 
-For the basis of $\NN_h$, we have to remove the three last functions and then we
-should have \[ \{\phi_m\}_{m=1}^3\cup\{\grad_\Gamma\varphi_j\}_{j=1}^2 \mbox{ is
-  a basis of } \ZZ_h \]
+We finally have \[ \{\bm{\phi}_m\}_{m=0}^2\cup\{\grad_\Gamma\varphi_j\}_{j=0}^1
+\mbox{ is a basis of } \ZZ_h \]
 And
 \begin{align*}
-\mbf{u}_h &= \sum_{m=1}^6 \left(\int_{e_m} \mbf{u}_h\cdot\tau_m\right) \phi_m = \sum_{m=1}^6 \alpha_m \phi_m\\
-&= \sum_{m=1}^3 \alpha_m'\phi_m + \sum_{j=1}^2 \beta_j\grad_\Gamma\varphi_j
+\mbf{u}_h &= \sum_{m=0}^5 \sigma_m(\mbf{u}_h) \bm{\phi}_m = \sum_{m=1}^6 \alpha_m \bm{\phi}_m\\
+&= \sum_{m=0}^2 \alpha_m'\bm{\phi}_m + \sum_{j=0}^2 \beta_j\grad_\Gamma\varphi_j
 \end{align*}
-With
+with $\beta_2 = 0$.\\
+
+We also have the following relations :
+\begin{align*}
+\alpha_0 &= \alpha_0' \pm \beta_0\\
+\alpha_1 &= \alpha_1' \pm \beta_1\\
+\alpha_2 &= \alpha_2' \pm \beta_2\\
+\alpha_3 &= \pm(\beta_0-\beta_2)\\
+\alpha_4 &= \pm(\beta_0-\beta_1)\\
+\alpha_5 &= \pm(\beta_1-\beta_2)
+\end{align*}
+Which leads to the system :
 \[ \begin{pmatrix}
-\alpha_1\\\alpha_2\\\alpha_3\\\alpha_4\\\alpha_5\\\alpha_6
+\alpha_0\\\alpha_1\\\alpha_2\\\alpha_3\\\alpha_4\\\alpha_5
 \end{pmatrix} = \begin{pmatrix}
-1 & 0 & 0 & \pm 1 & 0\\
-0 & 1 & 0 & 0 & \pm 1\\
-0 & 0 & 1 & 0 & 0\\
-0 & 0 & 0 & \pm 1 & \mp 1\\
-0 & 0 & 0 & 0 & \pm 1\\
-0 & 0 & 0 & \pm 1 & 0\\
+1 & 0 & 0 & \pm 1 & 0 & 0\\
+0 & 1 & 0 & 0 & \pm 1 & 0\\
+0 & 0 & 1 & 0 & 0 & \pm 1\\
+0 & 0 & 0 & \pm 1 & 0 & \mp 1\\
+0 & 0 & 0 & \pm 1 & \mp 1 & 0\\
+0 & 0 & 0 & 0 & \pm 1 & \mp 1\\
 \end{pmatrix} \begin{pmatrix}
-\alpha_1'\\\alpha_2'\\\alpha_3'\\\beta_1\\\beta_1
+\alpha_0'\\\alpha_1'\\\alpha_2'\\\beta_0\\\beta_1\\\beta_2
 \end{pmatrix} \]
 Then
-\begin{align*} \widehat{A}=\begin{pmatrix}
-a_{11} & a_{12} & a_{13} & \pm d_1(A) & \pm e_1(A)\\
-a_{21} & a_{22} & a_{23} & \pm d_2(A) & \pm e_2(A)\\
-a_{31} & a_{32} & a_{33} & \pm d_3(A) & \pm e_3(A)\\
-\pm f_1(A) & \pm f_2(A) & \pm f_3(A) & \pm \delta_{44}(A) & \pm \delta_{45}(A)\\
-\pm g_1(A) & \pm g_2(A) & \pm g_3(A) & \pm \delta_{54}(A) & \pm \delta_{55}(A)
+\begin{gather*} \widehat{A}=\begin{pmatrix}
+1 & 0 & 0 & 0 & 0 & 0\\
+0 & 1 & 0 & 0 & 0 & 0\\
+0 & 0 & 1 & 0 & 0 & 0\\
+\pm 1 & 0 & 0 & \pm 1 & \pm 1 & 0\\
+0 & \pm 1 & 0 & 0 & \pm 1 & \pm 1\\
+0 & 0 & \pm 1 & \pm 1 & \pm 1 & 0
+\end{pmatrix}\begin{pmatrix}
+a_{00} & a_{01} & a_{02} & a_{03} & a_{04} & a_{05}\\
+a_{10} & a_{11} & a_{12} & a_{13} & a_{14} & a_{15}\\
+a_{20} & a_{21} & a_{22} & a_{23} & a_{24} & a_{25}\\
+a_{30} & a_{31} & a_{32} & a_{33} & a_{34} & a_{35}\\
+a_{40} & a_{41} & a_{42} & a_{43} & a_{44} & a_{45}\\
+a_{50} & a_{51} & a_{52} & a_{53} & a_{54} & a_{55}\\
+\end{pmatrix}\begin{pmatrix}
+1 & 0 & 0 & \pm 1 & 0 & 0\\
+0 & 1 & 0 & 0 & \pm 1 & 0\\
+0 & 0 & 1 & 0 & 0 & \pm 1\\
+0 & 0 & 0 & \pm 1 & 0 & \mp 1\\
+0 & 0 & 0 & \pm 1 & \mp 1 & 0\\
+0 & 0 & 0 & 0 & \pm 1 & \mp 1\\
 \end{pmatrix}\\
 \widehat{B}=\begin{pmatrix}
-b_{11} & b_{12} & b_{13} & \pm d_1(B) & \pm e_1(B)\\
-b_{21} & b_{22} & b_{23} & \pm d_2(B) & \pm e_2(B)\\
-b_{31} & b_{32} & b_{33} & \pm d_3(B) & \pm e_3(B)\\
-\pm f_1(B) & \pm f_2(B) & \pm f_3(B) & \pm \delta_{44}(B) & \pm \delta_{45}(B)\\
-\pm g_1(B) & \pm g_2(B) & \pm g_3(B) & \pm \delta_{54}(B) & \pm \delta_{55}(B)
+1 & 0 & 0 & 0 & 0 & 0\\
+0 & 1 & 0 & 0 & 0 & 0\\
+0 & 0 & 1 & 0 & 0 & 0\\
+\pm 1 & 0 & 0 & \pm 1 & \pm 1 & 0\\
+0 & \pm 1 & 0 & 0 & \pm 1 & \pm 1\\
+0 & 0 & \pm 1 & \pm 1 & \pm 1 & 0
+\end{pmatrix}\begin{pmatrix}
+b_{00} & b_{01} & b_{02} & b_{03} & b_{04} & b_{05}\\
+b_{10} & b_{11} & b_{12} & b_{13} & b_{14} & b_{15}\\
+b_{20} & b_{21} & b_{22} & b_{23} & b_{24} & b_{25}\\
+b_{30} & b_{31} & b_{32} & b_{33} & b_{34} & b_{35}\\
+b_{40} & b_{41} & b_{42} & b_{43} & b_{44} & b_{45}\\
+b_{50} & b_{51} & b_{52} & b_{53} & b_{54} & b_{55}\\
+\end{pmatrix}\begin{pmatrix}
+1 & 0 & 0 & \pm 1 & 0 & 0\\
+0 & 1 & 0 & 0 & \pm 1 & 0\\
+0 & 0 & 1 & 0 & 0 & \pm 1\\
+0 & 0 & 0 & \pm 1 & 0 & \mp 1\\
+0 & 0 & 0 & \pm 1 & \mp 1 & 0\\
+0 & 0 & 0 & 0 & \pm 1 & \mp 1\\
 \end{pmatrix}
-\end{align*}
+\end{gather*}
 with 
 \begin{align*}
-d_k(X) &= x_{k1}+x_{k4}+x_{k6} & e_k(X) &= x_{k2}+x_{k4}+x_{k5}\\
-f_k(X) &= x_{1k}+x_{4k}+x_{6k} & g_k(X) &= x_{2k}+x_{4k}+x_{5k}\\
-\delta_{44}(X) &= f_1(X) + f_4(X) + f_6(X) & \delta_{45}(X) &= f_2(X) + f_4(X) + f_5(X) \\
-\delta_{54}(X) &= g_1(X) + g_4(X) + g_6(X) & \delta_{45}(X) &= g_2(X) + g_4(X) + g_5(X)
+a_{ij} &= \int_\Omega \curl\bm{\phi}_i\cdot\curl\bm{\phi}_j &
+b_{ij} &= \int_\Omega \bm{\phi}_i\cdot\bm{\phi}_j
 \end{align*}
 
 
