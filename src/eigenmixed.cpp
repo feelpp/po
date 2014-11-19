@@ -43,7 +43,7 @@ EigenProblem::run()
   auto a = form2( _test=Xh, _trial=Xh );
   a = integrate( _range=elements(mesh),
   		 _expr=inner(idt(w),id(w))
-  		 - trans(curlt(u))*id(w)
+  		 - inner(curlt(u),id(w))
   		 + inner(idt(w),id(u)) );
 
   auto b = form2( _test=Xh, _trial=Xh );
