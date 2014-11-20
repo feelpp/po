@@ -30,23 +30,29 @@ D^1(\Omega) &= \{\mbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\; |\; (\curl
 We consider the following problem :
 \begin{pb}\label{pbstart}
 Find $\lambda\in\CC$ and $\mbf{u}\ne 0$ such that
-\begin{align}
-\curl\mbf{u} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
-\div\mbf{u} = 0 & \quad \mbox{in }\Omega\\
-\mbf{u}\cdot \mbf{n} = 0 & \quad \mbox{on }\Gamma
-\end{align}
+\begin{empheq}[left=\empheqlbrace]{align}
+\curl\mbf{u} = \lambda\mbf{u} & \quad \mbox{in }\Omega \label{pbstart1}\\
+\div\mbf{u} = 0 & \quad \mbox{in }\Omega \label{pbstart2}\\
+\mbf{u}\cdot \mbf{n} = 0 & \quad \mbox{on }\Gamma \label{pbstart3}
+\end{empheq}
 \end{pb}
 
-According to R. Rodriguez and P. Venegas in \cite{Venegas2013}, this problem, for $\lambda\ne 0$, is
-equivalent to :
+According to R. Rodriguez and P. Venegas in \cite{Venegas2013}, this problem,
+for $\lambda\ne 0$, is equivalent to :
 \begin{pb}\label{pbcond}
 Find $\lambda\in\CC$ and $\mbf{u}\in
   H(\mathrm{curl};\Omega),\mbf{u}\ne 0$ such that
-\begin{align}
-\curl \mbf{u} = \lambda \mbf{u} & \quad \mbox{in }\Omega\\
-\curl \mbf{u}\cdot\mbf{n} = 0 & \quad \mbox{on }\Gamma
-\end{align}
+\begin{empheq}[left=\empheqlbrace]{align}
+\curl \mbf{u} = \lambda \mbf{u} & \quad \mbox{in }\Omega \label{pbcond1}\\
+\curl \mbf{u}\cdot\mbf{n} = 0 & \quad \mbox{on }\Gamma \label{pbcond2}
+\end{empheq}
 \end{pb}
+Indeed, we have that $(\ref{pbcond1})\implies(\ref{pbstart2})$ since
+$\div\mbf{u}=\lambda\div(\curl\mbf{u})=0$. And $(\ref{pbcond1})-(\ref{pbcond2})
+\implies (\ref{pbstart3})$ since $\mbf{u}\cdot\mbf{n} =
+\lambda\curl\mbf{u}\cdot\mbf{n} = 0$. In the same way,
+$(\ref{pbstart1})-(\ref{pbstart3})\implies (\ref{pbcond2})$.\\
+
 The solution of this problem belongs to $\ZZ=\{\mbf{v}\in
 H(\mathrm{curl};\Omega \,|\, \curl\mbf{v}\cdot\mbf{n}=0 \mbox{
   on } \Gamma \}$.\\
@@ -54,11 +60,11 @@ H(\mathrm{curl};\Omega \,|\, \curl\mbf{v}\cdot\mbf{n}=0 \mbox{
 Next, we multiply by $\mbf{v}\in\ZZ$ and integrate :
 \[ \int_\Omega \curl\mbf{u}\cdot\mbf{v} = \lambda\int_\Omega
 \mbf{u}\cdot\mbf{v} \]
-We have the follwing property for all $\mbf{u},\mbf{v}\in\ZZ$ :
-\[ \int_\Omega \left(\curl\mbf{u}\right)\cdot\mbf{v} -
-\mbf{u}\cdot\left(\curl\mbf{v}\right) = 0 \]
-Then, by applying it twice and using
-$\curl\mbf{u}=\lambda\mbf{u}$, we obtain the following
+We have the follwing property for all $\mbf{x},\mbf{y}\in\ZZ$ :
+\[ \int_\Omega \left(\curl\mbf{x}\right)\cdot\mbf{y} -
+\mbf{x}\cdot\left(\curl\mbf{y}\right) = 0 \]
+Then, by applying it and using
+$\mbf{u}=\curl\mbf{u}/\lambda$, we obtain the following
 variationnal form of the Problem \ref{pbstart} :
 \begin{pb}\label{pbweak}
 Find $\lambda\in\CC$ and $\mbf{u}\in\ZZ$, $\mbf{u}\ne 0$, such
@@ -192,9 +198,9 @@ By identification, we obtain :
 \[
 \alpha_m=\left\{\begin{aligned}
 &\alpha_m', &&\mbox{if } e_m\cap\Gamma = \emptyset, &\texttt{internalelements}\\
-&\alpha_m'\pm \beta_j, &&\mbox{if } e_m\cap\Gamma = \{P_j\},& \texttt{boundaryelements}\backslash\texttt{boundaryedges}\\
+&\alpha_m'\pm \beta_j, &&\mbox{if } e_m\cap\Gamma = \{P_j\},& \texttt{boundaryelements}\setminus\texttt{boundaryedges}\\
 &\alpha_m'\pm (\beta_j-\beta_k), &&\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
-(e_m\notin\Gamma),& \texttt{boundaryelements}\backslash\texttt{boundaryedges}\\
+(e_m\notin\Gamma),& \texttt{boundaryelements}\setminus\texttt{boundaryedges}\\
 &\pm (\beta_j-\beta_k), &&\mbox{if } e_m=[P_j,P_k]\subset\Gamma & \texttt{boundaryedges}
 \end{aligned}\right.
 \]
@@ -384,6 +390,42 @@ a_{ij} &= \int_\Omega \curl\bm{\phi}_i\cdot\curl\bm{\phi}_j &
 b_{ij} &= \int_\Omega \bm{\phi}_i\cdot\bm{\phi}_j
 \end{align*}
 
+\subsubsection{Implementation}
+
+\subsection{A mixed formulation}
+If we start from the Problem \ref{pbcond}, we can use an intermediate variable
+$\mbf{w}$ such that the problem becomes :
+\begin{pb}\label{pbmixed}
+Find $(\mbf{u},\mbf{w})$ such that :
+\begin{empheq}[left=\empheqlbrace]{align}
+\mbf{w} = \curl\mbf{u} & \quad \mbox{in }\Omega\\
+\mbf{w} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
+\mbf{w}\cdot\mbf{n} = 0 &  \quad \mbox{on }\Gamma
+\end{empheq}
+\end{pb}
+
+We know that $\mbf{u}$ belongs to $D^1(\Omega)$ and also in particular to
+$H(\mathrm{curl};\Omega)$. Using the De Rham diagram :
+\[ H^1(\Omega) \xrightarrow{\grad} H(\mathrm{curl};\Omega) \xrightarrow{\curl}
+H(\mathrm{div};\Omega) \xrightarrow{\div} L^2(\Omega) \]
+we know that $\mbf{w}$ should belongs to $H(\mathrm{div};\Omega)$.\\
+
+We shall introduce the following notations :
+\begin{gather*}
+\DDD^k = [\PP_k(T)]^3 \oplus\mbf{x}\PP_k(T) \ subset [\PP_{k+1}(T)]^d\\
+\DDD_h = \{\mbf{v}_h\in H(\mathrm{div};\Omega) \,|\,
+\mbf{v}_h\restr{T}\in\DDD^k(T)\, \forall T\in \TT_h \}
+\end{gather*}
+Those are the Raviart-Thomas elements, which are $H(\mathrm{div};\Omega)$
+conforming.
+
+Then the discrete problem associated to Problem \ref{pbmixed} is 
+\begin{pb}\label{pbmixeddiscr}
+Find $(\mbf{u},\mbf{w})\in\NN_h\times\DDD_h$ and $\lambda\in\R$ such that
+$\forall (\mbf{v},\mbf{q}) \in\NN_h\times\DDD_{h,0}$
+\[ \int_\Omega \mbf{w}\cdot\mbf{v}+\mbf{w}\cdot{q}-\curl\mbf{u}\cdot\mbf{q} =
+\lambda\int_\Omega \mbf{u}\cdot\mbf{v} \]
+\end{pb}
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
