@@ -106,7 +106,7 @@ From now on, we'll use the following notations :
 \mbox{ such that } \Omega=\cup_{T\in\TT}T\\
 &\TT_h^\Gamma =\{F\mbox{ faces of } T\in \TT_h \,|\, F\subset \Gamma
 \}\\
-&\NN^k(T)=\PP_{k-1}(T)^3\oplus\{\mbf{p}\in\PP_k(T)^3 \,|\,
+&\NN^k(T)=[\PP_{k-1}(T)]^3\oplus\{\mbf{p}\in[\PP_k(T)]^3 \,|\,
 \mbf{p(x)}\cdot\mbf{x}=0 \}\\
 &\NN_h=\{\mbf{v}_h\in H(\mathrm{curl};\Omega) \,|\,
 \mbf{v}_h\restr{T}\in\NN^k(T)\, \forall T\in \TT_h \}\\
@@ -338,6 +338,34 @@ Which leads to the system :
 \end{pmatrix} \begin{pmatrix}
 \alpha_0'\\\alpha_1'\\\alpha_2'\\\beta_0\\\beta_1\\\beta_2
 \end{pmatrix} \]
+\begin{rk}\label{squareC}
+The matrix $C$ has no reason to be square. This is a particular case. Take
+the following domain :
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[line join = round, line cap = round]
+\coordinate [label=left:$a_0$] (A) at (0,0,0);
+\coordinate [label=below:$a_1$] (D) at (0,0,3);
+\coordinate [label=right:$a_2$] (B) at (3,0,0);
+\coordinate [label=above:$a_3$] (C) at (0,3,0);
+\coordinate [label=above:$a_4$] (E) at (-3,0,0);
+\coordinate [label=above:$a_5$] (F) at (0,0,-3);
+
+\foreach \i in {B,C,D,E,F}
+    \draw[dashed] (0,0)--(\i);
+\draw[dashed] (B)--(F);
+\draw[dashed] (C)--(F);
+\draw[dashed] (E)--(F);
+\draw[-] (C)--(B);
+\draw[-] (C)--(D);
+\draw[-] (C)--(E);
+\draw[-] (B)--(D);
+\draw[-] (D)--(E);
+\end{tikzpicture}
+\end{figure}
+Then $M=13,N=1,J=6,L=5$, so $C$ has $13$ lines and $7$ colons.
+\end{rk}
+
 Then
 \begin{gather*} \widehat{A}=\begin{pmatrix}
 1 & 0 & 0 & 0 & 0 & 0\\
@@ -392,6 +420,32 @@ b_{ij} &= \int_\Omega \bm{\phi}_i\cdot\bm{\phi}_j
 
 \subsubsection{Implementation}
 
+For the implementation of this problem, we need several steps :
+\begin{itemize}
+\item create the space $\NN_h$, we can do it using :
+\lstinputlisting[linerange=Nh]{../../src/basischange.cpp}
+\item create the space $\LLL_h^\Gamma$, we can do it with :
+\lstinputlisting[linerange=P1ch]{../../src/basischange.cpp}
+where \texttt{boundary\_mesh\_type} is a mesh of topological dimension 2 but of
+dimension 3.
+Then we compute the boundary mesh and create the actual space with :
+\lstinputlisting[linerange=boundarymesh]{../../src/basischange.cpp}
+\item create the matrix $A$ and $B$ :
+\lstinputlisting[linerange=forms]{../../src/basischange.cpp}
+\item create a matrix with $M$ lines and $M+J$ colons, these can be achieved by
+  creating a bilinear form with the test space being $\NN_h$ and the trial space
+  being $\NN_h\times\LLL_h^\Gamma$. This form can be use to retrieve the pattern
+  of the degrees of freedom.
+\item remove the colons corresponding to the boundary edges by looping on the
+  faces of the boundary.
+\item fill the matrix $C$ by looping on the edges of the boundary elements.
+\item finally, create $\widehat{A}$ and $\widehat{B}$. These step presents a
+  problem, computing these matrix by multiplying them is inefficient. We should
+  use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.
+\end{itemize}
+
+For the moment, we'll try to export the matrices to matlab.
+
 \subsection{A mixed formulation}
 If we start from the Problem \ref{pbcond}, we can use an intermediate variable
 $\mbf{w}$ such that the problem becomes :
@@ -412,7 +466,7 @@ we know that $\mbf{w}$ should belongs to $H(\mathrm{div};\Omega)$.\\
 
 We shall introduce the following notations :
 \begin{gather*}
-\DDD^k = [\PP_k(T)]^3 \oplus\mbf{x}\PP_k(T) \ subset [\PP_{k+1}(T)]^d\\
+\DDD^k = [\PP_k(T)]^3 \oplus\mbf{x}\PP_k(T) \subset [\PP_{k+1}(T)]^d\\
 \DDD_h = \{\mbf{v}_h\in H(\mathrm{div};\Omega) \,|\,
 \mbf{v}_h\restr{T}\in\DDD^k(T)\, \forall T\in \TT_h \}
 \end{gather*}

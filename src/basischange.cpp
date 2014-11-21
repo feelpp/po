@@ -36,12 +36,16 @@ public Simget
     typedef Simget super;
 public:
     typedef double value_type;
+    // [Nh]
     typedef Mesh<Simplex<Dim>> mesh_type;
-    typedef Mesh<Simplex<Dim-1,1,Dim>> boundary_mesh_type;
     typedef meta::Ned1h<mesh_type,1>::type space_type;
     typedef meta::Ned1h<mesh_type,1>::ptrtype space_ptrtype;
+    // [Nh]
+    // [P1ch]
+    typedef Mesh<Simplex<Dim-1,1,Dim>> boundary_mesh_type;
     typedef meta::P1ch<boundary_mesh_type,1>::type scalar_space_type;
     typedef meta::P1ch<boundary_mesh_type,1>::ptrtype scalar_space_ptrtype;
+    // [P1ch]
 
     void run();
 private:
@@ -67,17 +71,22 @@ EigenProblem<Dim, Order>::run()
     auto mesh = loadMesh(_mesh = new mesh_type );
 
     auto Xh = space_type::New( mesh );
+    // [boundarymesh]
     auto boundarymesh = createSubmesh(mesh, boundaryfaces(mesh));
     auto Vh = scalar_space_type::New( boundarymesh );
-    
+    // [boundarymesh]
     
     auto u = Xh->element();
     auto v = Xh->element();
     auto l = form1( _test=Xh );
+    // [forms]
     auto a = form2( _test=Xh, _trial=Xh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(u))*curl(v));
+    auto matA = a.matrixPtr();
     auto b = form2( _test=Xh, _trial=Xh);
     b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
+    auto matB = b.matrixPtr();
+    // [forms]
 
     //  now we need to compute C, the change of basis to handle the
     //  decomposition of the field u as a hcurl function + gradient of a H1
