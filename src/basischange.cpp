@@ -38,14 +38,21 @@ public:
     typedef double value_type;
     // [Nh]
     typedef Mesh<Simplex<Dim>> mesh_type;
-    typedef meta::Ned1h<mesh_type,1>::type space_type;
-    typedef meta::Ned1h<mesh_type,1>::ptrtype space_ptrtype;
+    typedef bases<Nedelec<0,NedelecKind::NED1> > basis_type;
+    typedef FunctionSpace<mesh_type, basis_type > space_type;
+    // typedef typename meta::Ned1h<mesh_type,1>::type space_type;
+    // typedef typename meta::Ned1h<mesh_type,1>::ptrtype space_ptrtype;
     // [Nh]
     // [P1ch]
     typedef Mesh<Simplex<Dim-1,1,Dim>> boundary_mesh_type;
-    typedef meta::P1ch<boundary_mesh_type,1>::type scalar_space_type;
-    typedef meta::P1ch<boundary_mesh_type,1>::ptrtype scalar_space_ptrtype;
+    typedef typename meta::Pch<boundary_mesh_type,1>::type scalar_space_type;
+    typedef typename meta::Pch<boundary_mesh_type,1>::ptrtype scalar_space_ptrtype;
     // [P1ch]
+
+    //typedef bases<Nedelec<0,NedelecKind::NED1>, Lagrange<1, Scalar> > mixed_basis_type;
+    // // mesh_type || boundary_mesh_type
+    //typedef FunctionSpace<mesh_type, basis_type > space_type;
+    //typedef boost::shared_ptr<space_type> space_ptrtype;
 
     void run();
 private:
@@ -62,20 +69,23 @@ EigenProblem<Dim, Order>::run()
         std::cout << "Execute EigenProblem<" << Dim << ">\n";
     }
 
-    Environment::changeRepository( boost::format( "eigen/%1%/%2%D-P%3%/h_%4%/" )
+    Environment::changeRepository( boost::format( "%1%/h_%3%/" )
                                    % this->about().appName()
-                                   % Dim
-                                   % Order
                                    % option(_name="gmsh.hsize").template as<double>() );
 
     auto mesh = loadMesh(_mesh = new mesh_type );
 
     auto Xh = space_type::New( mesh );
+    if ( Environment::isMasterRank() )
+        std::cout << "[Xh] number of dof: " << Xh->nDof() << std::endl;
+
     // [boundarymesh]
     auto boundarymesh = createSubmesh(mesh, boundaryfaces(mesh));
     auto Vh = scalar_space_type::New( boundarymesh );
     // [boundarymesh]
-    
+    if ( Environment::isMasterRank() )
+        std::cout << "[Vh] number of dof: " << Vh->nDof() << std::endl;
+
     auto u = Xh->element();
     auto v = Xh->element();
     auto l = form1( _test=Xh );
@@ -88,21 +98,27 @@ EigenProblem<Dim, Order>::run()
     auto matB = b.matrixPtr();
     // [forms]
 
+    matA->printMatlab("a.m");
+    matB->printMatlab("b.m");
+
     //  now we need to compute C, the change of basis to handle the
     //  decomposition of the field u as a hcurl function + gradient of a H1
     //  scalar field
-    auto ctilde  = form2(_test=Xh,_trial=XhxVh );
-    // we have computed the pattern (non-zero entries) of the matrix
-    auto Ctilde = ctilde.matrixPtr();
+
+    // Xh x Vh does creating a mixed function space need the same mesh ?
+    // auto ctilde  = form2(_test=Xh,_trial=XhxVh );
+
+    // // we have computed the pattern (non-zero entries) of the matrix
+    // auto Ctilde = ctilde.matrixPtr();
 
     // now we need to compute the set of dof indices of Xh and Xh that are
     // involved in the decomposition: we need to remove the set of dof which are
     // on the boundary (edges on the boundary)
     //for( auto dof: )
-    
+
     // then extract the submatrix of the matrix Ctilde
     //auto C = Ctilde.extract( rows, cols );
-    
+
     // now we fill C
 
     // next step is to build C^T A C and C^T B C: in feature/operator we have a
@@ -113,35 +129,35 @@ EigenProblem<Dim, Order>::run()
     auto Atilde = compose(opCtrans,compose(op(A,"A"),opC) );
     auto Btilde = compose(opCtrans,compose(op(B,"B"),opC) );
 #endif
-    
-    if ( Environment::worldComm().isMasterRank() )
-    {
-        std::cout << "number of eigenvalues computed= " << option(_name="solvereigen.nev").template as<int>() <<std::endl;
-        std::cout << "number of eigenvalues for convergence= " << option(_name="solvereigen.ncv").template as<int>() <<std::endl;
-    }
 
-    auto modes= veigs( _formA=a, _formB=b );
+    // if ( Environment::worldComm().isMasterRank() )
+    // {
+    //     std::cout << "number of eigenvalues computed= " << option(_name="solvereigen.nev").template as<int>() <<std::endl;
+    //     std::cout << "number of eigenvalues for convergence= " << option(_name="solvereigen.ncv").template as<int>() <<std::endl;
+    // }
 
-    auto e =  exporter( _mesh=mesh );
+    // auto modes= veigs( _formA=a, _formB=b );
 
-    if ( e->doExport() )
-    {
-        LOG(INFO) << "exportResults starts\n";
-        int i = 0;
-        for( auto const& mode: modes )
-        {
-            auto norml2_div = normL2(_range=elements(mesh), _expr=divv(mode.second));
-            if ( Environment::isMasterRank() )
-            {
-                std::cout << "||div(u_" << i << ")||_0 = " << norml2_div << "\n";
-            }
-            e->add( ( boost::format( "mode-u-%1%" ) % i ).str(), mode.second );
-            i++;
-        }
+    // auto e =  exporter( _mesh=mesh );
 
-        e->save();
-        LOG(INFO) << "exportResults done\n";
-    }
+    // if ( e->doExport() )
+    // {
+    //     LOG(INFO) << "exportResults starts\n";
+    //     int i = 0;
+    //     for( auto const& mode: modes )
+    //     {
+    //         auto norml2_div = normL2(_range=elements(mesh), _expr=divv(mode.second));
+    //         if ( Environment::isMasterRank() )
+    //         {
+    //             std::cout << "||div(u_" << i << ")||_0 = " << norml2_div << "\n";
+    //         }
+    //         e->add( ( boost::format( "mode-u-%1%" ) % i ).str(), mode.second );
+    //         i++;
+    //     }
+
+    //     e->save();
+    //     LOG(INFO) << "exportResults done\n";
+    // }
 
 }
 
@@ -152,7 +168,7 @@ main( int argc, char** argv )
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=feel_options(),
-                     _about=about(_name="ge_curl",
+                     _about=about(_name="po_basischange",
                                   _author="Christophe Prud'homme",
                                   _email="christophe.prudhomme@feelpp.org") );
 
