@@ -22,6 +22,7 @@
 #
 #
 feelpp_add_application( po_app SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp CFG po_app.cfg )
-feelpp_add_application( po_eigenmixed SRCS eigenmixed.cpp CFG po_eigenmixed.cfg )
+feelpp_add_application( po_eigenmixed_curl SRCS eigenmixed.cpp CFG po_eigenmixed.cfg DEFS PO_UHCURL )
+feelpp_add_application( po_eigenmixed_div SRCS eigenmixed.cpp CFG po_eigenmixed.cfg )
 feelpp_add_application( po_basischange SRCS basischange.cpp CFG po_basischange.cfg )
 add_subdirectory( test )
