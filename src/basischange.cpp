@@ -57,6 +57,16 @@ operator<<( std::ostream& os, DofEdgeInfo const& dei  )
     return os;
 }
 
+inline
+std::ostream&
+operator<<( std::ostream& os, std::vector<size_type> const& vec  )
+{
+    for( auto v : vec )
+        os << v << " ";
+    os << std::endl;
+    return os;
+}
+
 template<int Dim, int Order>
 class EigenProblem
 :
@@ -159,11 +169,13 @@ EigenProblem<Dim, Order>::run()
     std::vector<DofEdgeInfo> dof_edge_info( Vh->nLocalDof(), {invalid_uint16_type_value,1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value} );
     std::vector<size_type> internalIndexes;
 
-    auto dofbegin = Vh->dof()->globalDof().first;
-    auto dofend = Vh->dof()->globalDof().second;
+    for( int i = 0; i < Vh->nDof(); ++i )
+        for( auto const& dof : Vh->dof()->globalDof( i ) ) {
+    // auto dofbegin = Vh->dof()->globalDof().first;
+    // auto dofend = Vh->dof()->globalDof().second;
 
-    for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
-        auto const& dof = *dofit;
+    // for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
+    //     auto const& dof = *dofit;
         if ( !doneVh[ dof.first.index() ] ) {
             auto const& edge = mesh->element(dof.second.elementId()).edge(dof.second.localDof());
             dof_edge_info[dof.first.index()].index = dof.first.index();
@@ -226,9 +238,7 @@ EigenProblem<Dim, Order>::run()
     auto cInternal = backend()->newMatrix(_test=Vh,_trial=Vh);
     auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
 
-    cInternal->close();
-    cBoundary->close();
-
+    // works only with 1 proc
     for( int i = 0; i < Vh->nDof(); ++i ) {
         cInternal->set(i,i,1);
         auto dei = dof_edge_info[i];
@@ -240,6 +250,9 @@ EigenProblem<Dim, Order>::run()
             cBoundary->set(i,dei.dof_vertex_id1, 1*dei.sign);
         }
     }
+
+    cInternal->close();
+    cBoundary->close();
 
 
     // then extract the submatrix of the matrix Ctilde
@@ -253,12 +266,15 @@ EigenProblem<Dim, Order>::run()
     //         if ( !doneSh[ dof.first.index() ] ) {
     //             auto const& vertex = mesh->element(dof.second.elementId()).vertices(dof.second.localDof();
     //             if( vertex.isOnBoundary() ) {
-    //                 boundaryIndexes.push_back( dof.first.index() );
+    //                 boundaryIndexes.push_back( Vh->nDof()+dof.first.index() );
     //             }
     //         }
     //         doneSh[dof.first.index()] = true;
     //     }
     // }
+
+    internalIndexes.insert( internalIndexes.end(), boundaryIndexes.begin(), boundaryIndexes.end() );
+    std::cout << internalIndexes;
 
 
     std::vector<size_type> rows( Vh->nDof() );
@@ -266,27 +282,24 @@ EigenProblem<Dim, Order>::run()
         rows[i] = i;
     }
 
-    auto cInternalTilde = backend()->newMatrix(Vh->nDof(), internalIndexes.size(), Vh->nDof(), internalIndexes.size());
-    cInternal->createSubmatrix( *cInternalTilde, rows, internalIndexes );
-
-    auto cBoundaryTilde = backend()->newMatrix(Vh->nDof(), boundaryIndexes.size(), Vh->nDof(), boundaryIndexes.size());
-    cInternal->createSubmatrix( *cBoundaryTilde, rows, internalIndexes );
-
     BlocksBaseSparseMatrix<double> cBlock(1,2);
-    cBlock(0,0) = cInternalTilde;
-    cBlock(0,1) = cBoundaryTilde;
-    auto C = backend()->newBlockMatrix(_block=cBlock, _copy_values=true);
+    cBlock(0,0) = cInternal;
+    cBlock(0,1) = cBoundary;
+    auto cTilde = backend()->newBlockMatrix(_block=cBlock, _copy_values=true);
+    cTilde->close();
 
-
-    // next step is to build C^T A C and C^T B C: in feature/operator we have a
-    // operator framework that allows to define such objects
-
+    auto C = backend()->newMatrix(Vh->nDof(), internalIndexes.size(), Vh->nDof(), internalIndexes.size() );
+    cTilde->createSubmatrix( *C, rows, internalIndexes);
 
     matA->printMatlab("a.m");
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
+    std::cout << "c : " << C->size1() << "x" << C->size2() << std::endl;
 
+
+    // next step is to build C^T A C and C^T B C: in feature/operator we have a
+    // operator framework that allows to define such objects
 
 
 #if 0
