@@ -21,8 +21,12 @@
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <feel/feel.hpp>
+//#include <feel/feel.hpp>
+#include <feel/feelcore/feel.hpp>
+#include <feel/feelfilters/loadmesh.hpp>
+#include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
+#include <boost/mpi/timer.hpp>
 
 /** use Feel namespace */
 using namespace Feel;
@@ -112,6 +116,14 @@ EigenProblem<Dim, Order>::run()
                                    % this->about().appName()
                                    % option(_name="gmsh.hsize").template as<double>() );
 
+    LOG(INFO) << "[timer] h = " << doption("gmsh.hsize") << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] h = " << doption("gmsh.hsize") << std::endl;
+
+
+    boost::mpi::timer t;
+    boost::mpi::timer total;
+
     auto mesh = loadMesh(_mesh = new mesh_type );
     if ( Environment::isMasterRank() ){
         std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
@@ -121,6 +133,11 @@ EigenProblem<Dim, Order>::run()
         std::cout << " number of vertices : " << mesh->numGlobalVertices() << std::endl;
         std::cout << " number of local vertices : " << mesh->numLocalVertices() << std::endl;
     }
+
+    LOG(INFO) << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
 
     auto Vh = space_type::New( mesh );
     auto Sh = Pch<1>( mesh );
@@ -143,6 +160,12 @@ EigenProblem<Dim, Order>::run()
                   << Sh->dof()->nLocalDof()*mesh->numGlobalElements() << std::endl;
     }
 
+    LOG(INFO) << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
+
     auto u = Vh->element();
     auto v = Vh->element();
 
@@ -156,6 +179,11 @@ EigenProblem<Dim, Order>::run()
     auto matB = b.matrixPtr();
     // [forms]
 
+    LOG(INFO) << "[timer] form = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
 
     //  now we need to compute C, the change of basis to handle the
     //  decomposition of the field u as a hcurl function + gradient of a H1
@@ -166,8 +194,9 @@ EigenProblem<Dim, Order>::run()
     // on the boundary (edges on the boundary)
 
     std::vector<bool> doneVh( Vh->nLocalDof(), false );
+    std::vector<bool> doneSh( Sh->nLocalDof(), false );
     std::vector<DofEdgeInfo> dof_edge_info( Vh->nLocalDof(), {invalid_uint16_type_value,1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value} );
-    std::vector<size_type> internalIndexes;
+    std::vector<size_type> indexesToKeep;
 
     for( int i = 0; i < Vh->nDof(); ++i )
         for( auto const& dof : Vh->dof()->globalDof( i ) ) {
@@ -177,6 +206,7 @@ EigenProblem<Dim, Order>::run()
     // for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
     //     auto const& dof = *dofit;
         if ( !doneVh[ dof.first.index() ] ) {
+            // we retrieve the edge corresponding to the dof
             auto const& edge = mesh->element(dof.second.elementId()).edge(dof.second.localDof());
             dof_edge_info[dof.first.index()].index = dof.first.index();
             dof_edge_info[dof.first.index()].sign = dof.first.sign();
@@ -186,6 +216,7 @@ EigenProblem<Dim, Order>::run()
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
 
+            // we retrieve the index of the dof of Sh corresponding to the vertex of the edge
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i ) {
                 if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt1.id() ) {
                     dofid1 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
@@ -196,13 +227,24 @@ EigenProblem<Dim, Order>::run()
             }
 
             if ( edge.isOnBoundary() ) {
+                // if the points are on the boundary, we keep their indexes to extract the colons
+                if( !doneSh[ dofid1 ] ) {
+                    indexesToKeep.push_back( Vh->nDof()+dofid1 );
+                    doneSh[ dofid1 ] = true;
+                }
+                if( !doneSh[ dofid2 ] ) {
+                    indexesToKeep.push_back( Vh->nDof()+dofid2 );
+                    doneSh[ dofid2 ] = true;
+                }
+
                 dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY;
                 dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
                 dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
             }
             if ( !edge.isOnBoundary() ) {
-                // if the edge is not on the boundary, we keep its index to extract the colomn
-                internalIndexes.push_back(dof.first.index());
+                // if the edge is not on the boundary, we keep its index to extract the colon
+                indexesToKeep.push_back(dof.first.index());
+
                 //both points touch the boundary
                 if ( pt1.isOnBoundary() && pt2.isOnBoundary() ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_2;
@@ -234,68 +276,83 @@ EigenProblem<Dim, Order>::run()
         doneVh[dof.first.index()] = true;
     }
 
+    LOG(INFO) << "[timer] indexes = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] indexes = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
+    // std::cout << indexesToKeep;
+
+
     // now we fill C
+
+    // cInternal correspond to the matrix of all the dofs of Vh
     auto cInternal = backend()->newMatrix(_test=Vh,_trial=Vh);
+    // cBoundary correspond to the matrix of all the dofs of Sh
     auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
 
     // works only with 1 proc
     for( int i = 0; i < Vh->nDof(); ++i ) {
+        // the matrix cInternal is the identity
+        // we'll remove the colons later
         cInternal->set(i,i,1);
+
+        // the matrix cBoundary has +1 or -1 on the vertex of the edge which are on the boundary
         auto dei = dof_edge_info[i];
         if( dei.type == EDGE_BOUNDARY || dei.type == EDGE_BOUNDARY_VERTEX_2 ) {
-            cBoundary->set(i,dei.dof_vertex_id1, 1*dei.sign);
-            cBoundary->set(i,dei.dof_vertex_id2, -1*dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id1, 1*(int)dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id2, -1*(int)dei.sign);
         }
         else if( dei.type == EDGE_BOUNDARY_VERTEX_1 ) {
             cBoundary->set(i,dei.dof_vertex_id1, 1*dei.sign);
         }
     }
 
+    // we close the matrices so we can work on them
     cInternal->close();
     cBoundary->close();
 
-
-    // then extract the submatrix of the matrix Ctilde
-
-    // We keep the index of the vertex on the boundary
-    std::vector<size_type> boundaryIndexes;
-    std::vector<bool> doneSh( Sh->nLocalDof(), false );
-
-    // for( int i = 0; i < Sh->nDof(); ++i ) {
-    //     for( auto const& dof : Sh->dof()->globalDof( i ) ) {
-    //         if ( !doneSh[ dof.first.index() ] ) {
-    //             auto const& vertex = mesh->element(dof.second.elementId()).vertices(dof.second.localDof();
-    //             if( vertex.isOnBoundary() ) {
-    //                 boundaryIndexes.push_back( Vh->nDof()+dof.first.index() );
-    //             }
-    //         }
-    //         doneSh[dof.first.index()] = true;
-    //     }
-    // }
-
-    internalIndexes.insert( internalIndexes.end(), boundaryIndexes.begin(), boundaryIndexes.end() );
-    std::cout << internalIndexes;
-
-
-    std::vector<size_type> rows( Vh->nDof() );
-    for( int i = 0; i < Vh->nDof(); ++i ) {
-        rows[i] = i;
-    }
-
+    // we first create a matrix with all the dof of Vh and Sh
     BlocksBaseSparseMatrix<double> cBlock(1,2);
     cBlock(0,0) = cInternal;
     cBlock(0,1) = cBoundary;
     auto cTilde = backend()->newBlockMatrix(_block=cBlock, _copy_values=true);
     cTilde->close();
 
-    auto C = backend()->newMatrix(Vh->nDof(), internalIndexes.size(), Vh->nDof(), internalIndexes.size() );
-    cTilde->createSubmatrix( *C, rows, internalIndexes);
+    LOG(INFO) << "[timer] fill = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] fill = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
+
+    // then extract the submatrix of the matrix Ctilde
+
+    // we keep all the rows of this matrix
+    std::vector<size_type> rows( Vh->nDof() );
+    for( int i = 0; i < Vh->nDof(); ++i ) {
+        rows[i] = i;
+    }
+
+    // we need to sort the indexes of the colons
+    std::sort(indexesToKeep.begin(), indexesToKeep.end() );
+
+    // we keep only the dofs corresponding to the edges not on the boundary and the points on the boundary
+    auto C = backend()->newMatrix(Vh->nDof(), indexesToKeep.size(), Vh->nDof(), indexesToKeep.size() );
+    cTilde->createSubmatrix( *C, rows, indexesToKeep);
 
     matA->printMatlab("a.m");
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
-    std::cout << "c : " << C->size1() << "x" << C->size2() << std::endl;
+    LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
+    LOG(INFO) << "[timer] total = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() ) {
+        std::cout << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
+        std::cout << "[timer] total = " << t.elapsed() << " sec" << std::endl;
+    }
+
+
+    std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
 
 
     // next step is to build C^T A C and C^T B C: in feature/operator we have a
