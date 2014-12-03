@@ -56,6 +56,9 @@ $(\ref{pbstart1})-(\ref{pbstart3})\implies (\ref{pbcond2})$.\\
 The solution of this problem belongs to $\ZZ=\{\mbf{v}\in
 H(\mathrm{curl};\Omega \,|\, \curl\mbf{v}\cdot\mbf{n}=0 \mbox{
   on } \Gamma \}$.\\
+This space already appeared in \cite{girault90-1} and we know that each functions $\mbf{v}\in\ZZ$ has the decomposition
+\begin{equation}\label{relation} \mbf{v}=\mbf{w} + \grad q \end{equation}
+with $q\in H^1(\Omega)$ and $\mbf{w}\in [H^1(\Omega)]^3$ with div $\mbf{w} = 0$ on $\Omega$ and $\mbf{w}\times\mbf{n} = 0$ on $\Gamma$. All the functions of this form belong to $\ZZ$.\\
 
 Next, we multiply by $\mbf{v}\in\ZZ$ and integrate :
 \[ \int_\Omega \curl\mbf{u}\cdot\mbf{v} = \lambda\int_\Omega
@@ -130,7 +133,7 @@ find the proper parameter.\\
 
 \subsubsection{A new basis}
 \label{base}
-In \cite{Venegas2013}, following the method used in
+In \cite{Venegas2013}, using \ref{relation} and following the method used in
 \cite{Meddahi2003,Salgado2005}, they propose a basis to the space $\ZZ_h$.
 Since it is based on the work of A. Buffa in \cite{Buffa2002845}, we need to
 define some operators before we go on.
@@ -418,27 +421,26 @@ a_{ij} &= \int_\Omega \curl\bm{\phi}_i\cdot\curl\bm{\phi}_j &
 b_{ij} &= \int_\Omega \bm{\phi}_i\cdot\bm{\phi}_j
 \end{align*}
 
-\subsubsection{Implementation}
+\subsection{Implementation}
+\subsubsection{Details}
 
 For the implementation of this problem, we need several steps :
 \begin{itemize}
 \item create the space $\NN_h$, we can do it using :
-\lstinputlisting[linerange=Nh]{../../src/basischange.cpp}
-\item create the space $\LLL_h^\Gamma$, we can do it with :
+\lstinputlisting[linerange={Nh,Nh2}]{../../src/basischange.cpp}
+\item instead of already creating the space $\LLL_h^\Gamma$, we use for now $\LLL_h$ :
 \lstinputlisting[linerange=P1ch]{../../src/basischange.cpp}
-where \texttt{boundary\_mesh\_type} is a mesh of topological dimension 2 but of
-dimension 3.
-Then we compute the boundary mesh and create the actual space with :
-\lstinputlisting[linerange=boundarymesh]{../../src/basischange.cpp}
 \item create the matrix $A$ and $B$ :
 \lstinputlisting[linerange=forms]{../../src/basischange.cpp}
-\item create a matrix with $M$ lines and $M+J$ colons, these can be achieved by
-  creating a bilinear form with the test space being $\NN_h$ and the trial space
-  being $\NN_h\times\LLL_h^\Gamma$. This form can be use to retrieve the pattern
-  of the degrees of freedom.
-\item remove the colons corresponding to the boundary edges by looping on the
-  faces of the boundary.
-\item fill the matrix $C$ by looping on the edges of the boundary elements.
+\item we can now use the function spaces previously defined to retrieve the informations on the dofs, if they are on the boundary or if they touch it.
+\item we now create two matrices. One of size $M\times M$ for the dofs of $\NN_h$ and one of size $M\times K$ for the dofs of $\LLL_h$.
+\lstinputlisting[linerange=cIntBound]{../../src/basischange.cpp}
+\item using the informations retrieved on the dofs, we can now fill these two matrices :
+\lstinputlisting[linerange=fill]{../../src/basischange.cpp}
+\item we now assemble the two matrices in one matrix of size $M\times (M+K)$
+\lstinputlisting[linerange=ctilde]{../../src/basischange.cpp}
+\item in the same time we retrieved the informations on the dofs, we also keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
+\lstinputlisting[linerange=submatrix]{../../src/basischange.cpp}
 \item finally, create $\widehat{A}$ and $\widehat{B}$. These step presents a
   problem, computing these matrix by multiplying them is inefficient. We should
   use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.
@@ -446,40 +448,40 @@ Then we compute the boundary mesh and create the actual space with :
 
 For the moment, we'll try to export the matrices to matlab.
 
-\subsection{A mixed formulation}
-If we start from the Problem \ref{pbcond}, we can use an intermediate variable
-$\mbf{w}$ such that the problem becomes :
-\begin{pb}\label{pbmixed}
-Find $(\mbf{u},\mbf{w})$ such that :
-\begin{empheq}[left=\empheqlbrace]{align}
-\mbf{w} = \curl\mbf{u} & \quad \mbox{in }\Omega\\
-\mbf{w} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
-\mbf{w}\cdot\mbf{n} = 0 &  \quad \mbox{on }\Gamma
-\end{empheq}
-\end{pb}
+\subsubsection{Results}
 
-We know that $\mbf{u}$ belongs to $D^1(\Omega)$ and also in particular to
-$H(\mathrm{curl};\Omega)$. Using the De Rham diagram :
-\[ H^1(\Omega) \xrightarrow{\grad} H(\mathrm{curl};\Omega) \xrightarrow{\curl}
-H(\mathrm{div};\Omega) \xrightarrow{\div} L^2(\Omega) \]
-we know that $\mbf{w}$ should belongs to $H(\mathrm{div};\Omega)$.\\
+For now, we implemented all the steps except for the last one in \texttt{octave}.\\
+The figure \ref{timeC} shows the time take to accomplish the steps for creating the matrix $C$. \texttt{indexes} corresponds to the steps for retrieving the informations on the dofs and the indexes to keep in the matrix. \texttt{fill} corresponds to the steps of creating the two matrices, fill them and assembling them. \texttt{submatrix} corresponds to sorting the vector of indexes, and removing the columns to have $C$. These tests have been conducted on the cylinder.\\
 
-We shall introduce the following notations :
-\begin{gather*}
-\DDD^k = [\PP_k(T)]^3 \oplus\mbf{x}\PP_k(T) \subset [\PP_{k+1}(T)]^d\\
-\DDD_h = \{\mbf{v}_h\in H(\mathrm{div};\Omega) \,|\,
-\mbf{v}_h\restr{T}\in\DDD^k(T)\, \forall T\in \TT_h \}
-\end{gather*}
-Those are the Raviart-Thomas elements, which are $H(\mathrm{div};\Omega)$
-conforming.
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{createC}
+\caption{Time to compute C}
+\label{timeC}
+\end{figure}
 
-Then the discrete problem associated to Problem \ref{pbmixed} is 
-\begin{pb}\label{pbmixeddiscr}
-Find $(\mbf{u},\mbf{w})\in\NN_h\times\DDD_h$ and $\lambda\in\R$ such that
-$\forall (\mbf{v},\mbf{q}) \in\NN_h\times\DDD_{h,0}$
-\[ \int_\Omega \mbf{w}\cdot\mbf{v}+\mbf{w}\cdot{q}-\curl\mbf{u}\cdot\mbf{q} =
-\lambda\int_\Omega \mbf{u}\cdot\mbf{v} \]
-\end{pb}
+We could think that the time increase really fast but the figure \ref{completeTime} shows the percentage of the total time take for the steps. \texttt{mesh} corresponds to the loading of the mesh, \texttt{space} create $\NN_h$ and $\LLL_h$, and \texttt{forms} create the matrix $A$ and $B$.\\
+We see that in fact the percentage of time is constant for each steps.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{completeChBase}
+\caption{Time to compute the changement of basis}
+\label{completeTime}
+\end{figure}
+
+For an idea, we have the following number of dofs depending on the size of the mesh for the cylinder :
+\begin{center}
+\begin{tabular}{ c | c | c | c }
+$h$ & \#dof($\NN_h$) & \#dof($\LLL_h$) & \#columns of $C$ \\ \hline
+0.1 & 23\,943 & 3\,908 & 19\,867 \\ \hline
+0.08 & 48\,016 & 7\,593 & 41\,322 \\ \hline
+0.06 & 107\,447 & 16\,414 & 95\,669 \\ \hline
+0.04 & 333\,704 & 49\,202 & 308\,086 \\ \hline
+0.02 & 2\,598\,692 & 367\,288 & 2\,497\,232 \\ \hline
+\end{tabular}
+\end{center}
+
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"

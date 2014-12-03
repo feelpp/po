@@ -1,0 +1,40 @@
+\section{A mixed formulation}
+If we start from the Problem \ref{pbcond}, we can use an intermediate variable
+$\mbf{w}$ such that the problem becomes :
+\begin{pb}\label{pbmixed}
+Find $(\mbf{u},\mbf{w})$ such that :
+\begin{empheq}[left=\empheqlbrace]{align}
+\mbf{w} = \curl\mbf{u} & \quad \mbox{in }\Omega\\
+\mbf{w} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
+\mbf{w}\cdot\mbf{n} = 0 &  \quad \mbox{on }\Gamma
+\end{empheq}
+\end{pb}
+
+We know that $\mbf{u}$ belongs to $D^1(\Omega)$ and also in particular to
+$H(\mathrm{curl};\Omega)$. Using the De Rham diagram :
+\[ H^1(\Omega) \xrightarrow{\grad} H(\mathrm{curl};\Omega) \xrightarrow{\curl}
+H(\mathrm{div};\Omega) \xrightarrow{\div} L^2(\Omega) \]
+we know that $\mbf{w}$ should belongs to $H(\mathrm{div};\Omega)$.\\
+
+We shall introduce the following notations :
+\begin{gather*}
+\DDD^k = [\PP_k(T)]^3 \oplus\mbf{x}\PP_k(T) \subset [\PP_{k+1}(T)]^d\\
+\DDD_h = \{\mbf{v}_h\in H(\mathrm{div};\Omega) \,|\,
+\mbf{v}_h\restr{T}\in\DDD^k(T)\, \forall T\in \TT_h \}
+\end{gather*}
+Those are the Raviart-Thomas elements, which are $H(\mathrm{div};\Omega)$
+conforming.
+
+Then the discrete problem associated to Problem \ref{pbmixed} is 
+\begin{pb}\label{pbmixeddiscr}
+Find $(\mbf{u},\mbf{w})\in\NN_h\times\DDD_h$ and $\lambda\in\R$ such that
+$\forall (\mbf{v},\mbf{q}) \in\NN_h\times\DDD_{h,0}$
+\[ \int_\Omega \mbf{w}\cdot\mbf{v}+\mbf{w}\cdot{q}-\curl\mbf{u}\cdot\mbf{q} =
+\lambda\int_\Omega \mbf{u}\cdot\mbf{v} \]
+\end{pb}
+
+%%% Local Variables:
+%%% TeX-master: "../peps.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "english"
+%%% End:
