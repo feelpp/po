@@ -450,7 +450,6 @@ For the moment, we'll try to export the matrices to matlab.
 
 \subsubsection{Results}
 
-For now, we implemented all the steps except for the last one in \texttt{octave}.\\
 The figure \ref{timeC} shows the time take to accomplish the steps for creating the matrix $C$. \texttt{indexes} corresponds to the steps for retrieving the informations on the dofs and the indexes to keep in the matrix. \texttt{fill} corresponds to the steps of creating the two matrices, fill them and assembling them. \texttt{submatrix} corresponds to sorting the vector of indexes, and removing the columns to have $C$. These tests have been conducted on the cylinder.\\
 
 \begin{figure}[H]
@@ -482,6 +481,9 @@ $h$ & \#dof($\NN_h$) & \#dof($\LLL_h$) & \#columns of $C$ \\ \hline
 \end{tabular}
 \end{center}
 
+In \texttt{octave}, I don't have any results yet.\\
+I tried to use the \texttt{eig} function, this computes all the spectrum of the problem, but takes a really long time.\\
+I also tried \texttt{eigs}, but this function works with sparse matrices, and $\widehat{A}$ and $\widehat{B}$ seems to be recognized like full matrices by \texttt{octave}.
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
