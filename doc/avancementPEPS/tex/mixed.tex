@@ -1,0 +1,78 @@
+\section{A mixed formulation}
+\subsection{A first attempt}
+
+If we start from the Problem \ref{pbcond}, we can use an intermediate variable
+$\mbf{w}$ such that the problem becomes :
+\begin{pb}\label{pbmixed}
+Find $(\mbf{u},\mbf{w})$ and $\lambda$ such that :
+\begin{empheq}[left=\empheqlbrace]{align}
+\mbf{w} = \curl\mbf{u} & \quad \mbox{in }\Omega\\
+\mbf{w} = \lambda\mbf{u} & \quad \mbox{in }\Omega\\
+\mbf{w}\cdot\mbf{n} = 0 &  \quad \mbox{on }\Gamma
+\end{empheq}
+\end{pb}
+
+We know that $\mbf{u}$ belongs to $D^1(\Omega)$ and so in particular to
+$H(\mathrm{curl};\Omega)$. Using the De Rham diagram :
+\[ H^1(\Omega) \xrightarrow{\grad} H(\mathrm{curl};\Omega) \xrightarrow{\curl}
+H(\mathrm{div};\Omega) \xrightarrow{\div} L^2(\Omega) \]
+we know that $\mbf{w}$ should belongs to $H(\mathrm{div};\Omega)$.\\
+
+We shall introduce the following notations :
+\begin{gather*}
+\DDD^k = [\PP_k(T)]^3 \oplus\mbf{x}\PP_k(T) \subset [\PP_{k+1}(T)]^d\\
+\DDD_h = \{\mbf{v}_h\in H(\mathrm{div};\Omega) \,|\,
+\mbf{v}_h\restr{T}\in\DDD^k(T)\, \forall T\in \TT_h \}
+\end{gather*}
+Those are the Raviart-Thomas elements, which are $H(\mathrm{div};\Omega)$
+conforming.
+
+Then the discrete problem associated to Problem \ref{pbmixed} is 
+\begin{pb}\label{pbmixeddiscr}
+Find $(\mbf{u},\mbf{w})\in\NN_h\times\DDD_h$ and $\lambda\in\R$ such that
+$\forall (\mbf{v},\mbf{\tilde{w}}) \in\NN_h\times\DDD_{h,0}$
+\[ \int_\Omega \mbf{w}\cdot\mbf{v}+\mbf{w}\cdot\mbf{\tilde{w}}-\curl\mbf{u}\cdot\mbf{\tilde{w}} = \lambda\int_\Omega \mbf{u}\cdot\mbf{v} \]
+\end{pb}
+
+\begin{rk}
+An issue with this formulation is that the matrix is not symmetric, and so we can't use the best algorithm to resolve the eigen problem.
+\end{rk}
+
+\subsection{Using the curl of the curl}
+
+Following the previous remark, we introduce in problem \ref{pbmixed} the curl of $\mbf{w}$ and a gradient of pressure to add the constraint on the divergence :
+\begin{pb}\label{pbmixedcurl}
+Find $(\mbf{u},\mbf{w})$ and $\lambda$ such that :
+\begin{empheq}[left=\empheqlbrace]{align}
+\mbf{w} = \curl\mbf{u} & \quad \mbox{in }\Omega\\
+\curl\mbf{w} + \grad p = \lambda^2\mbf{u} & \quad \mbox{in }\Omega\\
+\div\mbf{u} = 0\\
+\mbf{u}\cdot\mbf{n} = 0 &  \quad \mbox{on }\Gamma
+\end{empheq}
+\end{pb}
+
+This can lead to two differents discrete problems, depending if we take $\mbf{u}\in H(\mathrm{curl},\Omega)$ and $\mbf{w}\in H(\mathrm{div},\Omega)$ or $\mbf{u}\in H(\mathrm{div},\Omega)$ and $\mbf{w}\in H(\mathrm{curl},\Omega)$.
+
+In the first case, we have :
+\begin{pb}\label{pbmixedcurldiscrcurl}
+Find $(\mbf{u},\mbf{w},p)\in\NN_h\times\DDD_h\times\LLL_h$ and $\lambda\in\R$ such that
+$\forall (\mbf{v},\mbf{\tilde{w}},q) \in\NN_h\times\DDD_{h,0}\times\LLL_h$
+\[ \int_\Omega \mbf{w}\cdot\mbf{\tilde{w}} - \curl\mbf{u}\cdot\mbf{\tilde{w}} + \mbf{w}\cdot\curl\mbf{v} + \grad p\cdot\mbf{v} + \mbf{u}\cdot\grad q + \int_\Gamma (\mbf{v}\times\mbf{n})\cdot\mbf{w} - q\underbrace{\mbf{u}\cdot\mbf{n}}_{0}
+= \lambda^2\int_\Omega \mbf{u}\cdot\mbf{v} \]
+\end{pb}
+
+And in the second case :
+\begin{pb}\label{pbmixedcurldiscrdiv}
+Find $(\mbf{u},\mbf{w},p)\in\DDD_h\times\NN_h\times\LLL_h$ and $\lambda\in\R$ such that
+$\forall (\mbf{v},\mbf{\tilde{w}},q) \in\DDD_h\times\NN_{h,0}\times\LLL_h$
+\[ \int_\Omega \mbf{w}\cdot\mbf{\tilde{w}} - \mbf{u}\cdot\curl\mbf{\tilde{w}} + \curl\mbf{w}\cdot\mbf{v} + p\div\mbf{v} + q\div\mbf{u} - \int_\Gamma (\mbf{\tilde{w}}\times\mbf{n})\cdot\mbf{u} + p\underbrace{\mbf{v}\cdot\mbf{n}}_{0}
+= \lambda^2\int_\Omega \mbf{u}\cdot\mbf{v} \]
+\end{pb}
+
+
+
+%%% Local Variables:
+%%% TeX-master: "../peps.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "english"
+%%% End:

@@ -84,14 +84,13 @@ public:
     typedef Mesh<Simplex<Dim>> mesh_type;
     typedef bases<Nedelec<0,NedelecKind::NED1> > basis_type;
     typedef FunctionSpace<mesh_type, basis_type > space_type;
+    // [Nh]
     // typedef typename meta::Ned1h<mesh_type,1>::type space_type;
     // typedef typename meta::Ned1h<mesh_type,1>::ptrtype space_ptrtype;
-    // [Nh]
-    // [P1ch]
+
     typedef Mesh<Simplex<Dim-1,1,Dim>> boundary_mesh_type;
     typedef typename meta::Pch<boundary_mesh_type,1>::type scalar_space_type;
     typedef typename meta::Pch<boundary_mesh_type,1>::ptrtype scalar_space_ptrtype;
-    // [P1ch]
 
     //typedef bases<Nedelec<0,NedelecKind::NED1>, Lagrange<1, Scalar> > mixed_basis_type;
     // // mesh_type || boundary_mesh_type
@@ -141,8 +140,12 @@ EigenProblem<Dim, Order>::run()
         std::cout << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
     t.restart();
 
+    // [Nh2]
     auto Vh = space_type::New( mesh );
+    // [Nh2]
+    // [P1ch]
     auto Sh = Pch<1>( mesh );
+    // [P1ch]
 
     LOG(INFO) << "[info] Vh dof = " << Vh->nDof() << std::endl;
     LOG(INFO) << "[info] Sh dof = " << Sh->nDof() << std::endl;
@@ -295,14 +298,16 @@ EigenProblem<Dim, Order>::run()
 
     // now we fill C
 
+    // [cIntBound]
     // cInternal correspond to the matrix of all the dofs of Vh
     auto cInternal = backend()->newMatrix(_test=Vh,_trial=Vh);
     // cBoundary correspond to the matrix of all the dofs of Sh
     auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
-
+    // [cIntBound]
 
     auto pm = ioption("pm");
 
+    // [fill]
     // works only with 1 proc !!
     for( int i = 0; i < Vh->nDof(); ++i ) {
         // the matrix cInternal is the identity
@@ -320,6 +325,7 @@ EigenProblem<Dim, Order>::run()
             cBoundary->set(i,dei.dof_vertex_id1, pm*dei.sign);
         }
     }
+    // [fill]
 
     // we close the matrices so we can work on them
     cInternal->close();
@@ -327,11 +333,13 @@ EigenProblem<Dim, Order>::run()
 
 
     // we first create a matrix with all the dof of Vh and Sh
+    // [ctilde]
     BlocksBaseSparseMatrix<double> cBlock(1,2);
     cBlock(0,0) = cInternal;
     cBlock(0,1) = cBoundary;
     auto cTilde = backend()->newBlockMatrix(_block=cBlock, _copy_values=true);
     cTilde->close();
+    // [ctilde]
 
     LOG(INFO) << "[timer] fill = " << t.elapsed() << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
@@ -356,9 +364,11 @@ EigenProblem<Dim, Order>::run()
 
     // we keep only the dofs corresponding to the edges not on the boundary
     // and the points on the boundary
+    // [submatrix]
     auto C = backend()->newMatrix(Vh->nDof(), indexesToKeep.size(),
                                   Vh->nDof(), indexesToKeep.size() );
     cTilde->createSubmatrix( *C, rows, indexesToKeep);
+    // [submatrix]
 
     LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
     LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
