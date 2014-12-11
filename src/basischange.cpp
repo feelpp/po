@@ -24,6 +24,7 @@
 //#include <feel/feel.hpp>
 #include <feel/feelcore/feel.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
+#include <feel/feelfilters/unitsphere.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
 #include <boost/mpi/timer.hpp>
@@ -124,7 +125,8 @@ EigenProblem<Dim, Order>::run()
     boost::mpi::timer t;
     boost::mpi::timer total;
 
-    auto mesh = loadMesh(_mesh = new mesh_type );
+    // auto mesh = loadMesh(_mesh = new mesh_type );
+    auto mesh = unitSphere();
     if ( Environment::isMasterRank() ){
         std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
         std::cout << " number of faces : " << mesh->numGlobalFaces() << std::endl;
@@ -141,6 +143,9 @@ EigenProblem<Dim, Order>::run()
 
     auto Vh = space_type::New( mesh );
     auto Sh = Pch<1>( mesh );
+
+    LOG(INFO) << "[info] Vh dof = " << Vh->nDof() << std::endl;
+    LOG(INFO) << "[info] Sh dof = " << Sh->nDof() << std::endl;
     if ( Environment::isMasterRank() ){
         std::cout << "[Vh] number of dof             : "
                   << Vh->nDof() << std::endl;
@@ -197,6 +202,7 @@ EigenProblem<Dim, Order>::run()
     std::vector<bool> doneSh( Sh->nLocalDof(), false );
     std::vector<DofEdgeInfo> dof_edge_info( Vh->nLocalDof(), {invalid_uint16_type_value,1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value} );
     std::vector<size_type> indexesToKeep;
+    std::vector<size_type> boundaryIndexesToKeep;
 
     for( int i = 0; i < Vh->nDof(); ++i )
         for( auto const& dof : Vh->dof()->globalDof( i ) ) {
@@ -216,7 +222,8 @@ EigenProblem<Dim, Order>::run()
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
 
-            // we retrieve the index of the dof of Sh corresponding to the vertex of the edge
+            // we retrieve the index of the dof of Sh
+            // corresponding to the vertex of the edge
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i ) {
                 if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt1.id() ) {
                     dofid1 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
@@ -227,13 +234,14 @@ EigenProblem<Dim, Order>::run()
             }
 
             if ( edge.isOnBoundary() ) {
-                // if the points are on the boundary, we keep their indexes to extract the colons
+                // if the points are on the boundary,
+                // we keep their indexes to extract the columns
                 if( !doneSh[ dofid1 ] ) {
-                    indexesToKeep.push_back( Vh->nDof()+dofid1 );
+                    boundaryIndexesToKeep.push_back( Vh->nDof()+dofid1 );
                     doneSh[ dofid1 ] = true;
                 }
                 if( !doneSh[ dofid2 ] ) {
-                    indexesToKeep.push_back( Vh->nDof()+dofid2 );
+                    boundaryIndexesToKeep.push_back( Vh->nDof()+dofid2 );
                     doneSh[ dofid2 ] = true;
                 }
 
@@ -242,7 +250,8 @@ EigenProblem<Dim, Order>::run()
                 dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
             }
             if ( !edge.isOnBoundary() ) {
-                // if the edge is not on the boundary, we keep its index to extract the colon
+                // if the edge is not on the boundary, we keep its index
+                // to extract the column
                 indexesToKeep.push_back(dof.first.index());
 
                 //both points touch the boundary
@@ -291,26 +300,31 @@ EigenProblem<Dim, Order>::run()
     // cBoundary correspond to the matrix of all the dofs of Sh
     auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
 
-    // works only with 1 proc
+
+    auto pm = ioption("pm");
+
+    // works only with 1 proc !!
     for( int i = 0; i < Vh->nDof(); ++i ) {
         // the matrix cInternal is the identity
         // we'll remove the colons later
         cInternal->set(i,i,1);
 
-        // the matrix cBoundary has +1 or -1 on the vertex of the edge which are on the boundary
+        // the matrix cBoundary has +1 or -1 on the edges' vertex
+        // which are on the boundary
         auto dei = dof_edge_info[i];
         if( dei.type == EDGE_BOUNDARY || dei.type == EDGE_BOUNDARY_VERTEX_2 ) {
-            cBoundary->set(i,dei.dof_vertex_id1, 1*(int)dei.sign);
-            cBoundary->set(i,dei.dof_vertex_id2, -1*(int)dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id1, pm*(int)dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id2, -pm*(int)dei.sign);
         }
         else if( dei.type == EDGE_BOUNDARY_VERTEX_1 ) {
-            cBoundary->set(i,dei.dof_vertex_id1, 1*dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id1, pm*dei.sign);
         }
     }
 
     // we close the matrices so we can work on them
     cInternal->close();
     cBoundary->close();
+
 
     // we first create a matrix with all the dof of Vh and Sh
     BlocksBaseSparseMatrix<double> cBlock(1,2);
@@ -333,27 +347,67 @@ EigenProblem<Dim, Order>::run()
         rows[i] = i;
     }
 
-    // we need to sort the indexes of the colons
-    std::sort(indexesToKeep.begin(), indexesToKeep.end() );
 
-    // we keep only the dofs corresponding to the edges not on the boundary and the points on the boundary
-    auto C = backend()->newMatrix(Vh->nDof(), indexesToKeep.size(), Vh->nDof(), indexesToKeep.size() );
+    // we need to sort the indexes of the colons for Sh
+    std::sort(boundaryIndexesToKeep.begin(), boundaryIndexesToKeep.end() );
+    indexesToKeep.insert(indexesToKeep.end(),
+                         boundaryIndexesToKeep.begin(),
+                         boundaryIndexesToKeep.end() );
+
+    // we keep only the dofs corresponding to the edges not on the boundary
+    // and the points on the boundary
+    auto C = backend()->newMatrix(Vh->nDof(), indexesToKeep.size(),
+                                  Vh->nDof(), indexesToKeep.size() );
     cTilde->createSubmatrix( *C, rows, indexesToKeep);
+
+    LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
+    LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() ) {
+        std::cout << "[timer] submatrix = " << t.elapsed() << " sec"
+                  << std::endl;
+        std::cout << "[timer] total = " << total.elapsed() << " sec" << std::endl;
+    }
+
+    LOG(INFO) << "[info] Csize = " << C->size1() << " x " << C->size2()
+              << std::endl;
+    if ( Environment::worldComm().isMasterRank() ) {
+        std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
+    }
 
     matA->printMatlab("a.m");
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
-    LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
-    LOG(INFO) << "[timer] total = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() ) {
-        std::cout << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
-        std::cout << "[timer] total = " << t.elapsed() << " sec" << std::endl;
+#if 0
+    cInternal->printMatlab("cInt.m");
+    cBoundary->printMatlab("cBound.m");
+    cTilde->printMatlab("cTilde.m");
+
+    std::vector<size_type> indexesComp( Sh->nDof() );
+    for( int i = 0; i < Sh->nDof(); ++i ) {
+        indexesComp[i] = i;
+    }
+    for( int i = 0; i < boundaryIndexesToKeep.size(); ++i ) {
+        indexesComp.erase( indexesComp.begin() + boundaryIndexesToKeep[i] - Vh->nDof() - i );
     }
 
+    auto cComp = backend()->newMatrix( Vh->nDof(), indexesComp.size(),
+                                       Vh->nDof(), indexesComp.size() );
+    cBoundary->createSubmatrix( *cComp, rows, indexesComp );
 
-    std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
+    auto cIntNorm = cInternal->l1Norm();
+    auto cCompNorm = cComp->l1Norm();
+    auto cTildeNorm = cTilde->linftyNorm();
+    auto cNorm = C->linftyNorm();
 
+    if ( Environment::worldComm().isMasterRank() ) {
+        std::cout << "#bouIndex : " << boundaryIndexesToKeep.size() << std::endl
+                  << "normL1 of cInt : " << cIntNorm << std::endl
+                  << "normInf of cTilde : " << cTildeNorm << std::endl
+                  << "normL1 of c complementary : " << cCompNorm << std::endl
+                  << "normInf of c : " << cNorm << std::endl;
+    }
+#endif
 
     // next step is to build C^T A C and C^T B C: in feature/operator we have a
     // operator framework that allows to define such objects
@@ -394,8 +448,8 @@ EigenProblem<Dim, Order>::run()
     //     e->save();
     //     LOG(INFO) << "exportResults done\n";
     // }
-
 }
+    
 
 int
 main( int argc, char** argv )
@@ -404,7 +458,8 @@ main( int argc, char** argv )
 
     po::options_description basischangeoptions( "basischange options" );
     basischangeoptions.add_options()
-        ("dof", po::value<int>()->default_value( 0 ), "global dof id" );
+        ("dof", po::value<int>()->default_value( 0 ), "global dof id" )
+        ("pm", po::value<int>()->default_value( 1 ), "plus or minus one" );
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=basischangeoptions,
