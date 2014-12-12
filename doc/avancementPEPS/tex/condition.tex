@@ -432,21 +432,82 @@ For the implementation of this problem, we need several steps :
 \lstinputlisting[linerange=P1ch]{../../src/basischange.cpp}
 \item create the matrix $A$ and $B$ :
 \lstinputlisting[linerange=forms]{../../src/basischange.cpp}
-\item we can now use the function spaces previously defined to retrieve the informations on the dofs, if they are on the boundary or if they touch it.
+The figure \ref{spyA} shows the sparsity pattern of $A$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{spyA}
+\caption{Sparsity pattern of $A$}
+\label{spyA}
+\end{figure}
+\item we can now use the function spaces previously defined to retrieve the
+  informations on the dofs, if they are on the boundary or if they touch it.\\
+We first loop over all the degrees of freedom of $\NN_h$,
+\begin{itemize}
+\item for all these dofs, we retrieve the edge associated, the sign of this
+  edge, and the two vertices,
+\item we now search for the dofs of $\LLL_h$ associated with these vertices,
+\item if the edge is on the boundary,
+\begin{itemize}
+\item we set its type,
+\item keep the two dofs of $\LLL_h$ corresponding to the vertices in memory,
+\item  and keep the index of these dofs for later,
+\end{itemize}
+\item if the edge is not on the boundary,
+\begin{itemize}
+\item we keep the index of the dof for later,
+\item and if the two vertices are on the boundary, we set its type such that we
+  know that it is {\bf not} on the boundary but it touches it with the two
+  vertices, and we also keep the two dofs of $\LLL_h$,
+\item if only one vertex is on the boundary, we set its type accordingly, and
+  keep the dof concerned,
+\item if the edge doesn't touch the boundary, we set its type to remember that.
+\end{itemize}
+\end{itemize}
 \item we now create two matrices. One of size $M\times M$ for the dofs of $\NN_h$ and one of size $M\times K$ for the dofs of $\LLL_h$.
 \lstinputlisting[linerange=cIntBound]{../../src/basischange.cpp}
-\item using the informations retrieved on the dofs, we can now fill these two matrices :
+\item using the informations retrieved on the dofs, we can now fill these two
+  matrices :\\
+For each line of the two matrices,
+\begin{itemize}
+\item we set the first matrix to be the identity,
+\item if the edge touch the boundary with two vertices, we set the columns of
+  the second matrix using the indexes of the two dofs corresponding to the
+  vertices of the edge,
+\item if the edge touch the boundary with only one vertices, we set only the
+  corresponding column,
+\item if the edge doesn't touch the boundary, these line stays empty. 
+\end{itemize}
 \lstinputlisting[linerange=fill]{../../src/basischange.cpp}
-\item we now assemble the two matrices in one matrix of size $M\times (M+K)$
+\item we now assemble the two matrices in one matrix $\tilde{C}$ of size $M\times (M+K)$
 \lstinputlisting[linerange=ctilde]{../../src/basischange.cpp}
-\item in the same time we retrieved the informations on the dofs, we also keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
+The figure \ref{spyCTilde} shows the sparsity pattern of $\tilde{C}$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{spyCTilde}
+\caption{Sparsity pattern of $\tilde{C}$}
+\label{spyCTilde}
+\end{figure}
+\item when we retrieved the informations on the dofs, we keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
 \lstinputlisting[linerange=submatrix]{../../src/basischange.cpp}
+The figure \ref{spyC} shows the sparsity pattern of $\tilde{C}$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{spyC}
+\caption{Sparsity pattern of $C$}
+\label{spyC}
+\end{figure}
 \item finally, create $\widehat{A}$ and $\widehat{B}$. These step presents a
   problem, computing these matrix by multiplying them is inefficient. We should
-  use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.
-\end{itemize}
-
+  use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.\\
 For the moment, we'll try to export the matrices to matlab.
+The figure \ref{spyAA} shows the sparsity pattern of $\widehat{A}$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{spyAA}
+\caption{Sparsity pattern of $\widehat{A}$}
+\label{spyAA}
+\end{figure}
+\end{itemize}
 
 \subsubsection{Results}
 
