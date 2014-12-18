@@ -179,7 +179,7 @@ Let $\{\bm{\phi}_m\}_{m=1}^M$ be the basis of $\NN_h$, where the last ones
 correspond to the degrees of freedom related to the faces or edges on
 $\Gamma$. We have that $\{\bm{\phi}_m\}_{m=1}^N$ lie in $\ZZ_h$.\\
 
-Then the set $\{\bm{\phi}_m\}_{m=1}^N\cup  \{\grad_\Gamma\varphi_j\}_{j=1}^L$
+Then the set $\{\bm{\phi}_m\}_{m=1}^N\cup  \{\grad\varphi_j\}_{j=1}^L$
 is a basis of $\ZZ_h$.
 
 \subsubsection{An algebraic solution}
@@ -196,7 +196,7 @@ Let $\{P_j\}_{j=1}^J$ be the set of vertices of $\TT_h^\Gamma$, and
 $\{\varphi_j\}_{j=1}^J$ be the basis of $\LLL_h^\Gamma$, where the last $I$
 functions are choses on a different connected component of $\Gamma$. Then, we have also :
 \[ \mbf{u}_h = \sum_{m=1}^N \alpha_m'\bm{\phi}_m + \sum_{j=1}^L
-\beta_j\grad_\Gamma\varphi_j \]
+\beta_j\grad\varphi_j \]
 By identification, we obtain :
 \[
 \alpha_m=\left\{\begin{aligned}
@@ -294,28 +294,28 @@ If we assume that $\Gamma=\{z=0\}$, then $N=2$ and $J=2$.
 
 Then we have that $\{\varphi_j\}_{j=0}^3$ is a basis of $\LLL_h$, with :
 \begin{align*}
-\varphi_0(x,y,z) &= \frac{-1}{8}(4+4x+4y+4z) &
+\varphi_0(x,y,z) &= -\frac{1+x+y+z}{2} &
 \varphi_1(x,y,z) &= \frac{x+1}{2}\\
 \varphi_2(x,y,z) &= \frac{y+1}{2} & \varphi_3(x,y,z) &= \frac{z+1}{2}\\
 \end{align*}
 Then $\left\langle\{\varphi_j\}_{j=0}^2\right\rangle=\LLL_h^\Gamma$ and
 $n=(0,0,-1)$, which leads to :
 \[
-\grad_\Gamma \varphi_0(x,y,z) = \begin{pmatrix}-1/2\\1/2\\0\end{pmatrix},\quad
-\grad_\Gamma \varphi_1(x,y,z) = \begin{pmatrix}1/2\\0\\0\end{pmatrix},\quad
-\grad_\Gamma \varphi_2(x,y,z) = \begin{pmatrix}0\\1/2\\0\end{pmatrix}
+\grad \varphi_0(x,y,z) = \begin{pmatrix}-1/2\\-1/2\\-1/2\end{pmatrix},\quad
+\grad \varphi_1(x,y,z) = \begin{pmatrix}1/2\\0\\0\end{pmatrix},\quad
+\grad \varphi_2(x,y,z) = \begin{pmatrix}0\\1/2\\0\end{pmatrix}
 \]
 We have to remove a function corresponding to the only connected component of
-$\Gamma$, so we remove $\grad_\Gamma \varphi_2$.\\
+$\Gamma$, so we remove $\grad \varphi_2$.\\
 Then $\{\grad_\Gamma \varphi_j\}_{j=0}^1$ is a basis of
 $\grad_\Gamma(\LLL_h^\Gamma)$.\\
 
-We finally have \[ \{\bm{\phi}_m\}_{m=0}^2\cup\{\grad_\Gamma\varphi_j\}_{j=0}^1
+We finally have \[ \{\bm{\phi}_m\}_{m=0}^2\cup\{\grad\varphi_j\}_{j=0}^1
 \mbox{ is a basis of } \ZZ_h \]
 And
 \begin{align*}
 \mbf{u}_h &= \sum_{m=0}^5 \sigma_m(\mbf{u}_h) \bm{\phi}_m = \sum_{m=1}^6 \alpha_m \bm{\phi}_m\\
-&= \sum_{m=0}^2 \alpha_m'\bm{\phi}_m + \sum_{j=0}^2 \beta_j\grad_\Gamma\varphi_j
+&= \sum_{m=0}^2 \alpha_m'\bm{\phi}_m + \sum_{j=0}^2 \beta_j\grad\varphi_j
 \end{align*}
 with $\beta_2 = 0$.\\
 
@@ -369,57 +369,21 @@ the following domain :
 Then $M=13,N=1,J=6,L=5$, so $C$ has $13$ lines and $7$ colons.
 \end{rk}
 
-Then
-\begin{gather*} \widehat{A}=\begin{pmatrix}
-1 & 0 & 0 & 0 & 0 & 0\\
-0 & 1 & 0 & 0 & 0 & 0\\
-0 & 0 & 1 & 0 & 0 & 0\\
-\pm 1 & 0 & 0 & \pm 1 & \pm 1 & 0\\
-0 & \pm 1 & 0 & 0 & \pm 1 & \pm 1\\
-0 & 0 & \pm 1 & \pm 1 & \pm 1 & 0
-\end{pmatrix}\begin{pmatrix}
-a_{00} & a_{01} & a_{02} & a_{03} & a_{04} & a_{05}\\
-a_{10} & a_{11} & a_{12} & a_{13} & a_{14} & a_{15}\\
-a_{20} & a_{21} & a_{22} & a_{23} & a_{24} & a_{25}\\
-a_{30} & a_{31} & a_{32} & a_{33} & a_{34} & a_{35}\\
-a_{40} & a_{41} & a_{42} & a_{43} & a_{44} & a_{45}\\
-a_{50} & a_{51} & a_{52} & a_{53} & a_{54} & a_{55}\\
-\end{pmatrix}\begin{pmatrix}
-1 & 0 & 0 & \pm 1 & 0 & 0\\
-0 & 1 & 0 & 0 & \pm 1 & 0\\
-0 & 0 & 1 & 0 & 0 & \pm 1\\
-0 & 0 & 0 & \pm 1 & 0 & \mp 1\\
-0 & 0 & 0 & \pm 1 & \mp 1 & 0\\
-0 & 0 & 0 & 0 & \pm 1 & \mp 1\\
-\end{pmatrix}\\
-\widehat{B}=\begin{pmatrix}
-1 & 0 & 0 & 0 & 0 & 0\\
-0 & 1 & 0 & 0 & 0 & 0\\
-0 & 0 & 1 & 0 & 0 & 0\\
-\pm 1 & 0 & 0 & \pm 1 & \pm 1 & 0\\
-0 & \pm 1 & 0 & 0 & \pm 1 & \pm 1\\
-0 & 0 & \pm 1 & \pm 1 & \pm 1 & 0
-\end{pmatrix}\begin{pmatrix}
-b_{00} & b_{01} & b_{02} & b_{03} & b_{04} & b_{05}\\
-b_{10} & b_{11} & b_{12} & b_{13} & b_{14} & b_{15}\\
-b_{20} & b_{21} & b_{22} & b_{23} & b_{24} & b_{25}\\
-b_{30} & b_{31} & b_{32} & b_{33} & b_{34} & b_{35}\\
-b_{40} & b_{41} & b_{42} & b_{43} & b_{44} & b_{45}\\
-b_{50} & b_{51} & b_{52} & b_{53} & b_{54} & b_{55}\\
-\end{pmatrix}\begin{pmatrix}
-1 & 0 & 0 & \pm 1 & 0 & 0\\
-0 & 1 & 0 & 0 & \pm 1 & 0\\
-0 & 0 & 1 & 0 & 0 & \pm 1\\
-0 & 0 & 0 & \pm 1 & 0 & \mp 1\\
-0 & 0 & 0 & \pm 1 & \mp 1 & 0\\
-0 & 0 & 0 & 0 & \pm 1 & \mp 1\\
-\end{pmatrix}
-\end{gather*}
-with 
-\begin{align*}
-a_{ij} &= \int_\Omega \curl\bm{\phi}_i\cdot\curl\bm{\phi}_j &
-b_{ij} &= \int_\Omega \bm{\phi}_i\cdot\bm{\phi}_j
-\end{align*}
+If we take $\mbf{u}=4(\phi_0+\phi_4-\phi_5)=(2,1+x_3,1-x_2)$ which belongs to
+$\ZZ_h$ ($\curl\mbf{u}=(-2,0,0)$), then we
+also have $\mbf{u}=(\phi_0+\phi_1+\grad\varphi_1)$ and :
+\[ \begin{pmatrix}
+4\\0\\0\\0\\4\\-4
+\end{pmatrix} = \begin{pmatrix}
+1 & 0 & 0 & -1 & 0 & 0\\
+0 & 1 & 0 & 0 & -1 & 0\\
+0 & 0 & 1 & 0 & 0 & -1\\
+0 & 0 & 0 & -1 & 0 & 1\\
+0 & 0 & 0 & -1 & 1 & 0\\
+0 & 0 & 0 & 0 & -1 & 1\\
+\end{pmatrix} \begin{pmatrix}
+4\\4\\0\\0\\4\\0
+\end{pmatrix} \]
 
 \subsection{Implementation}
 \subsubsection{Details}
@@ -432,21 +396,82 @@ For the implementation of this problem, we need several steps :
 \lstinputlisting[linerange=P1ch]{../../src/basischange.cpp}
 \item create the matrix $A$ and $B$ :
 \lstinputlisting[linerange=forms]{../../src/basischange.cpp}
-\item we can now use the function spaces previously defined to retrieve the informations on the dofs, if they are on the boundary or if they touch it.
+The figure \ref{spyA} shows the sparsity pattern of $A$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{spyA}
+\caption{Sparsity pattern of $A$}
+\label{spyA}
+\end{figure}
+\item we can now use the function spaces previously defined to retrieve the
+  informations on the dofs, if they are on the boundary or if they touch it.\\
+We first loop over all the degrees of freedom of $\NN_h$,
+\begin{itemize}
+\item for all these dofs, we retrieve the edge associated, the sign of this
+  edge, and the two vertices,
+\item we now search for the dofs of $\LLL_h$ associated with these vertices,
+\item if the edge is on the boundary,
+\begin{itemize}
+\item we set its type,
+\item keep the two dofs of $\LLL_h$ corresponding to the vertices in memory,
+\item  and keep the index of these dofs for later,
+\end{itemize}
+\item if the edge is not on the boundary,
+\begin{itemize}
+\item we keep the index of the dof for later,
+\item and if the two vertices are on the boundary, we set its type such that we
+  know that it is {\bf not} on the boundary but it touches it with the two
+  vertices, and we also keep the two dofs of $\LLL_h$,
+\item if only one vertex is on the boundary, we set its type accordingly, and
+  keep the dof concerned,
+\item if the edge doesn't touch the boundary, we set its type to remember that.
+\end{itemize}
+\end{itemize}
 \item we now create two matrices. One of size $M\times M$ for the dofs of $\NN_h$ and one of size $M\times K$ for the dofs of $\LLL_h$.
 \lstinputlisting[linerange=cIntBound]{../../src/basischange.cpp}
-\item using the informations retrieved on the dofs, we can now fill these two matrices :
+\item using the informations retrieved on the dofs, we can now fill these two
+  matrices :\\
+For each line of the two matrices,
+\begin{itemize}
+\item we set the first matrix to be the identity,
+\item if the edge touch the boundary with two vertices, we set the columns of
+  the second matrix using the indexes of the two dofs corresponding to the
+  vertices of the edge,
+\item if the edge touch the boundary with only one vertices, we set only the
+  corresponding column,
+\item if the edge doesn't touch the boundary, these line stays empty. 
+\end{itemize}
 \lstinputlisting[linerange=fill]{../../src/basischange.cpp}
-\item we now assemble the two matrices in one matrix of size $M\times (M+K)$
+\item we now assemble the two matrices in one matrix $\tilde{C}$ of size $M\times (M+K)$
 \lstinputlisting[linerange=ctilde]{../../src/basischange.cpp}
-\item in the same time we retrieved the informations on the dofs, we also keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
+The figure \ref{spyCTilde} shows the sparsity pattern of $\tilde{C}$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{spyCTilde}
+\caption{Sparsity pattern of $\tilde{C}$}
+\label{spyCTilde}
+\end{figure}
+\item when we retrieved the informations on the dofs, we keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
 \lstinputlisting[linerange=submatrix]{../../src/basischange.cpp}
+The figure \ref{spyC} shows the sparsity pattern of $\tilde{C}$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{spyC}
+\caption{Sparsity pattern of $C$}
+\label{spyC}
+\end{figure}
 \item finally, create $\widehat{A}$ and $\widehat{B}$. These step presents a
   problem, computing these matrix by multiplying them is inefficient. We should
-  use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.
-\end{itemize}
-
+  use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.\\
 For the moment, we'll try to export the matrices to matlab.
+The figure \ref{spyAA} shows the sparsity pattern of $\widehat{A}$ : 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{spyAA}
+\caption{Sparsity pattern of $\widehat{A}$}
+\label{spyAA}
+\end{figure}
+\end{itemize}
 
 \subsubsection{Results}
 
@@ -454,7 +479,7 @@ The figure \ref{timeC} shows the time take to accomplish the steps for creating 
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.8]{createC}
+\includegraphics[scale=0.7]{createC}
 \caption{Time to compute C}
 \label{timeC}
 \end{figure}
@@ -464,7 +489,7 @@ We see that in fact the percentage of time is constant for each steps.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.8]{completeChBase}
+\includegraphics[scale=0.7]{completeChBase}
 \caption{Time to compute the changement of basis}
 \label{completeTime}
 \end{figure}
@@ -481,9 +506,40 @@ $h$ & \#dof($\NN_h$) & \#dof($\LLL_h$) & \#columns of $C$ \\ \hline
 \end{tabular}
 \end{center}
 
-In \texttt{octave}, I don't have any results yet.\\
-I tried to use the \texttt{eig} function, this computes all the spectrum of the problem, but takes a really long time.\\
-I also tried \texttt{eigs}, but this function works with sparse matrices, and $\widehat{A}$ and $\widehat{B}$ seems to be recognized like full matrices by \texttt{octave}.
+In \texttt{matlab}, the function \texttt{eigs} works but take too long to be
+used with that much dofs. The following shows the results for different number
+of dof.
+
+\[
+\begin{array}{cccc}
+0.125  & 0.11   & 0.1    & 0.075 \\ \hline
+0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
+0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
+0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
+0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
+0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
+0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
+6.2652 & 0.0000 & 0.0000 & 0.0000\\ 
+6.6159 & 0.0000 & 0.0000 & 0.0000\\ 
+6.6832 & 0.0000 & 0.0000 & 0.0000\\ 
+7.1481 & 0.0000 & 0.0000 & 0.0000\\ 
+10.2784 & 0.0000 & 0.0000 & 0.0000\\ 
+10.6218 & 0.0000 & 0.0000 & 7.0877\\ 
+10.9753 & 0.0000 & 1.8521 & 7.1051\\ 
+11.4466 & 6.9669 & 6.7911 & 7.1485\\ 
+11.7956 & 7.0183 & 6.9923 & 13.6927\\ 
+12.4540 & 7.0634 & 7.0546 & 13.7943\\ 
+12.6401 & 7.1816 & 9.5931 & 13.8640\\ 
+13.7313 & 12.9154 & 12.6579 & 13.9942\\ 
+14.0901 & 13.3071 & 13.2775 & 14.0917\\ 
+14.4985 & 13.5665 & 13.4353 & 18.6648\\ 
+15.0133 & 13.7048 & 13.7843 & 18.9614\\ 
+15.8525 & 13.7958 & 14.3350 & 19.1036\\ 
+16.3595 & 16.0128 & 16.1637 & 19.1963\\ 
+16.7025 & 17.4616 & 16.7012 & 21.6165\\ 
+17.6974 & 17.5464 & 17.6577 & 21.8776\\ 
+\end{array}
+\]
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
