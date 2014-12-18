@@ -17,6 +17,7 @@ public:
   typedef Mesh<Simplex<3 > > mesh_type;
 
   typedef bases<RaviartThomas<0>, Nedelec<0,NedelecKind::NED1>, Lagrange<2,Scalar > > basis_type;
+  //typedef bases<RaviartThomas<0>, Nedelec<0,NedelecKind::NED1> > basis_type;
   typedef FunctionSpace<mesh_type, basis_type > space_type;
 
   void run();
@@ -47,6 +48,7 @@ EigenProblem::run()
   auto w = U.element<0>();
   auto p = U.element<2>();
 
+  auto l = form1( _test=Xh );
   auto a = form2( _test=Xh, _trial=Xh );
   a = integrate( elements(mesh),
 		 - trans(curlt(u))*id(w) - trans(idt(u))*trans(grad(p))
@@ -58,6 +60,11 @@ EigenProblem::run()
 
   a += integrate( boundaryfaces( mesh ),
        		        trans(idt(u))*cross(id(w),N()) );
+
+  if( boption("bcVec") )
+      a += on(_range=boundaryfaces(mesh), _rhs=l, _element=w, _expr=zero<3,1>() );
+  else
+      a += on(_range=boundaryfaces(mesh), _rhs=l, _element=w, _expr=cst(0.) );
 
 #else
   // if u is in h(div) and w in h(curl)
@@ -86,12 +93,9 @@ EigenProblem::run()
 		              //  + gamma*inner(idt(p),id(p))
   		               );
 
-  auto l = form1( _test=Xh );
-  if( boption("bcVec") )
-      a += on(_range=boundaryfaces(mesh), _rhs=l, _element=w, _expr=zero<3,1>() );
-  else
-      a += on(_range=boundaryfaces(mesh), _rhs=l, _element=w, _expr=cst(0.) );
 
+  a.matrixPtr()->printMatlab("a.m");
+  b.matrixPtr()->printMatlab("b.m");
 
   auto modes = veigs( _formA=a, _formB=b );
 
