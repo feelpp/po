@@ -42,7 +42,7 @@ enum EdgeType {
 struct DofEdgeInfo
 {
     size_type index;
-    size_type sign;
+    int8_type sign;
     EdgeType type;
     size_type dof_vertex_id1;
     size_type dof_vertex_id2;
@@ -214,11 +214,17 @@ EigenProblem<Dim, Order>::run()
 
     // for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
     //     auto const& dof = *dofit;
+
+            // std::cout << "first : " << dof.first.sign() << std::endl;
+
         if ( !doneVh[ dof.first.index() ] ) {
             // we retrieve the edge corresponding to the dof
             auto const& edge = mesh->element(dof.second.elementId()).edge(dof.second.localDof());
             dof_edge_info[dof.first.index()].index = dof.first.index();
             dof_edge_info[dof.first.index()].sign = dof.first.sign();
+
+            // auto arraySign = Vh->dof()->localToGlobalSigns( dof.second.elementId());
+            // std::cout << "array : " << arraySign << std::endl;
 
             auto const& pt1 = edge.point( 0 );
             auto const& pt2 = edge.point( 1 );
@@ -318,8 +324,8 @@ EigenProblem<Dim, Order>::run()
         // which are on the boundary
         auto dei = dof_edge_info[i];
         if( dei.type == EDGE_BOUNDARY || dei.type == EDGE_BOUNDARY_VERTEX_2 ) {
-            cBoundary->set(i,dei.dof_vertex_id1, pm*(int)dei.sign);
-            cBoundary->set(i,dei.dof_vertex_id2, -pm*(int)dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id1, pm*dei.sign);
+            cBoundary->set(i,dei.dof_vertex_id2, -pm*dei.sign);
         }
         else if( dei.type == EDGE_BOUNDARY_VERTEX_1 ) {
             cBoundary->set(i,dei.dof_vertex_id1, pm*dei.sign);
@@ -388,7 +394,7 @@ EigenProblem<Dim, Order>::run()
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
-#if 0
+#if 1
     cInternal->printMatlab("cInt.m");
     cBoundary->printMatlab("cBound.m");
     cTilde->printMatlab("cTilde.m");
@@ -397,18 +403,18 @@ EigenProblem<Dim, Order>::run()
     for( int i = 0; i < Sh->nDof(); ++i ) {
         indexesComp[i] = i;
     }
-    for( int i = 0; i < boundaryIndexesToKeep.size(); ++i ) {
-        indexesComp.erase( indexesComp.begin() + boundaryIndexesToKeep[i] - Vh->nDof() - i );
+    for( int i = boundaryIndexesToKeep.size() - 1; i >= 0; --i ) {
+        indexesComp.erase( indexesComp.begin() + boundaryIndexesToKeep[i] - Vh->nDof() );
     }
 
     auto cComp = backend()->newMatrix( Vh->nDof(), indexesComp.size(),
                                        Vh->nDof(), indexesComp.size() );
     cBoundary->createSubmatrix( *cComp, rows, indexesComp );
 
-    auto cIntNorm = cInternal->l1Norm();
-    auto cCompNorm = cComp->l1Norm();
-    auto cTildeNorm = cTilde->linftyNorm();
-    auto cNorm = C->linftyNorm();
+    auto cIntNorm = cInternal->l1Norm(); // each column should be 1
+    auto cCompNorm = cComp->l1Norm(); // each column should be 0
+    auto cTildeNorm = cTilde->linftyNorm(); // each row should be less than 3
+    auto cNorm = C->linftyNorm(); // each row should be less than 3
 
     if ( Environment::worldComm().isMasterRank() ) {
         std::cout << "#bouIndex : " << boundaryIndexesToKeep.size() << std::endl
