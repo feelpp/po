@@ -394,6 +394,13 @@ EigenProblem<Dim, Order>::run()
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
+    auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+    auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+    backend()->PtAP( matA, C, Ahat );
+    backend()->PtAP( matB, C, Bhat );
+    Ahat->printMatlab("Ahat.m");
+    Bhat->printMatlab("Bhat.m");
+
 #if 1
     cInternal->printMatlab("cInt.m");
     cBoundary->printMatlab("cBound.m");
