@@ -27,6 +27,8 @@
 #include <feel/feelfilters/unitsphere.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
+#include <feel/feelalg/solvereigen.hpp>
+#include <feel/feelfilters/exporter.hpp>
 #include <boost/mpi/timer.hpp>
 
 /** use Feel namespace */
@@ -394,14 +396,9 @@ EigenProblem<Dim, Order>::run()
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
-    auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-    auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-    backend()->PtAP( matA, C, Ahat );
-    backend()->PtAP( matB, C, Bhat );
-    Ahat->printMatlab("Ahat.m");
-    Bhat->printMatlab("Bhat.m");
+#if 0
+    // some test on C
 
-#if 1
     cInternal->printMatlab("cInt.m");
     cBoundary->printMatlab("cBound.m");
     cTilde->printMatlab("cTilde.m");
@@ -432,47 +429,35 @@ EigenProblem<Dim, Order>::run()
     }
 #endif
 
-    // next step is to build C^T A C and C^T B C: in feature/operator we have a
-    // operator framework that allows to define such objects
+    auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+    auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+    backend()->PtAP( matA, C, Ahat );
+    backend()->PtAP( matB, C, Bhat );
 
+    Ahat->printMatlab("Ahat.m");
+    Bhat->printMatlab("Bhat.m");
 
-#if 0
-    auto opCtrans = op(C,"C",true);
-    auto opC = op(C,"C");
-    auto Atilde = compose(opCtrans,compose(op(A,"A"),opC) );
-    auto Btilde = compose(opCtrans,compose(op(B,"B"),opC) );
-#endif
+    if ( Environment::worldComm().isMasterRank() ) {
+        std::cout << "nev = " << ioption(_name="solvereigen.nev")
+                  << "ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
+    }
 
-    // if ( Environment::worldComm().isMasterRank() )
-    // {
-    //     std::cout << "number of eigenvalues computed= " << option(_name="solvereigen.nev").template as<int>() <<std::endl;
-    //     std::cout << "number of eigenvalues for convergence= " << option(_name="solvereigen.ncv").template as<int>() <<std::endl;
-    // }
-
-    // auto modes= veigs( _formA=a, _formB=b );
+    auto modes = eigs( _matrixA=Ahat, _matrixB=Bhat );
 
     // auto e =  exporter( _mesh=mesh );
 
-    // if ( e->doExport() )
-    // {
-    //     LOG(INFO) << "exportResults starts\n";
-    //     int i = 0;
-    //     for( auto const& mode: modes )
-    //     {
-    //         auto norml2_div = normL2(_range=elements(mesh), _expr=divv(mode.second));
-    //         if ( Environment::isMasterRank() )
-    //         {
-    //             std::cout << "||div(u_" << i << ")||_0 = " << norml2_div << "\n";
-    //         }
-    //         e->add( ( boost::format( "mode-u-%1%" ) % i ).str(), mode.second );
-    //         i++;
-    //     }
+    int i = 0;
+    for( auto const& mode: modes ) {
+        if ( Environment::isMasterRank() ) {
+            std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
+        }
+        // e->add( ( boost::format( "mode-%1%" ) % i ).str(), *mode.second.get<2>() );
+        i++;
+    }
 
-    //     e->save();
-    //     LOG(INFO) << "exportResults done\n";
-    // }
+    // e->save();
 }
-    
+
 
 int
 main( int argc, char** argv )
@@ -481,7 +466,6 @@ main( int argc, char** argv )
 
     po::options_description basischangeoptions( "basischange options" );
     basischangeoptions.add_options()
-        ("dof", po::value<int>()->default_value( 0 ), "global dof id" )
         ("pm", po::value<int>()->default_value( 1 ), "plus or minus one" );
 
     Environment env( _argc=argc, _argv=argv,
