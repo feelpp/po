@@ -126,8 +126,8 @@ EigenProblem<Dim, Order>::run()
     boost::mpi::timer t;
     boost::mpi::timer total;
 
-    // auto mesh = loadMesh(_mesh = new mesh_type );
-    auto mesh = unitSphere();
+    auto mesh = loadMesh(_mesh = new mesh_type );
+    // auto mesh = unitSphere();
     if ( Environment::isMasterRank() ){
         std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
         std::cout << " number of faces : " << mesh->numGlobalFaces() << std::endl;
@@ -162,7 +162,7 @@ EigenProblem<Dim, Order>::run()
                   << Vh->dof()->nLocalDof()*mesh->numGlobalElements() << std::endl;
         std::cout << "[Sh] number of dof             : "
                   << Sh->nDof() << std::endl;
-        std::cout << "[Vh] number of dof per proc    : "
+        std::cout << "[Sh] number of dof per proc    : "
                   << Sh->nLocalDof() << std::endl;
         std::cout << "[Sh] number of local dof       : "
                   << Sh->dof()->nLocalDof() << std::endl;
@@ -244,7 +244,16 @@ EigenProblem<Dim, Order>::run()
                 }
             }
 
-            if ( edge.isOnBoundary() ) {
+            if ( Environment::worldComm().isMasterRank() ) {
+                std::cout << "index : " << dof.first.index() << "\t sign : " << dof.first.sign()
+                          << "\n\t\t x=[ " << pt1[0] << " , " << pt2[0] << " ]\n"
+                          << "\t\t y=[ " << pt1[1] << " , " << pt2[1] << " ]\n"
+                          << "\t\t z=[ " << pt1[2] << " , " << pt2[2] << " ]\n"
+                          << "\t\t [a_" << dofid1 << " , a_" << dofid2 << " ]"
+                          << std::endl;
+            }
+
+            if ( pt1[2] == -1 && pt2[2] == -1 ) {
                 // if the points are on the boundary,
                 // we keep their indexes to extract the columns
                 if( !doneSh[ dofid1 ] ) {
@@ -260,13 +269,13 @@ EigenProblem<Dim, Order>::run()
                 dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
                 dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
             }
-            if ( !edge.isOnBoundary() ) {
+            else {
                 // if the edge is not on the boundary, we keep its index
                 // to extract the column
                 indexesToKeep.push_back(dof.first.index());
 
                 //both points touch the boundary
-                if ( pt1.isOnBoundary() && pt2.isOnBoundary() ) {
+                if ( pt1[2] == -1 && pt2[2] == -1 ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_2;
                     dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
@@ -274,13 +283,13 @@ EigenProblem<Dim, Order>::run()
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // one of the end points touch the boundary
-                else if ( pt1.isOnBoundary()  ) {
+                else if ( pt1[2] == -1  ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_1;
                     dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
                     CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
                 }
-                else if ( pt2.isOnBoundary()  ) {
+                else if ( pt2[2] == -1  ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_1;
                     dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid2;
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
@@ -428,7 +437,7 @@ EigenProblem<Dim, Order>::run()
                   << "normInf of c : " << cNorm << std::endl;
     }
 #endif
-
+#if 0
     auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
     auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
     backend()->PtAP( matA, C, Ahat );
@@ -456,6 +465,7 @@ EigenProblem<Dim, Order>::run()
     }
 
     // e->save();
+#endif
 }
 
 
