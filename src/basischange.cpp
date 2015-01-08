@@ -27,12 +27,15 @@
 #include <feel/feelfilters/unitsphere.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
+#include <feel/feelvf/vf.hpp>
 #include <feel/feelalg/solvereigen.hpp>
 #include <feel/feelfilters/exporter.hpp>
 #include <boost/mpi/timer.hpp>
+#include <time.h>
 
 /** use Feel namespace */
 using namespace Feel;
+using namespace Feel::vf;
 
 enum EdgeType {
     EDGE_INTERIOR = 0, // edge in the interior
@@ -244,16 +247,9 @@ EigenProblem<Dim, Order>::run()
                 }
             }
 
-            if ( Environment::worldComm().isMasterRank() ) {
-                std::cout << "index : " << dof.first.index() << "\t sign : " << dof.first.sign()
-                          << "\n\t\t x=[ " << pt1[0] << " , " << pt2[0] << " ]\n"
-                          << "\t\t y=[ " << pt1[1] << " , " << pt2[1] << " ]\n"
-                          << "\t\t z=[ " << pt1[2] << " , " << pt2[2] << " ]\n"
-                          << "\t\t [a_" << dofid1 << " , a_" << dofid2 << " ]"
-                          << std::endl;
-            }
 
-            if ( pt1[2] == -1 && pt2[2] == -1 ) {
+            // if ( edge.isOnBoundary() ) {
+            if ( edge.isOnBoundary() ){
                 // if the points are on the boundary,
                 // we keep their indexes to extract the columns
                 if( !doneSh[ dofid1 ] ) {
@@ -275,7 +271,7 @@ EigenProblem<Dim, Order>::run()
                 indexesToKeep.push_back(dof.first.index());
 
                 //both points touch the boundary
-                if ( pt1[2] == -1 && pt2[2] == -1 ) {
+                if ( pt1.isOnBoundary() && pt2.isOnBoundary() ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_2;
                     dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
@@ -283,13 +279,13 @@ EigenProblem<Dim, Order>::run()
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // one of the end points touch the boundary
-                else if ( pt1[2] == -1  ) {
+                else if ( pt1.isOnBoundary()  ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_1;
                     dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
                     CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
                 }
-                else if ( pt2[2] == -1  ) {
+                else if ( pt2.isOnBoundary()  ) {
                     dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_1;
                     dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid2;
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
@@ -301,7 +297,16 @@ EigenProblem<Dim, Order>::run()
                     dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
                 }
             }
+            if ( Environment::worldComm().isMasterRank() ) {
+                std::cout << "index : " << dof.first.index() << "\t sign : " << dof.first.sign() << "\t type: " << dof_edge_info[dof.first.index()].type
+                          << "\n\t x=[ " << pt1[0] << " , " << pt2[0] << " ]\n"
+                          << "\t y=[ " << pt1[1] << " , " << pt2[1] << " ]\n"
+                          << "\t z=[ " << pt1[2] << " , " << pt2[2] << " ]\n"
+                          << "\t [a_" << dofid1 << " , a_" << dofid2 << " ]"
+                          << std::endl;
+            }
         }
+
         doneVh[dof.first.index()] = true;
     }
 
@@ -405,7 +410,31 @@ EigenProblem<Dim, Order>::run()
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
-#if 0
+    auto fSh  = Sh->element();
+    fSh.set( 3, 1);
+    fSh.set( 5, -2);
+    auto fVh = Vh->element();
+    fVh.set( 2, 1);
+    auto f = vf::project( _space=Vh, _range=elements(mesh),
+                          _expr= idv(fVh) + trans(gradv(fSh)) );
+
+    auto alphaPrime = backend()->newVector( 7, 7 );
+    alphaPrime->set(0, 1);
+    alphaPrime->set(3, 1);
+    alphaPrime->set(5, -2);
+
+    auto alphaVec = backend()->newVector( Vh );
+    C->multVector( alphaPrime, alphaVec);
+    auto alpha = Vh->element();
+    alpha.zero();
+    alpha.add(*alphaVec);
+
+    auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
+    std::cout << "erreur : " << erreur << std::endl;
+    f.printMatlab("f.m");
+    alpha.printMatlab("f.m");
+
+#if 1
     // some test on C
 
     cInternal->printMatlab("cInt.m");
