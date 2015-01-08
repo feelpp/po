@@ -420,8 +420,8 @@ EigenProblem<Dim, Order>::run()
 
     auto alphaPrime = backend()->newVector( 7, 7 );
     alphaPrime->set(0, 1);
-    alphaPrime->set(3, 1);
-    alphaPrime->set(5, -2);
+    alphaPrime->set(4, 1);
+    alphaPrime->set(6, -2);
 
     auto alphaVec = backend()->newVector( Vh );
     C->multVector( alphaPrime, alphaVec);
@@ -430,9 +430,10 @@ EigenProblem<Dim, Order>::run()
     alpha.add(*alphaVec);
 
     auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
-    std::cout << "erreur : " << erreur << std::endl;
+    auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+    std::cout << "erreur : " << erreur << "\t curl*n : " << curln << std::endl;
     f.printMatlab("f.m");
-    alpha.printMatlab("f.m");
+    alpha.printMatlab("alpha.m");
 
 #if 1
     // some test on C
