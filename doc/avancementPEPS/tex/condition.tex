@@ -227,6 +227,7 @@ where $\widehat{\mbf{A}}=\mbf{C}^t\mbf{A}\mbf{C}$ and $\widehat{\mbf{B}}=\mbf{C}
 \end{pb}
 
 \subsubsection{Example}
+\paragraph{One element}
 If we take for an element the following tetrahedron :
 \begin{figure}[H]
 \centering
@@ -341,18 +342,34 @@ Which leads to the system :
 \end{pmatrix} \begin{pmatrix}
 \alpha_0'\\\alpha_1'\\\alpha_2'\\\beta_0\\\beta_1\\\beta_2
 \end{pmatrix} \]
-\begin{rk}\label{squareC}
-The matrix $C$ has no reason to be square. This is a particular case. Take
-the following domain :
+
+If we take $\mbf{u}=4(\phi_0+\phi_4-\phi_5)=(2,1+x_3,1-x_2)$ which belongs to
+$\ZZ_h$ ($\curl\mbf{u}=(-2,0,0)$), then we
+also have $\mbf{u}=4(\phi_0+\phi_1+\grad\varphi_1)$ and :
+\[ \begin{pmatrix}
+4\\0\\0\\0\\4\\-4
+\end{pmatrix} = \begin{pmatrix}
+1 & 0 & 0 & -1 & 0 & 0\\
+0 & 1 & 0 & 0 & -1 & 0\\
+0 & 0 & 1 & 0 & 0 & -1\\
+0 & 0 & 0 & 1 & 0 & -1\\
+0 & 0 & 0 & -1 & 1 & 0\\
+0 & 0 & 0 & 0 & -1 & 1\\
+\end{pmatrix} \begin{pmatrix}
+4\\4\\0\\0\\4\\0
+\end{pmatrix} \]
+
+\paragraph{4 elements}
+Take this pyramid :
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[line join = round, line cap = round]
-\coordinate [label=left:$a_0$] (A) at (0,0,0);
-\coordinate [label=below:$a_1$] (D) at (0,0,3);
-\coordinate [label=right:$a_2$] (B) at (3,0,0);
-\coordinate [label=above:$a_3$] (C) at (0,3,0);
-\coordinate [label=above:$a_4$] (E) at (-3,0,0);
-\coordinate [label=above:$a_5$] (F) at (0,0,-3);
+\coordinate [label=left:$a_1$] (A) at (0,0,0);
+\coordinate [label=below:$a_2$] (D) at (0,0,3);
+\coordinate [label=right:$a_5$] (B) at (3,0,0);
+\coordinate [label=above:$a_0$] (C) at (0,3,0);
+\coordinate [label=above:$a_3$] (E) at (-3,0,0);
+\coordinate [label=above:$a_4$] (F) at (0,0,-3);
 
 \foreach \i in {B,C,D,E,F}
     \draw[dashed] (0,0)--(\i);
@@ -366,24 +383,65 @@ the following domain :
 \draw[-] (D)--(E);
 \end{tikzpicture}
 \end{figure}
-Then $M=13,N=1,J=6,L=5$, so $C$ has $13$ lines and $7$ colons.
-\end{rk}
+with
+\begin{align*}
+a_0 &= (-1,-1,1) & a_1 &= (-1,-1,-1) & a_2 &= (1,-1,-1)\\
+a_3 &= (-1,-3,-1) & a_4 &= (-3,-1,-1) & a_5 &= (-1,1,-1)
+\end{align*}
+\begin{align*}
+e_0 &= [a_1,a_2] & e_1 &= [a_2,a_0] & e_2 &= [a_0,a_1]\\
+e_3 &= [a_0,a_3] & e_4 &= [a_1,a_3] & e_5 &= [a_3,a_2]\\
+e_6 &= [a_4,a_5] & e_7 &= [a_0,a_5] & e_8 &= [a_0,a_4]\\
+e_9 &= [a_1,a_4] & e_{10} &= [a_5,a_1] & e_{11} &= [a_2,a_5]\\
+& & e_{12} &= [a_4,a_3] & &
+\end{align*}
+Then $M=13,N=1,K=6,J=6,L=5$, so $C$ has $13$ lines and $7$ colons and :
+\[
+c=\begin{pmatrix}
+0 & 0 & -1 & 1 & 0 & 0 & 0 \\
+ 0 & -1 & 0 & 1 & 0 & 0 & 0 \\
+ 1 & 1 & -1 & 0 & 0 & 0 & 0 \\
+ 0 & -1 & 0 & 0 & 1 & 0 & 0 \\
+ 0 & 0 & -1 & 0 & 1 & 0 & 0 \\
+ 0 & 0 & 0 & 1 & -1 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & -1 & 1 \\
+ 0 & -1 & 0 & 0 & 0 & 0 & 1 \\
+ 0 & -1 & 0 & 0 & 0 & 1 & 0 \\
+ 0 & 0 & -1 & 0 & 0 & 1 & 0 \\
+ 0 & 0 & -1 & 0 & 0 & 0 & 1 \\
+ 0 & 0 & 0 & -1 & 0 & 0 & 1 \\
+ 0 & 0 & 0 & 0 & 1 & -1 & 0 \\
+ \end{pmatrix}\]
+I then tried to get a function which belongs to $\ZZ_h$. For this I used a function $f_{Sh}$ of $\LLL_h$ and set it to be $\varphi_3 - 2\varphi_5$.
+I use also a function $\mbf{f}_{Vh}$ in $\NN_h$ and set it to $\mbf{\phi}_2$, which is the only degree of freedom which is not on the boundary.\\
+And I computed the function $\mbf{f}=\mbf{f}_{Vh}+\grad f_{Sh}$. This function belongs to $\ZZ_h\subset\NN_h$.\\
 
-If we take $\mbf{u}=4(\phi_0+\phi_4-\phi_5)=(2,1+x_3,1-x_2)$ which belongs to
-$\ZZ_h$ ($\curl\mbf{u}=(-2,0,0)$), then we
-also have $\mbf{u}=(\phi_0+\phi_1+\grad\varphi_1)$ and :
-\[ \begin{pmatrix}
-4\\0\\0\\0\\4\\-4
-\end{pmatrix} = \begin{pmatrix}
-1 & 0 & 0 & -1 & 0 & 0\\
-0 & 1 & 0 & 0 & -1 & 0\\
-0 & 0 & 1 & 0 & 0 & -1\\
-0 & 0 & 0 & -1 & 0 & 1\\
-0 & 0 & 0 & -1 & 1 & 0\\
-0 & 0 & 0 & 0 & -1 & 1\\
-\end{pmatrix} \begin{pmatrix}
-4\\4\\0\\0\\4\\0
-\end{pmatrix} \]
+Since the basis of $\ZZ_h$ is $\{\mbf{\phi}_2,\grad\varphi_0,\grad\varphi_1,\grad\varphi_2,\grad\varphi_3,\grad\varphi_4,\grad\varphi_5\}$, we have that 
+\begin{align*}
+\mbf{f} &= \mbf{\phi}_2 + \grad\varphi_3-2\grad\varphi_5\\
+&= \mbf{\phi_2} + \mbf{\phi_3} + \mbf{\phi_4} + \mbf{\phi_5} -2 \mbf{\phi_6} +2 \mbf{\phi_7} +2 \mbf{\phi_{10}} +2 \mbf{\phi_{11}} + \mbf{\phi_{12}}
+\end{align*}
+And
+\[
+\begin{pmatrix}
+0 & 0 & -1 & 1 & 0 & 0 & 0 \\
+ 0 & -1 & 0 & 1 & 0 & 0 & 0 \\
+ 1 & 1 & -1 & 0 & 0 & 0 & 0 \\
+ 0 & -1 & 0 & 0 & 1 & 0 & 0 \\
+ 0 & 0 & -1 & 0 & 1 & 0 & 0 \\
+ 0 & 0 & 0 & 1 & -1 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & -1 & 1 \\
+ 0 & -1 & 0 & 0 & 0 & 0 & 1 \\
+ 0 & -1 & 0 & 0 & 0 & 1 & 0 \\
+ 0 & 0 & -1 & 0 & 0 & 1 & 0 \\
+ 0 & 0 & -1 & 0 & 0 & 0 & 1 \\
+ 0 & 0 & 0 & -1 & 0 & 0 & 1 \\
+ 0 & 0 & 0 & 0 & 1 & -1 & 0 \\
+ \end{pmatrix}
+\begin{pmatrix}1\\0\\0\\0\\1\\0\\-2\end{pmatrix} =
+\begin{pmatrix}0\\0\\1\\1\\1\\-1\\-2\\-2\\0\\0\\-2\\-2\\1\end{pmatrix} \neq
+\begin{pmatrix}0\\0\\1\\1\\1\\1\\-2\\2\\0\\0\\2\\2\\1\end{pmatrix}
+\]
 
 \subsection{Implementation}
 \subsubsection{Details}

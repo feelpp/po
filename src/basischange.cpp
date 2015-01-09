@@ -410,6 +410,15 @@ EigenProblem<Dim, Order>::run()
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
+    // C->set(5,3,-1);
+    // C->set(5,4,1);
+    // C->set(7,1,1);
+    // C->set(7,6,-1);
+    // C->set(10,2,1);
+    // C->set(10,6,-1);
+    // C->set(11,3,1);
+    // C->set(11,6,-1);
+
     auto fSh  = Sh->element();
     fSh.set( 3, 1);
     fSh.set( 5, -2);
@@ -432,8 +441,8 @@ EigenProblem<Dim, Order>::run()
     auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
     auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
     std::cout << "erreur : " << erreur << "\t curl*n : " << curln << std::endl;
-    f.printMatlab("f.m");
-    alpha.printMatlab("alpha.m");
+    f.printMatlab("f");
+    alpha.printMatlab("alpha");
 
 #if 1
     // some test on C
