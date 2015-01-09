@@ -410,15 +410,7 @@ EigenProblem<Dim, Order>::run()
     matB->printMatlab("b.m");
     C->printMatlab("c.m");
 
-    // C->set(5,3,-1);
-    // C->set(5,4,1);
-    // C->set(7,1,1);
-    // C->set(7,6,-1);
-    // C->set(10,2,1);
-    // C->set(10,6,-1);
-    // C->set(11,3,1);
-    // C->set(11,6,-1);
-
+#if 0 //some test on C
     auto fSh  = Sh->element();
     fSh.set( 3, 1);
     fSh.set( 5, -2);
@@ -443,9 +435,9 @@ EigenProblem<Dim, Order>::run()
     std::cout << "erreur : " << erreur << "\t curl*n : " << curln << std::endl;
     f.printMatlab("f");
     alpha.printMatlab("alpha");
+#endif
 
-#if 1
-    // some test on C
+#if 0    // some test on C
 
     cInternal->printMatlab("cInt.m");
     cBoundary->printMatlab("cBound.m");
@@ -476,7 +468,10 @@ EigenProblem<Dim, Order>::run()
                   << "normInf of c : " << cNorm << std::endl;
     }
 #endif
-#if 0
+
+
+#if 1 // feature/operator
+
     auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
     auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
     backend()->PtAP( matA, C, Ahat );
@@ -492,18 +487,22 @@ EigenProblem<Dim, Order>::run()
 
     auto modes = eigs( _matrixA=Ahat, _matrixB=Bhat );
 
-    // auto e =  exporter( _mesh=mesh );
+    auto e =  exporter( _mesh=mesh );
 
     int i = 0;
     for( auto const& mode: modes ) {
         if ( Environment::isMasterRank() ) {
             std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
         }
-        // e->add( ( boost::format( "mode-%1%" ) % i ).str(), *mode.second.get<2>() );
+        auto tmpVec = backend()->newVector( Vh );
+        C->multVector( mode.second.get<2>(), tmpVec);
+        auto tmp = Vh->element();
+        tmp.add(*tmpVec);
+        e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
         i++;
     }
 
-    // e->save();
+    e->save();
 #endif
 }
 
