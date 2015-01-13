@@ -47,7 +47,6 @@ enum EdgeType {
 
 struct DofEdgeInfo
 {
-    size_type index;
     int8_type sign1;
     int8_type sign2;
 
@@ -62,7 +61,6 @@ std::ostream&
 operator<<( std::ostream& os, DofEdgeInfo const& dei  )
 {
     os << "-----------Dof-Edge-Info------------\n"
-       << "index       : " << dei.index << "\n"
        << "type        : " << dei.type << "\n"
        << "id vertex 1 : " << dei.dof_vertex_id1 << "\n"
        << "id vertex 2 : " << dei.dof_vertex_id2 << "\n";
@@ -212,120 +210,120 @@ EigenProblem<Dim, Order>::run()
 
     std::vector<bool> doneVh( Vh->nLocalDof(), false );
     std::vector<bool> doneSh( Sh->nLocalDof(), false );
-    DofEdgeInfo einfo_default {invalid_uint16_type_value,1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
+    DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
     std::vector<DofEdgeInfo> dof_edge_info( Vh->nLocalDof(), einfo_default );
-    std::vector<size_type> indexesToKeep;
+    std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
 
-    for( int i = 0; i < Vh->nDof(); ++i )
-    {
-        for( auto const& dof : Vh->dof()->globalDof( i ) )
+    auto dofbegin = Vh->dof()->globalDof().first;
+    auto dofend = Vh->dof()->globalDof().second;
+
+    for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
+        auto const& dof = *dofit;
+
+        auto index = dof.first.index();
+
+        if ( !doneVh[ index ] )
         {
-            // auto dofbegin = Vh->dof()->globalDof().first;
-            // auto dofend = Vh->dof()->globalDof().second;
+            // we retrieve the edge corresponding to the dof
+            auto elt = mesh->element(dof.second.elementId());
 
-            // for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
-            //     auto const& dof = *dofit;
+            auto const& edge = elt.edge(dof.second.localDof());
 
-            // std::cout << "first : " << dof.first.sign() << std::endl;
+            // if edge is oriented from 1 to 2 (globally) then the sign
+            // is -1 (the gradient associated with dof1 is oriented from
+            // 2 to 1)
+            auto perm = mesh->element(dof.second.elementId()).edgePermutation(dof.second.localDof());
+            dof_edge_info[index].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
+            dof_edge_info[index].sign2 = -dof_edge_info[index].sign1;
 
-            if ( !doneVh[ dof.first.index() ] )
+            // we retrieve the index of the dof of Sh
+            // corresponding to the vertex of the edge
+            auto i1 = elt.eToP(dof.second.localDof(), 0);
+            auto i2 = elt.eToP(dof.second.localDof(), 1);
+            auto const& pt1 = elt.point( i1 );
+            auto const& pt2 = elt.point( i2 );
+            size_type dofid1 = invalid_uint16_type_value;
+            size_type dofid2 = invalid_uint16_type_value;
+            for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
             {
-                // we retrieve the edge corresponding to the dof
-                auto const& edge = mesh->element(dof.second.elementId()).edge(dof.second.localDof());
-                auto perm = mesh->element(dof.second.elementId()).edgePermutation(dof.second.localDof());
-                dof_edge_info[dof.first.index()].index = dof.first.index();
-
-                auto const& pt1 = edge.point( 0 );
-                auto const& pt2 = edge.point( 1 );
-                size_type dofid1 = invalid_uint16_type_value;
-                size_type dofid2 = invalid_uint16_type_value;
-                // if edge is oriented from 1 to 2 (globally) then the sign
-                // is -1 (the gradient associated with dof1 is oriented from
-                // 2 to 1)
-                dof_edge_info[dof.first.index()].sign1 = (perm==edge_permutation_type::IDENTITY)?-1:1;
-                dof_edge_info[dof.first.index()].sign2 = -dof_edge_info[dof.first.index()].sign1;
-
-                // we retrieve the index of the dof of Sh
-                // corresponding to the vertex of the edge
-                for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
+                if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt1.id() )
                 {
-                    if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt1.id() )
-                    {
-                        dofid1 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
-                    }
-                    if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt2.id() )
-                    {
-                        dofid2 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
-                    }
+                    dofid1 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
                 }
-
-                if ( edge.isOnBoundary() )
+                if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt2.id() )
                 {
-                    // if the points are on the boundary,
-                    // we keep their indexes to extract the columns
-                    if( !doneSh[ dofid1 ] )
-                    {
-                        boundaryIndexesToKeep.push_back( Vh->nDof()+dofid1 );
-                        doneSh[ dofid1 ] = true;
-                    }
-                    if( !doneSh[ dofid2 ] )
-                    {
-                        boundaryIndexesToKeep.push_back( Vh->nDof()+dofid2 );
-                        doneSh[ dofid2 ] = true;
-                    }
-
-                    dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY;
-                    dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
-                    dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
+                    dofid2 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
                 }
-                if ( !edge.isOnBoundary() )
-                {
-                    // if the edge is not on the boundary, we keep its index
-                    // to extract the column
-                    indexesToKeep.push_back(dof.first.index());
-
-                    //both points touch the boundary
-                    if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
-                    {
-                        dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_3;
-                        dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
-                        dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
-                        CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
-                        CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
-                    }
-                    // one of the end points touch the boundary
-                    else if ( pt1.isOnBoundary()  )
-                    {
-                        dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_1;
-                        dof_edge_info[dof.first.index()].dof_vertex_id1 = dofid1;
-                        dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
-                        CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
-                    }
-                    else if ( pt2.isOnBoundary()  )
-                    {
-                        dof_edge_info[dof.first.index()].type = EDGE_BOUNDARY_VERTEX_2;
-                        dof_edge_info[dof.first.index()].dof_vertex_id1 = invalid_size_type_value;
-                        dof_edge_info[dof.first.index()].dof_vertex_id2 = dofid2;
-                        CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id1";
-                    }
-                    else {
-                        dof_edge_info[dof.first.index()].type = EDGE_INTERIOR;
-                        dof_edge_info[dof.first.index()].dof_vertex_id1 = invalid_size_type_value;
-                        dof_edge_info[dof.first.index()].dof_vertex_id2 = invalid_size_type_value;
-                    }
-                }
-                if ( Environment::worldComm().isMasterRank() ) {
-                    std::cout << "index : " << dof.first.index() << "\t sign : " << dof.first.sign() << "\t type: " << dof_edge_info[dof.first.index()].type
-                              << "\n\t x=[ " << pt1[0] << " , " << pt2[0] << " ]\n"
-                              << "\t y=[ " << pt1[1] << " , " << pt2[1] << " ]\n"
-                              << "\t z=[ " << pt1[2] << " , " << pt2[2] << " ]\n"
-                              << "\t [a_" << dofid1 << " , a_" << dofid2 << " ]"
-                              << std::endl;
-                }
-
-                doneVh[dof.first.index()] = true;
             }
+
+            if ( edge.isOnBoundary() )
+            {
+                // if the points are on the boundary,
+                // we keep their indexes to extract the columns
+                if( !doneSh[ dofid1 ] )
+                {
+                    boundaryIndexesToKeep.push_back( Vh->nDof()+dofid1 );
+                    doneSh[ dofid1 ] = true;
+                }
+                if( !doneSh[ dofid2 ] )
+                {
+                    boundaryIndexesToKeep.push_back( Vh->nDof()+dofid2 );
+                    doneSh[ dofid2 ] = true;
+                }
+
+                dof_edge_info[index].type = EDGE_BOUNDARY;
+                dof_edge_info[index].dof_vertex_id1 = dofid1;
+                dof_edge_info[index].dof_vertex_id2 = dofid2;
+            }
+            if ( !edge.isOnBoundary() )
+            {
+                // if the edge is not on the boundary, we keep its index
+                // to extract the column
+                interiorIndexesToKeep.push_back(index);
+
+                //both points touch the boundary
+                if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
+                {
+                    dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_3;
+                    dof_edge_info[index].dof_vertex_id1 = dofid1;
+                    dof_edge_info[index].dof_vertex_id2 = dofid2;
+                    CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
+                    CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
+                }
+                // the starting point touch the boundary
+                else if ( pt1.isOnBoundary()  )
+                {
+                    dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_1;
+                    dof_edge_info[index].dof_vertex_id1 = dofid1;
+                    dof_edge_info[index].dof_vertex_id2 = invalid_size_type_value;
+                    CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
+                }
+                // the ending point touch the boundary
+                else if ( pt2.isOnBoundary()  )
+                {
+                    dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_2;
+                    dof_edge_info[index].dof_vertex_id1 = invalid_size_type_value;
+                    dof_edge_info[index].dof_vertex_id2 = dofid2;
+                    CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id1";
+                }
+                // the edge doesn't touch the boundary
+                else {
+                    dof_edge_info[index].type = EDGE_INTERIOR;
+                    dof_edge_info[index].dof_vertex_id1 = invalid_size_type_value;
+                    dof_edge_info[index].dof_vertex_id2 = invalid_size_type_value;
+                }
+            }
+            if ( Environment::worldComm().isMasterRank() ) {
+                std::cout << "index : " << index << "\t perm : " << static_cast<int>(dof_edge_info[index].sign1) << "\t sign : " << dof.first.sign() << "\t type: " << dof_edge_info[index].type
+                          << "\n\t x=[ " << pt1[0] << " , " << pt2[0] << " ]\n"
+                          << "\t y=[ " << pt1[1] << " , " << pt2[1] << " ]\n"
+                          << "\t z=[ " << pt1[2] << " , " << pt2[2] << " ]\n"
+                          << "\t [a_" << dofid1 << " , a_" << dofid2 << " ]"
+                          << std::endl;
+            }
+
+            doneVh[index] = true;
         }
     }
 
@@ -410,6 +408,7 @@ EigenProblem<Dim, Order>::run()
 
     // we need to sort the indexes of the colons for Sh
     std::sort(boundaryIndexesToKeep.begin(), boundaryIndexesToKeep.end() );
+    std::vector<size_type> indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
                          boundaryIndexesToKeep.begin(),
                          boundaryIndexesToKeep.end() );
@@ -441,30 +440,55 @@ EigenProblem<Dim, Order>::run()
     C->printMatlab("c.m");
 
 #if 1    // some test on C
-    auto fSh  = Sh->element();
-    fSh.set( 3, 1);
-    fSh.set( 5, -2);
-    auto fVh = Vh->element();
-    fVh.set( 2, 1);
-    auto f = vf::project( _space=Vh, _range=elements(mesh),
-                          _expr= idv(fVh) + trans(gradv(fSh)) );
 
-    auto alphaPrime = backend()->newVector( indexesToKeep.size(), indexesToKeep.size() );
-    alphaPrime->set(0, 1);
-    alphaPrime->set(4, 1);
-    alphaPrime->set(6, -2);
+    for(int i = 0; i < (1 << interiorIndexesToKeep.size()); i++)
+    {
+    // auto pm = ioption("pm");
 
-    auto alphaVec = backend()->newVector( Vh );
-    C->multVector( alphaPrime, alphaVec);
-    auto alpha = Vh->element();
-    alpha.zero();
-    alpha.add(*alphaVec);
+        auto fSh  = Sh->element();
+        auto fVh = Vh->element();
 
-    auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
-    auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
-    std::cout << "erreur : " << erreur << "\t curl*n : " << curln << std::endl;
-    f.printMatlab("f");
-    alpha.printMatlab("alpha");
+        // alphaPrime is the representation of f in the basis of Zh
+        auto alphaPrime = backend()->newVector( indexesToKeep.size(), indexesToKeep.size() );
+
+        for( int j = 0; j < interiorIndexesToKeep.size(); j++)
+        {
+            if( i & (1 << j))
+            {
+                fVh.set(interiorIndexesToKeep[j], 1);
+                alphaPrime->set(j, 1);
+            }
+        }
+        for( int k = 0; k < (1 << boundaryIndexesToKeep.size()); k++)
+        {
+            for( int l = 0; l < boundaryIndexesToKeep.size(); l++)
+            {
+                if( k & (1 << l))
+                {
+                    fSh.set(boundaryIndexesToKeep[l] - Vh->nDof(), 1);
+                    alphaPrime->set(interiorIndexesToKeep.size() + l, 1);
+                }
+            }
+
+            // create f in Nh, which belongs to Zh
+            auto f = vf::project( _space=Vh, _range=elements(mesh),
+                                  _expr= idv(fVh) + trans(gradv(fSh)) );
+
+            // alpha is C * alphaPrime
+            auto alphaVec = backend()->newVector( Vh );
+            C->multVector( alphaPrime, alphaVec);
+            auto alpha = Vh->element();
+            alpha.zero();
+            alpha.add(*alphaVec);
+
+            auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
+            auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+            std::cout << "pm : " << k<<"/"<<i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
+        }
+    }
+        // f.printMatlab("f");
+        // alpha.printMatlab("alpha");
 #endif
 
 #if 0    // some test on C
@@ -561,4 +585,3 @@ main( int argc, char** argv )
     app.add( new EigenProblem<3,1>() );
     app.run();
 }
-
