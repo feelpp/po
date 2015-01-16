@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath,amsthm,amsfonts,amssymb}
 \usepackage{verbatim,listings}
+\usepackage{here,caption,subfig}
 \usepackage{color,geometry,fancyhdr,lastpage,fancyvrb}
 \usepackage[colorlinks=true,urlcolor=blue]{hyperref}
 \usepackage{bm}
@@ -63,3 +64,40 @@ includerangemarker=false}
 \lfoot{Romain Hild\\Christophe Prud'homme}
 \cfoot{\thepage/\pageref{LastPage}}
 \rfoot{Philippe Gilotte\\Benjamin Surowiec}
+
+
+% remove whitespaces before lstinputlisting
+\newlength{\rawgobble}
+\newlength{\gobble}
+\newlength{\gobblea}
+% The width of a single space. basicstyle from lstset should be used
+\sbox0{\Huge\ttfamily \ }
+% Remove a single space
+\settowidth{\rawgobble}{\Huge\ttfamily \ }
+\setlength{\rawgobble}{-\rawgobble}
+
+\makeatletter
+\def\sepstar#1*#2\relax{%
+    \def\sepstarone{#1}%
+    \def\sepstartwo{#2}%
+}
+\lst@Key{firstlineandnumber}\relax{\def\lst@firstline{#1\relax}\def\lst@firstnumber{#1\relax}}
+\lst@Key{widthgobble}{0*0}{%
+    % Reindent a bit by multiplying with 0.9, then multiply by tabsize and number of indentation levels
+    \sepstar #1\relax
+    \setlength{\gobble}{0.9\rawgobble}%
+    \setlength{\gobble}{\sepstarone\gobble}%
+    \setlength{\gobble}{\sepstartwo\gobble}%
+    \setlength{\gobblea}{\gobble}%
+    \addtolength{\gobblea}{10pt}%
+    \def\lst@xleftmargin{\gobble}%
+    \def\lst@framexleftmargin{\gobble}%
+    \def\lst@numbersep{\gobblea}%
+}
+\makeatother
+
+
+% italic quotation
+\newenvironment{italicquotes}
+{\begin{quotation}\itshape}
+{\end{quotation}}

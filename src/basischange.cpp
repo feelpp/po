@@ -85,11 +85,11 @@ class EigenProblem
     typedef Simget super;
 public:
     typedef double value_type;
-    // [Nh]
     typedef Mesh<Simplex<Dim> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef typename mesh_type::element_type::edge_permutation_type edge_permutation_type;
 
+    // [Nh]
     typedef bases<Nedelec<0,NedelecKind::NED1> > basis_type;
     typedef FunctionSpace<mesh_type, basis_type > space_type;
     // [Nh]
@@ -215,41 +215,49 @@ EigenProblem<Dim, Order>::run()
     std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
 
+    // [loop]
     auto dofbegin = Vh->dof()->globalDof().first;
     auto dofend = Vh->dof()->globalDof().second;
 
     for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
         auto const& dof = *dofit;
+        // [loop]
 
         auto index = dof.first.index();
 
         if ( !doneVh[ index ] )
         {
             // we retrieve the edge corresponding to the dof
-            auto const& elt = mesh->element(dof.second.elementId());
-
-            auto const& edge = elt.edge(dof.second.localDof());
 
             // if edge is oriented from 1 to 2 (globally) then the sign
             // is -1 (the gradient associated with dof1 is oriented from
             // 2 to 1)
-            auto perm = mesh->element(dof.second.elementId()).edgePermutation(dof.second.localDof());
+            // [perm]
+            auto const& elt = mesh->element(dof.second.elementId());
+            auto const& edge = elt.edge(dof.second.localDof());
+            auto perm = mesh->element(dof.second.elementId() ).edgePermutation( dof.second.localDof() );
             dof_edge_info[index].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
             dof_edge_info[index].sign2 = -dof_edge_info[index].sign1;
+            // [perm]
 
             // we retrieve the index of the dof of Sh
             // corresponding to the vertex of the edge
+            // [points]
             auto i1 = elt.eToP(dof.second.localDof(), 0);
             auto i2 = elt.eToP(dof.second.localDof(), 1);
             auto const& pt1 = elt.point( i1 );
             auto const& pt2 = elt.point( i2 );
+            // [points]
+
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
             {
+                // [dofLh]
                 if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt1.id() )
                 {
                     dofid1 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
+                    // [dofLh]
                 }
                 if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt2.id() )
                 {
@@ -511,12 +519,14 @@ EigenProblem<Dim, Order>::run()
 
     if( boption("eigs")) // feature/operator necessary
     {
+        // [ptap]
         auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
         auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
         backend()->PtAP( matA, C, Ahat );
         backend()->PtAP( matB, C, Bhat );
         Ahat->close();
         Bhat->close();
+        // [ptap]
 
         LOG(INFO) << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
         if ( Environment::worldComm().isMasterRank() )
@@ -550,12 +560,14 @@ EigenProblem<Dim, Order>::run()
             {
                 std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
             }
+            // [eigenvec]
             auto tmpVec = backend()->newVector( Vh );
             C->multVector( mode.second.get<2>(), tmpVec);
             element_type tmp = Vh->element();
             tmp.add(*tmpVec);
             // element_type tmp = *tmpVec;
             tmp.close();
+            // [eigenvec]
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
             i++;
         }

@@ -399,48 +399,37 @@ Then $M=13,N=1,K=6,J=6,L=5$, so $C$ has $13$ lines and $7$ colons and :
 \[
 c=\begin{pmatrix}
 0 & 0 & -1 & 1 & 0 & 0 & 0 \\
- 0 & -1 & 0 & 1 & 0 & 0 & 0 \\
- 1 & 1 & -1 & 0 & 0 & 0 & 0 \\
+ 0 & 1 & 0 & -1 & 0 & 0 & 0 \\
+ 1 & -1 & 1 & 0 & 0 & 0 & 0 \\
  0 & -1 & 0 & 0 & 1 & 0 & 0 \\
  0 & 0 & -1 & 0 & 1 & 0 & 0 \\
- 0 & 0 & 0 & 1 & -1 & 0 & 0 \\
+ 0 & 0 & 0 & -1 & 1 & 0 & 0 \\
  0 & 0 & 0 & 0 & 0 & -1 & 1 \\
- 0 & -1 & 0 & 0 & 0 & 0 & 1 \\
+ 0 & 1 & 0 & 0 & 0 & 0 & -1 \\
  0 & -1 & 0 & 0 & 0 & 1 & 0 \\
- 0 & 0 & -1 & 0 & 0 & 1 & 0 \\
- 0 & 0 & -1 & 0 & 0 & 0 & 1 \\
- 0 & 0 & 0 & -1 & 0 & 0 & 1 \\
+ 0 & 0 & 1 & 0 & 0 & -1 & 0 \\
+ 0 & 0 & 1 & 0 & 0 & 0 & -1 \\
+ 0 & 0 & 0 & 1 & 0 & 0 & -1 \\
  0 & 0 & 0 & 0 & 1 & -1 & 0 \\
- \end{pmatrix}\]
-I then tried to get a function which belongs to $\ZZ_h$. For this I used a function $f_{Sh}$ of $\LLL_h$ and set it to be $\varphi_3 - 2\varphi_5$.
+\end{pmatrix}\]
+
+To test this matrix, I created a function which belongs to $\ZZ_h$. For this I used a function $f_{Sh}$ of $\LLL_h$ and set it to be $\varphi_3 - 2\varphi_5$.
 I use also a function $\mbf{f}_{Vh}$ in $\NN_h$ and set it to $\mbf{\phi}_2$, which is the only degree of freedom which is not on the boundary.\\
 And I computed the function $\mbf{f}=\mbf{f}_{Vh}+\grad f_{Sh}$. This function belongs to $\ZZ_h\subset\NN_h$.\\
-
+\begin{rk}\label{createZh}
+  Here is a method to obtain a function in $\ZZ_h$. You use a function in $\LLL_h$ which uses only the basis functions on the boundary, another function in $\NN_h$ which uses only the basis functions in the interior of the domain, and you add the latter and the gradient of the former.\\
+  The resultant function belongs to $\ZZ_h$.
+\end{rk}
 Since the basis of $\ZZ_h$ is $\{\mbf{\phi}_2,\grad\varphi_0,\grad\varphi_1,\grad\varphi_2,\grad\varphi_3,\grad\varphi_4,\grad\varphi_5\}$, we have that 
 \begin{align*}
-\mbf{f} &= \mbf{\phi}_2 + \grad\varphi_3-2\grad\varphi_5\\
-&= \mbf{\phi_2} + \mbf{\phi_3} + \mbf{\phi_4} + \mbf{\phi_5} -2 \mbf{\phi_6} +2 \mbf{\phi_7} +2 \mbf{\phi_{10}} +2 \mbf{\phi_{11}} + \mbf{\phi_{12}}
+  &&\mbf{f} &= \mbf{\phi}_2 + \grad\varphi_3-2\grad\varphi_5 = (1,0,0,0,1,0,-2) = \alpha\\
+  \mbox{but also} &&&\\
+  && \mbf{f} &= \mbf{\phi_2} + \mbf{\phi_3} + \mbf{\phi_4} + \mbf{\phi_5} -2 \mbf{\phi_6} +2 \mbf{\phi_7} +2 \mbf{\phi_{10}} +2 \mbf{\phi_{11}} + \mbf{\phi_{12}}\\
+  &&&= (0,0,1,1,1,1,-2,2,0,0,2,2,1)
 \end{align*}
-And
+And we have 
 \[
-\begin{pmatrix}
-0 & 0 & -1 & 1 & 0 & 0 & 0 \\
- 0 & -1 & 0 & 1 & 0 & 0 & 0 \\
- 1 & 1 & -1 & 0 & 0 & 0 & 0 \\
- 0 & -1 & 0 & 0 & 1 & 0 & 0 \\
- 0 & 0 & -1 & 0 & 1 & 0 & 0 \\
- 0 & 0 & 0 & 1 & -1 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & -1 & 1 \\
- 0 & -1 & 0 & 0 & 0 & 0 & 1 \\
- 0 & -1 & 0 & 0 & 0 & 1 & 0 \\
- 0 & 0 & -1 & 0 & 0 & 1 & 0 \\
- 0 & 0 & -1 & 0 & 0 & 0 & 1 \\
- 0 & 0 & 0 & -1 & 0 & 0 & 1 \\
- 0 & 0 & 0 & 0 & 1 & -1 & 0 \\
- \end{pmatrix}
-\begin{pmatrix}1\\0\\0\\0\\1\\0\\-2\end{pmatrix} =
-\begin{pmatrix}0\\0\\1\\1\\1\\-1\\-2\\-2\\0\\0\\-2\\-2\\1\end{pmatrix} \neq
-\begin{pmatrix}0\\0\\1\\1\\1\\1\\-2\\2\\0\\0\\2\\2\\1\end{pmatrix}
+c\ \alpha = \mbf{f}
 \]
 
 \subsection{Implementation}
@@ -448,156 +437,245 @@ And
 
 For the implementation of this problem, we need several steps :
 \begin{itemize}
-\item create the space $\NN_h$, we can do it using :
-\lstinputlisting[linerange={Nh,Nh2}]{../../src/basischange.cpp}
-\item instead of already creating the space $\LLL_h^\Gamma$, we use for now $\LLL_h$ :
-\lstinputlisting[linerange=P1ch]{../../src/basischange.cpp}
-\item create the matrix $A$ and $B$ :
-\lstinputlisting[linerange=forms]{../../src/basischange.cpp}
-The figure \ref{spyA} shows the sparsity pattern of $A$ : 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.75]{spyA}
-\caption{Sparsity pattern of $A$}
-\label{spyA}
-\end{figure}
-\item we can now use the function spaces previously defined to retrieve the
+\item
+  create the space $\NN_h$, we can do it using :
+  \lstinputlisting[widthgobble=1*2,linerange={Nh,Nh2}]{../../src/basischange.cpp}
+\item
+  instead of already creating the space $\LLL_h^\Gamma$, we use for now $\LLL_h$ in order to use the same mesh between the two spaces :
+  \lstinputlisting[widthgobble=1*2,linerange=P1ch]{../../src/basischange.cpp}
+\item
+  create the matrix $A$ and $B$ :
+  \lstinputlisting[widthgobble=1*2,linerange=forms]{../../src/basischange.cpp}
+  The figure \ref{spyA} shows the sparsity pattern of $A$ : 
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.65]{spyA}
+    \caption{Sparsity pattern of $A$}
+    \label{spyA}
+  \end{figure}
+\item
+  we can now use the function spaces previously defined to retrieve the
   informations on the dofs, if they are on the boundary or if they touch it.\\
-We first loop over all the degrees of freedom of $\NN_h$,
-\begin{itemize}
-\item for all these dofs, we retrieve the edge associated, the sign of this
-  edge, and the two vertices,
-\item we now search for the dofs of $\LLL_h$ associated with these vertices,
-\item if the edge is on the boundary,
-\begin{itemize}
-\item we set its type,
-\item keep the two dofs of $\LLL_h$ corresponding to the vertices in memory,
-\item  and keep the index of these dofs for later,
-\end{itemize}
-\item if the edge is not on the boundary,
-\begin{itemize}
-\item we keep the index of the dof for later,
-\item and if the two vertices are on the boundary, we set its type such that we
-  know that it is {\bf not} on the boundary but it touches it with the two
-  vertices, and we also keep the two dofs of $\LLL_h$,
-\item if only one vertex is on the boundary, we set its type accordingly, and
-  keep the dof concerned,
-\item if the edge doesn't touch the boundary, we set its type to remember that.
-\end{itemize}
-\end{itemize}
-\item we now create two matrices. One of size $M\times M$ for the dofs of $\NN_h$ and one of size $M\times K$ for the dofs of $\LLL_h$.
-\lstinputlisting[linerange=cIntBound]{../../src/basischange.cpp}
-\item using the informations retrieved on the dofs, we can now fill these two
+  \begin{itemize}
+  \item
+    We first loop over all the degrees of freedom of $\NN_h$,
+    \lstinputlisting[widthgobble=1*2,linerange=loop]{../../src/basischange.cpp}
+  \item
+    for all these dofs, we retrieve the edge associated and the permutation applied on this edge for the given element, if the permutation is the identity, the sign for the start of the edge is $-1$, else it is $+1$. The sign for the ending point of the edge is the opposite.
+    \lstinputlisting[widthgobble=3*2,linerange=perm]{../../src/basischange.cpp}
+  \item
+    we now search for the dofs of $\LLL_h$ associated with these vertices. For this, we need to find the starting and ending points of the edge, relatively to the elements.\\
+    This was the point where we were wrong before.
+    \lstinputlisting[widthgobble=3*2,linerange=points]{../../src/basischange.cpp}
+    Once we have the find the points, we need to find the corresponding dofs in $\LLL_h$
+    \lstinputlisting[widthgobble=4*2,linerange=dofLh]{../../src/basischange.cpp}
+  \item
+    if the edge is on the boundary,
+    \begin{itemize}
+    \item
+      we set its type,
+    \item
+      keep the two dofs of $\LLL_h$ corresponding to the vertices in memory,
+    \item
+      and keep the index of these dofs for later,
+    \end{itemize}
+  \item
+    if the edge is not on the boundary,
+    \begin{itemize}
+    \item
+      we keep the index of the dof for later,
+    \item
+      and if the two vertices are on the boundary, we set its type such that we
+      know that it is {\bf not} on the boundary but it touches it with the two
+      vertices, and we also keep the two dofs of $\LLL_h$,
+    \item
+      if only one vertex is on the boundary, we set its type accordingly, and
+      keep the dof concerned,
+    \item
+      if the edge doesn't touch the boundary, we set its type to remember that.
+    \end{itemize}
+  \end{itemize}
+\item
+  we now create two matrices. One of size $M\times M$ for the dofs of $\NN_h$ and one of size $M\times K$ for the dofs of $\LLL_h$.
+  \lstinputlisting[linerange=cIntBound]{../../src/basischange.cpp}
+\item
+  using the informations retrieved on the dofs, we can now fill these two
   matrices :\\
-For each line of the two matrices,
-\begin{itemize}
-\item we set the first matrix to be the identity,
-\item if the edge touch the boundary with two vertices, we set the columns of
-  the second matrix using the indexes of the two dofs corresponding to the
-  vertices of the edge,
-\item if the edge touch the boundary with only one vertices, we set only the
-  corresponding column,
-\item if the edge doesn't touch the boundary, these line stays empty. 
-\end{itemize}
-\lstinputlisting[linerange=fill]{../../src/basischange.cpp}
-\item we now assemble the two matrices in one matrix $\tilde{C}$ of size $M\times (M+K)$
-\lstinputlisting[linerange=ctilde]{../../src/basischange.cpp}
-The figure \ref{spyCTilde} shows the sparsity pattern of $\tilde{C}$ : 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.75]{spyCTilde}
-\caption{Sparsity pattern of $\tilde{C}$}
-\label{spyCTilde}
-\end{figure}
-\item when we retrieved the informations on the dofs, we keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
-\lstinputlisting[linerange=submatrix]{../../src/basischange.cpp}
-The figure \ref{spyC} shows the sparsity pattern of $\tilde{C}$ : 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.75]{spyC}
-\caption{Sparsity pattern of $C$}
-\label{spyC}
-\end{figure}
-\item finally, create $\widehat{A}$ and $\widehat{B}$. These step presents a
-  problem, computing these matrix by multiplying them is inefficient. We should
-  use the inverse of $C$ but following the remark \ref{squareC} we know that this is not a square matrix.\\
-For the moment, we'll try to export the matrices to matlab.
-The figure \ref{spyAA} shows the sparsity pattern of $\widehat{A}$ : 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.75]{spyAA}
-\caption{Sparsity pattern of $\widehat{A}$}
-\label{spyAA}
-\end{figure}
+  For each line of the two matrices,
+  \begin{itemize}
+  \item
+    we set the first matrix to be the identity,
+  \item
+    if the edge touch the boundary with two vertices, we set the columns of
+    the second matrix using the indexes of the two dofs corresponding to the
+    vertices of the edge,
+  \item
+    if the edge touch the boundary with only one vertices, the start or the end of the edge, we set only the
+    corresponding column,
+  \item
+    if the edge doesn't touch the boundary, these line stays empty. 
+  \end{itemize}
+  \lstinputlisting[linerange=fill]{../../src/basischange.cpp}
+\item
+  we now assemble the two matrices in one matrix $\tilde{C}$ of size $M\times (M+K)$
+  \lstinputlisting[widthgobble=1*2,linerange=ctilde]{../../src/basischange.cpp}
+  The figure \ref{spyCTilde} shows the sparsity pattern of $\tilde{C}$ : 
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.65]{spyCTilde}
+    \caption{Sparsity pattern of $\tilde{C}$}
+    \label{spyCTilde}
+  \end{figure}
+\item
+  when we retrieved the informations on the dofs, we keep the indexes of the dofs of $\NN_h$ which {\bf are not} on the boundary and the indexes of the dofs of $\LLL_h$ which {\bf are} on the boundary. We only keep the columns of the matrix corresponding to these indexes.
+  \lstinputlisting[widthgobble=1*2,linerange=submatrix]{../../src/basischange.cpp}
+  The figure \ref{spyC} shows the sparsity pattern of $\tilde{C}$ : 
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.65]{spyC}
+    \caption{Sparsity pattern of $C$}
+    \label{spyC}
+  \end{figure}
+\item
+  finally, create $\widehat{A}$ and $\widehat{B}$. We use for this the operator \texttt{PtAP} :
+  \lstinputlisting[widthgobble=2*2,linerange=ptap]{../../src/basischange.cpp}
+  The figure \ref{spyAA} shows the sparsity pattern of $\widehat{A}$ : 
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.65]{spyAA}
+    \caption{Sparsity pattern of $\widehat{A}$}
+    \label{spyAA}
+  \end{figure}
+\item
+  We can now resolve the generalized eigen problem with $\widehat{A}$ and $\widehat{B}$.
+\item
+  Finally, to retrieve the original eigen functions, we need to multiply the eigen functions by $C$.
+  \lstinputlisting[widthgobble=2*2,linerange=eigenvec]{../../src/basischange.cpp}
 \end{itemize}
 
-\subsubsection{Results}
+\subsubsection{Timing}
 
 The figure \ref{timeC} shows the time take to accomplish the steps for creating the matrix $C$. \texttt{indexes} corresponds to the steps for retrieving the informations on the dofs and the indexes to keep in the matrix. \texttt{fill} corresponds to the steps of creating the two matrices, fill them and assembling them. \texttt{submatrix} corresponds to sorting the vector of indexes, and removing the columns to have $C$. These tests have been conducted on the cylinder.\\
 
 \begin{figure}[H]
-\centering
-\includegraphics[scale=0.7]{createC}
-\caption{Time to compute C}
-\label{timeC}
+  \centering
+  \includegraphics[scale=0.7]{createC}
+  \caption{Time to compute C}
+  \label{timeC}
 \end{figure}
 
 We could think that the time increase really fast but the figure \ref{completeTime} shows the percentage of the total time take for the steps. \texttt{mesh} corresponds to the loading of the mesh, \texttt{space} create $\NN_h$ and $\LLL_h$, and \texttt{forms} create the matrix $A$ and $B$.\\
 We see that in fact the percentage of time is constant for each steps.
 
 \begin{figure}[H]
-\centering
-\includegraphics[scale=0.7]{completeChBase}
-\caption{Time to compute the changement of basis}
-\label{completeTime}
+  \centering
+  \includegraphics[scale=0.7]{completeChBase}
+  \caption{Time to compute the changement of basis}
+  \label{completeTime}
 \end{figure}
 
 For an idea, we have the following number of dofs depending on the size of the mesh for the cylinder :
 \begin{center}
-\begin{tabular}{ c | c | c | c }
-$h$ & \#dof($\NN_h$) & \#dof($\LLL_h$) & \#columns of $C$ \\ \hline
-0.1 & 23\,943 & 3\,908 & 19\,867 \\ \hline
-0.08 & 48\,016 & 7\,593 & 41\,322 \\ \hline
-0.06 & 107\,447 & 16\,414 & 95\,669 \\ \hline
-0.04 & 333\,704 & 49\,202 & 308\,086 \\ \hline
-0.02 & 2\,598\,692 & 367\,288 & 2\,497\,232 \\ \hline
-\end{tabular}
+  \begin{tabular}{ c | c | c | c }
+    $h$ & \#dof($\NN_h$) & \#dof($\LLL_h$) & \#columns of $C$ \\ \hline
+    0.1 & 23\,943 & 3\,908 & 19\,867 \\ \hline
+    0.08 & 48\,016 & 7\,593 & 41\,322 \\ \hline
+    0.06 & 107\,447 & 16\,414 & 95\,669 \\ \hline
+    0.04 & 333\,704 & 49\,202 & 308\,086 \\ \hline
+    0.02 & 2\,598\,692 & 367\,288 & 2\,497\,232 \\ \hline
+  \end{tabular}
 \end{center}
 
-In \texttt{matlab}, the function \texttt{eigs} works but take too long to be
-used with that much dofs. The following shows the results for different number
-of dof.
+\subsubsection{Results}
 
-\[
-\begin{array}{cccc}
-0.125  & 0.11   & 0.1    & 0.075 \\ \hline
-0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
-0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
-0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
-0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
-0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
-0.0000 & 0.0000 & 0.0000 & 0.0000\\ 
-6.2652 & 0.0000 & 0.0000 & 0.0000\\ 
-6.6159 & 0.0000 & 0.0000 & 0.0000\\ 
-6.6832 & 0.0000 & 0.0000 & 0.0000\\ 
-7.1481 & 0.0000 & 0.0000 & 0.0000\\ 
-10.2784 & 0.0000 & 0.0000 & 0.0000\\ 
-10.6218 & 0.0000 & 0.0000 & 7.0877\\ 
-10.9753 & 0.0000 & 1.8521 & 7.1051\\ 
-11.4466 & 6.9669 & 6.7911 & 7.1485\\ 
-11.7956 & 7.0183 & 6.9923 & 13.6927\\ 
-12.4540 & 7.0634 & 7.0546 & 13.7943\\ 
-12.6401 & 7.1816 & 9.5931 & 13.8640\\ 
-13.7313 & 12.9154 & 12.6579 & 13.9942\\ 
-14.0901 & 13.3071 & 13.2775 & 14.0917\\ 
-14.4985 & 13.5665 & 13.4353 & 18.6648\\ 
-15.0133 & 13.7048 & 13.7843 & 18.9614\\ 
-15.8525 & 13.7958 & 14.3350 & 19.1036\\ 
-16.3595 & 16.0128 & 16.1637 & 19.1963\\ 
-16.7025 & 17.4616 & 16.7012 & 21.6165\\ 
-17.6974 & 17.5464 & 17.6577 & 21.8776\\ 
-\end{array}
-\]
+I have ran some tests in \texttt{matlab} with the function \texttt{eigs}. For now, in \texttt{Feel++}, I can't achieved the same results, but since I use the same matrices, it is only a question of which solver and which options to use. I'll update the results as soon as I have found the right settings.\\
+
+\paragraph{Sphere}
+
+In the sphere, we know that the first eigen value of the problem \ref{pbstart} is approximately $4.493409$. Since we resolved the problem \ref{pbweak}, our eigen value is squared and with multiplicity 6. So we compute $\widehat{\lambda}_h=(\sum_{i=1}^6\lambda_{i,h})/6$.\\
+The table \ref{sphResults} represents the results :
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|ccc|c}
+    $\#\NN_h$ & time & $\widehat{\lambda}_h$ & $\lambda$ & $|\widehat{\lambda}_h-\lambda|$ & erc \\
+    \hline
+    20769 & 2000 & 4.4940 & 4.493409 & 0.000594 & $-$ \\
+    44929 & 5000 & 4.4938 & 4.493409 & 0.000359 & 1.6499 \\
+    97812 & 34000 & 4.4937 & 4.493409 & 0.000297 & 0.7261
+  \end{tabular}
+  \caption{Results in the sphere depending on the number of elements of $\NN_h$}
+  \label{sphResults}
+\end{table}
+
+The last column is the experimental rate of convergence defined in \cite{Venegas2013} :
+\[ erc=-3\frac{\log(|\widehat{\lambda}_h-\lambda|/|\widehat{\lambda}_{h'}-\lambda|)}{\log(\#\NN_h/\#\NN_{h'})} \]
+We see that our error is lesser than in their article, but the rate of convergence is better for them than for us.\\
+
+Those are of course prelimenary results and need to be precised with a number of elements way greater. To achieved this, we may need to run in parallel, but we need to review our code in details to be sure it ok.\\
+
+\paragraph{Rectangular Box}
+
+In the rectangular box, the multiplicity is 2 and we know 3 eigen values : $7.4319, 7.7763, 8.0909$.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|ccc|c|c}
+    & $\#\NN_h=9343$ & $\#\NN_h=9343$ & $\#\NN_h=9343$ & $\lambda$ & erc \\
+    \hline
+    time & 330 & 2300 & 7000 & $-$ & $-$ \\
+    $\widehat{\lambda}_{h,1}$ & 7.4215 & 7.4266 & 7.4282 & 7.4319 & 1.5601 \\
+    $\widehat{\lambda}_{h,2}$ & 7.7614 & 7.7702 & 7.7725 & 7.7763 & 2.0522 \\
+    $\widehat{\lambda}_{h,3}$ & 8.0732 & 8.0825 & 8.0848 & 8.0909 & 1.5961
+  \end{tabular}
+  \caption{Results in the rectangular box depending on the number of elements of $\NN_h$}
+  \label{RBResults}
+\end{table}
+We can notice in \ref{RBResults} that the time of computation for the greater number of elements is way smaller than in the sphere. I need to check this with a larger set of element's size.
+
+\paragraph{Back in \texttt{Feel++}}
+
+I created a function to reload the eigen functins from \texttt{Matlab} in \texttt{Feel++}. Using it, I have been able to see the functions in \texttt{Paraview}. The figure \ref{modes} presents the first six modes.
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 1]{\includegraphics[scale=0.27]{mode1}}\ 
+		\subfloat[mode 2]{\includegraphics[scale=0.27]{mode2}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 3]{\includegraphics[scale=0.27]{mode3}}\ 
+		\subfloat[mode 4]{\includegraphics[scale=0.27]{mode4}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 5]{\includegraphics[scale=0.27]{mode5}}\ 
+		\subfloat[mode 6]{\includegraphics[scale=0.27]{mode6}}
+	}
+	\caption{Modes propres}
+	\label{modes}
+\end{figure}
+
+To understand the link between those functions and the eigen functions of the curl operator, I'll quote the article \cite{Venegas2013} :
+\begin{italicquotes}
+  According to the theoretical results, the invariant subspace spanned by the six eigenfunctions of Problem \ref{pbdiscr} corresponding to $\lambda_{h,1},\dots,\lambda_{h,6}$ yields an approximation of the eigenspace of $\lambda^2$ in Problem \ref{pbweak}. However, the latter is the direct sum of two three-dimensional eigenspaces of Problem \ref{pbstart}, those corresponding to $\lambda$ and $-\lambda$. Therefore, the eigenfunctions of Problem \ref{pbdiscr} are not in general eigenfunctions of Problem \ref{pbstart} (and hence Beltrami fields), but a linear combination of eigenfunctions corresponding to both eigenvalues, $\lambda$ and $-\lambda$.
+\end{italicquotes}
+
+And indeed, we do not have that $\curl\mbf{u}_i-\lambda_i\mbf{u}_i = 0$.\\
+For the first eigenvalue, we have the following results, for a mesh with 7164 elements :
+\begin{align*}
+  \div\mbf{u} &= 1.07054e-15\\
+  \mbf{u}\cdot\mbf{n} &= 0.00598972\\
+  \curl\mbf{u}\cdot\mbf{n} &= 3.62421e-17\\
+  \curl\mbf{u}-\lambda\mbf{u} &= 0.189511
+\end{align*}
+
+We can see that the divergence and the normal component of the curl are zero, but the normal component of the function is not exactly zero, but again, this is with $h=0.15$ and only 7164 elements.\\
+The important thing is that the eigenspaces are equivalents.\\
+To test that, I could create some functions $\mbf{u}_h$ in $\ZZ_h$ (following \ref{createZh}) and compute the error
+\[ \left(\sum_{i=1}^M (\mbf{u}_h,\mbf{e}_i)\mbf{e}_i\right) - \mbf{u}_h \]
+It should tend to 0 as $M$ grows.
+
+Of course, I need also to get back the same results with \texttt{Feel++} than with \texttt{Matlab}. And then, I will be able to test the code in parallel.
+
+
+
+
 
 %%% Local Variables:
 %%% TeX-master: "../peps.tex"
