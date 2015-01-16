@@ -86,23 +86,17 @@ class EigenProblem
 public:
     typedef double value_type;
     // [Nh]
-    typedef Mesh<Simplex<Dim>> mesh_type;
+    typedef Mesh<Simplex<Dim> > mesh_type;
+    typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef typename mesh_type::element_type::edge_permutation_type edge_permutation_type;
 
     typedef bases<Nedelec<0,NedelecKind::NED1> > basis_type;
     typedef FunctionSpace<mesh_type, basis_type > space_type;
     // [Nh]
-    // typedef typename meta::Ned1h<mesh_type,1>::type space_type;
-    // typedef typename meta::Ned1h<mesh_type,1>::ptrtype space_ptrtype;
+    typedef typename space_type::element_type element_type;
 
-    typedef Mesh<Simplex<Dim-1,1,Dim>> boundary_mesh_type;
-    typedef typename meta::Pch<boundary_mesh_type,1>::type scalar_space_type;
-    typedef typename meta::Pch<boundary_mesh_type,1>::ptrtype scalar_space_ptrtype;
-
-    //typedef bases<Nedelec<0,NedelecKind::NED1>, Lagrange<1, Scalar> > mixed_basis_type;
-    // // mesh_type || boundary_mesh_type
-    //typedef FunctionSpace<mesh_type, basis_type > space_type;
-    //typedef boost::shared_ptr<space_type> space_ptrtype;
+    typedef VectorPetsc<double> vector_type;
+    typedef boost::shared_ptr<vector_type> vector_ptrtype;
 
     void run();
 private:
@@ -131,8 +125,12 @@ EigenProblem<Dim, Order>::run()
     boost::mpi::timer t;
     boost::mpi::timer total;
 
-    auto mesh = loadMesh(_mesh = new mesh_type );
-    // auto mesh = unitSphere();
+    mesh_ptrtype mesh;
+    if( boption("useSphere") )
+        mesh = unitSphere();
+    else
+        mesh = loadMesh(_mesh = new mesh_type );
+
     if ( Environment::isMasterRank() ){
         std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
         std::cout << " number of faces : " << mesh->numGlobalFaces() << std::endl;
@@ -180,7 +178,6 @@ EigenProblem<Dim, Order>::run()
         std::cout << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
     t.restart();
 
-
     auto u = Vh->element();
     auto v = Vh->element();
 
@@ -188,11 +185,14 @@ EigenProblem<Dim, Order>::run()
     auto a = form2( _test=Vh, _trial=Vh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(u))*curl(v));
     auto matA = a.matrixPtr();
+    matA->close();
 
     auto b = form2( _test=Vh, _trial=Vh);
     b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
     auto matB = b.matrixPtr();
+    matB->close();
     // [forms]
+
 
     LOG(INFO) << "[timer] form = " << t.elapsed() << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
@@ -226,7 +226,7 @@ EigenProblem<Dim, Order>::run()
         if ( !doneVh[ index ] )
         {
             // we retrieve the edge corresponding to the dof
-            auto elt = mesh->element(dof.second.elementId());
+            auto const& elt = mesh->element(dof.second.elementId());
 
             auto const& edge = elt.edge(dof.second.localDof());
 
@@ -314,14 +314,6 @@ EigenProblem<Dim, Order>::run()
                     dof_edge_info[index].dof_vertex_id2 = invalid_size_type_value;
                 }
             }
-            if ( Environment::worldComm().isMasterRank() ) {
-                std::cout << "index : " << index << "\t perm : " << static_cast<int>(dof_edge_info[index].sign1) << "\t sign : " << dof.first.sign() << "\t type: " << dof_edge_info[index].type
-                          << "\n\t x=[ " << pt1[0] << " , " << pt2[0] << " ]\n"
-                          << "\t y=[ " << pt1[1] << " , " << pt2[1] << " ]\n"
-                          << "\t z=[ " << pt1[2] << " , " << pt2[2] << " ]\n"
-                          << "\t [a_" << dofid1 << " , a_" << dofid2 << " ]"
-                          << std::endl;
-            }
 
             doneVh[index] = true;
         }
@@ -331,8 +323,6 @@ EigenProblem<Dim, Order>::run()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "[timer] indexes = " << t.elapsed() << " sec" << std::endl;
     t.restart();
-
-    // std::cout << indexesToKeep;
 
 
     // now we fill C
@@ -420,14 +410,7 @@ EigenProblem<Dim, Order>::run()
                                   Vh->nDof(), indexesToKeep.size() );
     cTilde->createSubmatrix( *C, rows, indexesToKeep);
     // [submatrix]
-
-    LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
-    LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() ) {
-        std::cout << "[timer] submatrix = " << t.elapsed() << " sec"
-                  << std::endl;
-        std::cout << "[timer] total = " << total.elapsed() << " sec" << std::endl;
-    }
+    C->close();
 
     LOG(INFO) << "[info] Csize = " << C->size1() << " x " << C->size2()
               << std::endl;
@@ -435,11 +418,12 @@ EigenProblem<Dim, Order>::run()
         std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
     }
 
-    matA->printMatlab("a.m");
-    matB->printMatlab("b.m");
-    C->printMatlab("c.m");
+    LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
 
-#if 1    // some test on C
+#if 0    // some test on C
 
     for(int i = 0; i < (1 << interiorIndexesToKeep.size()); i++)
     {
@@ -523,44 +507,141 @@ EigenProblem<Dim, Order>::run()
     }
 #endif
 
-
-#if 0 // feature/operator
-
-    auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-    auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-    backend()->PtAP( matA, C, Ahat );
-    backend()->PtAP( matB, C, Bhat );
-
-    Ahat->printMatlab("Ahat.m");
-    Bhat->printMatlab("Bhat.m");
-
-    if ( Environment::worldComm().isMasterRank() )
-    {
-        std::cout << "nev = " << ioption(_name="solvereigen.nev")
-                  << "ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
-    }
-
-    auto modes = eigs( _matrixA=Ahat, _matrixB=Bhat );
-
     auto e =  exporter( _mesh=mesh );
 
-    int i = 0;
-    for( auto const& mode: modes )
+    if( boption("eigs")) // feature/operator necessary
     {
-        if ( Environment::isMasterRank() )
+        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+        backend()->PtAP( matA, C, Ahat );
+        backend()->PtAP( matB, C, Bhat );
+        Ahat->close();
+        Bhat->close();
+
+        LOG(INFO) << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
+        t.restart();
+
+        if ( Environment::worldComm().isMasterRank() )
         {
-            std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
+            std::cout << "nev = " << ioption(_name="solvereigen.nev")
+                      << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
         }
-        auto tmpVec = backend()->newVector( Vh );
-        C->multVector( mode.second.get<2>(), tmpVec);
-        auto tmp = Vh->element();
-        tmp.add(*tmpVec);
-        e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
-        i++;
+
+        auto modes = eigs( _matrixA=Ahat,
+                           _matrixB=Bhat,
+                           _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
+                           _problem=(EigenProblemType)EigenMap[soption("solvereigen.problem")],
+                           _transform=(SpectralTransformType)EigenMap[soption("solvereigen.transform")],
+                           _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")]
+                           );
+
+
+        LOG(INFO) << "[timer] eigs = " << t.elapsed() << " sec" << std::endl;
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "[timer] eigs = " << t.elapsed() << " sec" << std::endl;
+        t.restart();
+
+        int i = 0;
+        for( auto const& mode: modes )
+        {
+            if ( Environment::isMasterRank() )
+            {
+                std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
+            }
+            auto tmpVec = backend()->newVector( Vh );
+            C->multVector( mode.second.get<2>(), tmpVec);
+            element_type tmp = Vh->element();
+            tmp.add(*tmpVec);
+            // element_type tmp = *tmpVec;
+            tmp.close();
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
+            i++;
+        }
+
+    }
+
+    if( boption("load") )
+    {
+        std::fstream s;
+        s.open("lambda", std::fstream::in);
+        std::vector<double> lambda(6,0);
+        if( !s.is_open() ){
+            std::cout << "Eigen values not found" << std::endl;
+            exit(0);
+        }
+        for( int i = 0; i < 6; i++)
+            s >> lambda[i];
+        s.close();
+
+        for( int i = 1; i < 7; i++)
+        {
+            s.open ( (boost::format( "vec_%1%" ) % i ).str(), std::fstream::in);
+            if( !s.is_open() )
+            {
+                std::cout << "Eigen vectors not found" << std::endl;
+                exit(0);
+            }
+
+            vector_ptrtype v = vector_ptrtype( new vector_type( indexesToKeep.size() ) );
+            double val;
+            for( int j = 0; j < indexesToKeep.size() && s.good(); j++ )
+            {
+                s >> val;
+                v->set(j, val);
+            }
+            s.close();
+
+            auto tmpVec = backend()->newVector( Vh );
+            C->multVector( v, tmpVec);
+            element_type tmp = Vh->element();
+            tmp.add(*tmpVec);
+            tmp.close();
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
+
+            auto di = normL2( elements(mesh), divv(tmp));
+            auto nor = normL2( boundaryfaces(mesh), trans(idv(tmp))*N() );
+            auto curln = normL2( boundaryfaces(mesh), trans(curlv(tmp))*N() );
+            auto err = normL2( elements(mesh), curlv(tmp)-std::sqrt(lambda[i-1])*idv(tmp) );
+            auto err2 = normL2( elements(mesh), curlv(tmp)+std::sqrt(lambda[i-1])*idv(tmp) );
+
+            auto tmpCurl = vf::project( _space=Vh, _range=elements(mesh),
+                                        _expr=curlv(tmp) );
+            auto curl2n = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
+            auto errC2 = normL2( elements(mesh), curlv(tmpCurl)-lambda[i-1]*idv(tmp) );
+
+            std::cout << "mode " << i << std::endl
+                      << "\t\t |div| = " << di << std::endl
+                      << "\t\t |normale| = " << nor << std::endl
+                      << "\t\t |curl*n| = " << curln << std::endl
+                      << "\t\t |erreur+| = " << err << std::endl
+                      << "\t\t |erreur-| = " << err2 << std::endl
+                      << "\t\t |curl2*n| = " << curl2n << std::endl
+                      << "\t\t |err2| = " << errC2 << std::endl;
+        }
+
+    }
+
+    LOG(INFO) << "[timer] export = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] export = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
+    if( boption("isPrinting") )
+    {
+            matA->printMatlab("a.m");
+            matB->printMatlab("b.m");
+            C->printMatlab("c.m");
+            // Ahat->printMatlab("Ahat.m");
+            // Bhat->printMatlab("Bhat.m");
     }
 
     e->save();
-#endif
+
+    LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
+    std::cout << "[timer] total = " << total.elapsed() << " sec" << std::endl;
+
 }
 
 
@@ -571,6 +652,10 @@ main( int argc, char** argv )
 
     po::options_description basischangeoptions( "basischange options" );
     basischangeoptions.add_options()
+        ("isPrinting", po::value<bool>()->default_value( false ), "print matrices")
+        ("useSphere", po::value<bool>()->default_value( true ), "use sphere or other geo")
+        ("eigs", po::value<bool>()->default_value( true ), "compute the eigen problem")
+        ("load", po::value<bool>()->default_value( true ), "load eigen vectors and values")
         ("pm", po::value<int>()->default_value( 1 ), "plus or minus one" );
 
     Environment env( _argc=argc, _argv=argv,
