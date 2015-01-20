@@ -2,6 +2,7 @@
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelvf/vf.hpp>
 #include <feel/feeldiscr/pch.hpp>
+#include <feel/feeldiscr/pchv.hpp>
 #include <feel/feelfilters/exporter.hpp>
 
 using namespace Feel;
@@ -53,14 +54,14 @@ int main(int argc, char** argv)
     auto V = Xh->element();
 
     V = vf::project( _range=elements(mesh), _space=Xh,
-    		 _expr=vec(idv(u)*sin(idv(v))*cos(idv(w)),
-    			   idv(u)*sin(idv(v))*sin(idv(w)),
-    			   idv(u)*cos(idv(v)) ) );
+                     _expr=vec(idv(u)*sin(idv(v))*cos(idv(w)),
+                               idv(u)*sin(idv(v))*sin(idv(w)),
+                               idv(u)*cos(idv(v)) ) );
 
     auto n = normL2( _range=boundaryfaces(mesh), _expr=inner(idv(V),N()) );
     auto err = normL2( _range=elements(mesh), _expr=l*idv(V)-curlv(V) );
     if ( Environment::isMasterRank() )
-	std::cout << "normal : " << n << "\nerr : " << err << std::endl;
+        std::cout << "normal : " << n << "\nerr : " << err << std::endl;
 
     auto e = exporter( mesh );
     e->add( "u", u );
