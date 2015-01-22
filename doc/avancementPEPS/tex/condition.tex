@@ -601,7 +601,8 @@ The table \ref{sphResults} represents the results :
     \hline
     20769 & 2000 & 4.4940 & 4.493409 & 0.000594 & $-$ \\
     44929 & 5000 & 4.4938 & 4.493409 & 0.000359 & 1.6499 \\
-    97812 & 34000 & 4.4937 & 4.493409 & 0.000297 & 0.7261
+    97812 & 34000 & 4.4937 & 4.493409 & 0.000297 & 1.1861 \\
+    163559 & 60000 & 4.4936 & 4.493409 & 0.000181 & 1.6112
   \end{tabular}
   \caption{Results in the sphere depending on the number of elements of $\NN_h$}
   \label{sphResults}
@@ -618,13 +619,14 @@ Those are of course prelimenary results and need to be precised with a number of
 In the rectangular box, the multiplicity is 2 and we know 3 eigen values : $7.4319, 7.7763, 8.0909$.
 \begin{table}[H]
   \centering
-  \begin{tabular}{c|ccc|c|c}
-    & $\#\NN_h=9343$ & $\#\NN_h=9343$ & $\#\NN_h=9343$ & $\lambda$ & erc \\
+  \begin{tabular}{c|cccc|c|c}
+    $\#\NN_h$ & 9343 & 35880 & 69501 & 166841 & $\lambda$ & erc \\
     \hline
-    time & 330 & 2300 & 7000 & $-$ & $-$ \\
-    $\widehat{\lambda}_{h,1}$ & 7.4215 & 7.4266 & 7.4282 & 7.4319 & 1.5601 \\
-    $\widehat{\lambda}_{h,2}$ & 7.7614 & 7.7702 & 7.7725 & 7.7763 & 2.0522 \\
-    $\widehat{\lambda}_{h,3}$ & 8.0732 & 8.0825 & 8.0848 & 8.0909 & 1.5961
+    time & 330 & 2300 & 7000 & 30544 & $-$ & $-$ \\
+    \hline
+    $\widehat{\lambda}_{h,1}$ & 7.4215 & 7.4266 & 7.4282 & 7.4298 & 7.4319 & 1.6545 \\
+    $\widehat{\lambda}_{h,2}$ & 7.7614 & 7.7702 & 7.7725 & 7.7744 & 7.7763 & 2.1019 \\
+    $\widehat{\lambda}_{h,3}$ & 8.0732 & 8.0825 & 8.0848 & 8.0869 & 8.0909 & 1.5158
   \end{tabular}
   \caption{Results in the rectangular box depending on the number of elements of $\NN_h$}
   \label{RBResults}
