@@ -27,11 +27,10 @@
 #include <feel/feelfilters/unitsphere.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
-#include <feel/feelvf/vf.hpp>
-#include <feel/feelalg/solvereigen.hpp>
-#include <feel/feelfilters/exporter.hpp>
+// #include <feel/feelvf/vf.hpp>
+// #include <feel/feelalg/solvereigen.hpp>
+// #include <feel/feelfilters/exporter.hpp>
 #include <boost/mpi/timer.hpp>
-#include <time.h>
 
 /** use Feel namespace */
 using namespace Feel;
@@ -73,6 +72,26 @@ operator<<( std::ostream& os, std::vector<size_type> const& vec  )
 {
     for( auto v : vec )
         os << v << " ";
+    os << std::endl;
+    return os;
+}
+
+inline
+std::ostream&
+operator<<( std::ostream& os, std::set<size_type> const& se  )
+{
+    for( auto s : se )
+        os << s << " ";
+    os << std::endl;
+    return os;
+}
+
+inline
+std::ostream&
+operator<<( std::ostream& os, std::vector<std::vector<size_type> > const& vec  )
+{
+    for( auto v : vec )
+        os << "[ " << v << "]\n";
     os << std::endl;
     return os;
 }
@@ -177,7 +196,7 @@ EigenProblem<Dim, Order>::run()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
     t.restart();
-
+#if 1
     auto u = Vh->element();
     auto v = Vh->element();
 
@@ -196,9 +215,10 @@ EigenProblem<Dim, Order>::run()
 
     LOG(INFO) << "[timer] form = " << t.elapsed() << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
+        std::cout << "mat A size = " << matA->size1() << "x" << matA->size2() << std::endl;
+        //std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
     t.restart();
-
+#endif
 
     //  now we need to compute C, the change of basis to handle the
     //  decomposition of the field u as a hcurl function + gradient of a H1
@@ -215,53 +235,43 @@ EigenProblem<Dim, Order>::run()
     std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
 
-    // [loop]
-    auto dofbegin = Vh->dof()->globalDof().first;
-    auto dofend = Vh->dof()->globalDof().second;
+    auto dofbegin = Vh->dof()->localDof().first;
+    auto dofend = Vh->dof()->localDof().second;
 
-    for( auto dofit = dofbegin; dofit != dofend; ++dofit ) {
+    for( auto dofit = dofbegin; dofit != dofend; ++dofit )
+    {
         auto const& dof = *dofit;
-        // [loop]
 
-        auto index = dof.first.index();
-
+        auto index = dof.second.index();
         if ( !doneVh[ index ] )
         {
-            // we retrieve the edge corresponding to the dof
+            auto const& eltLocalId = dof.first.elementId();
+            auto const& elt = mesh->element(eltLocalId);
+            auto const& edgeLocalId = dof.first.localDof();
+            auto const& edge = elt.edge(edgeLocalId);
+            auto perm = elt.edgePermutation( edgeLocalId );
 
-            // if edge is oriented from 1 to 2 (globally) then the sign
-            // is -1 (the gradient associated with dof1 is oriented from
-            // 2 to 1)
-            // [perm]
-            auto const& elt = mesh->element(dof.second.elementId());
-            auto const& edge = elt.edge(dof.second.localDof());
-            auto perm = mesh->element(dof.second.elementId() ).edgePermutation( dof.second.localDof() );
             dof_edge_info[index].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
             dof_edge_info[index].sign2 = -dof_edge_info[index].sign1;
-            // [perm]
 
-            // we retrieve the index of the dof of Sh
-            // corresponding to the vertex of the edge
-            // [points]
-            auto i1 = elt.eToP(dof.second.localDof(), 0);
-            auto i2 = elt.eToP(dof.second.localDof(), 1);
+            auto i1 = elt.eToP(edgeLocalId, 0);
+            auto i2 = elt.eToP(edgeLocalId, 1);
             auto const& pt1 = elt.point( i1 );
             auto const& pt2 = elt.point( i2 );
-            // [points]
 
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
             {
                 // [dofLh]
-                if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt1.id() )
+                if ( mesh->element( eltLocalId ).point( i ).id() == pt1.id() )
                 {
-                    dofid1 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
+                    dofid1 = Sh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
                     // [dofLh]
                 }
-                if ( mesh->element( dof.second.elementId() ).point( i ).id() == pt2.id() )
+                if ( mesh->element( eltLocalId ).point( i ).id() == pt2.id() )
                 {
-                    dofid2 = Sh->dof()->localToGlobal( dof.second.elementId(), i, 0 ).index();
+                    dofid2 = Sh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
                 }
             }
 
@@ -271,12 +281,12 @@ EigenProblem<Dim, Order>::run()
                 // we keep their indexes to extract the columns
                 if( !doneSh[ dofid1 ] )
                 {
-                    boundaryIndexesToKeep.push_back( Vh->nDof()+dofid1 );
+                    boundaryIndexesToKeep.push_back( Vh->nLocalDof()+dofid1 );
                     doneSh[ dofid1 ] = true;
                 }
                 if( !doneSh[ dofid2 ] )
                 {
-                    boundaryIndexesToKeep.push_back( Vh->nDof()+dofid2 );
+                    boundaryIndexesToKeep.push_back( Vh->nLocalDof()+dofid2 );
                     doneSh[ dofid2 ] = true;
                 }
 
@@ -323,28 +333,48 @@ EigenProblem<Dim, Order>::run()
                 }
             }
 
-            doneVh[index] = true;
+            if(Environment::worldComm().globalRank() == 0 )
+            {
+                std::cout << "[" << Environment::worldComm().globalRank() << "]\t" << index << std::endl
+                          << "\t elt  : " << eltLocalId << std::endl
+                          << "\t edge : " << edgeLocalId << std::endl
+                          << "\t perm : " << (int)dof_edge_info[index].sign1 << std::endl
+                          << "\t type : " << dof_edge_info[index].type << std::endl
+                          << "\t id1  : " << dof_edge_info[index].dof_vertex_id1 << std::endl
+                          << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl;
+            }
+
+            Environment::worldComm().barrier();
+
+            if(Environment::worldComm().globalRank() == 1 )
+            {
+                std::cout << "[" << Environment::worldComm().globalRank() << "]\t" << index << std::endl
+                          << "\t elt  : " << eltLocalId << std::endl
+                          << "\t edge : " << edgeLocalId << std::endl
+                          << "\t perm : " << (int)dof_edge_info[index].sign1 << std::endl
+                          << "\t type : " << dof_edge_info[index].type << std::endl
+                          << "\t id1  : " << dof_edge_info[index].dof_vertex_id1 << std::endl
+                          << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl;
+            }
+
+            doneVh[ index ] = true;
         }
     }
 
-    LOG(INFO) << "[timer] indexes = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] indexes = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
-
-
-    // now we fill C
-
-    // [cIntBound]
-    // cInternal correspond to the matrix of all the dofs of Vh
     auto cInternal = backend()->newMatrix(_test=Vh,_trial=Vh);
     // cBoundary correspond to the matrix of all the dofs of Sh
     auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
     // [cIntBound]
 
+    if ( Environment::worldComm().isMasterRank() )
+    {
+        std::cout << "cInternal size = " << cInternal->size1() << "x" << cInternal->size2() << std::endl;
+        std::cout << "cBoundary size = " << cBoundary->size1() << "x" << cBoundary->size2() << std::endl;
+    }
+
     // [fill]
     // works only with 1 proc !!
-    for( int i = 0; i < Vh->nDof(); ++i )
+    for( int i = 0; i < Vh->nLocalDof(); ++i )
     {
         // the matrix cInternal is the identity
         // we'll remove the colons later
@@ -382,75 +412,61 @@ EigenProblem<Dim, Order>::run()
     cInternal->close();
     cBoundary->close();
 
+    cInternal->printMatlab("cInt.m");
+    cBoundary->printMatlab("cBou.m");
 
-    // we first create a matrix with all the dof of Vh and Sh
-    // [ctilde]
     BlocksBaseSparseMatrix<double> cBlock(1,2);
     cBlock(0,0) = cInternal;
     cBlock(0,1) = cBoundary;
     auto cTilde = backend()->newBlockMatrix(_block=cBlock, _copy_values=true);
     cTilde->close();
-    // [ctilde]
 
-    LOG(INFO) << "[timer] fill = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] fill = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
-
-
-    // then extract the submatrix of the matrix Ctilde
-
-    // we keep all the rows of this matrix
-    std::vector<size_type> rows( Vh->nDof() );
+    std::vector<size_type> rows( Vh->nLocalDof() );
     std::iota( rows.begin(), rows.end(), 0 );
 
-    // we need to sort the indexes of the colons for Sh
     std::sort(boundaryIndexesToKeep.begin(), boundaryIndexesToKeep.end() );
     std::vector<size_type> indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
                          boundaryIndexesToKeep.begin(),
                          boundaryIndexesToKeep.end() );
 
-    // we keep only the dofs corresponding to the edges not on the boundary
-    // and the points on the boundary
-    // [submatrix]
+    std::vector<std::vector<size_type> > gathered2dIndexesToKeep;
+    mpi::all_gather(Environment::worldComm().globalComm(),
+                    indexesToKeep,
+                    gathered2dIndexesToKeep);
+
+    std::cout << "gathered : " << gathered2dIndexesToKeep << std::endl;
+
+    std::vector<size_type> gatheredIndexesToKeep = gathered2dIndexesToKeep[0];
+    for( int i = 1; i < Environment::numberOfProcessors(); i++)
+        gatheredIndexesToKeep.insert(gatheredIndexesToKeep.end(),
+                                     gathered2dIndexesToKeep[i].begin(),
+                                     gathered2dIndexesToKeep[i].end() );
+
+    std::set<size_type> globalIndexesToKeep( gatheredIndexesToKeep.begin(), gatheredIndexesToKeep.end() );
+
+    std::cout << "global : " << globalIndexesToKeep << std::endl;
+
+#if 0
     auto C = backend()->newMatrix(Vh->nDof(), indexesToKeep.size(),
-                                  Vh->nDof(), indexesToKeep.size() );
+                                  Vh->nLocalDof(), indexesToKeep.size() );
     cTilde->createSubmatrix( *C, rows, indexesToKeep);
-    // [submatrix]
     C->close();
 
-    LOG(INFO) << "[info] Csize = " << C->size1() << " x " << C->size2()
-              << std::endl;
-    if ( Environment::worldComm().isMasterRank() ) {
-        std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
-    }
+    std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
+    C->printMatlab("c.m");
 
-    LOG(INFO) << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] submatrix = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
 
     auto e =  exporter( _mesh=mesh );
 
-    if( boption("eigs")) // feature/operator necessary
+    if( boption("eigs"))
     {
-        // [ptap]
-        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-        // remove call to PtAP for Travis
-#if 0
+        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size() );
+        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size() );
         backend()->PtAP( matA, C, Ahat );
         backend()->PtAP( matB, C, Bhat );
-#endif
         Ahat->close();
         Bhat->close();
-        // [ptap]
-
-        LOG(INFO) << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
 
         if ( Environment::worldComm().isMasterRank() )
         {
@@ -467,11 +483,6 @@ EigenProblem<Dim, Order>::run()
                            );
 
 
-        LOG(INFO) << "[timer] eigs = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] eigs = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
-
         int i = 0;
         for( auto const& mode: modes )
         {
@@ -479,100 +490,20 @@ EigenProblem<Dim, Order>::run()
             {
                 std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
             }
-            // [eigenvec]
             auto tmpVec = backend()->newVector( Vh );
             C->multVector( mode.second.get<2>(), tmpVec);
             element_type tmp = Vh->element();
             tmp.add(*tmpVec);
             // element_type tmp = *tmpVec;
             tmp.close();
-            // [eigenvec]
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
             i++;
         }
 
     }
 
-    if( boption("load") )
-    {
-        std::fstream s;
-        s.open("lambda", std::fstream::in);
-        std::vector<double> lambda(6,0);
-        if( !s.is_open() ){
-            std::cout << "Eigen values not found" << std::endl;
-            exit(0);
-        }
-        for( int i = 0; i < 6; i++)
-            s >> lambda[i];
-        s.close();
-
-        for( int i = 1; i < 7; i++)
-        {
-            s.open ( (boost::format( "vec_%1%" ) % i ).str(), std::fstream::in);
-            if( !s.is_open() )
-            {
-                std::cout << "Eigen vectors not found" << std::endl;
-                exit(0);
-            }
-
-            vector_ptrtype v = vector_ptrtype( new vector_type( indexesToKeep.size() ) );
-            double val;
-            for( int j = 0; j < indexesToKeep.size() && s.good(); j++ )
-            {
-                s >> val;
-                v->set(j, val);
-            }
-            s.close();
-
-            auto tmpVec = backend()->newVector( Vh );
-            C->multVector( v, tmpVec);
-            element_type tmp = Vh->element();
-            tmp.add(*tmpVec);
-            tmp.close();
-            e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
-
-            auto di = normL2( elements(mesh), divv(tmp));
-            auto nor = normL2( boundaryfaces(mesh), trans(idv(tmp))*N() );
-            auto curln = normL2( boundaryfaces(mesh), trans(curlv(tmp))*N() );
-            auto err = normL2( elements(mesh), curlv(tmp)-std::sqrt(lambda[i-1])*idv(tmp) );
-            auto err2 = normL2( elements(mesh), curlv(tmp)+std::sqrt(lambda[i-1])*idv(tmp) );
-
-            auto tmpCurl = vf::project( _space=Vh, _range=elements(mesh),
-                                        _expr=curlv(tmp) );
-            auto curl2n = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
-            auto errC2 = normL2( elements(mesh), curlv(tmpCurl)-lambda[i-1]*idv(tmp) );
-
-            std::cout << "mode " << i << std::endl
-                      << "\t\t |div| = " << di << std::endl
-                      << "\t\t |normale| = " << nor << std::endl
-                      << "\t\t |curl*n| = " << curln << std::endl
-                      << "\t\t |erreur+| = " << err << std::endl
-                      << "\t\t |erreur-| = " << err2 << std::endl
-                      << "\t\t |curl2*n| = " << curl2n << std::endl
-                      << "\t\t |err2| = " << errC2 << std::endl;
-        }
-
-    }
-
-    LOG(INFO) << "[timer] export = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] export = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
-
-    if( boption("isPrinting") )
-    {
-            matA->printMatlab("a.m");
-            matB->printMatlab("b.m");
-            C->printMatlab("c.m");
-            // Ahat->printMatlab("Ahat.m");
-            // Bhat->printMatlab("Bhat.m");
-    }
-
     e->save();
-
-    LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
-    std::cout << "[timer] total = " << total.elapsed() << " sec" << std::endl;
-
+#endif
 }
 
 
