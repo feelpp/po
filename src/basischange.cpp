@@ -196,7 +196,7 @@ EigenProblem<Dim, Order>::run()
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
     t.restart();
-#if 1
+#if 0
     auto u = Vh->element();
     auto v = Vh->element();
 
@@ -215,25 +215,18 @@ EigenProblem<Dim, Order>::run()
 
     LOG(INFO) << "[timer] form = " << t.elapsed() << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
-        std::cout << "mat A size = " << matA->size1() << "x" << matA->size2() << std::endl;
-        //std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
+        std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
     t.restart();
 #endif
-
-    //  now we need to compute C, the change of basis to handle the
-    //  decomposition of the field u as a hcurl function + gradient of a H1
-    //  scalar field
-
-    // now we need to compute the set of dof indices of Xh that are
-    // involved in the decomposition: we need to remove the set of dof which are
-    // on the boundary (edges on the boundary)
 
     std::vector<bool> doneVh( Vh->nLocalDof(), false );
     std::vector<bool> doneSh( Sh->nLocalDof(), false );
     DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
     std::vector<DofEdgeInfo> dof_edge_info( Vh->nLocalDof(), einfo_default );
     std::vector<size_type> interiorIndexesToKeep;
+    std::vector<size_type> interiorIndexesToKeepGlobal;
     std::vector<size_type> boundaryIndexesToKeep;
+    std::vector<size_type> boundaryIndexesToKeepGlobal;
 
     auto dofbegin = Vh->dof()->localDof().first;
     auto dofend = Vh->dof()->localDof().second;
@@ -261,17 +254,21 @@ EigenProblem<Dim, Order>::run()
 
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
+            size_type dofid1Global = invalid_uint16_type_value;
+            size_type dofid2Global = invalid_uint16_type_value;
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
             {
                 // [dofLh]
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt1.id() )
                 {
                     dofid1 = Sh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
+                    dofid1Global = Sh->dof()->localToGlobalOnCluster(eltLocalId, i).index();
                     // [dofLh]
                 }
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt2.id() )
                 {
                     dofid2 = Sh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
+                    dofid2Global = Sh->dof()->localToGlobalOnCluster(eltLocalId, i).index();
                 }
             }
 
@@ -282,11 +279,13 @@ EigenProblem<Dim, Order>::run()
                 if( !doneSh[ dofid1 ] )
                 {
                     boundaryIndexesToKeep.push_back( Vh->nLocalDof()+dofid1 );
+                    boundaryIndexesToKeepGlobal.push_back( Vh->nDof()+dofid1Global );
                     doneSh[ dofid1 ] = true;
                 }
                 if( !doneSh[ dofid2 ] )
                 {
                     boundaryIndexesToKeep.push_back( Vh->nLocalDof()+dofid2 );
+                    boundaryIndexesToKeepGlobal.push_back( Vh->nDof()+dofid2Global );
                     doneSh[ dofid2 ] = true;
                 }
 
@@ -299,6 +298,7 @@ EigenProblem<Dim, Order>::run()
                 // if the edge is not on the boundary, we keep its index
                 // to extract the column
                 interiorIndexesToKeep.push_back(index);
+                interiorIndexesToKeepGlobal.push_back( Vh->dof()->localToGlobalOnCluster(eltLocalId,edgeLocalId).index() );
 
                 //both points touch the boundary
                 if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
@@ -323,7 +323,7 @@ EigenProblem<Dim, Order>::run()
                     dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_2;
                     dof_edge_info[index].dof_vertex_id1 = invalid_size_type_value;
                     dof_edge_info[index].dof_vertex_id2 = dofid2;
-                    CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id1";
+                    CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // the edge doesn't touch the boundary
                 else {
@@ -362,9 +362,7 @@ EigenProblem<Dim, Order>::run()
     }
 
     auto cInternal = backend()->newMatrix(_test=Vh,_trial=Vh);
-    // cBoundary correspond to the matrix of all the dofs of Sh
     auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
-    // [cIntBound]
 
     if ( Environment::worldComm().isMasterRank() )
     {
@@ -372,16 +370,10 @@ EigenProblem<Dim, Order>::run()
         std::cout << "cBoundary size = " << cBoundary->size1() << "x" << cBoundary->size2() << std::endl;
     }
 
-    // [fill]
-    // works only with 1 proc !!
     for( int i = 0; i < Vh->nLocalDof(); ++i )
     {
-        // the matrix cInternal is the identity
-        // we'll remove the colons later
         cInternal->set(i,i,1);
 
-        // the matrix cBoundary has +1 or -1 on the edges' vertex
-        // which are on the boundary
         auto const& dei = dof_edge_info[i];
         switch( dei.type )
         {
@@ -406,9 +398,7 @@ EigenProblem<Dim, Order>::run()
             break;
         }
     }
-    // [fill]
 
-    // we close the matrices so we can work on them
     cInternal->close();
     cBoundary->close();
 
@@ -424,45 +414,69 @@ EigenProblem<Dim, Order>::run()
     std::vector<size_type> rows( Vh->nLocalDof() );
     std::iota( rows.begin(), rows.end(), 0 );
 
+    // proc level
     std::sort(boundaryIndexesToKeep.begin(), boundaryIndexesToKeep.end() );
     std::vector<size_type> indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
                          boundaryIndexesToKeep.begin(),
                          boundaryIndexesToKeep.end() );
 
+#if 0    // cluster level
+    std::sort(interiorIndexesToKeepGlobal.begin(), interiorIndexesToKeepGlobal.end() );
+    std::sort(boundaryIndexesToKeepGlobal.begin(), boundaryIndexesToKeepGlobal.end() );
+    std::vector<size_type> indexesToKeepGlobal = interiorIndexesToKeepGlobal;
+    indexesToKeepGlobal.insert(indexesToKeepGlobal.end(),
+                               boundaryIndexesToKeepGlobal.begin(),
+                               boundaryIndexesToKeepGlobal.end() );
+
+    // gather all cluster indexes to keep in 2D vector
     std::vector<std::vector<size_type> > gathered2dIndexesToKeep;
     mpi::all_gather(Environment::worldComm().globalComm(),
-                    indexesToKeep,
+                    indexesToKeepGlobal,
                     gathered2dIndexesToKeep);
 
-    std::cout << "gathered : " << gathered2dIndexesToKeep << std::endl;
-
+    // get a 1D vector of all cluster indexes to keep
     std::vector<size_type> gatheredIndexesToKeep = gathered2dIndexesToKeep[0];
     for( int i = 1; i < Environment::numberOfProcessors(); i++)
         gatheredIndexesToKeep.insert(gatheredIndexesToKeep.end(),
                                      gathered2dIndexesToKeep[i].begin(),
                                      gathered2dIndexesToKeep[i].end() );
 
+    // get a set of unique cluster indexes to keep
     std::set<size_type> globalIndexesToKeep( gatheredIndexesToKeep.begin(), gatheredIndexesToKeep.end() );
 
     std::cout << "global : " << globalIndexesToKeep << std::endl;
 
-#if 0
-    auto C = backend()->newMatrix(Vh->nDof(), indexesToKeep.size(),
-                                  Vh->nLocalDof(), indexesToKeep.size() );
+    auto C = backend()->newMatrix(Vh->nDof(), globalIndexesToKeep.size(),
+                                  Vh->nLocalDof(), indexesToKeep.size() ); // add graph = graphcsr(mapVh,mapCol)
+    if( C->mapRowPtr() == NULL )
+        std::cout << "c mapRow not initialized\n";
+    else
+        std::cout << "c mapRow initialized\n";
     cTilde->createSubmatrix( *C, rows, indexesToKeep);
+#else
+    bool checkAndFixRange = boption("checkAndFixRange");
+    auto C = cTilde->createSubMatrix(rows, indexesToKeep, false, checkAndFixRange);
+#endif
+
+    if( C->mapRowPtr() == NULL )
+        std::cout << "c mapRow not initialized after submatrix\n";
+    else
+        std::cout << "c mapRow initialized after submatrix\n";
     C->close();
 
-    std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
+    //std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
     C->printMatlab("c.m");
 
-
+#if 0
     auto e =  exporter( _mesh=mesh );
 
     if( boption("eigs"))
     {
-        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size() );
-        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size(), indexesToKeep.size() );
+        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),    // global
+                                         indexesToKeep.size(), indexesToKeep.size() );  // local
+        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),    // global
+                                         indexesToKeep.size(), indexesToKeep.size() );  // local
         backend()->PtAP( matA, C, Ahat );
         backend()->PtAP( matB, C, Bhat );
         Ahat->close();
@@ -518,7 +532,7 @@ main( int argc, char** argv )
         ("useSphere", po::value<bool>()->default_value( true ), "use sphere or other geo")
         ("eigs", po::value<bool>()->default_value( true ), "compute the eigen problem")
         ("load", po::value<bool>()->default_value( true ), "load eigen vectors and values")
-        ("pm", po::value<int>()->default_value( 1 ), "plus or minus one" );
+        ("checkAndFixRange", po::value<bool>()->default_value( true ), "check and fix range for createSubMatrix" );
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=basischangeoptions,
