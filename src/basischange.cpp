@@ -108,11 +108,13 @@ public:
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef typename mesh_type::element_type::edge_permutation_type edge_permutation_type;
 
-    // [Nh]
-    typedef bases<Nedelec<0,NedelecKind::NED1> > basis_type;
-    typedef FunctionSpace<mesh_type, basis_type > space_type;
-    // [Nh]
-    typedef typename space_type::element_type element_type;
+    typedef Nedelec<0, NedelecKind::NED1> basis_edge_type;
+    typedef Lagrange<1,Scalar> basis_vertex_type;
+    typedef bases<basis_edge_type, basis_vertex_type> basis_type;
+    typedef FunctionSpace<mesh_type, basis_type> space_type;
+
+    typedef FunctionSpace<mesh_type, bases<basis_edge_type> > space_edge_type;
+    typedef typename space_edge_type::element_type element_edge_type;
 
     typedef VectorPetsc<double> vector_type;
     typedef boost::shared_ptr<vector_type> vector_ptrtype;
@@ -141,9 +143,6 @@ EigenProblem<Dim, Order>::run()
         std::cout << "[timer] h = " << doption("gmsh.hsize") << std::endl;
 
 
-    boost::mpi::timer t;
-    boost::mpi::timer total;
-
     mesh_ptrtype mesh;
     if( boption("useSphere") )
         mesh = unitSphere();
@@ -159,84 +158,51 @@ EigenProblem<Dim, Order>::run()
         std::cout << " number of local vertices : " << mesh->numLocalVertices() << std::endl;
     }
 
-    LOG(INFO) << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
+    auto Xh = space_type::New( mesh );
+    auto Nh = Xh->template functionSpace<0>();
+    auto Lh = Xh->template functionSpace<1>();
 
-    // [Nh2]
-    auto Vh = space_type::New( mesh );
-    // [Nh2]
-    // [P1ch]
-    auto Sh = Pch<1>( mesh );
-    // [P1ch]
+    LOG(INFO) << "[info] Nh dof = " << Nh->nDof() << std::endl;
+    LOG(INFO) << "[info] Lh dof = " << Lh->nDof() << std::endl;
 
-    LOG(INFO) << "[info] Vh dof = " << Vh->nDof() << std::endl;
-    LOG(INFO) << "[info] Sh dof = " << Sh->nDof() << std::endl;
-    if ( Environment::isMasterRank() ){
-        std::cout << "[Vh] number of dof             : "
-                  << Vh->nDof() << std::endl;
-        std::cout << "[Vh] number of dof per proc    : "
-                  << Vh->nLocalDof() << std::endl;
-        std::cout << "[Vh] number of local dof       : "
-                  << Vh->dof()->nLocalDof() << std::endl;
-        std::cout << "[Vh] total number of local dof : "
-                  << Vh->dof()->nLocalDof()*mesh->numGlobalElements() << std::endl;
-        std::cout << "[Sh] number of dof             : "
-                  << Sh->nDof() << std::endl;
-        std::cout << "[Sh] number of dof per proc    : "
-                  << Sh->nLocalDof() << std::endl;
-        std::cout << "[Sh] number of local dof       : "
-                  << Sh->dof()->nLocalDof() << std::endl;
-        std::cout << "[Sh] total number of local dof : "
-                  << Sh->dof()->nLocalDof()*mesh->numGlobalElements() << std::endl;
-    }
+    std::ofstream file;
+    file.open( (boost::format( "info_%1%" ) % Environment::worldComm().globalRank() ).str() );
+    file << "Xh : " << *Xh << std::endl
+         << "Nh : " << *Nh << std::endl
+         << "Lh : " << *Lh << std::endl << std::endl
+         << "Nh : " << Nh->dof()->mapGlobalProcessToGlobalCluster()
+         << "Lh : " << Lh->dof()->mapGlobalProcessToGlobalCluster() << std::endl;
+    file.close();
 
-    LOG(INFO) << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] spaces = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
-#if 0
-    auto u = Vh->element();
-    auto v = Vh->element();
+    auto u = Nh->element();
+    auto v = Nh->element();
 
-    // [forms]
-    auto a = form2( _test=Vh, _trial=Vh);
+    auto a = form2( _test=Nh, _trial=Nh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(u))*curl(v));
     auto matA = a.matrixPtr();
     matA->close();
 
-    auto b = form2( _test=Vh, _trial=Vh);
+    auto b = form2( _test=Nh, _trial=Nh);
     b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
     auto matB = b.matrixPtr();
     matB->close();
-    // [forms]
 
-
-    LOG(INFO) << "[timer] form = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
-#endif
-
-    std::vector<bool> doneVh( Vh->nLocalDof(), false );
-    std::vector<bool> doneSh( Sh->nLocalDof(), false );
+    std::vector<bool> doneNh( Nh->nLocalDof(), false );
+    std::vector<bool> doneLh( Lh->nLocalDof(), false );
     DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
-    std::vector<DofEdgeInfo> dof_edge_info( Vh->nLocalDof(), einfo_default );
+    std::vector<DofEdgeInfo> dof_edge_info( Nh->nLocalDof(), einfo_default );
     std::vector<size_type> interiorIndexesToKeep;
-    std::vector<size_type> interiorIndexesToKeepGlobal;
     std::vector<size_type> boundaryIndexesToKeep;
-    std::vector<size_type> boundaryIndexesToKeepGlobal;
 
-    auto dofbegin = Vh->dof()->localDof().first;
-    auto dofend = Vh->dof()->localDof().second;
+    auto dofbegin = Nh->dof()->localDof().first;
+    auto dofend = Nh->dof()->localDof().second;
 
     for( auto dofit = dofbegin; dofit != dofend; ++dofit )
     {
         auto const& dof = *dofit;
 
         auto index = dof.second.index();
-        if ( !doneVh[ index ] )
+        if ( !doneNh[ index ] )
         {
             auto const& eltLocalId = dof.first.elementId();
             auto const& elt = mesh->element(eltLocalId);
@@ -254,21 +220,15 @@ EigenProblem<Dim, Order>::run()
 
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
-            size_type dofid1Global = invalid_uint16_type_value;
-            size_type dofid2Global = invalid_uint16_type_value;
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
             {
-                // [dofLh]
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt1.id() )
                 {
-                    dofid1 = Sh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
-                    dofid1Global = Sh->dof()->localToGlobalOnCluster(eltLocalId, i).index();
-                    // [dofLh]
+                    dofid1 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index() + Nh->nLocalDofWithGhost();
                 }
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt2.id() )
                 {
-                    dofid2 = Sh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
-                    dofid2Global = Sh->dof()->localToGlobalOnCluster(eltLocalId, i).index();
+                    dofid2 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index() + Nh->nLocalDofWithGhost();
                 }
             }
 
@@ -276,17 +236,15 @@ EigenProblem<Dim, Order>::run()
             {
                 // if the points are on the boundary,
                 // we keep their indexes to extract the columns
-                if( !doneSh[ dofid1 ] )
+                if( !doneLh[ dofid1 ] )
                 {
-                    boundaryIndexesToKeep.push_back( Vh->nLocalDof()+dofid1 );
-                    boundaryIndexesToKeepGlobal.push_back( Vh->nDof()+dofid1Global );
-                    doneSh[ dofid1 ] = true;
+                    boundaryIndexesToKeep.push_back( dofid1 );
+                    doneLh[ dofid1 ] = true;
                 }
-                if( !doneSh[ dofid2 ] )
+                if( !doneLh[ dofid2 ] )
                 {
-                    boundaryIndexesToKeep.push_back( Vh->nLocalDof()+dofid2 );
-                    boundaryIndexesToKeepGlobal.push_back( Vh->nDof()+dofid2Global );
-                    doneSh[ dofid2 ] = true;
+                    boundaryIndexesToKeep.push_back( dofid2 );
+                    doneLh[ dofid2 ] = true;
                 }
 
                 dof_edge_info[index].type = EDGE_BOUNDARY;
@@ -298,7 +256,6 @@ EigenProblem<Dim, Order>::run()
                 // if the edge is not on the boundary, we keep its index
                 // to extract the column
                 interiorIndexesToKeep.push_back(index);
-                interiorIndexesToKeepGlobal.push_back( Vh->dof()->localToGlobalOnCluster(eltLocalId,edgeLocalId).index() );
 
                 //both points touch the boundary
                 if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
@@ -333,46 +290,23 @@ EigenProblem<Dim, Order>::run()
                 }
             }
 
-            if(Environment::worldComm().globalRank() == 0 )
-            {
-                std::cout << "[" << Environment::worldComm().globalRank() << "]\t" << index << std::endl
-                          << "\t elt  : " << eltLocalId << std::endl
-                          << "\t edge : " << edgeLocalId << std::endl
-                          << "\t perm : " << (int)dof_edge_info[index].sign1 << std::endl
-                          << "\t type : " << dof_edge_info[index].type << std::endl
-                          << "\t id1  : " << dof_edge_info[index].dof_vertex_id1 << std::endl
-                          << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl;
-            }
+            file.open( (boost::format( "info_%1%" ) % Environment::worldComm().globalRank() ).str(), std::ios::out | std::ios::app);
+            file << "index   : " << index << std::endl
+                 << "\t perm : " << (int)dof_edge_info[index].sign1 << std::endl
+                 << "\t type : " << dof_edge_info[index].type << std::endl
+                 << "\t id1  : " << dof_edge_info[index].dof_vertex_id1 << std::endl
+                 << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl;
+            file.close();
 
-            Environment::worldComm().barrier();
-
-            if(Environment::worldComm().globalRank() == 1 )
-            {
-                std::cout << "[" << Environment::worldComm().globalRank() << "]\t" << index << std::endl
-                          << "\t elt  : " << eltLocalId << std::endl
-                          << "\t edge : " << edgeLocalId << std::endl
-                          << "\t perm : " << (int)dof_edge_info[index].sign1 << std::endl
-                          << "\t type : " << dof_edge_info[index].type << std::endl
-                          << "\t id1  : " << dof_edge_info[index].dof_vertex_id1 << std::endl
-                          << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl;
-            }
-
-            doneVh[ index ] = true;
+            doneNh[ index ] = true;
         }
     }
 
-    auto cInternal = backend()->newMatrix(_test=Vh,_trial=Vh);
-    auto cBoundary = backend()->newMatrix(_test=Vh,_trial=Sh );
+    auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
-    if ( Environment::worldComm().isMasterRank() )
+    for( int i = 0; i < Nh->nLocalDof(); ++i )
     {
-        std::cout << "cInternal size = " << cInternal->size1() << "x" << cInternal->size2() << std::endl;
-        std::cout << "cBoundary size = " << cBoundary->size1() << "x" << cBoundary->size2() << std::endl;
-    }
-
-    for( int i = 0; i < Vh->nLocalDof(); ++i )
-    {
-        cInternal->set(i,i,1);
+        cTilde->set(i,i,1);
 
         auto const& dei = dof_edge_info[i];
         switch( dei.type )
@@ -380,18 +314,18 @@ EigenProblem<Dim, Order>::run()
         case EDGE_BOUNDARY:
         case EDGE_BOUNDARY_VERTEX_3:
         {
-            cBoundary->set(i,dei.dof_vertex_id1, dei.sign1);
-            cBoundary->set(i,dei.dof_vertex_id2, dei.sign2);
+            cTilde->set(i,dei.dof_vertex_id1, dei.sign1);
+            cTilde->set(i,dei.dof_vertex_id2, dei.sign2);
         }
         break;
         case EDGE_BOUNDARY_VERTEX_1:
         {
-            cBoundary->set(i,dei.dof_vertex_id1, dei.sign1);
+            cTilde->set(i,dei.dof_vertex_id1, dei.sign1);
         };
         break;
         case EDGE_BOUNDARY_VERTEX_2:
         {
-            cBoundary->set(i,dei.dof_vertex_id2, dei.sign2);
+            cTilde->set(i,dei.dof_vertex_id2, dei.sign2);
         }
         break;
         case EDGE_INTERIOR:
@@ -399,84 +333,89 @@ EigenProblem<Dim, Order>::run()
         }
     }
 
-    cInternal->close();
-    cBoundary->close();
-
-    cInternal->printMatlab("cInt.m");
-    cBoundary->printMatlab("cBou.m");
-
-    BlocksBaseSparseMatrix<double> cBlock(1,2);
-    cBlock(0,0) = cInternal;
-    cBlock(0,1) = cBoundary;
-    auto cTilde = backend()->newBlockMatrix(_block=cBlock, _copy_values=true);
     cTilde->close();
 
-    std::vector<size_type> rows( Vh->nLocalDof() );
+    cTilde->printMatlab("cTilde.m");
+
+    auto mapPToC = cTilde->mapCol().mapGlobalProcessToGlobalCluster();
+
+    std::vector<size_type> rows( Nh->nLocalDof() );
     std::iota( rows.begin(), rows.end(), 0 );
 
-    // proc level
     std::sort(boundaryIndexesToKeep.begin(), boundaryIndexesToKeep.end() );
     std::vector<size_type> indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
                          boundaryIndexesToKeep.begin(),
                          boundaryIndexesToKeep.end() );
 
-#if 0    // cluster level
-    std::sort(interiorIndexesToKeepGlobal.begin(), interiorIndexesToKeepGlobal.end() );
-    std::sort(boundaryIndexesToKeepGlobal.begin(), boundaryIndexesToKeepGlobal.end() );
-    std::vector<size_type> indexesToKeepGlobal = interiorIndexesToKeepGlobal;
-    indexesToKeepGlobal.insert(indexesToKeepGlobal.end(),
-                               boundaryIndexesToKeepGlobal.begin(),
-                               boundaryIndexesToKeepGlobal.end() );
+    file.open( (boost::format( "info_%1%" ) % Environment::worldComm().globalRank() ).str(), std::ios::out | std::ios::app);
+    file << "cTidle size = " << cTilde->size1() << "x" << cTilde->size2() << std::endl;
+    file << "indexes to keep : " << indexesToKeep;
+    file << "mapProcToCluster : " << mapPToC;
 
-    // gather all cluster indexes to keep in 2D vector
-    std::vector<std::vector<size_type> > gathered2dIndexesToKeep;
-    mpi::all_gather(Environment::worldComm().globalComm(),
-                    indexesToKeepGlobal,
-                    gathered2dIndexesToKeep);
-
-    // get a 1D vector of all cluster indexes to keep
-    std::vector<size_type> gatheredIndexesToKeep = gathered2dIndexesToKeep[0];
-    for( int i = 1; i < Environment::numberOfProcessors(); i++)
-        gatheredIndexesToKeep.insert(gatheredIndexesToKeep.end(),
-                                     gathered2dIndexesToKeep[i].begin(),
-                                     gathered2dIndexesToKeep[i].end() );
-
-    // get a set of unique cluster indexes to keep
-    std::set<size_type> globalIndexesToKeep( gatheredIndexesToKeep.begin(), gatheredIndexesToKeep.end() );
-
-    std::cout << "global : " << globalIndexesToKeep << std::endl;
-
-    auto C = backend()->newMatrix(Vh->nDof(), globalIndexesToKeep.size(),
-                                  Vh->nLocalDof(), indexesToKeep.size() ); // add graph = graphcsr(mapVh,mapCol)
-    if( C->mapRowPtr() == NULL )
-        std::cout << "c mapRow not initialized\n";
-    else
-        std::cout << "c mapRow initialized\n";
-    cTilde->createSubmatrix( *C, rows, indexesToKeep);
-#else
     bool checkAndFixRange = boption("checkAndFixRange");
     auto C = cTilde->createSubMatrix(rows, indexesToKeep, false, checkAndFixRange);
-#endif
-
-    if( C->mapRowPtr() == NULL )
-        std::cout << "c mapRow not initialized after submatrix\n";
-    else
-        std::cout << "c mapRow initialized after submatrix\n";
     C->close();
 
-    //std::cout << "c : " << C->size1() << " x " << C->size2() << std::endl;
+    file << "c : " << C->size1() << " x " << C->size2() << std::endl;
+    file << "c (global) : " << C->mapColPtr()->nDof() << std::endl;
+    file.close();
     C->printMatlab("c.m");
 
 #if 0
+
+    for(int i = 0; i < (1 << interiorIndexesToKeep.size()); i++)
+    {
+        auto fLh  = Lh->element();
+        auto fNh = Nh->element();
+
+        auto alphaPrime = backend()->newVector( C->mapColPtr() );
+
+        for( int j = 0; j < interiorIndexesToKeep.size(); j++)
+        {
+            if( i & (1 << j))
+            {
+                fNh.set(interiorIndexesToKeep[j], 1);
+                alphaPrime->set(j, 1);
+            }
+        }
+
+        for( int k = 0; k < (1 << boundaryIndexesToKeep.size()); k++)
+        {
+            for( int l = 0; l < boundaryIndexesToKeep.size(); l++)
+            {
+                if( k & (1 << l))
+                {
+                    fLh.set(boundaryIndexesToKeep[l] - Nh->nLocalDofWithGhost(), 1);
+                    alphaPrime->set(interiorIndexesToKeep.size() + l, 1);
+                }
+            }
+
+            auto f = vf::project( _space=Nh, _range=elements(mesh),
+                                  _expr= idv(fNh) + trans(gradv(fLh)) );
+
+            auto alphaVec = backend()->newVector( Nh );
+            C->multVector( alphaPrime, alphaVec);
+            auto alpha = Nh->element();
+            alpha.zero();
+            alpha.add(*alphaVec);
+
+            auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
+            auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+            if ( Environment::worldComm().isMasterRank() )
+                std::cout << k << "/" << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
+        }
+    }
+
+
     auto e =  exporter( _mesh=mesh );
 
     if( boption("eigs"))
     {
-        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),    // global
-                                         indexesToKeep.size(), indexesToKeep.size() );  // local
-        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),    // global
-                                         indexesToKeep.size(), indexesToKeep.size() );  // local
+        auto Ahat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
+        auto Bhat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
+
         backend()->PtAP( matA, C, Ahat );
         backend()->PtAP( matB, C, Bhat );
         Ahat->close();
@@ -504,9 +443,9 @@ EigenProblem<Dim, Order>::run()
             {
                 std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
             }
-            auto tmpVec = backend()->newVector( Vh );
+            auto tmpVec = backend()->newVector( Nh );
             C->multVector( mode.second.get<2>(), tmpVec);
-            element_type tmp = Vh->element();
+            element_type tmp = Nh->element();
             tmp.add(*tmpVec);
             // element_type tmp = *tmpVec;
             tmp.close();
