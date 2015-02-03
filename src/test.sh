@@ -1,11 +1,11 @@
 #!/bin/bash
 
-APP=feelpp_po_app
-GEO=cylinderAdim.geo
+APP=feelpp_po_basischange
 
-NP=(1 2 5 10 20 30)
-NEV=(10 25 50 100 200)
-H=(0.1 0.075 0.05)
+SOLVER=("power" "lapack" "subspace" "arnoldi" "krylovschur")
+PROBLEM=("ghep" "gnhep")
+TRANSFORM=("shift" "shift_invert" "fold" "cayley")
+SPECTRUM=("largest_magnitude" "smallest_magnitude" "largest_real" "smallest_real")
 
 # for np in ${NP[@]};
 # do
@@ -16,7 +16,19 @@ H=(0.1 0.075 0.05)
 #     done
 # done
 
-for h in ${H[@]};
+for solver in ${SOLVER[@]};
 do
-    ./$APP --gmsh.filename $GEO --gmsh.hsize $h
+    for problem in ${PROBLEM[@]};
+    do
+	for transform in ${TRANSFORM[@]};
+	do
+	    for spectrum in ${SPECTRUM[@]};
+	    do
+		echo "$APP --gmsh.hsize 0.15 --solvereigen.solver $solver --solvereigen.problem $problem --solvereigen.transform $transform --solvereigen.spectrum $spectrum -st_shift 16"
+		./$APP --gmsh.hsize 0.15 --solvereigen.solver $solver --solvereigen.problem $problem --solvereigen.transform $transform --solvereigen.spectrum $spectrum -st_shift 16
+		echo "$APP --gmsh.hsize 0.15 --solvereigen.solver $solver --solvereigen.problem $problem --solvereigen.transform $transform --solvereigen.spectrum $spectrum"
+		./$APP --gmsh.hsize 0.15 --solvereigen.solver $solver --solvereigen.problem $problem --solvereigen.transform $transform --solvereigen.spectrum $spectrum
+	    done
+	done
+    done
 done
