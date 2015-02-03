@@ -22,6 +22,7 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 //#include <feel/feel.hpp>
+#include <feel/feelinfo.h>
 #include <feel/feelcore/feel.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelfilters/unitsphere.hpp>
@@ -116,6 +117,7 @@ EigenProblem<Dim, Order>::run()
     Environment::changeRepository( boost::format( "%1%/h_%2%/" )
                                    % this->about().appName()
                                    % option(_name="gmsh.hsize").template as<double>() );
+
 
     LOG(INFO) << "[timer] h = " << doption("gmsh.hsize") << std::endl;
     if ( Environment::worldComm().isMasterRank() )
@@ -433,25 +435,25 @@ EigenProblem<Dim, Order>::run()
 
     auto e =  exporter( _mesh=mesh );
 
+    // [ptap]
+    auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+    auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
+    // remove call to PtAP for Travis
+#if FEELPP_VERSION_GREATER_THAN(0,99,2)
+    backend()->PtAP( matA, C, Ahat );
+    backend()->PtAP( matB, C, Bhat );
+#endif
+    Ahat->close();
+    Bhat->close();
+    // [ptap]
+
+    LOG(INFO) << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
+    t.restart();
+
     if( boption("eigs")) // feature/operator necessary
     {
-        // [ptap]
-        auto Ahat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-        auto Bhat = backend()->newMatrix(indexesToKeep.size(), indexesToKeep.size(),indexesToKeep.size(), indexesToKeep.size() );
-        // remove call to PtAP for Travis
-#if 0
-        backend()->PtAP( matA, C, Ahat );
-        backend()->PtAP( matB, C, Bhat );
-#endif
-        Ahat->close();
-        Bhat->close();
-        // [ptap]
-
-        LOG(INFO) << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] matHat = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
-
         if ( Environment::worldComm().isMasterRank() )
         {
             std::cout << "nev = " << ioption(_name="solvereigen.nev")
@@ -477,7 +479,7 @@ EigenProblem<Dim, Order>::run()
         {
             if ( Environment::isMasterRank() )
             {
-                std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
+                std::cout << "eigenvalue " << i << " = (" << mode.second.get<0>() << "," <<  mode.second.get<1>() << ")" << std::endl;
             }
             // [eigenvec]
             auto tmpVec = backend()->newVector( Vh );
@@ -495,20 +497,32 @@ EigenProblem<Dim, Order>::run()
 
     if( boption("load") )
     {
+        int nbMode = ioption("nbMode");
+
         std::fstream s;
         s.open("lambda", std::fstream::in);
-        std::vector<double> lambda(6,0);
+        std::vector<double> lambda(nbMode,0);
         if( !s.is_open() ){
             std::cout << "Eigen values not found" << std::endl;
             exit(0);
         }
-        for( int i = 0; i < 6; i++)
+        for( int i = 0; i < nbMode; i++)
             s >> lambda[i];
         s.close();
 
-        for( int i = 1; i < 7; i++)
+        auto g = std::vector<element_type>(nbMode, Vh->element());
+        auto di = std::vector<double>(nbMode, 0);
+        auto nor = std::vector<double>(nbMode, 0);
+        auto curln = std::vector<double>(nbMode, 0);
+        auto errp = std::vector<double>(nbMode, 0);
+        auto errm = std::vector<double>(nbMode, 0);
+        auto curl2n = std::vector<double>(nbMode, 0);
+        auto errC2 = std::vector<double>(nbMode, 0);
+
+        for( int i = 0; i < nbMode; i++)
         {
-            s.open ( (boost::format( "vec_%1%" ) % i ).str(), std::fstream::in);
+            int k = i + 1;
+            s.open ( (boost::format( "vec_%1%" ) % k ).str(), std::fstream::in);
             if( !s.is_open() )
             {
                 std::cout << "Eigen vectors not found" << std::endl;
@@ -524,34 +538,100 @@ EigenProblem<Dim, Order>::run()
             }
             s.close();
 
-            auto tmpVec = backend()->newVector( Vh );
-            C->multVector( v, tmpVec);
-            element_type tmp = Vh->element();
-            tmp.add(*tmpVec);
-            tmp.close();
-            e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
+            auto tmp = backend()->newVector( Vh );
+            C->multVector( v, tmp);
+            g[i].add(*tmp);
+            g[i].close();
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), g[i] );
 
-            auto di = normL2( elements(mesh), divv(tmp));
-            auto nor = normL2( boundaryfaces(mesh), trans(idv(tmp))*N() );
-            auto curln = normL2( boundaryfaces(mesh), trans(curlv(tmp))*N() );
-            auto err = normL2( elements(mesh), curlv(tmp)-std::sqrt(lambda[i-1])*idv(tmp) );
-            auto err2 = normL2( elements(mesh), curlv(tmp)+std::sqrt(lambda[i-1])*idv(tmp) );
+            di[i] = normL2( elements(mesh), divv(g[i]));
+            nor[i] = normL2( boundaryfaces(mesh), trans(idv(g[i]))*N() );
+            curln[i] = normL2( boundaryfaces(mesh), trans(curlv(g[i]))*N() );
+            errp[i] = normL2( elements(mesh), curlv(g[i])-std::sqrt(lambda[i])*idv(g[i]) );
+            errm[i] = normL2( elements(mesh), curlv(g[i])+std::sqrt(lambda[i])*idv(g[i]) );
 
             auto tmpCurl = vf::project( _space=Vh, _range=elements(mesh),
-                                        _expr=curlv(tmp) );
-            auto curl2n = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
-            auto errC2 = normL2( elements(mesh), curlv(tmpCurl)-lambda[i-1]*idv(tmp) );
+                                        _expr=curlv(g[i]) );
+            curl2n[i] = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
+            errC2[i] = normL2( elements(mesh), curlv(tmpCurl)-lambda[i]*idv(g[i]) );
 
             std::cout << "mode " << i << std::endl
-                      << "\t\t |div| = " << di << std::endl
-                      << "\t\t |normale| = " << nor << std::endl
-                      << "\t\t |curl*n| = " << curln << std::endl
-                      << "\t\t |erreur+| = " << err << std::endl
-                      << "\t\t |erreur-| = " << err2 << std::endl
-                      << "\t\t |curl2*n| = " << curl2n << std::endl
-                      << "\t\t |err2| = " << errC2 << std::endl;
+                      << "\t\t |div    | = " << di[i] << std::endl
+                      << "\t\t |normale| = " << nor[i] << std::endl
+                      << "\t\t |curl*n | = " << curln[i] << std::endl
+                      << "\t\t |erreur+| = " << errp[i] << std::endl
+                      << "\t\t |erreur-| = " << errm[i] << std::endl
+                      << "\t\t |curl2*n| = " << curl2n[i] << std::endl
+                      << "\t\t |err2   | = " << errC2[i] << std::endl;
         }
 
+        double di_av = 0, nor_av = 0, curln_av = 0, errp_av = 0, errm_av = 0, curl2n_av = 0, errC2_av = 0;
+        for( int i=0; i<nbMode; i++)
+        {
+            di_av += di[i];
+            nor_av += nor[i];
+            curln_av += curln[i];
+            errp_av += errp[i];
+            errm_av += errm[i];
+            curl2n_av += curl2n[i];
+            errC2_av += errC2[i];
+        }
+        di_av /= nbMode;
+        nor_av /= nbMode;
+        curln_av /= nbMode;
+        errp_av /= nbMode;
+        errm_av /= nbMode;
+        curl2n_av /= nbMode;
+        errC2_av /= nbMode;
+
+        std::cout << "********** average **********" << std::endl
+                  << "\t\t |div    | = " << di_av << std::endl
+                  << "\t\t |normale| = " << nor_av << std::endl
+                  << "\t\t |curl*n | = " << curln_av << std::endl
+                  << "\t\t |erreur+| = " << errp_av << std::endl
+                  << "\t\t |erreur-| = " << errm_av << std::endl
+                  << "\t\t |curl2*n| = " << curl2n_av << std::endl
+                  << "\t\t |err2   | = " << errC2_av << std::endl;
+
+        if( boption("space") )
+        {
+            auto fVh = Vh->element();
+            auto fSh = Sh->element();
+
+            srand(std::time(NULL));
+
+            for( int i = 0; i < interiorIndexesToKeep.size(); i++)
+                if(rand() % 10 > 8)
+                    fVh.set(interiorIndexesToKeep[i], 1);
+            for( int i = 0; i < boundaryIndexesToKeep.size(); i++)
+                if(rand() % 10 > 8)
+                    fSh.set(boundaryIndexesToKeep[i] - Vh->nDof(), 1);
+
+            auto f = vf::project( _space=Vh, _range=elements(mesh),
+                                  _expr= idv(fVh) + trans(gradv(fSh)) );
+
+            auto dif = normL2( elements(mesh), divv(f));
+            auto norf = normL2( boundaryfaces(mesh), trans(idv(f))*N() );
+            auto curlnf = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+            std::cout << "f" << std::endl
+                      << "\t\t |div    | = " << dif << std::endl
+                      << "\t\t |normale| = " << norf << std::endl
+                      << "\t\t |curl*n | = " << curlnf << std::endl;
+
+
+            auto coef = std::vector<double>(nbMode, 0);
+            auto tmpProj = Vh->element();
+            double errProj = 0.0;
+
+            for( int i = 0; i < nbMode; i++)
+            {
+                coef[i] = integrate(elements(mesh), idv(f)*trans(idv(g[i])) ).evaluate()(0,0);
+                tmpProj.add(coef[i],g[i]);
+                errProj = normL2( elements(mesh), idv(f)-idv(tmpProj) );
+                std::cout << "i = " << i << "\t c = " << coef[i] << "\terreur = " << errProj << std::endl;
+            }
+        }
     }
 
     LOG(INFO) << "[timer] export = " << t.elapsed() << " sec" << std::endl;
@@ -564,8 +644,8 @@ EigenProblem<Dim, Order>::run()
             matA->printMatlab("a.m");
             matB->printMatlab("b.m");
             C->printMatlab("c.m");
-            // Ahat->printMatlab("Ahat.m");
-            // Bhat->printMatlab("Bhat.m");
+            Ahat->printMatlab("aHat.m");
+            Bhat->printMatlab("bHat.m");
     }
 
     e->save();
@@ -586,8 +666,9 @@ main( int argc, char** argv )
         ("isPrinting", po::value<bool>()->default_value( false ), "print matrices")
         ("useSphere", po::value<bool>()->default_value( true ), "use sphere or other geo")
         ("eigs", po::value<bool>()->default_value( true ), "compute the eigen problem")
-        ("load", po::value<bool>()->default_value( true ), "load eigen vectors and values")
-        ("pm", po::value<int>()->default_value( 1 ), "plus or minus one" );
+        ("load", po::value<bool>()->default_value( false ), "load eigen vectors and values")
+        ("space", po::value<bool>()->default_value( false ), "verify the eigen space")
+        ("nbMode", po::value<int>()->default_value( 1 ), "number of modes to load" );
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=basischangeoptions,
