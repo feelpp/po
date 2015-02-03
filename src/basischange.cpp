@@ -295,7 +295,9 @@ EigenProblem<Dim, Order>::run()
                  << "\t perm : " << (int)dof_edge_info[index].sign1 << std::endl
                  << "\t type : " << dof_edge_info[index].type << std::endl
                  << "\t id1  : " << dof_edge_info[index].dof_vertex_id1 << std::endl
-                 << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl;
+                 << "\t id2  : " << dof_edge_info[index].dof_vertex_id2 << std::endl
+                 << "\t id1_[x,y,z] : [" << pt1[0] << ", " << pt1[1] << ", " << pt1[2] << "]" << std::endl
+                 << "\t id2_[x,y,z] : [" << pt2[0] << ", " << pt2[1] << ", " << pt2[2] << "]" << std::endl;
             file.close();
 
             doneNh[ index ] = true;
@@ -332,83 +334,95 @@ EigenProblem<Dim, Order>::run()
             break;
         }
     }
-
     cTilde->close();
 
     cTilde->printMatlab("cTilde.m");
+    //cTilde->printMatlab();
 
     auto mapPToC = cTilde->mapCol().mapGlobalProcessToGlobalCluster();
 
     std::vector<size_type> rows( Nh->nLocalDof() );
     std::iota( rows.begin(), rows.end(), 0 );
 
-    std::sort(boundaryIndexesToKeep.begin(), boundaryIndexesToKeep.end() );
     std::vector<size_type> indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
                          boundaryIndexesToKeep.begin(),
                          boundaryIndexesToKeep.end() );
+    std::sort(indexesToKeep.begin(), indexesToKeep.end() );
 
-    file.open( (boost::format( "info_%1%" ) % Environment::worldComm().globalRank() ).str(), std::ios::out | std::ios::app);
-    file << "cTidle size = " << cTilde->size1() << "x" << cTilde->size2() << std::endl;
-    file << "indexes to keep : " << indexesToKeep;
-    file << "mapProcToCluster : " << mapPToC;
-
-    bool checkAndFixRange = boption("checkAndFixRange");
-    auto C = cTilde->createSubMatrix(rows, indexesToKeep, false, checkAndFixRange);
+    auto C = cTilde->createSubMatrix(rows, indexesToKeep, false, boption("checkAndFixRange"));
     C->close();
 
-    file << "c : " << C->size1() << " x " << C->size2() << std::endl;
-    file << "c (global) : " << C->mapColPtr()->nDof() << std::endl;
-    file.close();
+    file.open( (boost::format( "info_%1%" ) % Environment::worldComm().globalRank() ).str(), std::ios::out | std::ios::app);
+    file << "Nh : " << Nh->dof()->mapGlobalProcessToGlobalCluster()
+         << "Nh clusterToPro : " << Nh->dof()->mapGlobalClusterToGlobalProcess()
+         << "Lh : " << Lh->dof()->mapGlobalProcessToGlobalCluster()
+         << "indexes to keep : " << indexesToKeep
+         << "cTilde procToCluster : " << mapPToC
+         << "c procToCluster : " << C->mapColPtr()->mapGlobalProcessToGlobalCluster()
+         << "c clusterToProc : " << C->mapColPtr()->mapGlobalClusterToGlobalProcess() << std::endl;
+
     C->printMatlab("c.m");
+    //C->printMatlab();
 
-#if 0
-
-    for(int i = 0; i < (1 << interiorIndexesToKeep.size()); i++)
+#if 1
+    auto fLh  = Lh->element();
+    auto fNh = Nh->element();
+    for( int i = 0; i < (1 << C->mapColPtr()->nDof()); i++)
     {
-        auto fLh  = Lh->element();
-        auto fNh = Nh->element();
+        auto tmpNh = backend()->newVector( Nh );
+        auto tmpLh = backend()->newVector( Lh );
 
         auto alphaPrime = backend()->newVector( C->mapColPtr() );
+        auto map = alphaPrime->mapPtr()->mapGlobalProcessToGlobalCluster();
 
-        for( int j = 0; j < interiorIndexesToKeep.size(); j++)
+        for( int j = 0; j < C->mapColPtr()->nDof(); j++)
         {
-            if( i & (1 << j))
+            if( i & (1<<j) )
             {
-                fNh.set(interiorIndexesToKeep[j], 1);
-                alphaPrime->set(j, 1);
-            }
-        }
+                auto it = std::find(map.begin(), map.end(), j);
+                auto index = it-map.begin();
 
-        for( int k = 0; k < (1 << boundaryIndexesToKeep.size()); k++)
-        {
-            for( int l = 0; l < boundaryIndexesToKeep.size(); l++)
-            {
-                if( k & (1 << l))
+                if( it != map.end() )
                 {
-                    fLh.set(boundaryIndexesToKeep[l] - Nh->nLocalDofWithGhost(), 1);
-                    alphaPrime->set(interiorIndexesToKeep.size() + l, 1);
+                    alphaPrime->set(index, 1);
+
+                    int col = indexesToKeep[index];
+                    if( col < Nh->nLocalDofWithGhost() )
+                    {
+                        tmpNh->set(col, 1);
+                    } else
+                    {
+                        int dofLocalLh = col - Nh->nLocalDofWithGhost();
+                        tmpLh->set(dofLocalLh, 1);
+                    }
                 }
             }
-
-            auto f = vf::project( _space=Nh, _range=elements(mesh),
-                                  _expr= idv(fNh) + trans(gradv(fLh)) );
-
-            auto alphaVec = backend()->newVector( Nh );
-            C->multVector( alphaPrime, alphaVec);
-            auto alpha = Nh->element();
-            alpha.zero();
-            alpha.add(*alphaVec);
-
-            auto erreur = normL2( elements(mesh), idv(f)-idv(alpha));
-            auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
-
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << k << "/" << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
         }
+
+        tmpNh->close();
+        fNh = *tmpNh;
+        tmpLh->close();
+        fLh = *tmpLh;
+
+        auto f = vf::project( _space=Nh, _range=elements(mesh),
+                              _expr= idv(fNh) + trans(gradv(fLh)) );
+
+        auto alphaVec = backend()->newVector( Nh );
+        C->multVector( alphaPrime, alphaVec);
+        auto alpha = Nh->element();
+        alpha = *alphaVec;
+
+        auto erreur = normL2( elements(mesh), idv(f) - idv(alpha) );
+        auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
     }
+    file.close();
+#endif
 
-
+#if 0
     auto e =  exporter( _mesh=mesh );
 
     if( boption("eigs"))
