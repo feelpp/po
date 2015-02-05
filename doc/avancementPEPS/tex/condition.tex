@@ -627,7 +627,7 @@ I created a function to reload the eigen functins from \texttt{Matlab} in \textt
 		\subfloat[mode 5]{\includegraphics[scale=0.27]{mode5}}\ 
 		\subfloat[mode 6]{\includegraphics[scale=0.27]{mode6}}
 	}
-	\caption{Modes propres}
+	\caption{Eigen Functions from Matlab}
 	\label{modes}
 \end{figure}
 
@@ -652,7 +652,6 @@ We can notice in table \ref{RBResults} that the time of computation for the grea
 
 \paragraph{Back in \texttt{Feel++}}
 
-For now, in \texttt{Feel++}, I can't achieved the same results, but since I use the same matrices, it is only a question of which solver and which options to use.\\
 Using the following configuration :
 \begin{description}
 \item[solver] krylovschur
@@ -662,10 +661,19 @@ Using the following configuration :
 \end{description}
 I find the 6 first eigenvalue in the sphere.\\
 The \texttt{interval}  option is \texttt{eps\_interval}, which retrieve all the eigenvalues in a given interval. This interval can be open in one end, so we could use $[a, \infty)$ with $a$ very small but positive.\\
-There is some limitations with this option as exposed in the \href{http://slepc.upv.es/documentation/slepc.pdf}{documentation of SLEPc} \S 3.4.5. We have to use KrylovSchur as solver and shift and invert as transform. Furthermore, direct linear solvers are required. This linear solver must provide the matrix inertia and must use a symmetric factorization (\texttt{cholesky}). To use it in parallel, we have to use MUMPS.\\
+There is some limitations with this option as exposed in the \href{http://slepc.upv.es/documentation/slepc.pdf}{documentation of SLEPc} \S 3.4.5. We have to use KrylovSchur as solver and shift and invert as transform.\\
+Furthermore, direct linear solvers are required. This linear solver must provide the matrix inertia and must use a symmetric factorization (\texttt{cholesky}).\\
+To use it in parallel, we have to use MUMPS.\\
 So the command looks like :\\ \texttt{./feelpp\_po\_basischange --solvereigen.solver krylovschur -eps\_interval 19,30 -st\_ksp\_type preonly -st\_pc\_type cholesky -st\_pc\_factor\_mat\_solver\_package mumps -mat\_mumps\_icntl\_13 1}\\
 
-Display 4 modes ...\\
+\begin{figure}[H]
+  \makebox[\textwidth][c]{
+    \subfloat[Sphere]{\includegraphics[scale=0.27]{sphMode0}}\ 
+    \subfloat[Rectangular Box]{\includegraphics[scale=0.27]{rbMode0}}
+  }
+  \caption{Eigen Functions from Feel++}
+  \label{feelModes}
+\end{figure}
 
 To understand the link between those functions and the eigen functions of the curl operator, I'll quote the article \cite{Venegas2013} :
 \begin{italicquotes}
@@ -679,11 +687,29 @@ For the first eigenvalue, we have the following results :
   \begin{tabular}{r|c|c}
     h & 0.15 & 0.075 \\
     \hline
-    ||\div\mbf{u}||_2 & 2.88311e-14 & 6.60701e-14 \\
-    ||\mbf{u}\cdot\mbf{n}||_2 = 0.216208 & 0.112487 \\
-    ||\curl\mbf{u}\cdot\mbf{n}||_2 & 5.11927e-15 & 9.48309e-15 \\
-    ||\curl\mbf{u}-\lambda\mbf{u}||_2 &= 6.5155 & 6.38584
-\end{align*}
+    $\widehat{\lambda}_h$ & 4.49481924 & 4.49377347\\
+    $|\widehat{\lambda}_h-\lambda|$ & 0.00141024 & 0.00036447 \\
+    erc & $-$ & \\
+    \hline
+    $||\div\mbf{u}||_2$ & 2.88311e-14 & 6.60701e-14 \\
+    $||\mbf{u}\cdot\mbf{n}||_2$ & 0.216208 & 0.112487 \\
+    $||\curl\mbf{u}\cdot\mbf{n}||_2$ & 5.11927e-15 & 9.48309e-15 \\
+    $||\curl\mbf{u}-\lambda\mbf{u}||_2$ & 6.5155 & 6.38584
+  \end{tabular}
+  \caption{Results in the sphere}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|cc|c}
+    h & 0.075 & 0.05 & $\lambda$ \\
+    \hline
+    $\widehat{\lambda}_{h,1}$ & 7.42151 & 7.42658 & 7.4319 \\
+    $\widehat{\lambda}_{h,2}$ & 7.76569 & 7.77023 & 7.7763 \\
+    $\widehat{\lambda}_{h,3}$ & 8.07633 &  8.08247 & 8.0909    
+  \end{tabular}
+  \caption{Results in the rectangular box}
+\end{table}
 
 We can see that the divergence and the normal component of the curl are zero, but the normal component of the function is not exactly zero, but tends to dicrease as $h$ tends to 0.\\
 The important thing is that the eigenspaces are equivalents.\\
