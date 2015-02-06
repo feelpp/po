@@ -227,11 +227,11 @@ EigenProblem<Dim, Order>::run()
             {
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt1.id() )
                 {
-                    dofid1 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index() + Nh->nLocalDofWithGhost();
+                    dofid1 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
                 }
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt2.id() )
                 {
-                    dofid2 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index() + Nh->nLocalDofWithGhost();
+                    dofid2 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
                 }
             }
 
@@ -241,18 +241,18 @@ EigenProblem<Dim, Order>::run()
                 // we keep their indexes to extract the columns
                 if( !doneLh[ dofid1 ] )
                 {
-                    boundaryIndexesToKeep.push_back( dofid1 );
+                    boundaryIndexesToKeep.push_back( dofid1 + Nh->nLocalDofWithGhost() );
                     doneLh[ dofid1 ] = true;
                 }
                 if( !doneLh[ dofid2 ] )
                 {
-                    boundaryIndexesToKeep.push_back( dofid2 );
+                    boundaryIndexesToKeep.push_back( dofid2 + Nh->nLocalDofWithGhost() );
                     doneLh[ dofid2 ] = true;
                 }
 
                 dof_edge_info[index].type = EDGE_BOUNDARY;
-                dof_edge_info[index].dof_vertex_id1 = dofid1;
-                dof_edge_info[index].dof_vertex_id2 = dofid2;
+                dof_edge_info[index].dof_vertex_id1 = dofid1 + Nh->nLocalDofWithGhost();
+                dof_edge_info[index].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
             }
             if ( !edge.isOnBoundary() )
             {
@@ -264,8 +264,8 @@ EigenProblem<Dim, Order>::run()
                 if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
                 {
                     dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_3;
-                    dof_edge_info[index].dof_vertex_id1 = dofid1;
-                    dof_edge_info[index].dof_vertex_id2 = dofid2;
+                    dof_edge_info[index].dof_vertex_id1 = dofid1 + Nh->nLocalDofWithGhost();
+                    dof_edge_info[index].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
                     CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
@@ -273,7 +273,7 @@ EigenProblem<Dim, Order>::run()
                 else if ( pt1.isOnBoundary()  )
                 {
                     dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_1;
-                    dof_edge_info[index].dof_vertex_id1 = dofid1;
+                    dof_edge_info[index].dof_vertex_id1 = dofid1 + Nh->nLocalDofWithGhost();
                     dof_edge_info[index].dof_vertex_id2 = invalid_size_type_value;
                     CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
                 }
@@ -282,7 +282,7 @@ EigenProblem<Dim, Order>::run()
                 {
                     dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_2;
                     dof_edge_info[index].dof_vertex_id1 = invalid_size_type_value;
-                    dof_edge_info[index].dof_vertex_id2 = dofid2;
+                    dof_edge_info[index].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // the edge doesn't touch the boundary
