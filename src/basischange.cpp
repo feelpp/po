@@ -27,9 +27,9 @@
 #include <feel/feelfilters/unitsphere.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
-// #include <feel/feelvf/vf.hpp>
-// #include <feel/feelalg/solvereigen.hpp>
-// #include <feel/feelfilters/exporter.hpp>
+#include <feel/feelvf/vf.hpp>
+#include <feel/feelalg/solvereigen.hpp>
+#include <feel/feelfilters/exporter.hpp>
 #include <boost/mpi/timer.hpp>
 
 /** use Feel namespace */
@@ -200,6 +200,9 @@ EigenProblem<Dim, Order>::run()
     for( auto dofit = dofbegin; dofit != dofend; ++dofit )
     {
         auto const& dof = *dofit;
+    // for( int i = 0; i < Nh->nLocalDof(); ++i )
+    //     for( auto const& dof : Nh->dof()->localDof( i ) )
+    //     {
 
         auto index = dof.second.index();
         if ( !doneNh[ index ] )
@@ -336,9 +339,6 @@ EigenProblem<Dim, Order>::run()
     }
     cTilde->close();
 
-    cTilde->printMatlab("cTilde.m");
-    //cTilde->printMatlab();
-
     auto mapPToC = cTilde->mapCol().mapGlobalProcessToGlobalCluster();
 
     std::vector<size_type> rows( Nh->nLocalDof() );
@@ -362,32 +362,52 @@ EigenProblem<Dim, Order>::run()
          << "c procToCluster : " << C->mapColPtr()->mapGlobalProcessToGlobalCluster()
          << "c clusterToProc : " << C->mapColPtr()->mapGlobalClusterToGlobalProcess() << std::endl;
 
-    C->printMatlab("c.m");
-    //C->printMatlab();
-
-#if 1
-    auto fLh  = Lh->element();
-    auto fNh = Nh->element();
-    for( int i = 0; i < (1 << C->mapColPtr()->nDof()); i++)
+    if( boption("isPrinting") )
     {
-        auto tmpNh = backend()->newVector( Nh );
-        auto tmpLh = backend()->newVector( Lh );
+        if( Environment::worldComm().isMasterRank() )
+            std::cout << "Start printing" << std::endl;
 
-        auto alphaPrime = backend()->newVector( C->mapColPtr() );
-        auto map = alphaPrime->mapPtr()->mapGlobalProcessToGlobalCluster();
+        matA->printMatlab("a.m");
+        matB->printMatlab("b.m");
+        C->printMatlab("c.m");
+        //C->printMatlab();
+    }
 
-        for( int j = 0; j < C->mapColPtr()->nDof(); j++)
+    if( boption("testC") )
+    {
+        auto fLh  = Lh->element();
+        auto fNh = Nh->element();
+        for( int i = 0; i < 50; i++)
         {
-            if( i & (1<<j) )
+            auto tmpNh = backend()->newVector( Nh );
+            auto tmpLh = backend()->newVector( Lh );
+
+            auto alphaPrime = backend()->newVector( C->mapColPtr() );
+            auto map = alphaPrime->mapPtr()->mapGlobalProcessToGlobalCluster();
+
+            std::srand(std::time(NULL));
+
+            int n = C->mapColPtr()->nDof();
+            int stop = 0;
+            if(n < 100)
+                stop = n/2;
+            else
+                stop = 50;
+
+            file << "[" << i << "] : ";
+
+            for( int j = 0; j < stop; j++)
             {
-                auto it = std::find(map.begin(), map.end(), j);
+                int r = rand() % n;
+                auto it = std::find(map.begin(), map.end(), r);
                 auto index = it-map.begin();
 
                 if( it != map.end() )
                 {
                     alphaPrime->set(index, 1);
 
-                    int col = indexesToKeep[index];
+                    auto col = indexesToKeep[index];
+                    file << col << " ";
                     if( col < Nh->nLocalDofWithGhost() )
                     {
                         tmpNh->set(col, 1);
@@ -398,38 +418,38 @@ EigenProblem<Dim, Order>::run()
                     }
                 }
             }
+
+            file << std::endl;
+
+            tmpNh->close();
+            fNh = *tmpNh;
+            tmpLh->close();
+            fLh = *tmpLh;
+
+            auto f = vf::project( _space=Nh, _range=elements(mesh),
+                                  _expr= idv(fNh) + trans(gradv(fLh)) );
+
+            alphaPrime->close();
+            auto alphaVec = backend()->newVector( Nh );
+            C->multVector( alphaPrime, alphaVec);
+            auto alpha = Nh->element();
+            alphaVec->close();
+            alpha = *alphaVec;
+
+            auto erreur = normL2( elements(mesh), idv(f) - idv(alpha) );
+            auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+            if ( Environment::worldComm().isMasterRank() )
+                std::cout << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
         }
-
-        tmpNh->close();
-        fNh = *tmpNh;
-        tmpLh->close();
-        fLh = *tmpLh;
-
-        auto f = vf::project( _space=Nh, _range=elements(mesh),
-                              _expr= idv(fNh) + trans(gradv(fLh)) );
-
-        auto alphaVec = backend()->newVector( Nh );
-        C->multVector( alphaPrime, alphaVec);
-        auto alpha = Nh->element();
-        alpha = *alphaVec;
-
-        auto erreur = normL2( elements(mesh), idv(f) - idv(alpha) );
-        auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
-
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
     }
-    file.close();
-#endif
 
-#if 0
-    auto e =  exporter( _mesh=mesh );
+    file.close();
 
     if( boption("eigs"))
     {
         auto Ahat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
         auto Bhat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
-
         backend()->PtAP( matA, C, Ahat );
         backend()->PtAP( matB, C, Bhat );
         Ahat->close();
@@ -449,28 +469,25 @@ EigenProblem<Dim, Order>::run()
                            _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")]
                            );
 
+        auto e =  exporter( _mesh=mesh );
 
         int i = 0;
         for( auto const& mode: modes )
         {
             if ( Environment::isMasterRank() )
-            {
-                std::cout << "eigenvalue " << i << " = (" << modes.begin()->second.get<0>() << "," <<  modes.begin()->second.get<1>() << ")" << std::endl;
-            }
+                std::cout << "eigenvalue " << i << " = (" << boost::get<0>(mode.second) << "," <<  boost::get<1>(mode.second) << ")" << std::endl;
+
             auto tmpVec = backend()->newVector( Nh );
-            C->multVector( mode.second.get<2>(), tmpVec);
-            element_type tmp = Nh->element();
-            tmp.add(*tmpVec);
-            // element_type tmp = *tmpVec;
-            tmp.close();
+            C->multVector( boost::get<2>(mode.second), tmpVec);
+            tmpVec->close();
+            auto tmp = Nh->element();
+            tmp = *tmpVec;
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), tmp );
             i++;
         }
 
+        e->save();
     }
-
-    e->save();
-#endif
 }
 
 
@@ -483,8 +500,9 @@ main( int argc, char** argv )
     basischangeoptions.add_options()
         ("isPrinting", po::value<bool>()->default_value( false ), "print matrices")
         ("useSphere", po::value<bool>()->default_value( true ), "use sphere or other geo")
-        ("eigs", po::value<bool>()->default_value( true ), "compute the eigen problem")
-        ("load", po::value<bool>()->default_value( true ), "load eigen vectors and values")
+        ("eigs", po::value<bool>()->default_value( false ), "compute the eigen problem")
+        ("load", po::value<bool>()->default_value( false ), "load eigen vectors and values")
+        ("testC", po::value<bool>()->default_value( false ), "test matrix C")
         ("checkAndFixRange", po::value<bool>()->default_value( true ), "check and fix range for createSubMatrix" );
 
     Environment env( _argc=argc, _argv=argv,
