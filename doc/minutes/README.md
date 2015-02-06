@@ -1,6 +1,6 @@
 ## Compte Rendu des réunions
 
-Chaque réunion est nommé JJMMAA.md suivie par une brève description.
+Chaque réunion est nommé AAMMJJ.md suivie par une brève description.
 
 - [21/11/14](211114.md) : Discussions sur la matrice de changement de base, le problème mixte et les solutions analytiques
 - [05/12/14](051214.md) : Avancement des travaux et réflexions sur la stratégies de résolution du problème aux valeurs propres
