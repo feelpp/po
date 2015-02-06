@@ -588,8 +588,7 @@ For an idea, we have the following number of dofs depending on the size of the m
 
 \subsubsection{Results}
 
-I have ran some tests in \texttt{matlab} with the function \texttt{eigs}. For now, in \texttt{Feel++}, I can't achieved the same results, but since I use the same matrices, it is only a question of which solver and which options to use. I'll update the results as soon as I have found the right settings.\\
-
+I have ran some tests in \texttt{matlab} with the function \texttt{eigs}. 
 \paragraph{Sphere}
 
 In the sphere, we know that the first eigen value of the problem \ref{pbstart} is approximately $4.493409$. Since we resolved the problem \ref{pbweak}, our eigen value is squared and with multiplicity 6. So we compute $\widehat{\lambda}_h=(\sum_{i=1}^6\lambda_{i,h})/6$.\\
@@ -612,7 +611,25 @@ The last column is the experimental rate of convergence defined in \cite{Venegas
 \[ erc=-3\frac{\log(|\widehat{\lambda}_h-\lambda|/|\widehat{\lambda}_{h'}-\lambda|)}{\log(\#\NN_h/\#\NN_{h'})} \]
 We see that our error is lesser than in their article, but the rate of convergence is better for them than for us.\\
 
-Those are of course prelimenary results and need to be precised with a number of elements way greater. To achieved this, we may need to run in parallel, but we need to review our code in details to be sure it ok.\\
+Those are of course prelimenary results and need to be precised with a number of elements way greater. To achieved this, we may need to run in parallel, but we need to review our code in details to be sure it's ok.\\
+
+I created a function to reload the eigen functins from \texttt{Matlab} in \texttt{Feel++}. Using it, I have been able to see the functions in \texttt{Paraview}. The figure \ref{modes} presents the first six modes.
+\begin{figure}[H]
+	\makebox[\textwidth][c]{
+		\subfloat[mode 1]{\includegraphics[scale=0.27]{mode1}}\ 
+		\subfloat[mode 2]{\includegraphics[scale=0.27]{mode2}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 3]{\includegraphics[scale=0.27]{mode3}}\ 
+		\subfloat[mode 4]{\includegraphics[scale=0.27]{mode4}}
+	}\\
+	\makebox[\textwidth][c]{
+		\subfloat[mode 5]{\includegraphics[scale=0.27]{mode5}}\ 
+		\subfloat[mode 6]{\includegraphics[scale=0.27]{mode6}}
+	}
+	\caption{Eigen Functions from Matlab}
+	\label{modes}
+\end{figure}
 
 \paragraph{Rectangular Box}
 
@@ -631,26 +648,31 @@ In the rectangular box, the multiplicity is 2 and we know 3 eigen values : $7.43
   \caption{Results in the rectangular box depending on the number of elements of $\NN_h$}
   \label{RBResults}
 \end{table}
-We can notice in \ref{RBResults} that the time of computation for the greater number of elements is way smaller than in the sphere. I need to check this with a larger set of element's size.
+We can notice in table \ref{RBResults} that the time of computation for the greater number of elements is way smaller than in the sphere. I need to check this with a larger set of element's size.
 
 \paragraph{Back in \texttt{Feel++}}
 
-I created a function to reload the eigen functins from \texttt{Matlab} in \texttt{Feel++}. Using it, I have been able to see the functions in \texttt{Paraview}. The figure \ref{modes} presents the first six modes.
+Using the following configuration :
+\begin{description}
+\item[solver] krylovschur
+\item[problem] ghep
+\item[transform] shift\_invert
+\item[interval] 19,21
+\end{description}
+I find the 6 first eigenvalue in the sphere.\\
+The \texttt{interval}  option is \texttt{eps\_interval}, which retrieve all the eigenvalues in a given interval. This interval can be open in one end, so we could use $[a, \infty)$ with $a$ very small but positive.\\
+There is some limitations with this option as exposed in the \href{http://slepc.upv.es/documentation/slepc.pdf}{documentation of SLEPc} \S 3.4.5. We have to use KrylovSchur as solver and shift and invert as transform.\\
+Furthermore, direct linear solvers are required. This linear solver must provide the matrix inertia and must use a symmetric factorization (\texttt{cholesky}).\\
+To use it in parallel, we have to use MUMPS.\\
+So the command looks like :\\ \texttt{./feelpp\_po\_basischange --solvereigen.solver krylovschur -eps\_interval 19,30 -st\_ksp\_type preonly -st\_pc\_type cholesky -st\_pc\_factor\_mat\_solver\_package mumps -mat\_mumps\_icntl\_13 1}\\
+
 \begin{figure}[H]
-	\makebox[\textwidth][c]{
-		\subfloat[mode 1]{\includegraphics[scale=0.27]{mode1}}\ 
-		\subfloat[mode 2]{\includegraphics[scale=0.27]{mode2}}
-	}\\
-	\makebox[\textwidth][c]{
-		\subfloat[mode 3]{\includegraphics[scale=0.27]{mode3}}\ 
-		\subfloat[mode 4]{\includegraphics[scale=0.27]{mode4}}
-	}\\
-	\makebox[\textwidth][c]{
-		\subfloat[mode 5]{\includegraphics[scale=0.27]{mode5}}\ 
-		\subfloat[mode 6]{\includegraphics[scale=0.27]{mode6}}
-	}
-	\caption{Modes propres}
-	\label{modes}
+  \makebox[\textwidth][c]{
+    \subfloat[Sphere]{\includegraphics[scale=0.27]{sphMode0}}\ 
+    \subfloat[Rectangular Box]{\includegraphics[scale=0.27]{rbMode0}}
+  }
+  \caption{Eigen Functions from Feel++}
+  \label{feelModes}
 \end{figure}
 
 To understand the link between those functions and the eigen functions of the curl operator, I'll quote the article \cite{Venegas2013} :
@@ -659,23 +681,38 @@ To understand the link between those functions and the eigen functions of the cu
 \end{italicquotes}
 
 And indeed, we do not have that $\curl\mbf{u}_i-\lambda_i\mbf{u}_i = 0$.\\
-For the first eigenvalue, we have the following results, for a mesh with 7164 elements :
-\begin{align*}
-  \div\mbf{u} &= 1.07054e-15\\
-  \mbf{u}\cdot\mbf{n} &= 0.00598972\\
-  \curl\mbf{u}\cdot\mbf{n} &= 3.62421e-17\\
-  \curl\mbf{u}-\lambda\mbf{u} &= 0.189511
-\end{align*}
+For the first eigenvalue, we have the following results :
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c|c}
+    h & 0.15 & 0.075 \\
+    \hline
+    $\widehat{\lambda}_h$ & 4.49481924 & 4.49377347\\
+    $|\widehat{\lambda}_h-\lambda|$ & 0.00141024 & 0.00036447 \\
+    erc & $-$ & \\
+    \hline
+    $||\div\mbf{u}||_2$ & 2.88311e-14 & 6.60701e-14 \\
+    $||\mbf{u}\cdot\mbf{n}||_2$ & 0.216208 & 0.112487 \\
+    $||\curl\mbf{u}\cdot\mbf{n}||_2$ & 5.11927e-15 & 9.48309e-15 \\
+    $||\curl\mbf{u}-\lambda\mbf{u}||_2$ & 6.5155 & 6.38584
+  \end{tabular}
+  \caption{Results in the sphere}
+\end{table}
 
-We can see that the divergence and the normal component of the curl are zero, but the normal component of the function is not exactly zero, but again, this is with $h=0.15$ and only 7164 elements.\\
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|cc|c}
+    h & 0.075 & 0.05 & $\lambda$ \\
+    \hline
+    $\widehat{\lambda}_{h,1}$ & 7.42151 & 7.42658 & 7.4319 \\
+    $\widehat{\lambda}_{h,2}$ & 7.76569 & 7.77023 & 7.7763 \\
+    $\widehat{\lambda}_{h,3}$ & 8.07633 &  8.08247 & 8.0909    
+  \end{tabular}
+  \caption{Results in the rectangular box}
+\end{table}
+
+We can see that the divergence and the normal component of the curl are zero, but the normal component of the function is not exactly zero, but tends to dicrease as $h$ tends to 0.\\
 The important thing is that the eigenspaces are equivalents.\\
-To test that, I could create some functions $\mbf{u}_h$ in $\ZZ_h$ (following \ref{createZh}) and compute the error
-\[ \left(\sum_{i=1}^M (\mbf{u}_h,\mbf{e}_i)\mbf{e}_i\right) - \mbf{u}_h \]
-It should tend to 0 as $M$ grows.
-
-Of course, I need also to get back the same results with \texttt{Feel++} than with \texttt{Matlab}. And then, I will be able to test the code in parallel.
-
-
 
 
 
