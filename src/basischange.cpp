@@ -21,7 +21,6 @@
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-//#include <feel/feel.hpp>
 #include <feel/feelinfo.h>
 #include <feel/feelcore/feel.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
@@ -113,18 +112,16 @@ public:
     typedef bases<basis_edge_type, basis_vertex_type> basis_type;
     typedef FunctionSpace<mesh_type, basis_type> space_type;
 
-    typedef FunctionSpace<mesh_type, bases<basis_edge_type> > space_edge_type;
+    typedef typename space_type::template sub_functionspace<0>::type space_edge_type;
     typedef boost::shared_ptr<space_edge_type> space_edge_ptrtype;
     typedef typename space_edge_type::element_type element_type;
 
-    typedef Vector<value_type> vector_type;
-    typedef boost::shared_ptr<vector_type> vector_ptrtype;
     typedef MatrixSparse<value_type> sparse_matrix_type;
     typedef boost::shared_ptr<sparse_matrix_type> sparse_matrix_ptrtype;
 
     void run();
 private:
-    space_edge_ptrtype Vh;
+    space_edge_ptrtype Nh;
     sparse_matrix_ptrtype C;
 
     std::vector<double> lambda;
@@ -183,7 +180,7 @@ EigenProblem<Dim, Order>::run()
     t.restart();
 
     auto Xh = space_type::New( mesh );
-    auto Nh = Xh->template functionSpace<0>();
+    Nh = Xh->template functionSpace<0>();
     auto Lh = Xh->template functionSpace<1>();
 
     LOG(INFO) << "[info] Nh dof = " << Nh->nDof() << std::endl;
@@ -496,7 +493,7 @@ EigenProblem<Dim, Order>::run()
         auto e =  exporter( _mesh=mesh );
 
         lambda = std::vector<double>(modes.size(), 0);
-        g = std::vector<element_type>(modes.size(), Vh->element());
+        g = std::vector<element_type>(modes.size(), Nh->element());
         int i = 0;
         for( auto const& mode: modes )
         {
@@ -553,7 +550,7 @@ EigenProblem<Dim, Order>::run()
                 errp[j] = normL2( elements(mesh), curlv(g[ind])-ev[j]*idv(g[ind]) );
                 errm[j] = normL2( elements(mesh), curlv(g[ind])+ev[j]*idv(g[ind]) );
 
-                auto tmpCurl = vf::project( _space=Vh, _range=elements(mesh),
+                auto tmpCurl = vf::project( _space=Nh, _range=elements(mesh),
                                             _expr=curlv(g[ind]) );
                 curl2n[j] = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
                 errC2[j] = normL2( elements(mesh), curlv(tmpCurl)-lambda[ind]*idv(g[ind]) );
@@ -593,24 +590,22 @@ EigenProblem<Dim, Order>::run()
             std::cout << "[timer] testMode = " << t.elapsed() << " sec" << std::endl;
         t.restart();
 
-
-#if 0
         if( boption("space") )
         {
-            auto fVh = Vh->element();
-            auto fSh = Sh->element();
+            auto fNh = Nh->element();
+            auto fLh = Lh->element();
 
             srand(std::time(NULL));
 
             for( int i = 0; i < interiorIndexesToKeep.size(); i++)
                 if(rand() % 10 > 8)
-                    fVh.set(interiorIndexesToKeep[i], 1);
+                    fNh.set(interiorIndexesToKeep[i], 1);
             for( int i = 0; i < boundaryIndexesToKeep.size(); i++)
                 if(rand() % 10 > 8)
-                    fSh.set(boundaryIndexesToKeep[i] - Vh->nDof(), 1);
+                    fLh.set(boundaryIndexesToKeep[i] - Nh->nDof(), 1);
 
-            auto f = vf::project( _space=Vh, _range=elements(mesh),
-                                  _expr= idv(fVh) + trans(gradv(fSh)) );
+            auto f = vf::project( _space=Nh, _range=elements(mesh),
+                                  _expr= idv(fNh) + trans(gradv(fLh)) );
 
             auto dif = normL2( elements(mesh), divv(f));
             auto norf = normL2( boundaryfaces(mesh), trans(idv(f))*N() );
@@ -623,7 +618,7 @@ EigenProblem<Dim, Order>::run()
 
 
             auto coef = std::vector<double>(nbMode, 0);
-            auto tmpProj = Vh->element();
+            auto tmpProj = Nh->element();
             double errProj = 0.0;
 
             for( int i = 0; i < nbMode; i++)
@@ -639,7 +634,6 @@ EigenProblem<Dim, Order>::run()
                 std::cout << "[timer] space = " << t.elapsed() << " sec" << std::endl;
             t.restart();
         }
-#endif
     }
 
     LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
@@ -673,7 +667,7 @@ EigenProblem<Dim, Order>::load()
     int multiplicity = ioption("multiplicity");
     int total = nbMode * multiplicity;
     lambda = std::vector<double>(total, 0);
-    g = std::vector<element_type>(total, Vh->element());
+    g = std::vector<element_type>(total, Nh->element());
 
     std::fstream s;
     s.open ("lambda", std::fstream::in);
@@ -702,7 +696,7 @@ EigenProblem<Dim, Order>::loadMatlab()
     int multiplicity = ioption("multiplicity");
     int total = nbMode * multiplicity;
     lambda = std::vector<double>(total, 0);
-    g = std::vector<element_type>(total, Vh->element());
+    g = std::vector<element_type>(total, Nh->element());
 
     std::fstream s;
     std::fstream sv;
@@ -723,7 +717,7 @@ EigenProblem<Dim, Order>::loadMatlab()
             exit(0);
         }
 
-        vector_ptrtype v = backend()->newVector( C->mapColPtr() );
+        auto v = backend()->newVector( C->mapColPtr() );
         double val;
         for( int j = 0; j < C->mapColPtr()->nDof() && sv.good(); j++ )
         {
@@ -732,7 +726,7 @@ EigenProblem<Dim, Order>::loadMatlab()
         }
         sv.close();
 
-        auto tmp = backend()->newVector( Vh );
+        auto tmp = backend()->newVector( Nh );
         C->multVector( v, tmp);
         tmp->close();
         g[i] = *tmp;
