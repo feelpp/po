@@ -1,9 +1,12 @@
 \documentclass[a4paper,11pt]{report}
 \usepackage{mystyle}
-
-\title{\includegraphics[scale=0.4]{uds.jpg}\\Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
+\title{\includegraphics[scale=0.4]{uds.jpg}\\$$ \mbox{\Huge
+    $\mbf{NS_{++}^2}$}$$\\Non Standard Navier
+  Stokes formulation in Feel++}
 \author{Romain HILD}
 \date{\today\\ \includegraphics[scale=0.4]{po.jpg}}
+
+\includeonly{./tex/probleme,./tex/prog,./tex/relev,./tex/mode,./tex/ps,./tex/ccl}
 
 \begin{document}
 
@@ -25,7 +28,7 @@
 
 \include{./tex/ps}
 
-%\include{./tex/pression}
+\include{./tex/pression}
 
 \include{./tex/ccl}
 
@@ -42,9 +45,9 @@
 
 \include{./tex/test}
 
-%\include{./tex/reunion}
+\include{./tex/reunion}
 
-\bibliographystyle{plain}
+\bibliographystyle{alpha}
 \bibliography{ref}
 
 \end{document}

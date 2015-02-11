@@ -3,7 +3,7 @@
 
 Lors de la réunion, on a pu relever plusieurs problèmes dans le rapport, quelques fautes mathématiques et des approximations de ma part.\\
 
-La discussion a surtout porté sur le relèvement du problème par la fonction $a=\rot\mathbf{b}+\grad\psi^0$, et notamment sur le problème (\ref{curlb}).\\
+La discussion a surtout porté sur le relèvement du problème par la fonction $a=\curl\mathbf{b}+\grad\psi^0$, et notamment sur le problème (\ref{curlb}).\\
 La question a été de savoir si on pouvait résoudre directement le problème (\ref{curlb}), étant donné que c'est un problème de Stokes et qu'il existe déjà dans Feel++ une implémentation d'un problème ressemblant (doc/manual/stokes/stokesCurl.cpp). Ou alors de rester sur la formulation en deux partie et d'utiliser les fonctions propres précédemment calculées.\\
 Résoudre le problème mixte demanderait d'adapter l'exemple en 3D, et de vérifier si l'on peut l'utiliser dans le cas de $D^1$, et non $H(rot)$.\\
 
@@ -19,7 +19,7 @@ Il est important que je sois au point sur la formulation du problème avant que 
 Lors de la réunion, on a revu la décomposition du problème principal en plusieurs problèmes plus simples, notamment les problèmes concernant le relèvement (\ref{psi0}-\ref{curlb}).\\
 La question était de savoir dans quel espace on voulait résoudre les problèmes. Par exemple, pour $\psi^0$, il faudrait être dans $H(div)$ pour assurer la régularité. On utiliserait ainsi un problème mixte, avec des multiplicateurs de Lagrange pour la constante, pour trouver $\psi^0$. Il peut être aussi intéressant de comparer les résultats avec ceux obtenues par une projection sur $L^2$.\\
 
-Pour $\mathbf{b}$, il y a plusieurs approches possibles. On peut simplement calculer $\mathbf{b}$ avec un problème mixte dans $H^1$, et ensuite projeter $\rot\mathbf{a}$ sur l’espace choisit pour discrétiser le problème spectral. Ou bien essayer de changer la formulation faible du problème pour que le $\rot\mathbf{a}$ porte plutôt sur les $\mathbf{g}$, ainsi on aurait pas besoin de la  régularité sur $\rot\mathbf{a}$.\\
+Pour $\mathbf{b}$, il y a plusieurs approches possibles. On peut simplement calculer $\mathbf{b}$ avec un problème mixte dans $H^1$, et ensuite projeter $\curl\mathbf{a}$ sur l’espace choisit pour discrétiser le problème spectral. Ou bien essayer de changer la formulation faible du problème pour que le $\curl\mathbf{a}$ porte plutôt sur les $\mathbf{g}$, ainsi on aurait pas besoin de la  régularité sur $\curl\mathbf{a}$.\\
 Une autre possibilité est de ne pas utiliser le problème mixte pour trouver $\mathbf{b}$. On calcul $\psi^1$ de la même manière que $\psi^0$, et ensuite on calcul $\mathbf{b}$ dans $H(rot)$.\\
 
 Ainsi, il est très important que je précise les espaces dans lesquelles se situent les problèmes. De même, le rapport serait plus lisible si je différenciais les champs vectoriels des champs scalaires.\\
@@ -68,7 +68,7 @@ Le plus gros problème soulevé est l'adimensionnement des équations mais pas d
 Un autre problème est la moyenne nulle des composantes des modes propres, ce qui implique l'impossibilité d'appliquer des forces volumiques sur $\bm{u}$. Cela peut provenir de la symétrie du cylindre, et ainsi des modes propres. Il faudrait donc vérifier si il existe des modes de moyennes non nulles. Une solution est aussi de tester le problème sur une autre géomètrie, telle que la marche.\\
 De la même manière, il faut tester $\psi$ avec différentes moyennes, afin de voir le comportements du coefficient $R_{pk}$.\\
 
-Afin de calculer l'erreur sur la condition au bord $\rott\bm{g}\cdot\bm{n}$ et sur les modes propres $\rott\bm{g}-\lambda^2\bm{g}$, il faut pouvoir calculer $\rott\bm{g}$. Si on peut calculer $\rot\bm{g}$ avec Paraview, il faut utiliser une projection sur les fonctions continues et monter en ordre afin de calculer $\rott\bm{g}$.\\
+Afin de calculer l'erreur sur la condition au bord $\curll\bm{g}\cdot\bm{n}$ et sur les modes propres $\curll\bm{g}-\lambda^2\bm{g}$, il faut pouvoir calculer $\curll\bm{g}$. Si on peut calculer $\curl\bm{g}$ avec Paraview, il faut utiliser une projection sur les fonctions continues et monter en ordre afin de calculer $\curll\bm{g}$.\\
 Afin de limiter l'utilisation de la mémoire, il faudrait utiliser une décomposition du domaine afin de limiter la taille des problèmes.\\
 
 Un autre ajout important est le contrôle des différents paramètres du problème, la taille du maillage, le nombre de degré de libertè,... Cela permettra de pouvoir comparer les résultats entre eux précisément.

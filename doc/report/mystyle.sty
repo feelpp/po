@@ -1,7 +1,7 @@
 \ProvidesPackage{mystyle}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[francais]{babel}
+\usepackage[english]{babel}
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{amsmath,amsthm,amsfonts,amssymb}
@@ -14,11 +14,13 @@
 \usepackage{bm}
 \usepackage{multirow,array}
 \usepackage{todonotes}
+\usepackage{empheq}
+\usepackage{nth}
 
-\newtheorem{mydef}{Définition}
-\newtheorem{thm}{Théorème}
-\newtheorem{pb}{Problème}
-\newtheorem{rk}{Remarque}
+\newtheorem{mydef}{Definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{pb}{Problem}
+\newtheorem{rk}{Remark}
 \newcommand{\N}{{\mathbb{N}}}
 \newcommand{\Z}{{\mathbb{Z}}}
 \newcommand{\R}{{\mathbb{R}}}
@@ -26,13 +28,19 @@
 \newcommand{\LL}{{\mathbb{L}}}
 \newcommand{\HH}{{\mathbb{H}}}
 \newcommand{\DD}{{\mathbb{D}}}
+\newcommand{\ZZ}{{\bm{\mathcal{Z}}}}
+\newcommand{\TT}{{\bm{\mathcal{T}}}}
+\newcommand{\NN}{{\bm{\mathcal{N}}}}
+\newcommand{\DDD}{{\bm{\mathcal{D}}}}
+\newcommand{\LLL}{{\bm{\mathcal{L}}}}
 \newcommand{\grad}{{\nabla}}
 \newcommand{\laplace}{{\Delta}}
-\newcommand{\rot}{{\nabla\times}}
 \newcommand{\curl}{{\nabla\times}}
-\newcommand{\rott}{{\nabla^2\times}}
+\newcommand{\curll}{{\nabla^2\times}}
 \renewcommand{\div}{{\nabla\cdot}}
-\newcommand{\restr}{{\big\rvert_{\partial\Omega}}}
+\newcommand{\restr}[1]{{\big\rvert_{#1}}}
+\newcommand{\mbf}[1]{{\mathbf{#1}}}
+
 \newcommand{\taille}{0.8}
 \newcommand{\taillem}{0.9}
 \newcommand{\tailleg}{1.1}
@@ -60,6 +68,42 @@ includerangemarker=false}
 \fancyhead[L]{\leftmark}
 \fancyhead[R]{}
 \renewcommand\footrulewidth{1pt}
-\lfoot{Romain Hild\\Stage}
+\lfoot{Romain Hild\\Christophe Prud'homme}
 \cfoot{\thepage/\pageref{LastPage}}
-\rfoot{Christophe Prud'homme\\Philippe Gilotte \& Benjamin Surowiec}
+\rfoot{Philippe Gilotte\\Benjamin Surowiec}
+
+% remove whitespaces before lstinputlisting
+\newlength{\rawgobble}
+\newlength{\gobble}
+\newlength{\gobblea}
+% The width of a single space. basicstyle from lstset should be used
+\sbox0{\Huge\ttfamily \ }
+% Remove a single space
+\settowidth{\rawgobble}{\Huge\ttfamily \ }
+\setlength{\rawgobble}{-\rawgobble}
+
+\makeatletter
+\def\sepstar#1*#2\relax{%
+    \def\sepstarone{#1}%
+    \def\sepstartwo{#2}%
+}
+\lst@Key{firstlineandnumber}\relax{\def\lst@firstline{#1\relax}\def\lst@firstnumber{#1\relax}}
+\lst@Key{widthgobble}{0*0}{%
+    % Reindent a bit by multiplying with 0.9, then multiply by tabsize and number of indentation levels
+    \sepstar #1\relax
+    \setlength{\gobble}{0.9\rawgobble}%
+    \setlength{\gobble}{\sepstarone\gobble}%
+    \setlength{\gobble}{\sepstartwo\gobble}%
+    \setlength{\gobblea}{\gobble}%
+    \addtolength{\gobblea}{10pt}%
+    \def\lst@xleftmargin{\gobble}%
+    \def\lst@framexleftmargin{\gobble}%
+    \def\lst@numbersep{\gobblea}%
+}
+\makeatother
+
+
+% italic quotation
+\newenvironment{italicquotes}
+{\begin{quotation}\itshape}
+{\end{quotation}}
