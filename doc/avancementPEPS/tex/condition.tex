@@ -684,29 +684,31 @@ And indeed, we do not have that $\curl\mbf{u}_i-\lambda_i\mbf{u}_i = 0$.\\
 For the first eigenvalue, we have the following results :
 \begin{table}[H]
   \centering
-  \begin{tabular}{r|c|c}
-    h & 0.15 & 0.075 \\
+  \begin{tabular}{r|c|c|c}
+    h & 0.15 & 0.075 & 0.05 \\
+    \# elements & 7000 & 50000 & 150000 \\
     \hline
-    $\widehat{\lambda}_h$ & 4.49481924 & 4.49377347\\
-    $|\widehat{\lambda}_h-\lambda|$ & 0.00141024 & 0.00036447 \\
-    erc & $-$ & \\
+    $\widehat{\lambda}_h$ & 4.49481924 & 4.49377347 & 4.49361\\
+    $|\widehat{\lambda}_h-\lambda|$ & 0.00141024 & 0.00036447 & 0.000201 \\
+    order & $-$ & 1.9521 & 1.4678 \\
     \hline
-    $||\div\mbf{u}||_2$ & 2.88311e-14 & 6.60701e-14 \\
-    $||\mbf{u}\cdot\mbf{n}||_2$ & 0.216208 & 0.112487 \\
-    $||\curl\mbf{u}\cdot\mbf{n}||_2$ & 5.11927e-15 & 9.48309e-15 \\
-    $||\curl\mbf{u}-\lambda\mbf{u}||_2$ & 6.5155 & 6.38584
+    $||\div\mbf{u}||_2$ & 2.88311e-14 & 6.60701e-14 & 9.22039e-14 \\
+    $||\mbf{u}\cdot\mbf{n}||_2$ & 0.216208 & 0.112487 & 0.0737108 \\
+    $||\curl\mbf{u}\cdot\mbf{n}||_2$ & 5.11927e-15 & 9.48309e-15 & 1.47194e-14 \\
+    $||\curl\mbf{u}-\lambda\mbf{u}||_2$ & 6.5155 & 6.38584 & 6.381
   \end{tabular}
   \caption{Results in the sphere}
 \end{table}
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{c|cc|c}
-    h & 0.075 & 0.05 & $\lambda$ \\
+  \begin{tabular}{c|cc|c|c}
+    h & 0.075 & 0.05 & exact & order \\
+    \# elements & 10000 & 35000 & - & - \\
     \hline
-    $\widehat{\lambda}_{h,1}$ & 7.42151 & 7.42658 & 7.4319 \\
-    $\widehat{\lambda}_{h,2}$ & 7.76569 & 7.77023 & 7.7763 \\
-    $\widehat{\lambda}_{h,3}$ & 8.07633 &  8.08247 & 8.0909    
+    $\widehat{\lambda}_{h,1}$ & 7.42151 & 7.42658 & 7.4319 & 1.6509 \\
+    $\widehat{\lambda}_{h,2}$ & 7.76569 & 7.77023 & 7.7763 & 1.3773 \\
+    $\widehat{\lambda}_{h,3}$ & 8.07633 &  8.08247 & 8.0909 & 1.3495
   \end{tabular}
   \caption{Results in the rectangular box}
 \end{table}
