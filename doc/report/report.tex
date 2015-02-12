@@ -6,7 +6,7 @@
 \author{Romain HILD}
 \date{\today\\ \includegraphics[scale=0.4]{po.jpg}}
 
-\includeonly{./tex/probleme,./tex/prog,./tex/relev,./tex/mode,./tex/ps,./tex/ccl}
+\includeonly{./tex/problem/problem,./tex/discr/prog,./tex/discr/relev,./tex/discr/mode,./tex/discr/ps,./tex/ccl}
 
 \begin{document}
 
@@ -18,19 +18,19 @@
 
 \include{./tex/intro}
 
-\include{./tex/probleme}
+\include{./tex/problem/problem}
 
-\include{./tex/prog}
+\include{./tex/discr/prog}
 
-\include{./tex/relev}
+\include{./tex/discr/relev}
 
-\include{./tex/mode}
+\include{./tex/discr/mode}
 
-\include{./tex/ps}
+\include{./tex/discr/ps}
 
-\include{./tex/pression}
+\include{./tex/discr/pression}
 
-\include{./tex/ccl}
+\include{./tex/discr/ccl}
 
 \part{Annexes}
 
@@ -39,13 +39,13 @@
 \def\@seccntformat#1{Annexe~\csname the#1\endcsname:\quad}
 \makeatother
 
-\include{./tex/mesh}
+\include{./tex/annexes/mesh}
 
-\include{./tex/algo}
+\include{./tex/annexes/algo}
 
-\include{./tex/test}
+\include{./tex/annexes/test}
 
-\include{./tex/reunion}
+\include{./tex/annexes/reunion}
 
 \bibliographystyle{alpha}
 \bibliography{ref}

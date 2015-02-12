@@ -1,0 +1,30 @@
+\section{Pression : Post-traitement de la vitesse}
+\label{pression}
+Pour retrouver la vitesse $\mathbf{v}$, il suffit maintenant d'additionner $\mathbf{a}$ et $\mathbf{u}$.\\
+Le terme correspondant à la pression ayant été relayé en post-traitement de la vitesse, il faut le recalculer à partir de l'équation du problème \ref{depart}.
+
+On applique la divergence sur cette équation et on utilise le fait que $\mathbf{v}$ soit à divergence nulle, et que la divergence d'un rotationnel soit toujours nulle. On a alors :
+\begin{equation*}
+-\laplace q = \div((\curl \mathbf{v})\times \mathbf{v}) - \div \mathbf{f}
+\end{equation*}
+
+Pour obtenir une condition au bord, on utilise la composante normale de l'équation (\ref{depart}) et les conditions aux bords de $\mathbf{v}$ :
+\[ \grad q\cdot \mathbf{n}\restr{\Gamma} =  \mathbf{f}\cdot \mathbf{n}\restr{\Gamma} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} - \frac{\alpha_2}{Re} \]
+On cherche maintenant la forme variationnelle du problème :
+\[ \int_\Omega -\laplace q\varphi = \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi \]
+En intégrant par partie le terme de gauche, on a :
+\[ \int_\Omega \grad q\grad\varphi - \int_{\partial\Omega} (\grad q\cdot \mathbf{n})\varphi = \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi \]
+
+Toujours de même manière, on va trouver la pression à une constante près, on utilise donc encore une fois les multiplicateur de Lagrange afin de fixer cette constante. Comme dans \ref{multLagrange}, on obtient donc au final :
+\begin{pb}\label{fvq}
+Trouver $p=q-\frac{\mathbf{v}\cdot\mathbf{v}}{2} \in L^2(\Omega)$ tel que $\forall \varphi\in L^2(\Omega)$, on a :
+\begin{align*}
+\int_\Omega \grad q\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega q\nu &= \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi\\
+&+ \int_{\partial\Omega} \left(f\cdot \mathbf{n} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n} - \frac{\alpha_2}{Re}\right)\varphi
+\end{align*}\end{pb}
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
+%%% End:

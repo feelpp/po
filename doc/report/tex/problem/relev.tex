@@ -1,0 +1,132 @@
+\section{Relèvement}
+\label{relev}
+On veut maintenant relever les conditions aux limites sur le bord du domaine. On écrit donc $\mathbf{v}=\mathbf{u}+\mathbf{a}$, où $\mathbf{a}$ contient les informations sur le bord du domaine :
+\[ \mathbf{a}\cdot\mathbf{n}=\alpha_0\quad \curl\mathbf{a}\cdot\mathbf{n}=\alpha_1 \]
+
+On écrit $\mathbf{a}=\grad\psi^0 + \curl\mathbf{b}$.\\
+On va s'intéresser d'abord à $\grad\psi^0$ qui relève la condition $\mathbf{a}\cdot\mathbf{n}=\alpha_0$.\\
+
+\subsection{$\psi^0$ dans $H^1$}
+\label{secpsi0hdiv}
+Il y a plusieurs alternatives pour résoudre \ref{psi0}, on peut tout d'abord se placer dans $H^1(\Omega)$ et résoudre :
+\begin{equation*}
+\left\{\begin{aligned}
+&-\laplace\psi^0 = 0\\
+&\grad\psi^0\cdot \mathbf{n}\restr{\Gamma}=\alpha_0
+\end{aligned}\right.
+\end{equation*}
+
+Il faut faire attention au fait que $\int_{\partial\Omega} \alpha_0$ doit être égale à 0, en effet, on a :
+\[ 0=\int_\Omega \laplace \psi^0 = \int_\Omega \div(\grad\psi^0) = \int_{\partial\Omega} \grad\psi^0\cdot \mathbf{n} = \int_{\partial\Omega} \alpha_0 \]
+
+Pour obtenir sa forme variationnelle, on multiplie par une fonction test $\varphi\in H^1(\Omega)$ et on intègre :
+\[ \int_\Omega \laplace\psi^0 \varphi = 0 \]
+On utilise ensuite la formule de Green pour parvenir à :
+\[ -\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_{\partial\Omega} \grad\psi^0\cdot \mathbf{n}\varphi = 0 \]
+Or, $\grad\psi^0\cdot \mathbf{n} = \alpha_0$ sur $\partial\Omega$, on obtient donc la forme variationnelle suivante :
+\begin{equation*}\label{fvpsi0LM} -\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_{\partial\Omega} \alpha_0\varphi = 0
+\end{equation*}
+Comme énoncé précédemment, on va devoir utiliser les multiplicateurs de Lagrange pour ajouter la contrainte $\int \psi^0=0$. On utilise donc la même technique que dans \ref{multLagrange} avec $m=0$.\\
+Le problème \ref{psi0} devient donc :
+\begin{pb}\label{fvpsi0}
+Trouver $(\psi^0,\lambda)\in H^1\times L^2(\Omega)$ tel que $\forall (\varphi,\mu)\in H^1\times L^2(\Omega)$ :
+\begin{equation*}
+\int_\Omega \grad\psi^0\cdot\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega \psi^0\mu = \int_\Omega \alpha_0\varphi
+\end{equation*}\end{pb}
+\begin{rk}
+Ce problème permet de trouver $\psi^0$, mais il reste encore à calculer son gradient.
+\end{rk}
+% Si l'on note $V=H^1(\Omega)$, $a(u,v)=\int \grad u \cdot \grad v$, $l(v)=\int \alpha_0v$ et $J(v)=\frac{1}{2}a(v,v)-l(v)$, alors résoudre l'équation \ref{fvpsi0LM} revient à trouver $u$ tel que :
+% \[ J(u) = \min_{v\in V} J(v) \]
+% Si l'on ajoute la contrainte $b(v) = \int v = 0$, alors, avec $\lambda$ un multiplicateur de Lagrange, le problème devient trouver $u$ tel que :
+% \[ J(u) = \min_{v\in V} J(v) - \lambda b(v) \]
+% Soit, en ajoutant l'équation de la contrainte multipliée par le multiplicateur de Lagrange correspondant à $\varphi$, et le terme correspondant à la moyenne $m=0$ de $\psi^0$, on doit trouver $(\psi^0,\lambda)\in H^1(\Omega)\times L^2(\Omega)$ tel que $\forall (\varphi,\mu)$ :
+% \begin{align}\label{fvpsi0}
+% a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) &= l(\varphi) + m b(\mu) \notag \\
+% \int_\Omega \grad\psi^0\cdot\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega \psi^0\mu &= \int_\Omega \alpha_0\varphi
+% \end{align}
+
+\subsection{$\psi^0$ dans $H(\mathrm{div})$}
+
+L'autre possibilité pour trouver $\psi^0$ est de chercher $(\mathbf{w},\psi^0)\in H(\mathrm{div})\times L^2(\Omega)$ solution du problème mixte suivant :
+\begin{equation*}
+\left\{\begin{aligned}
+\mathbf{w} &= \grad \psi^0\\
+\div \mathbf{w} &= 0\\
+\mathbf{w}\cdot \mathbf{n}\restr{\Gamma} &= \alpha_0
+\end{aligned}\right.
+\end{equation*}
+Pour obtenir la formulation faible du problème, on multiplie par une fonction test $(\bm{\varphi},\nu)\in H(\mathrm{div})\times L^2(\Omega)$ et on intègre les deux premières équations :
+\begin{align*}
+\int_\Omega \mathbf{w}\cdot\bm{\varphi} &= \int_\Omega \grad\psi^0\cdot\bm{\varphi}\\
+\int_\Omega \div \mathbf{w}\ \nu &= 0
+\end{align*}
+On intègre par partie la deuxième équation :
+\[ \int_\Omega \div \mathbf{w}\ \nu = \int_{\partial\Omega} \mathbf{w}\cdot \mathbf{n}\ q - \int_\Omega \mathbf{w}\cdot\grad\nu = 0  \]
+En insérant la condition au bord et la première équation, on obtient la formulation faible :
+\[ -\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi}  = \int_{\partial\Omega} \alpha_0\nu \]
+
+Pour ajouter la contrainte de moyenne nulle, on procède de la même manière que dans \ref{multLagrange}. Le problème \ref{psi0} devient donc :
+\begin{pb}\label{fvpsidiv}
+Trouver $(\mathbf{w},\psi^0,\lambda)\in H(\mathrm{div})\times L^2(\Omega)\times L^2(\Omega)$ tel que $\forall (\bm{\varphi},\nu,\mu)\in H(\mathrm{div})\times L^2(\Omega)\times L^2(\Omega)$
+\begin{equation*}
+-\int_\Omega \mathbf{w}\cdot\bm{\varphi} + \int_\Omega \mathbf{w}\cdot\grad\nu + \int_\Omega \grad\psi^0\cdot\bm{\varphi} + \int_\Omega \lambda\varphi + \int_\Omega \psi^0\mu = \int_{\partial\Omega} \alpha_0\nu
+\end{equation*}\end{pb}
+
+\begin{rk}
+Calculer $\grad\psi^0$ dans $H(\mathrm{div})$ a l'avantage de faire gagner un ordre à la régularité de $\grad\psi^0$ par rapport à résoudre le problème dans $H^1$ pour trouver $\psi^0$ et ensuite calculer son gradient.
+\end{rk}
+
+\subsection{$\mathbf{b}$ dans $H(\mathrm{rot})$}
+On s'intéresse ensuite à $\curl\mathbf{b}$ qui relève la condition $\curl\mathbf{a}\cdot\mathbf{n}=\alpha_1$.\\
+Pour le problème \ref{curlb}, on veut résoudre dans $H(\mathrm{rot})$ le problème mixte suivant : 
+\begin{equation*}
+\left\{\begin{aligned}
+&\curll \mathbf{b} = \grad\psi^1\\
+&\div \mathbf{b} = 0\\
+&\mathbf{b}\cdot \mathbf{n}\restr{\Gamma} = 0\\
+&\curl \mathbf{b}\cdot \mathbf{n}\restr{\Gamma} = 0\\
+&\grad\psi^1\cdot \mathbf{n}\restr{\Gamma} = \alpha_1
+\end{aligned}\right.
+\end{equation*}
+
+Pour avoir la formulation faible, on multiplie par une fonction test de $H(\mathrm{rot})$ et on intègre :
+\[ \int_\Omega (\curll \mathbf{b})\cdot\bm{\varphi} = \int_\Omega (\grad\psi^1)\cdot\bm{\varphi} \]
+En intégrant par partie le premier terme et en utilisant la formule de Green sur le second, on obtient le problème suivant :
+\begin{pb} \label{fvbcurl}
+Trouver $(\mathbf{b},\psi^1)\in H(\mathrm{rot})\times L^2$ tel que $\forall \bm{\varphi}\in H(\mathrm{rot})$ :
+\begin{equation*}
+\int_\Omega (\curl \mathbf{b})\cdot(\curl\bm{\varphi}) - \int_{\partial\Omega} (\curl \mathbf{b})(\bm{\varphi}\cdot \mathbf{n}) + \int_\Omega \psi^1(\div\bm{\varphi}) - \int_{\partial\Omega} \psi^1(\bm{\varphi}\cdot \mathbf{n}) = 0
+\end{equation*}\end{pb}
+
+\subsection{$\mathbf{b}$ dans $D^1$}
+Une autre solution pour trouver $\mathbf{b}$ est d'utiliser la base de $D^1$ calculée précédemment pour exprimer $\mathbf{b}$. En effet, on a
+\[ \div\mathbf{b}=0\quad \mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=0\quad \curl\mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=0\]
+d'où $\mathbf{b}\in D^1$.\\
+On peut donc résoudre le problème
+\begin{pb}
+Trouver $\psi^1$ tel que :
+\begin{equation*}
+\left\{ \begin{aligned}
+-\laplace\psi^1 &= 0\\
+\grad\psi^1\cdot\mathbf{n} &= \alpha_1
+\end{aligned}\right. \end{equation*}\end{pb}
+de la même manière que le problème \ref{psi0}.\\
+Ensuite, trouver $\mathbf{b}$ tel que $\forall k=1,\dots,M$ :
+\[ \int_\Omega \curll\mathbf{b}\cdot\mathbf{g_k} = \int_\Omega \grad\psi^1\cdot\mathbf{g_k} \]
+En réutilisant la même méthode que dans \ref{eigen}, on a :
+\[ \int_\Omega \curl\mathbf{b}\cdot\curl\mathbf{g_k} + \int_{\partial\Omega}(\curll\mathbf{b}\cdot\mathbf{n})\psi_k = \int_\Omega \grad\psi^1\cdot\mathbf{g_k} \]
+En utilisant le fait que $\curll\mathbf{b}=\grad\psi^1$ et que $\grad\psi^1\cdot\mathbf{n}=\alpha_1$, ainsi qu'en écrivant $\mathbf{b}=\sum d_i\mathbf{g}_i$ et en notant que la base $(\mathbf{g}_i)$ est orthonormale, on obtient le problème suivant :
+\begin{pb}\label{pbbd1}
+Trouver $(d_i)_{i=1,\dots,M}$ tel que $\forall k=1,\dots,M$ on a :
+\[ d_k\lambda_k^2 = \int_\Omega \grad\psi^1\cdot\mathbf{g_k} - \int_{\partial\Omega} \alpha_1\psi_k \]
+\end{pb}
+
+%% \subsection{Relèvement de $\alpha_2$}
+%% De même, il faut encore trouver un système permettant de relever la condition $\curll\mathbf{a}\cdot\mathbf{n}=\alpha_2$.
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
+%%% End:
