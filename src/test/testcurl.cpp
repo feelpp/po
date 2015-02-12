@@ -1,4 +1,6 @@
 #include <feel/options.hpp>
+#include <feel/feeldiscr/ned1h.hpp>
+#include <feel/feelfilters/unitsphere.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feelfilters/exporter.hpp>
 #include <feel/feelalg/solvereigen.hpp>
@@ -10,7 +12,7 @@ using namespace Feel::vf;
 class TestCurl:public Simget
 {
     static const uint16_type Dim = 3;
-    static const uint16_type Order = 3;
+    static const uint16_type Order = 2;
 
 public:
     typedef Simplex<Dim> convex_type;
@@ -18,15 +20,12 @@ public:
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
 
-    //typedef bases<Nedelec<0,NedelecKind::NED1> > basis_nedtype;
-    typedef bases<Lagrange<Order, Vectorial> > basis_type;
+    typedef bases<Nedelec<0,NedelecKind::NED1> > basis_type;
+    // typedef bases<Lagrange<Order, Vectorial> > basis_type;
     typedef FunctionSpace<mesh_type, basis_type > space_type;
     typedef typename space_type::element_type element_type;
     typedef boost::shared_ptr<space_type> space_ptrtype;
 
-    std::vector<element_type> test;
-
-    TestCurl( mesh_ptrtype );
     void run();
  private:
 
@@ -35,16 +34,13 @@ public:
 };
 
 
-TestCurl::TestCurl( mesh_ptrtype mesh )
-{
-    this->mesh = mesh;
-    this->Vh = space_type::New( mesh );
-    this->test = std::vector<element_type>(15, Vh->element() );    
-}
-
 void
 TestCurl::run()
 {
+    // mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
+    mesh = unitSphere();
+    this->Vh = space_type::New( mesh );
+
     LOG(INFO) << "----- Vh -----\n";
     LOG(INFO) << "[dof] number of dof: " << Vh->nDof() << "\n";
     LOG(INFO) << "[dof] number of dof/proc: " << Vh->nLocalDof() << "\n";
@@ -57,33 +53,19 @@ TestCurl::run()
 
     // [exacte]
     auto t = expr<3,1>( soption("t") );
-    auto t1 = expr<3,1>( soption("t1") );
-    auto t2 = expr<3,1>( soption("t2") );
+    auto t1 = curl(t);
+    auto t2 = curl(t1);
 
-    // solution exacte
     auto vt = Vh->element(t);     // t
     // [exacte]
 
     auto vt1 = Vh->element(t1);   // curl(t)
     auto vt2 = Vh->element(t2);   // curl2(t)
 
-    auto curl_t = curl(t);             //ne fonctionne pas
-    auto curl2_t = curl(curl_t);
-
     if ( Environment::worldComm().isMasterRank() ){
-        std::cout << "t : " << t << "\nt1 : " << t1 << "\nt2 : " << t2/* << "\ncurl(t) : " << curl_t << "\ncurl2(t) : " << curl2_t*/ << std::endl;
+        std::cout << "\nt : " << t << "\ncurl(t) : " << t1 << "\ncurl2(t) : " << t2 << std::endl;
     }
 
-
-    // [Nedelec]
-    // auto vt = Vh->element();
-
-    // auto ap = form2( _test=Vh, _trial=Vh);
-    // auto bp = form1( _test=Vh );
-    // ap = integrate( elements(mesh), trans(idt(vt))*id(vt) );
-    // bp = integrate( elements(mesh), trans(t)*id(vt) );
-    // ap.solve(_rhs=bp, _solution=vt, _name="gi0" );
-    // [Nedelec]
 
     // utilisation de project et curlv
     auto curl_vt = vf::project(_space=Vh, _range=elements(mesh),
@@ -112,11 +94,14 @@ TestCurl::run()
     // [curl2]
 
     auto norm2id = normL2( elements(mesh), idv(vt) - t );
+    auto norm2id_1 = normL2( elements(mesh), idv(vt1) - t1 );
+    auto norm2id_2 = normL2( elements(mesh), idv(vt2) - t2 );
 
     auto norm2curl_1 = normL2( elements(mesh), curlv(vt) - t1 );
-    auto norm2curl2_1 = normL2( elements(mesh), curlv(cu) - t2 );
+    auto norm2curl2_1 = normL2( elements(mesh), curlv(vt1) - t2 );
 
     auto norm2curl_2 = normL2( elements(mesh), idv(curl_vt) - t1 );
+    auto norm2curl2_4 = normL2( elements(mesh),curlv(curl_vt) - t2);
     auto norm2curl2_2 = normL2( elements(mesh), idv(curl2_vt) - t2 );
 
     // [erreur]
@@ -125,19 +110,13 @@ TestCurl::run()
     // [erreur]
 
     if ( Environment::worldComm().isMasterRank() ){
+        std::cout << "init-ex = " << norm2id << "\t" << norm2id_1 << "\t" << norm2id_2 << std::endl;
+        std::cout << "err 2 : " << norm2curl2_4 << std::endl;
         std::cout << "\t\t\t\tcurlv \t project \t systeme" << std::endl;
         std::cout << "norm(vt - t) =\t\t" << norm2id << std::endl;
         std::cout << "norm(curlv(t)-t1)=\t" << norm2curl_1 << "\t" << norm2curl_2 << "\t" << norm2curl_3 << std::endl;
         std::cout << "norm(curl2v(t)-t2)=\t" << norm2curl2_1 << "\t" << norm2curl2_2 << "\t" << norm2curl2_3 << std::endl;
     }
-
-    test[0] = vt;
-    test[1] = vt1;
-    test[2] = vt2;
-    test[3] = curl_vt;
-    test[4] = curl2_vt;
-    test[5] = cu;
-    test[6] = ccu;
 
 }
 
@@ -168,9 +147,7 @@ main( int argc, char** argv )
 
     Application app;
 
-    auto mesh = loadMesh(_mesh = new Mesh<Simplex<3>> );
-
-    app.add( new TestCurl(mesh) );
+    app.add( new TestCurl() );
     app.run();
 
     return 0;
