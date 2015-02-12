@@ -57,13 +57,13 @@ struct DofEdgeInfo
 
 inline
 std::ostream&
-operator<<( std::ostream& os, DofEdgeInfo const& dei  )
+operator<<( std::ostream& out, DofEdgeInfo const& dei  )
 {
-    os << "-----------Dof-Edge-Info------------\n"
+    out << "-----------Dof-Edge-Info------------\n"
        << "type        : " << dei.type << "\n"
        << "id vertex 1 : " << dei.dof_vertex_id1 << "\n"
        << "id vertex 2 : " << dei.dof_vertex_id2 << "\n";
-    return os;
+    return out;
 }
 
 template<typename T>
@@ -77,14 +77,15 @@ operator<<( std::ostream& out,  const std::vector<T>& vec  )
     return out;
 }
 
-inline
+template<typename T>
 std::ostream&
-operator<<( std::ostream& os, std::set<size_type> const& se  )
+operator<<( std::ostream& out, const std::set<T>& se  )
 {
+    out << "{ ";
     for( auto s : se )
-        os << s << " ";
-    os << std::endl;
-    return os;
+        out << s << " ";
+    out << "}" << std::endl;
+    return out;
 }
 
 template <class InputIterator>
@@ -95,7 +96,6 @@ vectorMeans(InputIterator first, InputIterator last)
     return res/(last-first);
 }
 
-template<int Dim, int Order>
 class EigenProblem
     :
     public Simget
@@ -103,7 +103,7 @@ class EigenProblem
     typedef Simget super;
 public:
     typedef double value_type;
-    typedef Mesh<Simplex<Dim> > mesh_type;
+    typedef Mesh<Simplex<3> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef typename mesh_type::element_type::edge_permutation_type edge_permutation_type;
 
@@ -116,12 +116,19 @@ public:
     typedef boost::shared_ptr<space_edge_type> space_edge_ptrtype;
     typedef typename space_edge_type::element_type element_type;
 
+    typedef typename space_type::template sub_functionspace<1>::type space_vertex_type;
+    typedef boost::shared_ptr<space_vertex_type> space_vertex_ptrtype;
+
     typedef MatrixSparse<value_type> sparse_matrix_type;
     typedef boost::shared_ptr<sparse_matrix_type> sparse_matrix_ptrtype;
 
     void run();
+    void test();
 private:
+    mesh_ptrtype mesh;
     space_edge_ptrtype Nh;
+    space_vertex_ptrtype Lh;
+    std::vector<size_type> indexesToKeep;
     sparse_matrix_ptrtype C;
 
     std::vector<double> lambda;
@@ -130,17 +137,19 @@ private:
     void load();
     void loadMatlab();
     void save();
+    void testC(int nbTest);
+    void testModes();
+    void testSpace();
 
 }; // EigenProblem
 
-template<int Dim, int Order>
 void
-EigenProblem<Dim, Order>::run()
+EigenProblem::run()
 {
     if ( Environment::worldComm().isMasterRank() )
     {
         std::cout << "------------------------------------------------------------\n";
-        std::cout << "Execute EigenProblem<" << Dim << ">\n";
+        std::cout << "Execute EigenProblem\n";
     }
 
     Feel::fs::path mesh_name(soption("gmsh.filename"));
@@ -159,7 +168,6 @@ EigenProblem<Dim, Order>::run()
     boost::mpi::timer t;
     boost::mpi::timer total;
 
-    mesh_ptrtype mesh;
     if( boption("useSphere") )
         mesh = unitSphere();
     else
@@ -181,11 +189,12 @@ EigenProblem<Dim, Order>::run()
 
     auto Xh = space_type::New( mesh );
     Nh = Xh->template functionSpace<0>();
-    auto Lh = Xh->template functionSpace<1>();
+    Lh = Xh->template functionSpace<1>();
 
     LOG(INFO) << "[info] Nh dof = " << Nh->nDof() << std::endl;
     LOG(INFO) << "[info] Lh dof = " << Lh->nDof() << std::endl;
 
+    /* ------------------------- Bilinear Forms -------------------------*/
     auto u = Nh->element();
     auto v = Nh->element();
 
@@ -204,6 +213,7 @@ EigenProblem<Dim, Order>::run()
         std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
     t.restart();
 
+    /* ------------------------- Retrieve Information -------------------------*/
     std::vector<bool> doneNh( Nh->nLocalDof(), false );
     std::vector<bool> doneLh( Lh->nLocalDof(), false );
     DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
@@ -316,6 +326,7 @@ EigenProblem<Dim, Order>::run()
         std::cout << "[timer] info = " << t.elapsed() << " sec" << std::endl;
     t.restart();
 
+    /* ------------------------- Build Matrix C -------------------------*/
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
     for( int i = 0; i < Nh->nLocalDof(); ++i )
@@ -351,13 +362,13 @@ EigenProblem<Dim, Order>::run()
     std::vector<size_type> rows( Nh->nLocalDof() );
     std::iota( rows.begin(), rows.end(), 0 );
 
-    std::vector<size_type> indexesToKeep = interiorIndexesToKeep;
+    indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
                          boundaryIndexesToKeep.begin(),
                          boundaryIndexesToKeep.end() );
     std::sort(indexesToKeep.begin(), indexesToKeep.end() );
 
-    auto C = cTilde->createSubMatrix(rows, indexesToKeep, false, boption("checkAndFixRange"));
+    C = cTilde->createSubMatrix(rows, indexesToKeep);
     C->close();
 
     LOG(INFO) << "[timer] matrixC = " << t.elapsed() << " sec" << std::endl;
@@ -365,96 +376,7 @@ EigenProblem<Dim, Order>::run()
         std::cout << "[timer] matrixC = " << t.elapsed() << " sec" << std::endl;
     t.restart();
 
-    if( boption("isPrinting") )
-    {
-        if( Environment::worldComm().isMasterRank() )
-            std::cout << "Start printing" << std::endl;
-
-        matA->printMatlab("a.m");
-        matB->printMatlab("b.m");
-        C->printMatlab("c.m");
-    }
-
-    if( boption("testC") )
-    {
-        std::ofstream file;
-        file.open( (boost::format( "info_%1%" ) % Environment::worldComm().globalRank() ).str() );
-        file << "Xh : " << *Xh << std::endl
-             << "Nh : " << *Nh << std::endl
-             << "Lh : " << *Lh << std::endl;
-
-
-        auto fLh  = Lh->element();
-        auto fNh = Nh->element();
-        for( int i = 0; i < 50; i++)
-        {
-            file << "[" << i << "] : ";
-
-            auto tmpNh = backend()->newVector( Nh );
-            auto tmpLh = backend()->newVector( Lh );
-
-            auto alphaPrime = backend()->newVector( C->mapColPtr() );
-            auto map = alphaPrime->mapPtr()->mapGlobalProcessToGlobalCluster();
-
-            std::srand(std::time(NULL));
-
-            int n = C->mapColPtr()->nDof();
-            int stop = n < 100 ? n/2 : 50;
-
-            for( int j = 0; j < stop; j++)
-            {
-                int r = rand() % n;
-                auto it = std::find(map.begin(), map.end(), r);
-                auto index = it-map.begin();
-
-                if( it != map.end() )
-                {
-                    alphaPrime->set(index, 1);
-
-                    auto col = indexesToKeep[index];
-                    file << col << " ";
-                    if( col < Nh->nLocalDofWithGhost() )
-                    {
-                        tmpNh->set(col, 1);
-                    } else
-                    {
-                        int dofLocalLh = col - Nh->nLocalDofWithGhost();
-                        tmpLh->set(dofLocalLh, 1);
-                    }
-                }
-            }
-            file << std::endl;
-
-            tmpNh->close();
-            fNh = *tmpNh;
-            tmpLh->close();
-            fLh = *tmpLh;
-
-            auto f = vf::project( _space=Nh, _range=elements(mesh),
-                                  _expr= idv(fNh) + trans(gradv(fLh)) );
-
-            alphaPrime->close();
-            auto alphaVec = backend()->newVector( Nh );
-            C->multVector( alphaPrime, alphaVec);
-            auto alpha = Nh->element();
-            alphaVec->close();
-            alpha = *alphaVec;
-
-            auto erreur = normL2( elements(mesh), idv(f) - idv(alpha) );
-            auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
-
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
-        }
-
-        file.close();
-
-        LOG(INFO) << "[timer] testC = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] testC = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
-    }
-
+    /* ------------------------- Build Ahat, Bhat -------------------------*/
     if( boption("eigs"))
     {
         auto Ahat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
@@ -471,6 +393,7 @@ EigenProblem<Dim, Order>::run()
             std::cout << "[timer] hat = " << t.elapsed() << " sec" << std::endl;
         t.restart();
 
+        /* ------------------------- Resolve Eigen Problem -------------------------*/
         if ( Environment::worldComm().isMasterRank() )
         {
             std::cout << "nev = " << ioption(_name="solvereigen.nev")
@@ -490,6 +413,7 @@ EigenProblem<Dim, Order>::run()
             std::cout << "[timer] " << modes.size() << " eigs = " << t.elapsed() << " sec" << std::endl;
         t.restart();
 
+        /* ------------------------- Retrieve Nh modes -------------------------*/
         auto e =  exporter( _mesh=mesh );
 
         lambda = std::vector<double>(modes.size(), 0);
@@ -512,138 +436,33 @@ EigenProblem<Dim, Order>::run()
         e->save();
         save();
 
+        // Print matrices
+        if( boption("isPrinting") )
+        {
+            if( Environment::worldComm().isMasterRank() )
+                std::cout << "Start printing" << std::endl;
+
+            matA->printMatlab("a.m");
+            matB->printMatlab("b.m");
+            C->printMatlab("c.m");
+        }
+
         LOG(INFO) << "[timer] export = " << t.elapsed() << " sec" << std::endl;
         if ( Environment::worldComm().isMasterRank() )
             std::cout << "[timer] export = " << t.elapsed() << " sec" << std::endl;
     }
 
-    if( boption("load") )
-        load();
-
-    if( boption("loadMatlab") )
-        loadMatlab();
-
-    if( boption("load") || boption("loadMatlab") )
-    {
-        int nbMode = ioption("nbMode");
-        for( int i = 0; i < nbMode; i++)
-        {
-            int multiplicity = ioption("multiplicity");
-
-            auto ev = std::vector<double>(multiplicity, 0);
-            auto di = std::vector<double>(multiplicity, 0);
-            auto nor = std::vector<double>(multiplicity, 0);
-            auto curln = std::vector<double>(multiplicity, 0);
-            auto errp = std::vector<double>(multiplicity, 0);
-            auto errm = std::vector<double>(multiplicity, 0);
-            auto curl2n = std::vector<double>(multiplicity, 0);
-            auto errC2 = std::vector<double>(multiplicity, 0);
-
-            for( int j = 0; j < multiplicity; j++)
-            {
-                int ind = i*multiplicity + j;
-
-                ev[j] = std::sqrt(lambda[ind]);
-                di[j] = normL2( elements(mesh), divv(g[ind]));
-                nor[j] = normL2( boundaryfaces(mesh), trans(idv(g[ind]))*N() );
-                curln[j] = normL2( boundaryfaces(mesh), trans(curlv(g[ind]))*N() );
-                errp[j] = normL2( elements(mesh), curlv(g[ind])-ev[j]*idv(g[ind]) );
-                errm[j] = normL2( elements(mesh), curlv(g[ind])+ev[j]*idv(g[ind]) );
-
-                auto tmpCurl = vf::project( _space=Nh, _range=elements(mesh),
-                                            _expr=curlv(g[ind]) );
-                curl2n[j] = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
-                errC2[j] = normL2( elements(mesh), curlv(tmpCurl)-lambda[ind]*idv(g[ind]) );
-
-                std::cout << "mode " << ind << " : " << ev[j] << std::endl
-                          << "\t\t |div    | = " << di[j] << std::endl
-                          << "\t\t |normale| = " << nor[j] << std::endl
-                          << "\t\t |curl*n | = " << curln[j] << std::endl
-                          << "\t\t |erreur+| = " << errp[j] << std::endl
-                          << "\t\t |erreur-| = " << errm[j] << std::endl
-                          << "\t\t |curl2*n| = " << curl2n[j] << std::endl
-                          << "\t\t |err2   | = " << errC2[j] << std::endl;
-            }
-
-            double lambda_av = vectorMeans(ev.begin(), ev.end());
-            double di_av = vectorMeans(di.begin(),di.end());
-            double nor_av = vectorMeans(nor.begin(),nor.end());
-            double curln_av = vectorMeans(curln.begin(),curln.end());
-            double errp_av = vectorMeans(errp.begin(),errp.end());
-            double errm_av = vectorMeans(errm.begin(),errm.end());
-            double curl2n_av = vectorMeans(curl2n.begin(),curl2n.end());
-            double errC2_av = vectorMeans(errC2.begin(),errC2.end());
-
-            std::cout << "********** average **********" << std::endl
-                      << "\t\t lambda    = " << lambda_av << std::endl
-                      << "\t\t |div    | = " << di_av << std::endl
-                      << "\t\t |normale| = " << nor_av << std::endl
-                      << "\t\t |curl*n | = " << curln_av << std::endl
-                      << "\t\t |erreur+| = " << errp_av << std::endl
-                      << "\t\t |erreur-| = " << errm_av << std::endl
-                      << "\t\t |curl2*n| = " << curl2n_av << std::endl
-                      << "\t\t |err2   | = " << errC2_av << std::endl;
-        }
-
-        LOG(INFO) << "[timer] testMode = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] testMode = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
-
-        if( boption("space") )
-        {
-            auto fNh = Nh->element();
-            auto fLh = Lh->element();
-
-            srand(std::time(NULL));
-
-            for( int i = 0; i < interiorIndexesToKeep.size(); i++)
-                if(rand() % 10 > 8)
-                    fNh.set(interiorIndexesToKeep[i], 1);
-            for( int i = 0; i < boundaryIndexesToKeep.size(); i++)
-                if(rand() % 10 > 8)
-                    fLh.set(boundaryIndexesToKeep[i] - Nh->nDof(), 1);
-
-            auto f = vf::project( _space=Nh, _range=elements(mesh),
-                                  _expr= idv(fNh) + trans(gradv(fLh)) );
-
-            auto dif = normL2( elements(mesh), divv(f));
-            auto norf = normL2( boundaryfaces(mesh), trans(idv(f))*N() );
-            auto curlnf = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
-
-            std::cout << "f" << std::endl
-                      << "\t\t |div    | = " << dif << std::endl
-                      << "\t\t |normale| = " << norf << std::endl
-                      << "\t\t |curl*n | = " << curlnf << std::endl;
-
-
-            auto coef = std::vector<double>(nbMode, 0);
-            auto tmpProj = Nh->element();
-            double errProj = 0.0;
-
-            for( int i = 0; i < nbMode; i++)
-            {
-                coef[i] = integrate(elements(mesh), idv(f)*trans(idv(g[i])) ).evaluate()(0,0);
-                tmpProj.add(coef[i],g[i]);
-                errProj = normL2( elements(mesh), idv(f)-idv(tmpProj) );
-                std::cout << "i = " << i << "\t c = " << coef[i] << "\terreur = " << errProj << std::endl;
-            }
-
-            LOG(INFO) << "[timer] space = " << t.elapsed() << " sec" << std::endl;
-            if ( Environment::worldComm().isMasterRank() )
-                std::cout << "[timer] space = " << t.elapsed() << " sec" << std::endl;
-            t.restart();
-        }
-    }
 
     LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "[timer] total = " << total.elapsed() << " sec" << std::endl;
+
+    /* ------------------------- Tests -------------------------*/
+    test();
 }
 
-template<int Dim, int Order>
 void
-EigenProblem<Dim, Order>::save()
+EigenProblem::save()
 {
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
@@ -659,9 +478,29 @@ EigenProblem<Dim, Order>::save()
         s.close();
 }
 
-template<int Dim, int Order>
 void
-EigenProblem<Dim, Order>::load()
+EigenProblem::test()
+{
+    if( boption("testC") )
+        testC(50);
+
+    if( boption("load") || boption("loadMatlab") )
+    {
+        if( boption("load") )
+            load();
+        if( boption("loadMatlab") )
+            loadMatlab();
+
+        if( boption("testModes") )
+            testModes();
+
+        if( boption("space") )
+            testSpace();
+    }
+}
+
+void
+EigenProblem::load()
 {
     int nbMode = ioption("nbMode");
     int multiplicity = ioption("multiplicity");
@@ -686,9 +525,8 @@ EigenProblem<Dim, Order>::load()
     s.close();
 }
 
-template<int Dim, int Order>
 void
-EigenProblem<Dim, Order>::loadMatlab()
+EigenProblem::loadMatlab()
 {
     // ASSERT 1 PROC
 
@@ -732,7 +570,204 @@ EigenProblem<Dim, Order>::loadMatlab()
         g[i] = *tmp;
     }
     s.close();
+}
 
+void
+EigenProblem::testC(int nbTest)
+{
+    auto fLh  = Lh->element();
+    auto fNh = Nh->element();
+    for( int i = 0; i < nbTest; i++)
+    {
+        auto tmpNh = backend()->newVector( Nh );
+        auto tmpLh = backend()->newVector( Lh );
+
+        auto alphaPrime = backend()->newVector( C->mapColPtr() );
+        auto map = C->mapColPtr()->mapGlobalProcessToGlobalCluster();
+
+        std::srand(std::time(NULL));
+
+        int n = C->mapColPtr()->nDof();
+        int stop = n < 100 ? n/2 : 50;
+
+        for( int j = 0; j < stop; j++)
+        {
+            int r = rand() % n;
+            auto it = std::find(map.begin(), map.end(), r);
+            auto index = it-map.begin();
+
+            if( it != map.end() )
+            {
+                alphaPrime->set(index, 1);
+
+                auto col = indexesToKeep[index];
+                if( col < Nh->nLocalDofWithGhost() )
+                {
+                    tmpNh->set(col, 1);
+                } else
+                {
+                    int dofLocalLh = col - Nh->nLocalDofWithGhost();
+                    tmpLh->set(dofLocalLh, 1);
+                }
+            }
+        }
+
+        tmpNh->close();
+        fNh = *tmpNh;
+        tmpLh->close();
+        fLh = *tmpLh;
+
+        auto f = vf::project( _space=Nh, _range=elements(mesh),
+                              _expr= idv(fNh) + trans(gradv(fLh)) );
+
+        alphaPrime->close();
+        auto alphaVec = backend()->newVector( Nh );
+        C->multVector( alphaPrime, alphaVec);
+        auto alpha = Nh->element();
+        alphaVec->close();
+        alpha = *alphaVec;
+
+        auto erreur = normL2( elements(mesh), idv(f) - idv(alpha) );
+        auto curln = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << i  << "\t erreur : " << erreur << "\t curl*n : " << curln << std::endl;
+    }
+}
+
+void
+EigenProblem::testModes()
+{
+    int nbMode = ioption("nbMode");
+    for( int i = 0; i < nbMode; i++)
+    {
+        int multiplicity = ioption("multiplicity");
+
+        auto ev = std::vector<double>(multiplicity, 0);
+        auto di = std::vector<double>(multiplicity, 0);
+        auto nor = std::vector<double>(multiplicity, 0);
+        auto curln = std::vector<double>(multiplicity, 0);
+        auto errp = std::vector<double>(multiplicity, 0);
+        auto errm = std::vector<double>(multiplicity, 0);
+        auto curl2n = std::vector<double>(multiplicity, 0);
+        auto errC2 = std::vector<double>(multiplicity, 0);
+
+        for( int j = 0; j < multiplicity; j++)
+        {
+            int ind = i*multiplicity + j;
+
+            ev[j] = std::sqrt(lambda[ind]);
+            di[j] = normL2( elements(mesh), divv(g[ind]));
+            nor[j] = normL2( boundaryfaces(mesh), trans(idv(g[ind]))*N() );
+            curln[j] = normL2( boundaryfaces(mesh), trans(curlv(g[ind]))*N() );
+            errp[j] = normL2( elements(mesh), curlv(g[ind])-ev[j]*idv(g[ind]) );
+            errm[j] = normL2( elements(mesh), curlv(g[ind])+ev[j]*idv(g[ind]) );
+
+            auto tmpCurl = vf::project( _space=Nh, _range=elements(mesh),
+                                        _expr=curlv(g[ind]) );
+            curl2n[j] = normL2( boundaryfaces(mesh), trans(curlv(tmpCurl))*N() );
+            errC2[j] = normL2( elements(mesh), curlv(tmpCurl)-lambda[ind]*idv(g[ind]) );
+
+            if ( Environment::worldComm().isMasterRank() )
+                std::cout << "mode " << ind << " : " << ev[j] << std::endl
+                          << "\t\t |div    | = " << di[j] << std::endl
+                          << "\t\t |normale| = " << nor[j] << std::endl
+                          << "\t\t |curl*n | = " << curln[j] << std::endl
+                          << "\t\t |erreur+| = " << errp[j] << std::endl
+                          << "\t\t |erreur-| = " << errm[j] << std::endl
+                          << "\t\t |curl2*n| = " << curl2n[j] << std::endl
+                          << "\t\t |err2   | = " << errC2[j] << std::endl;
+        }
+
+        double lambda_av = vectorMeans(ev.begin(), ev.end());
+        double di_av = vectorMeans(di.begin(),di.end());
+        double nor_av = vectorMeans(nor.begin(),nor.end());
+        double curln_av = vectorMeans(curln.begin(),curln.end());
+        double errp_av = vectorMeans(errp.begin(),errp.end());
+        double errm_av = vectorMeans(errm.begin(),errm.end());
+        double curl2n_av = vectorMeans(curl2n.begin(),curl2n.end());
+        double errC2_av = vectorMeans(errC2.begin(),errC2.end());
+
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "********** average **********" << std::endl
+                      << "\t\t lambda    = " << lambda_av << std::endl
+                      << "\t\t |div    | = " << di_av << std::endl
+                      << "\t\t |normale| = " << nor_av << std::endl
+                      << "\t\t |curl*n | = " << curln_av << std::endl
+                      << "\t\t |erreur+| = " << errp_av << std::endl
+                      << "\t\t |erreur-| = " << errm_av << std::endl
+                      << "\t\t |curl2*n| = " << curl2n_av << std::endl
+                      << "\t\t |err2   | = " << errC2_av << std::endl;
+    }
+}
+
+void
+EigenProblem::testSpace()
+{
+    auto fNh = Nh->element();
+    auto fLh = Lh->element();
+    auto tmpNh = backend()->newVector( Nh );
+    auto tmpLh = backend()->newVector( Lh );
+    auto map = C->mapColPtr()->mapGlobalProcessToGlobalCluster();
+
+    srand(std::time(NULL));
+
+    int n = C->mapColPtr()->nDof();
+    int stop = n < 100 ? n/2 : 50;
+
+    for( int j = 0; j < stop; j++)
+    {
+        int r = rand() % n;
+        auto it = std::find(map.begin(), map.end(), r);
+        auto index = it-map.begin();
+
+        if( it != map.end() )
+        {
+            auto col = indexesToKeep[index];
+            if( col < Nh->nLocalDofWithGhost() )
+            {
+                tmpNh->set(col, 1);
+            } else
+            {
+                int dofLocalLh = col - Nh->nLocalDofWithGhost();
+                tmpLh->set(dofLocalLh, 1);
+            }
+        }
+    }
+
+    tmpNh->close();
+    fNh = *tmpNh;
+    tmpLh->close();
+    fLh = *tmpLh;
+
+    auto f = vf::project( _space=Nh, _range=elements(mesh),
+                          _expr= idv(fNh) + trans(gradv(fLh)) );
+
+    auto dif = normL2( elements(mesh), divv(f));
+    auto norf = normL2( boundaryfaces(mesh), trans(idv(f))*N() );
+    auto curlnf = normL2( boundaryfaces(mesh), trans(curlv(f))*N() );
+
+    if ( Environment::worldComm().isMasterRank() )
+        std::cout << "f" << std::endl
+                  << "\t\t |div    | = " << dif << std::endl
+                  << "\t\t |normale| = " << norf << std::endl
+                  << "\t\t |curl*n | = " << curlnf << std::endl;
+
+
+    int nbMode = ioption("nbMode");
+    auto coef = std::vector<double>(nbMode, 0);
+    auto tmpProj = Nh->element();
+    double errProj = 0.0;
+
+    for( int i = 0; i < nbMode; i++)
+    {
+        int index = i*ioption("multiplicity");
+        coef[i] = integrate(elements(mesh), idv(f)*trans(idv(g[index])) ).evaluate()(0,0);
+        tmpProj.add(coef[i],g[index]);
+        errProj = normL2( elements(mesh), idv(f)-idv(tmpProj) );
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "i = " << i << "\t c = " << coef[i] << "\terreur = " << errProj << std::endl;
+    }
 }
 
 int
@@ -744,14 +779,14 @@ main( int argc, char** argv )
     basischangeoptions.add_options()
         ("isPrinting", po::value<bool>()->default_value( false ), "print matrices")
         ("useSphere", po::value<bool>()->default_value( true ), "use sphere or other geo")
-        ("checkAndFixRange", po::value<bool>()->default_value( true ), "check and fix range for createSubMatrix" )
         ("eigs", po::value<bool>()->default_value( true ), "compute the eigen problem")
+        ("testC", po::value<bool>()->default_value( false ), "test matrix C")
         ("load", po::value<bool>()->default_value( false ), "load eigen vectors and values")
         ("loadMatlab", po::value<bool>()->default_value( false ), "load eigen vectors and values")
         ("nbMode", po::value<int>()->default_value( 1 ), "number of modes to load" )
         ("multiplicity", po::value<int>()->default_value( 1 ), "multiplicity of the modes to load" )
-        ("space", po::value<bool>()->default_value( false ), "verify the eigen space")
-        ("testC", po::value<bool>()->default_value( false ), "test matrix C");
+        ("testModes", po::value<bool>()->default_value( false ), "test on the modes")
+        ("space", po::value<bool>()->default_value( false ), "verify the eigen space");
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=basischangeoptions,
@@ -761,7 +796,6 @@ main( int argc, char** argv )
                                   _email="christophe.prudhomme@feelpp.org") );
 
     Application app;
-
-    app.add( new EigenProblem<3,1>() );
+    app.add( new EigenProblem() );
     app.run();
 }
