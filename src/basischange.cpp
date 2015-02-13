@@ -88,6 +88,18 @@ operator<<( std::ostream& out, const std::set<T>& se  )
     return out;
 }
 
+void
+logTime(boost::mpi::timer *t, std::string s, bool verbose)
+{
+    if( verbose )
+    {
+        LOG(INFO) << "[timer] " << s << " = " << t->elapsed() << std::endl;
+        if ( Environment::worldComm().isMasterRank() )
+            std::cout << "[timer] " << s << " = " << t->elapsed() << std::endl;
+    }
+    t->restart();
+}
+
 template <class InputIterator>
 double
 vectorMeans(InputIterator first, InputIterator last)
@@ -140,6 +152,7 @@ private:
     void testC(int nbTest);
     void testModes();
     void testSpace();
+    void logInfo();
 
 }; // EigenProblem
 
@@ -152,18 +165,12 @@ EigenProblem::run()
         std::cout << "Execute EigenProblem\n";
     }
 
-    Feel::fs::path mesh_name(soption("gmsh.filename"));
+    Feel::fs::path mesh_name(boption("useSphere") ? "sphere.geo" : soption("gmsh.filename"));
 
     Environment::changeRepository( boost::format( "%1%/%2%/h_%3%/" )
                                    % this->about().appName()
                                    % mesh_name.stem().string()
                                    % doption("gmsh.hsize") );
-
-
-    LOG(INFO) << "[timer] h = " << doption("gmsh.hsize") << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] h = " << doption("gmsh.hsize") << std::endl;
-
 
     boost::mpi::timer t;
     boost::mpi::timer total;
@@ -173,7 +180,7 @@ EigenProblem::run()
     else
         mesh = loadMesh(_mesh = new mesh_type );
 
-    if ( Environment::isMasterRank() ){
+    if ( Environment::isMasterRank() && FLAGS_v > -1){
         std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
         std::cout << " number of faces : " << mesh->numGlobalFaces() << std::endl;
         std::cout << " number of edges : " << mesh->numGlobalEdges() << std::endl;
@@ -182,17 +189,11 @@ EigenProblem::run()
         std::cout << " number of local vertices : " << mesh->numLocalVertices() << std::endl;
     }
 
-    LOG(INFO) << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] mesh = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
+    logTime(&t, "mesh", FLAGS_v > -1);
 
     auto Xh = space_type::New( mesh );
     Nh = Xh->template functionSpace<0>();
     Lh = Xh->template functionSpace<1>();
-
-    LOG(INFO) << "[info] Nh dof = " << Nh->nDof() << std::endl;
-    LOG(INFO) << "[info] Lh dof = " << Lh->nDof() << std::endl;
 
     /* ------------------------- Bilinear Forms -------------------------*/
     auto u = Nh->element();
@@ -208,10 +209,7 @@ EigenProblem::run()
     auto matB = b.matrixPtr();
     matB->close();
 
-    LOG(INFO) << "[timer] form = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] form = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
+    logTime(&t, "form", FLAGS_v > -1);
 
     /* ------------------------- Retrieve Information -------------------------*/
     std::vector<bool> doneNh( Nh->nLocalDof(), false );
@@ -321,10 +319,7 @@ EigenProblem::run()
         }
     }
 
-    LOG(INFO) << "[timer] info = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] info = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
+    logTime(&t, "dofinfo", FLAGS_v > -1);
 
     /* ------------------------- Build Matrix C -------------------------*/
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
@@ -371,10 +366,7 @@ EigenProblem::run()
     C = cTilde->createSubMatrix(rows, indexesToKeep);
     C->close();
 
-    LOG(INFO) << "[timer] matrixC = " << t.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] matrixC = " << t.elapsed() << " sec" << std::endl;
-    t.restart();
+    logTime(&t, "matrixC", FLAGS_v > -1);
 
     /* ------------------------- Build Ahat, Bhat -------------------------*/
     if( boption("eigs"))
@@ -388,15 +380,12 @@ EigenProblem::run()
         Ahat->close();
         Bhat->close();
 
-        LOG(INFO) << "[timer] hat = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] hat = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
+        logTime(&t, "hat", FLAGS_v > -1);
 
         /* ------------------------- Resolve Eigen Problem -------------------------*/
         if ( Environment::worldComm().isMasterRank() )
         {
-            std::cout << "nev = " << ioption(_name="solvereigen.nev")
+            std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
                       << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
         }
 
@@ -408,10 +397,7 @@ EigenProblem::run()
                            _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")]
                            );
 
-        LOG(INFO) << "[timer] " << modes.size() << " eigs = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] " << modes.size() << " eigs = " << t.elapsed() << " sec" << std::endl;
-        t.restart();
+        logTime(&t, "eigs", FLAGS_v > -1);
 
         /* ------------------------- Retrieve Nh modes -------------------------*/
         auto e =  exporter( _mesh=mesh );
@@ -436,26 +422,24 @@ EigenProblem::run()
         e->save();
         save();
 
-        // Print matrices
-        if( boption("isPrinting") )
-        {
-            if( Environment::worldComm().isMasterRank() )
-                std::cout << "Start printing" << std::endl;
-
-            matA->printMatlab("a.m");
-            matB->printMatlab("b.m");
-            C->printMatlab("c.m");
-        }
-
-        LOG(INFO) << "[timer] export = " << t.elapsed() << " sec" << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] export = " << t.elapsed() << " sec" << std::endl;
+        logTime(&t, "export", FLAGS_v > -1);
     }
 
+    // Print matrices
+    if( boption("isPrinting") )
+    {
+        if( Environment::worldComm().isMasterRank() )
+            std::cout << "Start printing" << std::endl;
 
-    LOG(INFO) << "[timer] total = " << total.elapsed() << " sec" << std::endl;
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "[timer] total = " << total.elapsed() << " sec" << std::endl;
+        matA->printMatlab("a.m");
+        matB->printMatlab("b.m");
+        C->printMatlab("c.m");
+
+        logTime(&t, "print", FLAGS_v > -1);
+    }
+
+    logTime(&total, "total", true);
+    logInfo();
 
     /* ------------------------- Tests -------------------------*/
     test();
@@ -767,6 +751,34 @@ EigenProblem::testSpace()
         errProj = normL2( elements(mesh), idv(f)-idv(tmpProj) );
         if ( Environment::worldComm().isMasterRank() )
             std::cout << "i = " << i << "\t c = " << coef[i] << "\terreur = " << errProj << std::endl;
+    }
+}
+
+void
+EigenProblem::logInfo()
+{
+    LOG(INFO) << "[info] np = " << Environment::numberOfProcessors() << std::endl;
+    if( boption("useSphere") )
+        LOG(INFO) << "[info] geo = sphere" << std::endl;
+    else
+        LOG(INFO) << "[info] geo = " << soption("gmsh.filename") << std::endl;
+    LOG(INFO) << "[info] h = " << doption("gmsh.hsize") << std::endl
+              << "[info] elt = " << mesh->numGlobalElements() << std::endl
+              << "[info] Nh dof = " << Nh->nDof() << std::endl
+              << "[info] Lh dof = " << Lh->nDof() << std::endl
+              << "[info] Zh dof = " << C->mapColPtr()->nDof() << std::endl;
+
+    if ( Environment::worldComm().isMasterRank() )
+    {
+        std::cout << "[info] np = " << Environment::numberOfProcessors() << std::endl;
+        if( boption("useSphere") )
+            std::cout << "[info] geo = sphere" << std::endl;
+        else
+            std::cout << "[info] geo = " << soption("gmsh.filename") << std::endl;
+        std::cout << "[info] h = " << doption("gmsh.hsize") << std::endl
+                  << "[info] Nh dof = " << Nh->nDof() << std::endl
+                  << "[info] Lh dof = " << Lh->nDof() << std::endl
+                  << "[info] Zh dof = " << C->mapColPtr()->nDof() << std::endl;
     }
 }
 
