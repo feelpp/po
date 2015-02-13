@@ -319,6 +319,27 @@ EigenProblem::run()
         }
     }
 
+    auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
+    size_type dofToRemove;
+    if( Environment::isMasterRank() )
+    {
+        auto itToRemove = std::find(doneLh.begin(),doneLh.end(),true);
+        dofToRemove = map[itToRemove - doneLh.begin()];
+    }
+    boost::mpi::broadcast(Environment::worldComm(), dofToRemove, Environment::worldComm().masterRank() );
+
+    auto localItToRemove = std::find(map.begin(),map.end(), dofToRemove);
+    if( localItToRemove != map.end() )
+    {
+        auto localDofToRemove = localItToRemove - map.begin();
+        auto indexeToRemove = std::find(boundaryIndexesToKeep.begin(),boundaryIndexesToKeep.end(),
+                                        localDofToRemove + Nh->nLocalDofWithGhost());
+        if( indexeToRemove != boundaryIndexesToKeep.end() )
+            boundaryIndexesToKeep.erase(indexeToRemove);
+
+        std::cout << "#" << Environment::worldComm().globalRank() << " indexe to remove : " << localDofToRemove << std::endl;
+    }
+
     logTime(&t, "dofinfo", FLAGS_v > -1);
 
     /* ------------------------- Build Matrix C -------------------------*/
