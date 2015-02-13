@@ -1,0 +1,152 @@
+\section{Problème aux valeurs propres}
+\label{eigen}
+We consider the following problem :
+\begin{pb}\label{pbstart}
+Find $\lambda\in\CC$ and $\mbf{u}\ne 0$ such that
+\begin{empheq}[left=\empheqlbrace]{align}
+\curl\mbf{u} = \lambda\mbf{u} & \quad \mbox{in }\Omega \label{pbstart1}\\
+\div\mbf{u} = 0 & \quad \mbox{in }\Omega \label{pbstart2}\\
+\mbf{u}\cdot \mbf{n} = 0 & \quad \mbox{on }\Gamma \label{pbstart3}
+\end{empheq}
+\end{pb}
+
+According to R. Rodriguez and P. Venegas in \cite{Venegas2013}, this problem,
+for $\lambda\ne 0$, is equivalent to :
+\begin{pb}\label{pbcond}
+Find $\lambda\in\CC$ and $\mbf{u}\in
+  H(\mathrm{curl};\Omega),\mbf{u}\ne 0$ such that
+\begin{empheq}[left=\empheqlbrace]{align}
+\curl \mbf{u} = \lambda \mbf{u} & \quad \mbox{in }\Omega \label{pbcond1}\\
+\curl \mbf{u}\cdot\mbf{n} = 0 & \quad \mbox{on }\Gamma \label{pbcond2}
+\end{empheq}
+\end{pb}
+Indeed, we have that $(\ref{pbcond1})\implies(\ref{pbstart2})$ since
+$\div\mbf{u}=\lambda\div(\curl\mbf{u})=0$. And $(\ref{pbcond1})-(\ref{pbcond2})
+\implies (\ref{pbstart3})$ since $\mbf{u}\cdot\mbf{n} =
+\lambda\curl\mbf{u}\cdot\mbf{n} = 0$. In the same way,
+$(\ref{pbstart1})-(\ref{pbstart3})\implies (\ref{pbcond2})$.\\
+
+The solution of this problem belongs to $\ZZ=\{\mbf{v}\in
+H(\mathrm{curl};\Omega \,|\, \curl\mbf{v}\cdot\mbf{n}=0 \mbox{
+  on } \Gamma \}$.\\
+This space already appeared in \cite{girault90-1} and we know that each functions $\mbf{v}\in\ZZ$ has the decomposition
+\begin{equation}\label{relation} \mbf{v}=\mbf{w} + \grad q \end{equation}
+with $q\in H^1(\Omega)$ and $\mbf{w}\in [H^1(\Omega)]^3$ with div $\mbf{w} = 0$ on $\Omega$ and $\mbf{w}\times\mbf{n} = 0$ on $\Gamma$. All the functions of this form belong to $\ZZ$.\\
+
+Next, we multiply by $\mbf{v}\in\ZZ$ and integrate :
+\[ \int_\Omega \curl\mbf{u}\cdot\mbf{v} = \lambda\int_\Omega
+\mbf{u}\cdot\mbf{v} \]
+We have the follwing property for all $\mbf{x},\mbf{y}\in\ZZ$ :
+\[ \int_\Omega \left(\curl\mbf{x}\right)\cdot\mbf{y} -
+\mbf{x}\cdot\left(\curl\mbf{y}\right) = 0 \]
+Then, by applying it and using
+$\mbf{u}=\curl\mbf{u}/\lambda$, we obtain the following
+variationnal form of the Problem \ref{pbstart} :
+\begin{pb}\label{pbweak}
+Find $\lambda\in\CC$ and $\mbf{u}\in\ZZ$, $\mbf{u}\ne 0$, such
+that
+\[ \int_\Omega \curl\mbf{u}\cdot\curl\mbf{v} =
+\lambda^2\int_\Omega \mbf{u}\cdot\mbf{v} \quad \forall
+\mbf{v}\in\ZZ \]
+\end{pb}
+
+If $(\lambda,\mbf{u})$ is a solution of Problem \ref{pbstart}, then it is a
+solution of Problem \ref{pbweak}. But the contrary is not always true,
+see \cite{Venegas2013} Corollary 3.10 :\\
+
+If $\nu\ne 0$ is a solution of Problem \ref{pbweak} and $\bm{\mathcal{E}}$ the
+corresponding eigenspace, then there exists an eigenvalue $\lambda$ of
+Problem \ref{pbstart} such that $\nu=\lambda^2$ and $\bm{\mathcal{E}}$ is an
+invariant subspace of Problem \ref{pbstart}.\\
+
+In fact, the eigenfunctions of Problem \ref{pbweak} are not necessarily
+eigenfunctions of Problem \ref{pbstart}. If both $\lambda$ and $-\lambda$
+are eigenvalues of Problem \ref{pbstart}, the $\lambda^2$ is an eigenvalue
+of Problem \ref{pbweak} with multiplicity equal to the sum of those of
+$\lambda$ and $-\lambda$. And the eigenfunction of Problem \ref{pbweak}
+corresponding to $\lambda^2$ would be a linear combination of the
+eigenfunctions of Problem \ref{pbstart} associated to $\lambda$ and
+$-\lambda$.\\
+
+\begin{rk}
+In our case, we are mainly interested by the eigenspace, since the
+eigen functions span the space $D^1(\Omega)$. We use the fact that
+$\curl\mbf{u}=\lambda\mbf{u}$ but it is a convenience, we could
+also compute $\curl\mbf{u}$.
+\end{rk}
+
+%\iffalse
+\section{Décomposition des fonctions de $D^1$}
+\label{decomp}
+
+Comme énoncé plus tôt, tout élément de $D^1$ peut s'écrire $\bm{\varphi} = \bm{\varphi}_0 + \grad\phi$, y compris bien sûr les $\mathbf{g}_i$. Comme on va en avoir besoin pour les problèmes suivants, on va les décomposer en $\mathbf{g}_i=\mathbf{g_i^0}+\grad\psi_i$ avec $\mathbf{g_i^0}\restr{\Gamma} = 0$ et $\grad\psi_i\cdot \mathbf{n}\restr{\Gamma} = 0$.\\
+On applique donc le rotationnel du rotationnel sur cette relation.\\
+\[ \curll \mathbf{g_i^0} +\curll\grad\psi_i = \curll \mathbf{g}_i \]
+Le dernier terme est nul car c'est le rotationnel d'un gradient. On utilise la formule $\curll \mathbf{v}=\grad(\div \mathbf{v})-\laplace \mathbf{v}$ sur le premier terme :
+\[ \grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} = \lambda_i^2 \mathbf{g}_i \]
+On obtient donc le tableau suivant :
+\begin{center}
+\begin{tabular}{c|ccccc}
+& $\mathbf{g}_i$ & = & $\mathbf{g_i^0}$ & + & $\grad\psi_i$ \\ \hline
+$\curll\star$ & $\lambda_i^2\mathbf{g}_i$ & & $\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0}$ & & 0\\ \hline
+$\div\star$ & 0 & & $\div \mathbf{g_i^0}$ & & $\laplace\psi_i$\\ \hline
+$\star\cdot \mathbf{n}\restr{\Gamma}$ & 0 & & 0 & & 0
+\end{tabular}
+\end{center}
+
+\subsection{$g_i^0$}
+En utilisant la première ligne, on parvient au problème :
+\begin{equation*}
+\left\{\begin{aligned}
+\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} &= \lambda_i^2\mathbf{g}_i\\
+\mathbf{g_i^0}\restr{\Gamma} &= 0
+\end{aligned}\right.
+\end{equation*}
+On cherche $\mathbf{g_i^0}$ dans $[H^1_0(\Omega)]^3$. On multiplie donc cette équation par une fonction test de $[H^1_0(\Omega)]^3$ et on intègre :
+\[ \int_\Omega \grad(\div \mathbf{g_i^0})\cdot\bm{\varphi} - \int_\Omega \laplace \mathbf{g_i^0}\cdot\bm{\varphi} = \int_\Omega \lambda_i^2\mathbf{g}_i\cdot\bm{\varphi} \]
+On utilise ensuite la formule d'intégration par partie $\int_\Omega \grad{\mathbf{u}}\bm{\varphi} = -\int_\Omega \mathbf{u}\div\bm{\varphi} + \int_{\partial\Omega} \mathbf{u}\bm{\varphi}\cdot \mathbf{n}$ sur le premier terme :
+\[ -\int_\Omega (\div \mathbf{g_i^0})(\div\bm{\varphi}) + \int_{\partial\Omega} (\div \mathbf{g_i^0})(\bm{\varphi}\cdot \mathbf{n}) - \int_\Omega \laplace \mathbf{g_i^0}\cdot\bm{\varphi} = \int_\Omega \lambda_i^2\mathbf{g}_i\cdot\bm{\varphi} \]
+Comme $\bm{\varphi}\in [H^1_0(\Omega)]^3$, la seconde intégrale est nul. On intègre par partie le terme en laplacien :
+\[ -\int_\Omega (\div \mathbf{g_i^0})(\div\bm{\varphi}) + \int_\Omega \overline{\grad \mathbf{g_i^0}}:\overline{\grad\bm{\varphi}} - \int_{\partial\Omega} (\overline{\grad \mathbf{g_i^0}}\cdot \mathbf{n})\cdot\bm{\varphi} = \int_\Omega \lambda_i^2\mathbf{g}_i\cdot\bm{\varphi} \]
+Encore une fois, comme $\bm{\varphi}\in [H^1_0(\Omega)]^3$, le terme sur les bords s'annule. On obtient donc le problème suivant :
+\begin{pb}\label{fvgi0}
+Trouver $\mathbf{g_i^0}\in H^1_0$ tel que $\forall \bm{\varphi}\in [H^1_0(\Omega)]^3$ :
+\begin{equation*}
+-\int_\Omega (\div \mathbf{g_i^0})(\div\bm{\varphi}) + \int_\Omega \overline{\grad \mathbf{g_i^0}}:\overline{\grad\bm{\varphi}} = \int_\Omega \lambda_i^2\mathbf{g}_i\cdot\bm{\varphi}
+\end{equation*}\end{pb}
+
+\subsection{Gradient $\psi_i$}
+\label{multLagrange}
+D'autre part, les deux dernières lignes du tableau nous donnent le problème de Poisson suivant :
+\begin{equation*}
+\left\{\begin{aligned}
+-\laplace\psi_i &= \div \mathbf{g_i^0}\\
+\grad\psi_i\cdot \mathbf{n}\restr{\Gamma} &= 0
+\end{aligned}\right.
+\end{equation*}
+Cette fois-ci, on cherche $\psi_i$ dans $H^1(\Omega)$. On a donc la forme variationnelle suivante :
+\begin{equation}\label{fvpsi}
+\int_\Omega \grad\psi_i\cdot\grad\varphi = \int_\Omega (\div \mathbf{g_i^0})\varphi
+\end{equation}
+
+Ce problème permet de trouver $\psi_i$ seulement à une constante près, on va donc devoir imposer une constante de notre choix, par exemple pour que $\int_\Omega \psi_i = 0$. Ceci va donc créer une translation dans le résultat, qu'il va falloir corriger en post-traitement.\\
+Afin d'appliquer cette contrainte supplémentaire, on va utiliser la méthode des multiplicateurs de Lagrange.\\
+Si l'on note $V=H^1(\Omega)$, $a(u,v)=\int \grad u \cdot \grad v$, $l(v)=\int (\div \mathbf{g_i^0})v$ et $J(v)=\frac{1}{2}a(v,v)-l(v)$, alors résoudre l'équation \ref{fvpsi} revient à trouver $u$ tel que :
+\[ J(u) = \min_{v\in V} J(v) \]
+Si l'on ajoute la contrainte $b(v) = \int v = 0$, alors, avec $\lambda$ un multiplicateur de Lagrange, le problème devient trouver $u$ tel que :
+\[ J(u) = \min_{v\in V} J(v) - \lambda b(v) \]
+Soit, en ajoutant l'équation de la contrainte multipliée par le multiplicateur de Lagrange correspondant à $\varphi$, et le terme correspondant à la moyenne $m$ de $\psi_i$ :
+\[ a(\psi_i,\varphi) + \lambda b(v) + \mu b(u) = l(\varphi) + m b(\mu) \]
+Ce qui donne le problème suivant :
+\begin{pb}\label{fvpsiml}
+Trouver $(\psi_i,\lambda)\in H^1(\Omega)\times L^2(\Omega)$ tel que $\forall (\varphi,\mu)$ :
+\begin{equation*}
+\int_\Omega \grad\psi_i\cdot\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega \psi_i\mu = \int_\Omega (\div \mathbf{g_i^0})\varphi + \int_\Omega m\ \mu
+\end{equation*}\end{pb}
+%\fi
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
+%%% End:

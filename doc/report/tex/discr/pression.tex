@@ -3,8 +3,8 @@ On a à présent à notre disposition $\bm{a}$ et $\bm{u}$. On peut donc retrouv
 
 En se servant de \ref{fvq}, on peut retrouver la pression en tant que post-traitement.
 \begin{align*}
-\int_\Omega \grad q\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega q\nu &= \int_\Omega (\div((\rot \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi\\
-&+ \int_{\partial\Omega} \left(f\cdot \mathbf{n} - \frac{\partial\alpha_0}{\partial t} - ((\rot \mathbf{v})\times \mathbf{v})\cdot \mathbf{n} - \frac{\alpha_2}{Re}\right)\varphi
+\int_\Omega \grad q\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega q\nu &= \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi\\
+&+ \int_{\partial\Omega} \left(f\cdot \mathbf{n} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n} - \frac{\alpha_2}{Re}\right)\varphi
 \end{align*}
 
 \section{Implémentation}
