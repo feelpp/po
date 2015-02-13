@@ -12,3 +12,4 @@ Chaque réunion est nommé AAMMJJ.md suivie par une brève description.
 - [05/12/14](141205.md) : Avancement des travaux et réflexions sur la stratégies de résolution du problème aux valeurs propres
 - [19/12/14](141219.md) : Avancement des tests sur la matrice et début du travail pour utiliser Feel++ plutôt que Matlab
 - [06/02/15](150206.md) : Discussions sur les résultats trouvés et réflexions sur l'algorithme général
+- [13/02/15](150213.md) : Réflexions sur les amèliorations à apporter aux solveurs
