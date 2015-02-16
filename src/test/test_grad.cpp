@@ -308,7 +308,7 @@ main( int argc, char** argv )
     Environment env( _argc=argc, _argv=argv,
                      _desc=makeOptions(),
                      _desc_lib=feel_options().add( backend_options( "grad" ) ).add ( backend_options( "div" ) ).add( backend_options( "hess" ) ),
-                     _about=about(_name="po_testgrad",
+                     _about=about(_name="po_test_grad",
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com") );
 
