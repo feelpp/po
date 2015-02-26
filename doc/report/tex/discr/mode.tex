@@ -131,11 +131,8 @@ where $\widehat{\mbf{A}}=\mbf{C}^t\mbf{A}\mbf{C}$ and $\widehat{\mbf{B}}=\mbf{C}
 For the implementation of this problem, we need several steps :
 \begin{itemize}
 \item
-  create the space $\NN_h$, we can do it using :
-  \lstinputlisting[widthgobble=1*2,linerange={Nh,Nh2}]{../../src/basischange.cpp}
-\item
-  instead of already creating the space $\LLL_h^\Gamma$, we use for now $\LLL_h$ in order to use the same mesh between the two spaces :
-  \lstinputlisting[widthgobble=1*2,linerange=P1ch]{../../src/basischange.cpp}
+  create the space $\mathbb{X}_h=\NN_hx\LLL_h$, we can do it using :
+  \lstinputlisting[widthgobble=1*2,linerange={Xh}]{../../src/basischange.cpp}
 \item
   create the matrix $A$ and $B$ :
   \lstinputlisting[widthgobble=1*2,linerange=forms]{../../src/basischange.cpp}
@@ -161,7 +158,7 @@ For the implementation of this problem, we need several steps :
     This was the point where we were wrong before.
     \lstinputlisting[widthgobble=3*2,linerange=points]{../../src/basischange.cpp}
     Once we have the find the points, we need to find the corresponding dofs in $\LLL_h$
-    \lstinputlisting[widthgobble=4*2,linerange=dofLh]{../../src/basischange.cpp}
+    \lstinputlisting[widthgobble=3*2,linerange=dofLh]{../../src/basischange.cpp}
   \item
     if the edge is on the boundary,
     \begin{itemize}
@@ -189,11 +186,11 @@ For the implementation of this problem, we need several steps :
     \end{itemize}
   \end{itemize}
 \item
-  we now create two matrices. One of size $M\times M$ for the dofs of $\NN_h$ and one of size $M\times K$ for the dofs of $\LLL_h$.
-  \lstinputlisting[linerange=cIntBound]{../../src/basischange.cpp}
+  We have the informations needed to construct a spanning set of $\ZZ_h$ but in order to have a basis, we have to remove one function, corresponding to a degree of freedom on the boundary. And that for each connected component of the boundary.\\
+  For now, we handle only the case where there is just one component and at least one dof of it is on the first proc. 
+  \lstinputlisting[linerange=remove]{../../src/basischange.cpp}
 \item
-  using the informations retrieved on the dofs, we can now fill these two
-  matrices :\\
+  we now create the matrix $\tilde{C}$ of size $M\times (M+K)$. Using the informations retrieved on the dofs, we can now fill these two matrices :\\
   For each line of the two matrices,
   \begin{itemize}
   \item
@@ -209,9 +206,6 @@ For the implementation of this problem, we need several steps :
     if the edge doesn't touch the boundary, these line stays empty. 
   \end{itemize}
   \lstinputlisting[linerange=fill]{../../src/basischange.cpp}
-\item
-  we now assemble the two matrices in one matrix $\tilde{C}$ of size $M\times (M+K)$
-  \lstinputlisting[widthgobble=1*2,linerange=ctilde]{../../src/basischange.cpp}
   The figure \ref{spyCTilde} shows the sparsity pattern of $\tilde{C}$ : 
   \begin{figure}[H]
     \centering

@@ -27,9 +27,9 @@ L^2_\sigma(\Omega) &= \{\mbf{v} \in [L^2(\Omega)]^3\; |\; \div \mbf{v} = 0\text{
 D^1(\Omega) &= \{\mbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\; |\; (\curl \mbf{v}\cdot \mbf{n})\restr{\Gamma} = 0  \}
 \end{align*}
 
-Nous cherchons $(\mathbf{v},p)$, correspondant respectivement à la vitesse et à la pression, solutions de l'équation de Navier-Stokes incompressibles adimensionnalisées dans $Q_T=\Omega\times[0,T]$, où $\Omega$ est un ouvert de $\R^3$ et $\partial\Omega$ sa frontière, avec une condition initiale et des conditions aux limites d'imperméabilité généralisée.
+We are looking for $(\mathbf{v},p)$, corresponding to the velocity and the pressure, solutions of the incompressible Navier-Stokes equations in $Q_T=\Omega\times[0,T]$, where $\Omega$ is an open set in $\R^3$ and $\partial\Omega$ its boundary, with initial condition and general impermeable boundary conditions.
 \begin{pb}\label{depart}
-On cherche $(\mathbf{v},p)$ tel que :
+Find $(\mathbf{v},p)$ such that :
 \begin{equation*}
 \left\{\begin{aligned}
 &\frac{\partial \mathbf{v}}{\partial t} + (\curl  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\curll  \mathbf{v}-\mathbf{f} = 0\\
@@ -40,25 +40,25 @@ On cherche $(\mathbf{v},p)$ tel que :
 &(\curll  \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} = \alpha_2
 \end{aligned}\right.
 \end{equation*}
-où $q = \frac{|\mathbf{v}|^2}{2}+p$.\\
+where $q = \frac{|\mathbf{v}|^2}{2}+p$.\\
 \end{pb}
-Ce problème possède des conditions aux bords non standards, plutôt que des conditions de Dirichlet, on utilise les conditions $\nabla^k\times\mathbf{v}\cdot\mathbf{n}\restr{\Gamma}$ pour $k=0,1,2$ avec la convention $\nabla^0\times=Id$.\\
-Ces conditions ont été assez peu étudiées et très peu utilisées dans l'industrie. On peut citer les travaux de V. Girault \cite{girault90-1}, H. Bellout, J. Neustuppa et P. Penel \cite{Penel2004}. Le principe est une décomposition de type Galerkin que l'on peut rapprocher avec les travaux de E. Deriaz et V. Perrier \cite{Deriaz2009249}.\\
+This problem has non standards boundary conditions. Rather than Dirichlet conditions, we use $\nabla^k\times\mathbf{v}\cdot\mathbf{n}\restr{\Gamma}$ for $k=0,1,2$ with $\nabla^0\times=Id$.\\
+There have been few studies about these conditions and the industry rarely uses it. We can cite the works of V. Girault \cite{girault90-1}, H. Bellout, J. Neustuppa and P. Penel \cite{Penel2004}. The principle is a Galerkin type decomposition that can be related to the works of E. Deriaz and V. Perrier \cite{Deriaz2009249}.\\
 
-L'intérêt pour Plastic Omnium est de pouvoir séparer les variables en temps et en espace et ainsi pouvoir faire des simulations sur un laps de temps plus long. De plus, les lois de paroi n'étant plus nécessaires, on supprime le besoin de prendre en compte la couche limite lors du maillage.\\
+The interest for Plastic Omnium is to be able to split the variables in time and space, and hence compute longer simulations. Furtermore, this could mean that we wouldn't need wall functions boundary condition, and so the boundary layer become needless.\\ 
 
-On va maintenant expliquer la stratégie de résolution du problème dans le chapitre \ref{strat}, puis étudié plus en détail chaque étapes de la résolution dans \ref{fv}.
+We can now explain the resolution's strategy in the chapter \ref{strat}, then study each step of the resolution in more details in \ref{fv}.
 
 \chapter{Stratégie de résolution}
 \label{strat}
 D'après \cite{Penel2004}, l'existence et l'unicité de la solution sont assurés si la solution est dans $D^1$, c'est-à-dire $\nabla^k\times\mathbf{v}\cdot\mathbf{n}\restr{\Gamma}=0$ pour $k=0,1$. On va donc relever ces conditions aux bords à l'aide d'une fonction $\mathbf{a}$. On cherche à écrire  $\mathbf{v}=\mathbf{u}+\mathbf{a}$, tel que :\\
 \begin{equation}\label{v}
-\begin{array}{c|ccccc}
-& \mathbf{v} & = & \mathbf{a} & + & \mathbf{u}\\ \hline
-\div\star & 0 & & 0 & & 0\\ \hline
-\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_0 & & \alpha_0 & & 0\\ \hline
-\curl\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_1 & & \alpha_1 & & 0\\ \hline
-\curll\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_1 & & 0 & & \alpha_2
+\begin{array}{c|ccccc|ccc}
+& \mathbf{v} & = & \mathbf{a} & + & \mathbf{u} & \mathbf{a} & + & \mathbf{u}\\ \hline
+\div\star & 0 & & 0 & & 0 & 0 & & 0\\ \hline
+\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_0 & & \alpha_0 & & 0 & \alpha_0 & & 0\\ \hline
+\curl\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_1 & & \alpha_1 & & 0 & \alpha_1 & & 0\\ \hline
+\curll\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_2 & & 0 & & \alpha_2 & \alpha_2 & & 0
 \end{array}
 \end{equation}
 Ainsi, on a $\mathbf{u}\in D^1(\Omega)$ qui sert à définir la solution à l'intérieur du domaine et $\mathbf{a}\in [L^2(\Omega)]^3$ qui sert à relever le problème sur les bords du domaine.
@@ -69,17 +69,19 @@ Trouver $\mathbf{a}\in [L^2(\Omega)]^3$ tel que :
 &\mathbf{a}=\curl \mathbf{b}+\grad\psi^0\\
 &\div \mathbf{a} =0\\
 &\mathbf{a}\cdot \mathbf{n}\restr{\Gamma} = \alpha_0\\
-&(\curl \mathbf{a})\cdot \mathbf{n}\restr{\Gamma} = \alpha_1
+&(\curl \mathbf{a})\cdot \mathbf{n}\restr{\Gamma} = \alpha_1\\
+&\left( (\curll\mathbf{a})\cdot\mathbf{n}\restr{\Gamma} = \alpha_2 \right)
 \end{aligned}\right.
 \end{equation*}
 \end{pb}
 En appliquant la divergence et les conditions aux bords à la première ligne du problème on obtient le tableau suivant :
 \begin{center}
-\begin{tabular}{c|ccccc}
-& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\curl \mathbf{b}$ \\ \hline
-$\div\star$ & 0 & & $\laplace\psi^0$ & & 0\\ \hline
-$\star\cdot \mathbf{n}\restr{\Gamma}$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
-$\curl\star\cdot \mathbf{n}\restr{\Gamma}$ & $\alpha_1$ & & 0 & & $\alpha_1$
+\begin{tabular}{c|ccccccc}
+& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\curl \mathbf{b}$ & + & $\mathbf{e}$ \\ \hline
+$\div\star$ & 0 & & $\laplace\psi^0$ & & 0 & & 0\\ \hline
+$\star\cdot \mathbf{n}\restr{\Gamma}$ & $\alpha_0$ & & $\alpha_0$ & & 0 & & 0\\ \hline
+  $\curl\star\cdot \mathbf{n}\restr{\Gamma}$ & $\alpha_1$ & & 0 & & $\alpha_1$ & & 0\\ \hline
+  $\curll\star\cdot\mathbf{n}\restr{\Gamma}$ & $\alpha_2$ & & 0 & & 0 & & $\alpha_2$
 \end{tabular}
 \end{center}
 En utilisant la première et la deuxième ligne du tableau, on obtient le problème :
@@ -106,6 +108,21 @@ Trouver $(\mathbf{b},\psi^1)$ tel que :
 &\grad\psi^1\cdot \mathbf{n}\restr{\Gamma} = \alpha_1
 \end{aligned}\right.
 \end{equation*}\end{pb}
+
+Soit $\mathbf{e}$ solution du problème suivant :
+\begin{pb}
+  Trouver $\mathbf{e}$ tel que :
+  \begin{equation*}
+    \left\{\begin{aligned}
+    &\curll\mathbf{e} = \mathbf{A_2}\\
+    &\div \mathbf{e} = 0\\
+    &\mathbf{e}\cdot\mathbf{n}\restr{\Gamma} = 0\\
+    &\curl\mathbf{e}\cdot\mathbf{n}\restr{\Gamma} = 0\\
+    &\curll\mathbf{e}\cdot\mathbf{n}\restr{\Gamma} = \alpha_2
+    \end{aligned}\right.
+  \end{equation*}
+  Tel que $\mathbf{A_2}\cdot\mathbf{n} = \alpha_2$
+\end{pb}
 
 % Il reste encore plusieurs questions concernant la manière de relever $\alpha_1$. En effet, écris de cette manière, $\mathbf{b}\in D^1(\Omega)$ et donc si $\mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=0$ alors $\curll\mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=0$ aussi. Ce problème est donc encore ouvert.\\
 
@@ -461,12 +478,24 @@ $} ;
 
 \node[draw,scale=\taille,fill=green!50] (a1) at (5,2) {$\alpha_1$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbbcurl) at (5,-2)
-{{\Huge ?}} ;
+     {$\begin{aligned}
+         \curll \mathbf{b} &= \grad\psi^1\\
+         \div \mathbf{b} &=0\\
+         \mathbf{b}\cdot \mathbf{n} &= 0\\
+         \curl \mathbf{b}\cdot \mathbf{n} &= 0\\
+         \grad \psi^1\cdot \mathbf{n} &= \alpha_1
+       \end{aligned}$} ;
 \node[draw,scale=\taille,fill=blue!50] (b) at (5,-6.5) {$\curl \mathbf{b}$} ;
 
 \node[draw,scale=\taille,fill=green!50] (a2) at (8,2) {$\alpha_2$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbe) at (8,-2)
-{{\Huge ?}} ;
+     {$\begin{aligned}
+         \curll \mathbf{e} &= \mathbf{A_2}\\
+         \div \mathbf{b} &=0\\
+         \mathbf{b}\cdot \mathbf{n} &= 0\\
+         \curl \mathbf{b}\cdot \mathbf{n} &= 0\\
+         \curll\mathbf{e}\cdot \mathbf{n} &= \alpha_2
+       \end{aligned}$} ;
 \node[draw,scale=\taille,fill=blue!50] (e) at (8,-6.5) {$\mathbf{e}$} ;
 
 \node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.3cm](\ref{a})}] (pba) at (3,-9) {$\mathbf{a} = \grad\psi^0 + \curl \mathbf{b} + \mathbf{e}$} ;

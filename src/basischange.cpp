@@ -119,10 +119,12 @@ public:
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef typename mesh_type::element_type::edge_permutation_type edge_permutation_type;
 
+    // [Xh]
     typedef Nedelec<0, NedelecKind::NED1> basis_edge_type;
     typedef Lagrange<1,Scalar> basis_vertex_type;
     typedef bases<basis_edge_type, basis_vertex_type> basis_type;
     typedef FunctionSpace<mesh_type, basis_type> space_type;
+    // [Xh]
 
     typedef typename space_type::template sub_functionspace<0>::type space_edge_type;
     typedef boost::shared_ptr<space_edge_type> space_edge_ptrtype;
@@ -200,6 +202,7 @@ EigenProblem::run()
     Lh = Xh->template functionSpace<1>();
 
     /* ------------------------- Bilinear Forms -------------------------*/
+    // [forms]
     auto u = Nh->element();
     auto v = Nh->element();
 
@@ -212,6 +215,7 @@ EigenProblem::run()
     b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
     matB = b.matrixPtr();
     matB->close();
+    // [forms]
 
     logTime(&t, "form", FLAGS_v > -1);
 
@@ -223,32 +227,39 @@ EigenProblem::run()
     std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
 
+    // [loop]
     auto dofbegin = Nh->dof()->localDof().first;
     auto dofend = Nh->dof()->localDof().second;
 
     for( auto dofit = dofbegin; dofit != dofend; ++dofit )
+        // [loop]
     {
         auto const& dof = *dofit;
 
         auto index = dof.second.index();
         if ( !doneNh[ index ] )
         {
+            // [perm]
             auto const& eltLocalId = dof.first.elementId();
             auto const& elt = mesh->element(eltLocalId);
             auto const& edgeLocalId = dof.first.localDof();
             auto const& edge = elt.edge(edgeLocalId);
             auto perm = elt.edgePermutation( edgeLocalId );
+            // [perm]
 
             dof_edge_info[index].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
             dof_edge_info[index].sign2 = -dof_edge_info[index].sign1;
 
+            // [points]
             auto i1 = elt.eToP(edgeLocalId, 0);
             auto i2 = elt.eToP(edgeLocalId, 1);
             auto const& pt1 = elt.point( i1 );
             auto const& pt2 = elt.point( i2 );
+            // [points]
 
             size_type dofid1 = invalid_uint16_type_value;
             size_type dofid2 = invalid_uint16_type_value;
+            // [dofLh]
             for ( uint16_type i = 0; i < mesh->numLocalVertices(); ++i )
             {
                 if ( mesh->element( eltLocalId ).point( i ).id() == pt1.id() )
@@ -260,6 +271,7 @@ EigenProblem::run()
                     dofid2 = Lh->dof()->localToGlobal( eltLocalId, i, 0 ).index();
                 }
             }
+            // [dofLh]
 
             if ( edge.isOnBoundary() )
             {
@@ -323,6 +335,7 @@ EigenProblem::run()
         }
     }
 
+    // [remove]
     auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
     size_type dofToRemove;
     if( Environment::isMasterRank() )
@@ -336,17 +349,20 @@ EigenProblem::run()
     if( localItToRemove != map.end() )
     {
         auto localDofToRemove = localItToRemove - map.begin();
-        auto indexeToRemove = std::find(boundaryIndexesToKeep.begin(),boundaryIndexesToKeep.end(),
+        auto indexeToRemove = std::find(boundaryIndexesToKeep.begin(),
+                                        boundaryIndexesToKeep.end(),
                                         localDofToRemove + Nh->nLocalDofWithGhost());
         if( indexeToRemove != boundaryIndexesToKeep.end() )
             boundaryIndexesToKeep.erase(indexeToRemove);
 
         std::cout << "#" << Environment::worldComm().globalRank() << " remove index : " << localDofToRemove << std::endl;
     }
+    // [remove]
 
     logTime(&t, "dofinfo", FLAGS_v > -1);
 
     /* ------------------------- Build Matrix C -------------------------*/
+    // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
     for( int i = 0; i < Nh->nLocalDof(); ++i )
@@ -378,7 +394,9 @@ EigenProblem::run()
         }
     }
     cTilde->close();
+    // [fill]
 
+    // [submatrix]
     std::vector<size_type> rows( Nh->nLocalDof() );
     std::iota( rows.begin(), rows.end(), 0 );
 
@@ -390,20 +408,21 @@ EigenProblem::run()
 
     C = cTilde->createSubMatrix(rows, indexesToKeep);
     C->close();
+    // [submatrix]
 
     logTime(&t, "matrixC", FLAGS_v > -1);
 
     /* ------------------------- Build Ahat, Bhat -------------------------*/
     if( boption("eigs"))
     {
+        // [ptap]
         aHat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
         bHat = backend()->newMatrix(C->mapRowPtr(), C->mapColPtr() );
-#if FEELPP_VERSION_GREATER_THAN(0,99,2)
         backend()->PtAP( matA, C, aHat );
         backend()->PtAP( matB, C, bHat );
-#endif
         aHat->close();
         bHat->close();
+        // [ptap]
 
         logTime(&t, "hat", FLAGS_v > -1);
 
@@ -450,10 +469,12 @@ EigenProblem::run()
 
             if( boost::get<0>(mode.second) > doption("thresold") )
             {
+                // [eigenvec]
                 lambda[i] = boost::get<0>(mode.second);
                 auto tmpVec = backend()->newVector( Nh );
                 C->multVector( boost::get<2>(mode.second), tmpVec);
                 tmpVec->close();
+                // [eigenvec]
                 // boost::get<2>(mode.second)->printMatlab( (boost::format("modeMat%1%")%i).str());
                 // tmpVec->printMatlab( (boost::format("funcMat%1%")%i).str());
                 // if ( Environment::isMasterRank() )
