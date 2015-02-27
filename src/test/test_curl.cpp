@@ -141,7 +141,7 @@ main( int argc, char** argv )
     Environment env( _argc=argc, _argv=argv,
                      _desc=makeOptions(),
                      _desc_lib=feel_options().add( backend_options("curl") ).add ( backend_options("curl2") ),
-                     _about=about(_name="po_testcurl",
+                     _about=about(_name="po_test_curl",
                                   _author="Romain Hild",
                                   _email="romain.hild@plasticomnium.com") );
 

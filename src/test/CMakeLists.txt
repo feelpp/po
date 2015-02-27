@@ -21,11 +21,12 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-feelpp_add_application( po_testcurl SRCS testcurl.cpp CFG po_testcurl.cfg )
-feelpp_add_application( po_testgrad SRCS testgrad.cpp CFG po_testgrad.cfg )
-feelpp_add_application( po_test_cyl SRCS testcyl.cpp DEFS PO_CYL CFG po_test_cyl.cfg GEO cylCooCyl.geo  )
-feelpp_add_application( po_test_car SRCS testcyl.cpp CFG po_test_car.cfg GEO cylCooCar.geo  )
-feelpp_add_application( po_testsph_sph SRCS testsph.cpp DEFS PO_SPH CFG po_testsph_sph.cfg GEO sphCooSph.geo  )
-feelpp_add_application( po_testsph_car SRCS testsph.cpp CFG po_testsph_car.cfg GEO sphCooCar.geo  )
-feelpp_add_application( po_spheromak SRCS spheromak.cpp CFG po_spheromak.cfg GEO doubleSphere.geo )
-feelpp_add_application( po_eigencube SRCS eigencube.cpp CFG po_eigencube.cfg GEO cubepi.geo )
+feelpp_add_application( po_test SRCS test.cpp CFG po_test.cfg )
+feelpp_add_application( po_test_curl SRCS test_curl.cpp CFG po_test_curl.cfg )
+feelpp_add_application( po_test_grad SRCS test_grad.cpp CFG po_test_grad.cfg )
+feelpp_add_application( po_test_cyl SRCS test_cyl.cpp DEFS PO_CYL CFG po_test_cyl.cfg GEO ../mesh/cylCooCyl.geo  )
+feelpp_add_application( po_test_car SRCS test_cyl.cpp CFG po_test_car.cfg GEO ../mesh/cylCooCar.geo  )
+feelpp_add_application( po_test_sph_sph SRCS test_sph.cpp DEFS PO_SPH CFG po_test_sph_sph.cfg GEO ../mesh/sphCooSph.geo  )
+feelpp_add_application( po_test_sph_car SRCS test_sph.cpp CFG po_test_sph_car.cfg GEO ../mesh/sphCooCar.geo  )
+feelpp_add_application( po_test_spheromak SRCS spheromak.cpp CFG po_spheromak.cfg GEO ../mesh/doubleSphere.geo )
+feelpp_add_application( po_test_eigencube SRCS eigencube.cpp CFG po_eigencube.cfg GEO ../mesh/cubepi.geo )

@@ -15,9 +15,9 @@ int main(int argc, char** argv)
                      _desc=feel_options(),
                      _about=about(_name=
 #if PO_SPH
-                                  "po_testsph_sph",
+                                  "po_test_sph_sph",
 #else
-                                  "po_testsph_car",
+                                  "po_test_sph_car",
 #endif
                                   _author="Feel++ Consortium",
                                   _email="feelpp-devel@feelpp.org"));
