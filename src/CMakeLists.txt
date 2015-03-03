@@ -25,5 +25,5 @@ feelpp_add_application( po_app SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eig
 feelpp_add_application( po_eigenmixed_curl SRCS eigenmixed.cpp CFG po_eigenmixed.cfg DEFS PO_UHCURL )
 feelpp_add_application( po_eigenmixed_div SRCS eigenmixed.cpp CFG po_eigenmixed.cfg )
 feelpp_add_application( po_stokesmixed SRCS stokesmixed.cpp CFG po_stokesmixed.cfg )
-feelpp_add_application( po_basischange SRCS basischange.cpp CFG po_basischange.cfg GEO mesh/pyramide.geo )
+feelpp_add_application( po_basischange SRCS basischange.cpp CFG po_basischange.cfg GEO mesh/sphere.geo )
 add_subdirectory( test )
