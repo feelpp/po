@@ -22,7 +22,7 @@
 #
 #
 #feelpp_add_application( po_app SRCS main.cpp psi0.hpp psi0.cpp eigenprob.hpp eigenprob.cpp spectralproblem.hpp spectralproblem.cpp CFG po_app.cfg )
-feelpp_add_application( po_app SRCS main.cpp solverns2.hpp solvereigenns2.hpp CFG po_app.cfg GEO mesh/sphere.geo )
+feelpp_add_application( po_app SRCS main.cpp solverns2.hpp solvereigenns2.hpp solvera0.hpp CFG po_app.cfg GEO mesh/sphere.geo )
 feelpp_add_application( po_eigenmixed_curl SRCS eigenmixed.cpp CFG po_eigenmixed.cfg DEFS PO_UHCURL )
 feelpp_add_application( po_eigenmixed_div SRCS eigenmixed.cpp CFG po_eigenmixed.cfg )
 feelpp_add_application( po_stokesmixed SRCS stokesmixed.cpp CFG po_stokesmixed.cfg )

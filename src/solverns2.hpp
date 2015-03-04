@@ -4,7 +4,7 @@
 #include <feel/feelfilters/exporter.hpp>
 
 #include "solvereigenns2.hpp"
-// #include "solvera0.hpp"
+#include "solvera0.hpp"
 // #include "solvera1.hpp"
 // #include "solvera2.hpp"
 // #include "solverspectralproblem.hpp"
@@ -19,26 +19,36 @@ public:
     typedef Mesh<Simplex<3> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-    typedef Nedelec<0, NedelecKind::NED1> basis_edge_type;
-    typedef Lagrange<1,Scalar> basis_vertex_type;
-    typedef bases<basis_edge_type, basis_vertex_type> basis_type;
-    typedef FunctionSpace<mesh_type, basis_type> space_type;
-    typedef boost::shared_ptr<space_type> space_ptrtype;
+    typedef Nedelec<0, NedelecKind::NED1> ned_basis_type;
+    typedef Lagrange<1,Scalar> lag1scalar_basis_type;
+    typedef Lagrange<2,Vectorial> lag2vec_basis_type;
 
-    typedef typename space_type::template sub_functionspace<0>::type ned_space_type;
+    typedef bases<ned_basis_type, lag1scalar_basis_type> eigen_basis_type;
+    typedef FunctionSpace<mesh_type, eigen_basis_type> eigen_space_type;
+    typedef boost::shared_ptr<eigen_space_type> eigen_space_ptrtype;
+
+    typedef typename eigen_space_type::template sub_functionspace<0>::type ned_space_type;
     typedef boost::shared_ptr<ned_space_type> ned_space_ptrtype;
     typedef typename ned_space_type::element_type ned_element_type;
 
     typedef std::pair<value_type,ned_element_type> eigenpair_type;
     typedef std::vector<eigenpair_type> eigenmodes_type;
 
+    typedef FunctionSpace<mesh_type, bases<lag2vec_basis_type> > lag2vec_space_type;
+    typedef boost::shared_ptr<lag2vec_space_type> lag2vec_space_ptrtype;
+    typedef lag2vec_space_type::element_type lag2vec_element_type;
+
     void solve();
 
 private:
     mesh_ptrtype mesh;
-    space_ptrtype Xh;
+
+    eigen_space_ptrtype Xh;
     ned_space_ptrtype Nh;
     eigenmodes_type eigenModes;
+
+    lag2vec_space_ptrtype Vh;
+    lag2vec_element_type a0;
 
     void setEigen();
     void setA0();
@@ -74,7 +84,12 @@ SolverNS2::solve()
             e->add( ( boost::format( "mode-%1%" ) % i++ ).str(), pair.second );
     }
 
-    setA0();
+    if( boption("needA0"))
+    {
+        setA0();
+        e->add( "a0", a0);
+    }
+
     setA1();
     setA2();
     initPS();
@@ -86,17 +101,20 @@ SolverNS2::solve()
 void
 SolverNS2::setEigen()
 {
-    Xh = space_type::New( mesh );
+    Xh = eigen_space_type::New( mesh );
     Nh = Xh->template functionSpace<0>();
 
-    auto eigen = SolverEigenNS2<decltype(Xh)>::build(mesh, Xh);
-    eigenModes = eigen->solve();
+    auto solverEigen = SolverEigenNS2<decltype(Xh)>::build(mesh, Xh);
+    eigenModes = solverEigen->solve();
 }
 
 void
 SolverNS2::setA0()
 {
+    Vh = lag2vec_space_type::New( mesh );
 
+    auto solvera0 = SolverA0<decltype(Vh)>::build(mesh, Vh);
+    a0 = solvera0->solve();
 }
 
 void
