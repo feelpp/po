@@ -123,6 +123,7 @@ public:
     typedef Lagrange<1,Scalar> basis_vertex_type;
     typedef bases<basis_edge_type, basis_vertex_type> basis_type;
     typedef FunctionSpace<mesh_type, basis_type> space_type;
+    typedef boost::shared_ptr<space_type> space_ptrtype;
     // [Xh]
 
     typedef typename space_type::template sub_functionspace<0>::type space_edge_type;
@@ -138,10 +139,13 @@ public:
     void test();
 private:
     mesh_ptrtype mesh;
+    space_ptrtype Xh;
     space_edge_ptrtype Nh;
     space_vertex_ptrtype Lh;
-    std::vector<size_type> indexesToKeep;
+    std::vector<DofEdgeInfo> dof_edge_info;
+    std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
+    std::vector<size_type> indexesToKeep;
     sparse_matrix_ptrtype matA;
     sparse_matrix_ptrtype matB;
     sparse_matrix_ptrtype C;
@@ -152,10 +156,15 @@ private:
     std::vector<element_type> g;
 
     void setDofsToRemove();
+    void setForms();
+    void setInfo();
+    void setMatrices();
+    void solve();
+    void print();
+    void save();
 
     void load();
     void loadMatlab();
-    void save();
     void testC(int nbTest);
     void testModes();
     void testSpace();
@@ -201,6 +210,45 @@ EigenProblem::run()
     Nh = Xh->template functionSpace<0>();
     Lh = Xh->template functionSpace<1>();
 
+    setForms();
+    logTime(t, "form", FLAGS_v > -1);
+
+    setInfo();
+    setDofsToRemove();
+    logTime(t, "dofinfo", FLAGS_v > -1);
+
+    setMatrices();
+    logTime(t, "matrices", FLAGS_v > -1);
+
+
+    if( boption("eigs"))
+    {
+        solve();
+        logTime(t, "eigs", FLAGS_v > -1);
+
+        save();
+        logTime(t, "export", FLAGS_v > -1);
+    }
+
+    if( boption("print") )
+    {
+        print();
+        logTime(t, "print", FLAGS_v > -1);
+    }
+
+    logTime(total, "total", true);
+    logInfo();
+
+    test();
+}
+
+void
+EigenProblem::setForms()
+{
+    Xh = space_type::New( mesh );
+    Nh = Xh->template functionSpace<0>();
+    Lh = Xh->template functionSpace<1>();
+
     /* ------------------------- Bilinear Forms -------------------------*/
     // [forms]
     auto u = Nh->element();
@@ -217,14 +265,16 @@ EigenProblem::run()
     matB->close();
     // [forms]
 
-    logTime(t, "form", FLAGS_v > -1);
+}
 
-    /* ------------------------- Retrieve Information -------------------------*/
+void
+EigenProblem::setInfo()
+{
     std::vector<bool> doneNh( Nh->nLocalDof(), false );
     std::vector<bool> doneLh( Lh->nLocalDof(), false );
     DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
-    std::vector<DofEdgeInfo> dof_edge_info( Nh->nLocalDof(), einfo_default );
-    std::vector<size_type> interiorIndexesToKeep;
+    dof_edge_info = std::vector<DofEdgeInfo>( Nh->nLocalDof(), einfo_default );
+    interiorIndexesToKeep = std::vector<size_type>();
     boundaryIndexesToKeep = std::vector<size_type>();
 
     // [loop]
@@ -334,12 +384,52 @@ EigenProblem::run()
             doneNh[ index ] = true;
         }
     }
+}
 
-    setDofsToRemove();
+void
+EigenProblem::setDofsToRemove()
+{
+    // [remove]
+    auto markers = Environment::vm()["markerList"].as<std::vector<std::string> >();
+    auto s = markers.size();
+    auto dofsToRemove = std::vector<int>();
 
-    logTime(t, "dofinfo", FLAGS_v > -1);
+    for( auto it = markers.begin(); it != markers.end(); ++it )
+    {
+        std::string m = *it;
+        if( mesh->hasMarker(m) )
+        {
+            auto r = Lh->dof()->markerToDof( m );
+            auto localDof = r.first->second;
+            auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
+            auto globalDof = map[localDof];
+            int minGlobalDof;
+            MPI_Allreduce( &globalDof, &minGlobalDof, 1, MPI_INT, MPI_MIN, Environment::worldComm());
+            auto itToRemove = std::find(map.begin(), map.end(), minGlobalDof);
+            if( itToRemove != map.end())
+            {
+                auto localDofToRemove = itToRemove - map.begin();
+                auto indexeToRemove = std::find(boundaryIndexesToKeep.begin(),boundaryIndexesToKeep.end(),
+                                                localDofToRemove + Nh->nLocalDofWithGhost());
+                if( indexeToRemove != boundaryIndexesToKeep.end() )
+                    boundaryIndexesToKeep.erase(indexeToRemove);
 
-    /* ------------------------- Build Matrix C -------------------------*/
+                std::cout << "#" << Environment::worldComm().globalRank() << " remove index : " << localDofToRemove << std::endl;
+            }
+        }
+        else
+        {
+            LOG(WARNING) << "Marker \"" << m << "\" not found !!" << std::endl;
+            if( Environment::isMasterRank() )
+                std::cout << "Marker \"" << m << "\" not found !!" << std::endl;
+        }
+    }
+    // [remove]
+}
+
+void
+EigenProblem::setMatrices()
+{
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
@@ -388,162 +478,78 @@ EigenProblem::run()
     C->close();
     // [submatrix]
 
-    logTime(t, "matrixC", FLAGS_v > -1);
-
-    /* ------------------------- Build Ahat, Bhat -------------------------*/
     // [ptap]
     aHat = backend()->newMatrix(C->mapColPtr(), C->mapColPtr() );
     bHat = backend()->newMatrix(C->mapColPtr(), C->mapColPtr() );
-    //#if FEELPP_VERSION_GREATER_THAN(0,99,2)
     backend()->PtAP( matA, C, aHat );
     backend()->PtAP( matB, C, bHat );
-    //#endif
     aHat->close();
     bHat->close();
     // [ptap]
-
-    logTime(t, "hat", FLAGS_v > -1);
-
-    /* ------------------------- Resolve Eigen Problem -------------------------*/
-    if( boption("eigs"))
-    {
-        if ( Environment::worldComm().isMasterRank() )
-        {
-            std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
-                      << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
-        }
-
-        auto modes = eigs2( _matrixA=aHat,
-                            _matrixB=bHat,
-                            _matrixC=C
-                            );
-
-        logTime(t, "eigs", FLAGS_v > -1);
-
-        /* ------------------------- Retrieve Nh modes -------------------------*/
-        auto e =  exporter( _mesh=mesh );
-
-        lambda = std::vector<double>(modes.size(), 0);
-        g = std::vector<element_type>(modes.size(), Nh->element());
-        auto tmp = modes.begin()->second;
-        int i = 0;
-        for( auto const& pair: modes )
-        {
-            lambda[i] = pair.first;
-            auto Cv = pair.second;
-            g[i] = *Cv;
-            e->add( ( boost::format( "mode-%1%" ) % i ).str(), g[i] );
-
-#if 1
-            auto ACv = backend()->newVector(matA->mapRowPtr());
-            auto BCv = backend()->newVector(matB->mapRowPtr());
-            matA->multVector(Cv, ACv);
-            ACv->close();
-            matB->multVector(Cv, BCv);
-            BCv->close();
-            auto Ct = backend()->newMatrix(C->mapColPtr(), C->mapRowPtr());
-            C->transpose(Ct);
-            Ct->close();
-            auto CtACv = backend()->newVector(Ct->mapColPtr());
-            auto CtBCv = backend()->newVector(Ct->mapColPtr());
-            Ct->multVector(ACv, CtACv);
-            Ct->multVector(BCv, CtBCv);
-            CtBCv->close();
-            CtACv->add(-lambda[i], CtBCv);
-            CtACv->close();
-            auto err2 = CtACv->l2Norm();
-
-            if ( Environment::isMasterRank() )
-                std::cout << "eigenvalue " << i << " = " << pair.first << std::endl
-                          << " index to differ : " << tmp->compare(*pair.second) << std::endl
-                          << " ||CtACv - l CtBCv|| = " << err2 << std::endl;
-            tmp = pair.second;
-#endif
-            i++;
-        }
-
-        e->save();
-        save();
-
-        logTime(t, "export", FLAGS_v > -1);
-    }
-
-    // Print matrices
-    if( boption("isPrinting") )
-    {
-        if( Environment::worldComm().isMasterRank() )
-            std::cout << "Start printing" << std::endl;
-
-        matA->printMatlab("a.m");
-        matB->printMatlab("b.m");
-        C->printMatlab("c.m");
-
-        logTime(t, "print", FLAGS_v > -1);
-    }
-
-    logTime(total, "total", true);
-    logInfo();
-
-    /* ------------------------- Tests -------------------------*/
-    test();
 }
 
 void
-EigenProblem::setDofsToRemove()
+EigenProblem::solve()
 {
-    // [remove]
-    auto markers = Environment::vm()["markerList"].as<std::vector<std::string> >();
-    auto s = markers.size();
-    auto dofsToRemove = std::vector<int>();
-
-    for( auto it = markers.begin(); it != markers.end(); ++it )
+    if ( Environment::worldComm().isMasterRank() )
     {
-        std::string m = *it;
-        if( mesh->hasMarker(m) )
-        {
-            auto r = Lh->dof()->markerToDof( m );
-            auto localDof = r.first->second;
-            auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
-            auto globalDof = map[localDof];
-            int minGlobalDof;
-            MPI_Allreduce( &globalDof, &minGlobalDof, 1, MPI_INT, MPI_MIN, Environment::worldComm());
-            auto itToRemove = std::find(map.begin(), map.end(), minGlobalDof);
-            if( itToRemove != map.end())
-            {
-                auto localDofToRemove = itToRemove - map.begin();
-                auto indexeToRemove = std::find(boundaryIndexesToKeep.begin(),boundaryIndexesToKeep.end(),
-                                                localDofToRemove + Nh->nLocalDofWithGhost());
-                if( indexeToRemove != boundaryIndexesToKeep.end() )
-                    boundaryIndexesToKeep.erase(indexeToRemove);
-
-                std::cout << "#" << Environment::worldComm().globalRank() << " remove index : " << localDofToRemove << std::endl;
-            }
-        }
-        else
-        {
-            LOG(WARNING) << "Marker \"" << m << "\" not found !!" << std::endl;
-            if( Environment::isMasterRank() )
-                std::cout << "Marker \"" << m << "\" not found !!" << std::endl;
-        }
+        std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
+                  << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
     }
-    // [remove]
+
+    auto modes = eigs2( _matrixA=aHat,
+                        _matrixB=bHat,
+                        _matrixC=C
+                        );
+
+    lambda = std::vector<double>(modes.size(), 0);
+    g = std::vector<element_type>(modes.size(), Nh->element());
+    int i = 0;
+
+    auto tmp = modes.begin()->second;
+
+    for( auto const& pair: modes )
+    {
+        lambda[i] = pair.first;
+        auto Cv = pair.second;
+        g[i] = *Cv;
+        if(Environment::isMasterRank())
+            std::cout << i << " eigenvalue = " << pair.first << std::endl;
+        i++;
+    }
+}
+
+void
+EigenProblem::print()
+{
+    if( Environment::worldComm().isMasterRank() )
+        std::cout << "Start printing" << std::endl;
+
+    matA->printMatlab("a.m");
+    matB->printMatlab("b.m");
+    C->printMatlab("c.m");
 }
 
 void
 EigenProblem::save()
 {
+    auto e =  exporter( _mesh=mesh );
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
         s.open ("lambda", std::fstream::out);
+
     for( int i = 0; i < lambda.size(); i++)
     {
         std::string path = (boost::format("mode-%1%")%i).str();
         g[i].save(_path=path);
+        e->add( ( boost::format( "mode-%1%" ) % i ).str(), g[i] );
         if ( Environment::worldComm().isMasterRank() )
             s << lambda[i] << std::endl;
     }
+
     if ( Environment::worldComm().isMasterRank() )
         s.close();
+    e->save();
 }
 
 void
@@ -552,13 +558,13 @@ EigenProblem::test()
     if( boption("testC") )
         testC(50);
 
-    if( boption("load") || boption("loadMatlab") )
-    {
-        if( boption("load") )
-            load();
-        if( boption("loadMatlab") )
-            loadMatlab();
+    if( boption("load") )
+        load();
+    if( boption("loadMatlab") )
+        loadMatlab();
 
+    if( boption("eigs") || boption("load") || boption("loadMatlab") )
+    {
         if( boption("testModes") )
             testModes();
 
@@ -835,6 +841,7 @@ EigenProblem::logInfo()
         std::cout << "[info] np = " << Environment::numberOfProcessors() << std::endl
                   << "[info] geo = " << soption("gmsh.filename") << std::endl
                   << "[info] h = " << doption("gmsh.hsize") << std::endl
+                  << "[info] elt = " << mesh->numGlobalElements() << std::endl
                   << "[info] Nh dof = " << Nh->nDof() << std::endl
                   << "[info] Lh dof = " << Lh->nDof() << std::endl
                   << "[info] Zh dof = " << C->mapColPtr()->nDof() << std::endl;
@@ -848,7 +855,7 @@ main( int argc, char** argv )
 
     po::options_description basischangeoptions( "basischange options" );
     basischangeoptions.add_options()
-        ("isPrinting", po::value<bool>()->default_value( false ), "print matrices")
+        ("print", po::value<bool>()->default_value( false ), "print matrices")
         ("markerList", po::value<std::vector<std::string> >()->multitoken(), "list of markers of the boundary" )
         ("eigs", po::value<bool>()->default_value( true ), "compute the eigen problem")
         ("testC", po::value<bool>()->default_value( false ), "test matrix C")
@@ -865,7 +872,6 @@ main( int argc, char** argv )
                                   _author="Christophe Prud'homme",
                                   _email="christophe.prudhomme@feelpp.org") );
 
-    Application app;
-    app.add( new EigenProblem() );
+    EigenProblem app = EigenProblem();
     app.run();
 }
