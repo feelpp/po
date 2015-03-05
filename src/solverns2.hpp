@@ -1,3 +1,4 @@
+#include <feel/feelcore/feel.hpp>
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
@@ -7,7 +8,7 @@
 #include "solvera0.hpp"
 // #include "solvera1.hpp"
 // #include "solvera2.hpp"
-// #include "solverspectralproblem.hpp"
+#include "solverspectralproblem.hpp"
 
 using namespace Feel;
 using namespace Feel::vf;
@@ -50,12 +51,14 @@ private:
     lag2vec_space_ptrtype Vh;
     lag2vec_element_type a0;
 
+    lag2vec_element_type u;
+    lag2vec_element_type v;
+
     void setEigen();
     void setA0();
     void setA1();
     void setA2();
-    void initPS();
-    void solvePS();
+    void solveSP();
 };
 
 void
@@ -65,7 +68,8 @@ SolverNS2::solve()
                      _update=MESH_CHECK|MESH_UPDATE_FACES|MESH_UPDATE_EDGES|MESH_PROPAGATE_MARKERS
                      );
 
-    if ( Environment::isMasterRank() && FLAGS_v > 0){
+    if ( Environment::isMasterRank() && FLAGS_v > 0)
+    {
         std::cout << " number of elements : " << mesh->numGlobalElements() << std::endl;
         std::cout << " number of faces : " << mesh->numGlobalFaces() << std::endl;
         std::cout << " number of edges : " << mesh->numGlobalEdges() << std::endl;
@@ -78,6 +82,9 @@ SolverNS2::solve()
 
     if( boption("needEigen"))
     {
+        if ( Environment::isMasterRank() && FLAGS_v > 0)
+            std::cout << " ---------- compute eigenmodes ----------\n";
+
         setEigen();
         int i = 0;
         for( auto const& pair : eigenModes)
@@ -86,14 +93,24 @@ SolverNS2::solve()
 
     if( boption("needA0"))
     {
+        if ( Environment::isMasterRank() && FLAGS_v > 0)
+            std::cout << " ---------- compute a0 ----------\n";
+
         setA0();
         e->add( "a0", a0);
     }
 
     setA1();
     setA2();
-    initPS();
-    solvePS();
+
+    if( boption("needSP"))
+    {
+        if ( Environment::isMasterRank() && FLAGS_v > 0)
+            std::cout << " ---------- compute spectral problem ----------\n";
+
+        solveSP();
+        e->add("u", u);
+    }
 
     e->save();
 }
@@ -120,23 +137,25 @@ SolverNS2::setA0()
 void
 SolverNS2::setA1()
 {
-
 }
 
 void
 SolverNS2::setA2()
 {
-
 }
 
 void
-SolverNS2::initPS()
+SolverNS2::solveSP()
 {
+    auto solversp = SolverSpectralProblem<decltype(Nh), decltype(Vh)>::build(mesh, Nh, Vh);
+    solversp->setA0(a0);
+    solversp->setEigen(eigenModes);
 
-}
+    if ( Environment::isMasterRank() && FLAGS_v > 0)
+        std::cout << " ---------- init R coeff ----------\n";
+    solversp->init();
 
-void
-SolverNS2::solvePS()
-{
-
+    if ( Environment::isMasterRank() && FLAGS_v > 0)
+        std::cout << " ---------- solve spectral problem ----------\n";
+    u = solversp->solve();
 }

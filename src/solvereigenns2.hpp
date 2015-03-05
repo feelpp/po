@@ -1,4 +1,3 @@
-#include <feel/feelcore/feel.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
 #include <feel/feelvf/vf.hpp>

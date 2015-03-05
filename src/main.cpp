@@ -32,13 +32,13 @@ makeOptions()
         ( "computeA2", po::value<bool>()->default_value( true ), "need to compute a2, else load it" )
         ( "alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
 
-        ( "needPS", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
+        ( "needSP", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
+        ( "nu", po::value<double>()->default_value( 1 ), "viscosity" )
         ( "computeRijk", po::value<bool>()->default_value( false ), "compute or load Rijk" )
         ( "computeRiak", po::value<bool>()->default_value( false ), "compute or load Riak" )
+        ( "computeRik", po::value<bool>()->default_value( false ), "compute or load Rik" )
         ( "computeRfk", po::value<bool>()->default_value( false ), "compute or load Rfk" )
         ( "f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
-        ( "computeRpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
-        ( "nu", po::value<double>()->default_value( 1 ), "viscosity" )
         ;
     return myappOptions;
 }
