@@ -49,7 +49,6 @@ class SolverSpectralProblem
 
     void initRijk();
     void initRiak();
-    void initRik();
     void initRfk();
 
 
@@ -95,7 +94,7 @@ SolverSpectralProblem<T1,T2>::setEigen(const eigenmodes_type& modes)
     for(auto const& pair : modes)
     {
         lambda(i) = pair.first;
-        g[i] = pair.second;
+        g[i++] = pair.second;
     }
 }
 
@@ -120,10 +119,8 @@ SolverSpectralProblem<T1,T2>::init()
 
     initRijk();
     logTime(t, "Rijk", FLAGS_v > 1);
-    initRiak();
-    logTime(t, "Riak", FLAGS_v > 1);
-    initRik();
-    logTime(t, "Rik", FLAGS_v > 1);
+    // initRiak();
+    // logTime(t, "Riak", FLAGS_v > 1);
     initRfk();
     logTime(t, "Rfk", FLAGS_v > 1);
 
@@ -147,11 +144,12 @@ SolverSpectralProblem<T1,T2>::initRijk()
         if ( Environment::worldComm().isMasterRank() )
             s.open ("rijk", std::fstream::out);
 
+        // Rijk = - Rikj && Rijj = 0
         for(int k = 0; k < M; k++)
         {
             for(int i = 0; i < M; i++)
             {
-                for(int j = 0; j < k; j++) // Rijk = - Rikj & Rijj = 0
+                for(int j = 0; j < k; j++)
                 {
                     Rijk(k)(i,j) = integrate( _range=elements( mesh ),
                                               _expr=inner( cross( curlv(g[i]),idv(g[j]) ), idv(g[k]) )
@@ -161,7 +159,7 @@ SolverSpectralProblem<T1,T2>::initRijk()
                     if ( Environment::worldComm().isMasterRank() && FLAGS_v > 2 )
                     {
                         std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
-                        s << Rijk(k,i) << std::endl;
+                        s << Rijk(k)(i,j) << std::endl;
                     }
                 }
                 Rijk(k)(i,k) = 0;
@@ -180,16 +178,24 @@ SolverSpectralProblem<T1,T2>::initRijk()
             exit(0);
         }
         for(int k = 0; k < M; k++)
+        {
             for(int i = 0; i < M; i++)
-                for(int j = 0; j < M; j++)
+            {
+                for(int j = 0; j < k; j++)
+                {
                     s >> Rijk(k)(i,j);
+                    Rijk(j)(i,k) = -Rijk(k)(i,j);
+                }
+                Rijk(k)(i,k) = 0;
+            }
+        }
         s.close();
     }
 }
 
 template<typename T1, typename T2>
 void
-SolverSpectralProblem<T1,T2>::initRiak()
+SolverSpectralProblem<T1,T2>::initRiak() // to test i<->k mult ???
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Riak -----" << std::endl;
@@ -231,57 +237,14 @@ SolverSpectralProblem<T1,T2>::initRiak()
             exit(0);
         }
         for(int i = 0; i< M ; i++)
-            for(int k = 0; k < M; k++)
-                s >> Riak(k,i);
-        s.close();
-    }
-}
-
-template<typename T1, typename T2>
-void
-SolverSpectralProblem<T1,T2>::initRik()
-{
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "----- Rik -----" << std::endl;
-
-    Riak = MatrixXd(M,M);
-
-    if( boption("computeRik") )
-    {
-        std::fstream s;
-        if ( Environment::worldComm().isMasterRank() )
-            s.open ("rik", std::fstream::out);
-
-        for(int i = 0; i< M ; i++)
         {
-            for(int k = 0; k <= i; k++)
+            for(int k = 0; k < i; k++)
             {
-                Rik(k,i) = integrate( _range=elements( mesh ),
-                                      _expr=inner( curlv(g[i]), curlv(g[k])) ).evaluate()(0,0);
-                Rik(i,k) = Rik(k,i);
-
-                if ( Environment::worldComm().isMasterRank() && FLAGS_v > 2 )
-                {
-                    std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
-                    s << Riak(k,i) << std::endl;
-                }
-            }
-        }
-        if ( Environment::worldComm().isMasterRank() )
-            s.close();
-    }
-    else
-    {
-        std::fstream s;
-        s.open ("riak", std::fstream::in);
-        if( !s.is_open() )
-        {
-            std::cout << "Riak not found\ntry to launch with --computeRiak=true" << std::endl;
-            exit(0);
-        }
-        for(int i = 0; i< M ; i++)
-            for(int k = 0; k < M; k++)
                 s >> Riak(k,i);
+                Riak(i,k) = -Riak(k,i);
+            }
+            Riak(i,i) = 0;
+        }
         s.close();
     }
 }
