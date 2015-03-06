@@ -88,7 +88,7 @@ SolverNS2::solve()
             std::cout << " ---------- compute a0 ----------\n";
 
         setA0();
-        //e->add( "a0", a0);
+        e->add( "a0", a0);
     }
 
     if( boption("needA1") || boption("needSP"))
@@ -167,8 +167,8 @@ SolverNS2::setA0()
 {
     Vh = lag2vec_space_type::New( mesh );
 
-    // auto solvera0 = SolverA0<decltype(Vh)>::build(mesh, Vh);
-    // a0 = solvera0->solve();
+    auto solvera0 = SolverA0<decltype(Vh)>::build(mesh, Vh);
+    a0 = solvera0->solve();
 }
 
 void
@@ -185,7 +185,7 @@ void
 SolverNS2::solveSP()
 {
     auto solversp = SolverSpectralProblem<decltype(Nh), decltype(Vh)>::build(mesh, Nh, Vh);
-    // solversp->setA0(a0);
+    solversp->setA0(a0);
     solversp->setEigen(eigenModes);
 
     if ( Environment::isMasterRank() && FLAGS_v > 0)
@@ -201,12 +201,16 @@ void
 SolverNS2::logInfo(std::ostream& out)
 {
     if(Environment::isMasterRank())
+    {
         out << "[info] np = " << Environment::numberOfProcessors() << std::endl
             << "[info] geo = " << soption("gmsh.filename") << std::endl
             << "[info] h = " << doption("gmsh.hsize") << std::endl
-            << "[info] elt = " << mesh->numGlobalElements() << std::endl
-            << "[info] Nh dof = " << Nh->nDof() << std::endl
-            << "[info] Vh dof = " << Vh->nDof() << std::endl;
+            << "[info] elt = " << mesh->numGlobalElements() << std::endl;
+        if(boption("needEigen") || boption("needSP"))
+            out << "[info] Nh dof = " << Nh->nDof() << std::endl;
+        if(boption("needA0") || boption("needSP"))
+            out << "[info] Vh dof = " << Vh->nDof() << std::endl;
+    }
 }
 
 inline

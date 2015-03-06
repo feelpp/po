@@ -119,8 +119,8 @@ SolverSpectralProblem<T1,T2>::init()
 
     initRijk();
     logTime(t, "Rijk", FLAGS_v > 1);
-    // initRiak();
-    // logTime(t, "Riak", FLAGS_v > 1);
+    initRiak();
+    logTime(t, "Riak", FLAGS_v > 1);
     initRfk();
     logTime(t, "Rfk", FLAGS_v > 1);
 
@@ -195,7 +195,7 @@ SolverSpectralProblem<T1,T2>::initRijk()
 
 template<typename T1, typename T2>
 void
-SolverSpectralProblem<T1,T2>::initRiak() // to test i<->k mult ???
+SolverSpectralProblem<T1,T2>::initRiak()
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "----- Riak -----" << std::endl;

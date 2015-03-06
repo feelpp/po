@@ -64,9 +64,8 @@ SolverA0<T>::computeA0()
                 { "speed", doption( _name="speed" ) } } );
     // [option]
 
-    std::cout << g_s << std::endl;
-
     auto Mh = ml_space_type::New( mesh );
+
     auto U = Mh->element();
     auto V = Mh->element();
     auto u = U.template element<0>() ;
@@ -90,8 +89,8 @@ SolverA0<T>::computeA0()
                    _expr=-g*id(v) );
     l += integrate( _range=markedfaces(mesh, 2), // outflow
                     _expr=g*id(v) );
-    l += integrate( _range=markedfaces(mesh, 3), // wall
-                    _expr=cst(0.)*id(v) );
+    // l += integrate( _range=markedfaces(mesh, 3), // wall
+    //                 _expr=cst(0.)*id(v) );
     // [rhs]
 
     a.solve( _name="a0", _rhs=l, _solution=U );
@@ -99,6 +98,7 @@ SolverA0<T>::computeA0()
 
     // [gradpsi0]
     auto w = Vh->element();
+    a0 = Vh->element();
     auto b = form2( _trial=Vh, _test=Vh );
     b = integrate( _range=elements(mesh),
                    _expr=inner(id(w),idt(w)) );
