@@ -3,22 +3,6 @@
 #include <feel/feelvf/vf.hpp>
 #include <feel/feelalg/solvereigen.hpp>
 
-#include <boost/mpi/timer.hpp>
-
-using namespace Feel;
-
-void
-logTime(boost::mpi::timer& t, std::string s, bool verbose)
-{
-    if( verbose )
-    {
-        LOG(INFO) << "[timer] " << s << " = " << t.elapsed() << std::endl;
-        if ( Environment::worldComm().isMasterRank() )
-            std::cout << "[timer] " << s << " = " << t.elapsed() << std::endl;
-    }
-    t.restart();
-}
-
 enum EdgeType {
     EDGE_INTERIOR = 0, // edge in the interior
     EDGE_BOUNDARY, // edge on boundary
@@ -112,18 +96,18 @@ SolverEigenNS2<T>::solve()
 
     boost::mpi::timer t;
 
-    setForms();
-    logTime(t, "form", FLAGS_v > 1);
-
-    setInfo();
-    setDofsToRemove();
-    logTime(t, "dofinfo", FLAGS_v > 1);
-
-    setMatrices();
-    logTime(t, "matrices", FLAGS_v > 1);
-
     if( boption("computeEigen"))
     {
+        setForms();
+        logTime(t, "form", FLAGS_v > 1);
+
+        setInfo();
+        setDofsToRemove();
+        logTime(t, "dofinfo", FLAGS_v > 1);
+
+        setMatrices();
+        logTime(t, "matrices", FLAGS_v > 1);
+
         solveEigen();
         logTime(t, "eigs", FLAGS_v > 1);
 
@@ -138,8 +122,6 @@ SolverEigenNS2<T>::solve()
 
     if( boption("print") )
         print();
-
-    logInfo();
 
     return modes;
 }
@@ -466,28 +448,4 @@ SolverEigenNS2<T>::load()
     }
 
     s.close();
-}
-
-template<typename T>
-void
-SolverEigenNS2<T>::logInfo()
-{
-    LOG(INFO) << "[info] np = " << Environment::numberOfProcessors() << std::endl
-              << "[info] geo = " << soption("gmsh.filename") << std::endl
-              << "[info] h = " << doption("gmsh.hsize") << std::endl
-              << "[info] elt = " << mesh->numGlobalElements() << std::endl
-              << "[info] Nh dof = " << Nh->nDof() << std::endl
-              << "[info] Lh dof = " << Lh->nDof() << std::endl
-              << "[info] Zh dof = " << C->mapColPtr()->nDof() << std::endl;
-
-    if ( Environment::worldComm().isMasterRank() )
-    {
-        std::cout << "[info] np = " << Environment::numberOfProcessors() << std::endl
-                  << "[info] geo = " << soption("gmsh.filename") << std::endl
-                  << "[info] h = " << doption("gmsh.hsize") << std::endl
-                  << "[info] elt = " << mesh->numGlobalElements() << std::endl
-                  << "[info] Nh dof = " << Nh->nDof() << std::endl
-                  << "[info] Lh dof = " << Lh->nDof() << std::endl
-                  << "[info] Zh dof = " << C->mapColPtr()->nDof() << std::endl;
-    }
 }
