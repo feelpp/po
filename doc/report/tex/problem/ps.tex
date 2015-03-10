@@ -1,78 +1,76 @@
-\section{Problème spectral}
+\section{Spectral Problem}
 \label{spectre}
-Nous connaissons maintenant $\mathbf{a}$ et les couples $(\lambda_i,\mathbf{g}_i)_{i=1,\dots,M}$, on a donc toutes les briques pour trouver les coefficients $c_i$ de $\mathbf{u}_M$ l'approximation de $\mathbf{u}$ :
+Now that we have $\mbf{a}$ and the eigenpairs $(\lambda_i,\mbf{g}_i)_{i=1,\dots,M}$, we have all the pieces to find the coefficients $c_i$ of $\mbf{u}_M$, the approximation of $\mbf{u}$ :
 \[\mathbf{u}_M= \sum_{i=1}^M c_i\mathbf{g}_i\mbox{ tel que } \mathbf{u}_M\underset{M\rightarrow\infty}{\longrightarrow} \mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i\]
-Pour cela, on utilise l'approximation du problème \ref{pbc}.
+For this, we use the problem \ref{pbc}.
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\mathbf{g}_i &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j(\curl\mathbf{g}_i\times \mathbf{g_j}) + \sum_{i=1}^Mc_i(\curl\mathbf{g}_i\times \mathbf{a})\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\mathbf{g}_i &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j((\curl\mathbf{g}_i)\times \mathbf{g_j}) + \sum_{i=1}^Mc_i((\curl\mathbf{g}_i)\times \mathbf{a})\\
 & +  \sum_{i=1}^Mc_i((\curl\mathbf{a})\times \mathbf{g}_i) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^Mc_i\curll\mathbf{g}_i - \mathbf{f_a} = 0\\
 \end{align*}
 
-Pour obtenir la forme variationnel du problème, on multiplie par une fonction test $\bm{\varphi}\in D^1(\Omega)$ et on intègre :
+To get the weak formulation of the problem, we multiply by a test function $\bm{\varphi}\in D^1(\Omega)$ and we integrate :
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega(\curl\mathbf{g}_i\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\int_\Omega(\curl\mathbf{g}_i\times \mathbf{a})\cdot\bm{\varphi}\\
-& +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\bm{\varphi} + \int_\Omega\grad \pi_{\mathbf{a}}\cdot\bm{\varphi} +\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\curll\mathbf{g}_i\cdot\bm{\varphi} - \int_\Omega\mathbf{f_a}\cdot\bm{\varphi} = 0\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{a})\cdot\bm{\varphi}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\bm{\varphi} + \int_\Omega\grad \pi_{\mathbf{a}}\cdot\bm{\varphi} +\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega(\curll\mathbf{g}_i)\cdot\bm{\varphi} - \int_\Omega\mathbf{f_a}\cdot\bm{\varphi} = 0\\
 \end{align*}
 
-En utilisant une intégration par partie sur le terme contenant $\grad\pi_{\mathbf{a}}$, on arrive à :
+By using an integration by parts on $\int_\Omega\grad \pi_{\mathbf{a}}\cdot\bm{\varphi}$,we get :
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega(\curl\mathbf{g}_i\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\int_\Omega(\curl\mathbf{g}_i\times \mathbf{a})\cdot\bm{\varphi}\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{a})\cdot\bm{\varphi}\\
 & +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\bm{\varphi} + \int_\Omega\pi_{\mathbf{a}}\div\bm{\varphi} + \int_{\partial\Omega}\pi_{\mathbf{a}}(\bm{\varphi}\cdot\mathbf{n})\\
-& \frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\curll\mathbf{g}_i\cdot\bm{\varphi} = \int_\Omega\mathbf{f_a}\cdot\bm{\varphi}\\
+& \frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega(\curll\mathbf{g}_i)\cdot\bm{\varphi} = \int_\Omega\mathbf{f_a}\cdot\bm{\varphi}\\
 \end{align*}
 
 \begin{rk}
-Comme $\bm{\varphi}\in D^1(\Omega)$, $\div\bm{\varphi}=0$ et $\bm{\varphi}\cdot \mathbf{n}=0$ sur $\partial\Omega$, le terme de pression s'annule donc sous cette forme. Il sera recalculé en post-traitement, voir \ref{pression}.\\
+As $\bm{\varphi}\in D^1(\Omega)$, $\div\bm{\varphi}=0$ and $\bm{\varphi}\cdot \mathbf{n}=0$ on $\Gamma$, the pressure term doesn't appear anymore in this formulation. We'll need to compute it in post-traitment, see \ref{pression}.
 \end{rk}
-Ce qui donne :
+Which leads to :
 \begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega(\curl\mathbf{g}_i\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\int_\Omega(\curl\mathbf{g}_i\times \mathbf{a})\cdot\bm{\varphi}\\
-& +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\bm{\varphi} + \int_\Omega\pi_{\mathbf{a}}\div\bm{\varphi} + \textcolor{red}{\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega\curll\mathbf{g}_i\cdot\bm{\varphi}}\\
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\bm{\varphi} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{g_j})\cdot\bm{\varphi} + \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{a})\cdot\bm{\varphi}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\bm{\varphi} + \frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega(\curll\mathbf{g}_i)\cdot\bm{\varphi}\\
 & = \int_\Omega\mathbf{f_a}\cdot\bm{\varphi}\\
 \end{align*}
 
-Le terme $\sum_{i=1}^Mc_i\int_\Omega\curll\mathbf{g}_i\cdot\bm{\varphi}$ provient de $\int_\Omega \curll\mathbf{u}\cdot\bm{\varphi}$.\\
-En utilisant plusieurs intégrations par parties et la décomposition de $\bm{\varphi}$ dans $D^1(\Omega)$, cela devient $\int_\Omega\curl\mathbf{u}\cdot\curl\bm{\varphi} -\int_{\partial\Omega} \alpha_2\phi$.\\
-En repassant à la décomposition de Galerkin, on obtient donc le terme $\sum_{i=1}^Mc_i\lambda_i\int_\Omega\mathbf{g}_i\cdot\curl\bm{\varphi}-\int_{\partial\Omega} \alpha_2\phi$.\\
+Multiplying by a test function in $D^1$, means that we want the equation to be true for all functions in $D^1$. So this is the same that solving this equation for all functions of a basis of $D^1$. This is where we use the basis $\{\mbf{g}_i\}_{i=1,\dots,M}$.\\
+We want $\forall k=1,\dots,M$ :
+\begin{align*}
+\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\mathbf{g_k} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{g_j})\cdot\mathbf{g_k} + \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{a})\cdot\mathbf{g_k}\\
+& +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\mathbf{g_k} +\frac{1}{Re}\sum_{i=1}^Mc_i\int_\Omega(\curll\mathbf{g}_i)\cdot\mathbf{g_k} = \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
+\end{align*}
+We know that in $\ZZ_h$, $\int(\curll\mbf{g}_i)\cdot\mbf{g_k}=\int(\curl\mbf{g}_i)\cdot(\curl\mbf{g}_k)$ and that the basis $\{\mbf{g}_i\}_{i=1,\dots,M}$ is orthogonal, so we have for $\forall k=1,\dots,M$ :
+\begin{align*}
+  \frac{\partial c_k}{\partial t} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{g_j})\cdot\mathbf{g_k} + \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{g}_i)\times \mathbf{a})\cdot\mathbf{g_k}\\
+  &+  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\mathbf{g_k} + \frac{1}{Re}\sum_{i=1}^M c_i\int_\Omega(\curl\mbf{g}_i)\cdot(\curl\mbf{g}_k) = \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}
+\end{align*}
+We will now use the following notations :
+\begin{align*}
+  R_{ijk} &= \int_\Omega((\curl\mathbf{g}_i)\times \mathbf{g}_j)\cdot\mathbf{g}_k & R_{iak} &= \int_\Omega((\curl\mathbf{g}_i)\times \mathbf{a})\cdot\mathbf{g}_k\\
+  R_{raij} &= \int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\mathbf{g}_k & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g}_k\\
+  R_{ik} &= \int_{\partial\Omega} (\curl\mbf{g}_i)\cdot(\curl\mbf{g}_k)
+\end{align*}
 \begin{rk}
-  Cependant, on a que $\alpha_2=\curll\mathbf{u}\cdot\mathbf{n}\restr{\Gamma}=\sum c_i\lambda_i^2 \mathbf{g}_i\cdot\mathbf{n}\restr{\Gamma} = 0$.\\
-Si l'on veut que cette condition soit différente de 0, $\alpha_2$ devrait être relever de la même manière que $\alpha_0$ et $\alpha_1$, mais comme cela a été remarqué tardivement, on a fait le choix de continuer à résoudre le système de la manière décrite dans ce rapport.\\
-Pareillement, $\mathbf{b}$ appartient aussi à $D^1$, on ne devrait donc pas avoir $\curll\mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=\alpha_1$.
+  Since we couldn't know if $\curll\mbf{g}_i=\lambda^2_i \mbf{g}_i$ (see remark \ref{curll}), we have to add the term $R_{ik}$, but in practice, this term is $\delta_{ik}\lambda^2_k$, so we don't have to compute it.
 \end{rk}
-Lorsqu'on prend une fonction de test dans $D^1$, on cherche à ce que l'équation soit vrai pour toutes les fonctions de $D^1$. Cela revient au même que de résoudre cette équation pour toutes les fonctions de la base de $D^1$. On utilise donc encore une fois les fonctions propres de l'opérateur rotationnel.\\
-On cherche donc $\forall k=1,\dots,M$ :
-\begin{align*}
-\sum_{i=1}^M\frac{\partial c_i}{\partial t}\int_\Omega\mathbf{g}_i\cdot\mathbf{g_k} &+ \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega(\curl\mathbf{g}_i\times \mathbf{g_j})\cdot\mathbf{g_k} + \sum_{i=1}^Mc_i\int_\Omega(\curl\mathbf{g}_i\times \mathbf{a})\cdot\mathbf{g_k}\\
-& +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\mathbf{g_k} +\frac{1}{Re}\sum_{i=1}^Mc_i\lambda_i^2\int_\Omega\mathbf{g}_i\cdot\mathbf{g_k}-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi_k = \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
-\end{align*}
-Comme la base $(\mathbf{g}_i)$ est orthonormale, on a $\forall k=1,\dots,M$ :
-\begin{align*}
-\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_j\int_\Omega(\curl\mathbf{g}_i\times \mathbf{g_j})\cdot\mathbf{g_k}\\
-& + \sum_{i=1}^Mc_i\int_\Omega(\curl\mathbf{g}_i\times \mathbf{a})\cdot\mathbf{g_k} +  \sum_{i=1}^Mc_i\int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\mathbf{g_k} = \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}+\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi_k\\
-\end{align*}
-En utilisant les notations suivantes :
-\begin{align*}
-  R_{ijk} &= \int_\Omega(\curl\mathbf{g}_i\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \int_\Omega(\curl\mathbf{g}_i\times \mathbf{a})\cdot\mathbf{g_k}\\
-  &= \lambda_i\int_\Omega(\mathbf{g}_i\times \mathbf{g_j})\cdot\mathbf{g_k} & &= \lambda_i\int_\Omega(\mathbf{g}_i\times \mathbf{a})\cdot\mathbf{g_k}\\
-R_{raij} &= \int_\Omega((\curl\mathbf{a})\times \mathbf{g}_i)\cdot\mathbf{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
-R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
-\end{align*}
-Le problème \ref{pbc} devient :
+The problem \ref{pbc} becomes :
 \begin{pb}\label{fvc}
-Trouver $(c_i)_{i=1,\dots,M}$ tel que $\forall k=1,\dots,M$ :
+Find $(c_i)_{i=1,\dots,M}$ such that $\forall k=1,\dots,M$ :
 \begin{equation*}
-\frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} + \sum_{i=1}^Mc_iR_{raij} = R_{hk} + \frac{1}{Re}R_{pk}
+\frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i=1}^M\sum_{j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_iR_{iak} + \sum_{i=1}^Mc_iR_{raij} = R_{fk}
 \end{equation*}\end{pb}
 
 \begin{rk}
-$R_{ijk}$ et $R_{pk}$ ne sont à calculer qu'une seule fois. Si $\mathbf{a}$ dépend du temps, alors, les autres termes doivent être recalculés à chaque itération en temps.
+  We need to compute $R_{ijk}$ only once. If $\mbf{a}$ depends on time, then we'll need to recompute the others terms at each iteration.
 \end{rk}
 \begin{rk}
-On a autant d'équations à résoudre et d'inconnus que de fonctions propres, c'est-à-dire $M$. Afin d'avoir une bonne approximation, on a besoin du plus grand nombre de fonctions de bases possible. Il faut donc trouver $M$ pour avoir un bon ratio entre précision et temps de calcul.
+  We have that :
+  \[ R_{ijk}=\int_\Omega((\curl(\mbf{g}_i)\times\mbf{g}_j)\cdot\mbf{g}_k=\int_\Omega(\mbf{g}_k\times(\curl\mbf{g}_i))\cdot\mbf{g}_j=-\int_\Omega((\curl\mbf{g}_i)\times\mbf{g_k})\cdot\mbf{g_j}=-R_{ikj}\]
+  And also :
+  \[ R_{ijj}=\int_\Omega((\curl(\mbf{g}_i)\times\mbf{g}_j)\cdot\mbf{g}_j=\int_\Omega(\mbf{g}_j\times\mbf{g}_j)\cdot(\curl\mbf{g}_i)=0 \]
+  And the same for $R_{aik}$. So instead of $M^3+2M^2+M$ terms, we need to compute only half $\frac{M^2(M-1)}{2}+M^2+\frac{M(M-1)}{2}+M=\frac{M^3}{2}+M^2+\frac{M}{2}$.
 \end{rk}
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
 %%% eval: (flyspell-mode 1)
-%%% ispell-local-dictionary: "french"
+%%% ispell-local-dictionary: "english"
 %%% End:

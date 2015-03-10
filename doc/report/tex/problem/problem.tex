@@ -27,219 +27,231 @@ L^2_\sigma(\Omega) &= \{\mbf{v} \in [L^2(\Omega)]^3\; |\; \div \mbf{v} = 0\text{
 D^1(\Omega) &= \{\mbf{v} \in [H^1(\Omega)]^3\cap L^2_\sigma(\Omega)\; |\; (\curl \mbf{v}\cdot \mbf{n})\restr{\Gamma} = 0  \}
 \end{align*}
 
-We are looking for $(\mathbf{v},p)$, corresponding to the velocity and the pressure, solutions of the incompressible Navier-Stokes equations in $Q_T=\Omega\times[0,T]$, where $\Omega$ is an open set in $\R^3$ and $\partial\Omega$ its boundary, with initial condition and general impermeable boundary conditions.
-\begin{pb}\label{depart}
-Find $(\mathbf{v},p)$ such that :
+We are looking for $(\mbf{v},p)$, corresponding to the velocity and the pressure, solutions of the incompressible Navier-Stokes equations in $Q_T=\Omega\times[0,T]$, where $\Omega$ is an open set in $\R^3$ and $\partial\Omega$ its boundary, with initial condition and general impermeable boundary conditions.
+\begin{pb}\label{start}
+Find $(\mbf{v},p)$ such that :
 \begin{equation*}
 \left\{\begin{aligned}
-&\frac{\partial \mathbf{v}}{\partial t} + (\curl  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\curll  \mathbf{v}-\mathbf{f} = 0\\
-&\div \mathbf{v} = 0\\
-&\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0\\
-&\mathbf{v}\cdot \mathbf{n}\restr{\Gamma} = \alpha_0\\
-&(\curl  \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} = \alpha_1\\
-&(\curll  \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} = \alpha_2
+&\frac{\partial \mbf{v}}{\partial t} + (\curl  \mbf{v})\times \mbf{v} + \grad q + \frac{1}{Re}\curll  \mbf{v}-\mbf{f} = 0\\
+&\div \mbf{v} = 0\\
+&\mbf{v}\big\rvert_{t=0} = \mbf{v}_0\\
+&\mbf{v}\cdot \mbf{n}\restr{\Gamma} = \alpha_0\\
+&(\curl  \mbf{v})\cdot \mbf{n}\restr{\Gamma} = \alpha_1\\
+&(\curll  \mbf{v})\cdot \mbf{n}\restr{\Gamma} = \alpha_2
 \end{aligned}\right.
 \end{equation*}
-where $q = \frac{|\mathbf{v}|^2}{2}+p$.\\
+where $q = \frac{|\mbf{v}|^2}{2}+p$.\\
 \end{pb}
-This problem has non standards boundary conditions. Rather than Dirichlet conditions, we use $\nabla^k\times\mathbf{v}\cdot\mathbf{n}\restr{\Gamma}$ for $k=0,1,2$ with $\nabla^0\times=Id$.\\
+This problem has non standards boundary conditions. Rather than Dirichlet conditions, we use $\nabla^k\times\mbf{v}\cdot\mbf{n}\restr{\Gamma}$ for $k=0,1,2$ with $\nabla^0\times=Id$.\\
 There have been few studies about these conditions and the industry rarely uses it. We can cite the works of V. Girault \cite{girault90-1}, H. Bellout, J. Neustuppa and P. Penel \cite{Penel2004}. The principle is a Galerkin type decomposition that can be related to the works of E. Deriaz and V. Perrier \cite{Deriaz2009249}.\\
 
 The interest for Plastic Omnium is to be able to split the variables in time and space, and hence compute longer simulations. Furtermore, this could mean that we wouldn't need wall functions boundary condition, and so the boundary layer become needless.\\ 
 
-We can now explain the resolution's strategy in the chapter \ref{strat}, then study each step of the resolution in more details in \ref{fv}.
+We can now explain the resolution's strategy in the chapter \ref{strategy}, then study each step of the resolution in more details in \ref{fv}.
 
-\chapter{Stratégie de résolution}
-\label{strat}
-D'après \cite{Penel2004}, l'existence et l'unicité de la solution sont assurés si la solution est dans $D^1$, c'est-à-dire $\nabla^k\times\mathbf{v}\cdot\mathbf{n}\restr{\Gamma}=0$ pour $k=0,1$. On va donc relever ces conditions aux bords à l'aide d'une fonction $\mathbf{a}$. On cherche à écrire  $\mathbf{v}=\mathbf{u}+\mathbf{a}$, tel que :\\
+\chapter{Resolution's Strategy}
+\label{strategy}
+According to \cite{Penel2004}, the existence and unicity of the solution are guaranteed if the solution lives in $D^1$, which means that $\nabla^k\times\mbf{v}\cdot\mbf{n}\restr{\Gamma}=0$ for $k=0,1$. We need to relief these boundary conditions with a function $\mbf{a}$. We want to write $\mbf{v}=\mbf{u}+\mbf{a}$, such that :\\
 \begin{equation}\label{v}
-\begin{array}{c|ccccc|ccc}
-& \mathbf{v} & = & \mathbf{a} & + & \mathbf{u} & \mathbf{a} & + & \mathbf{u}\\ \hline
-\div\star & 0 & & 0 & & 0 & 0 & & 0\\ \hline
-\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_0 & & \alpha_0 & & 0 & \alpha_0 & & 0\\ \hline
-\curl\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_1 & & \alpha_1 & & 0 & \alpha_1 & & 0\\ \hline
-\curll\star\cdot \mathbf{n}\restr{\Gamma} & \alpha_2 & & 0 & & \alpha_2 & \alpha_2 & & 0
+\begin{array}{c|ccccc}
+& \mbf{v} & = & \mbf{a} & + & \mbf{u}\\ \hline
+\div\star & 0 & & 0 & & 0\\ \hline
+\star\cdot \mbf{n}\restr{\Gamma} & \alpha_0 & & \alpha_0 & & 0\\ \hline
+\curl\star\cdot \mbf{n}\restr{\Gamma} & \alpha_1 & & \alpha_1 & & 0\\ \hline
+\curll\star\cdot \mbf{n}\restr{\Gamma} & \alpha_2 & & \alpha_2 & & 0
 \end{array}
 \end{equation}
-Ainsi, on a $\mathbf{u}\in D^1(\Omega)$ qui sert à définir la solution à l'intérieur du domaine et $\mathbf{a}\in [L^2(\Omega)]^3$ qui sert à relever le problème sur les bords du domaine.
+We have $\mbf{u}\in D^1(\Omega)$ to define the solution in the interior of the domain and $\mbf{a}\in [L^2(\Omega)]^3$ that we use for the boundary conditions.
 \begin{pb}\label{a}
-Trouver $\mathbf{a}\in [L^2(\Omega)]^3$ tel que :
+Find $\mbf{a}\in [L^2(\Omega)]^3$ such that :
 \begin{equation*}
 \left\{\begin{aligned}
-&\mathbf{a}=\curl \mathbf{b}+\grad\psi^0\\
-&\div \mathbf{a} =0\\
-&\mathbf{a}\cdot \mathbf{n}\restr{\Gamma} = \alpha_0\\
-&(\curl \mathbf{a})\cdot \mathbf{n}\restr{\Gamma} = \alpha_1\\
-&\left( (\curll\mathbf{a})\cdot\mathbf{n}\restr{\Gamma} = \alpha_2 \right)
+&\mbf{a}=\grad a_0 + \curl\mbf{a}_1 + \mbf{a}_2\\
+&\div \mbf{a} =0\\
+&\mbf{a}\cdot \mbf{n}\restr{\Gamma} = \alpha_0\\
+&(\curl \mbf{a})\cdot \mbf{n}\restr{\Gamma} = \alpha_1\\
+&(\curll\mbf{a})\cdot\mbf{n}\restr{\Gamma} = \alpha_2
 \end{aligned}\right.
 \end{equation*}
 \end{pb}
-En appliquant la divergence et les conditions aux bords à la première ligne du problème on obtient le tableau suivant :
+By applying the divergence and the boundary contions to the first lign, it leads to :
 \begin{center}
 \begin{tabular}{c|ccccccc}
-& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\curl \mathbf{b}$ & + & $\mathbf{e}$ \\ \hline
-$\div\star$ & 0 & & $\laplace\psi^0$ & & 0 & & 0\\ \hline
-$\star\cdot \mathbf{n}\restr{\Gamma}$ & $\alpha_0$ & & $\alpha_0$ & & 0 & & 0\\ \hline
-  $\curl\star\cdot \mathbf{n}\restr{\Gamma}$ & $\alpha_1$ & & 0 & & $\alpha_1$ & & 0\\ \hline
-  $\curll\star\cdot\mathbf{n}\restr{\Gamma}$ & $\alpha_2$ & & 0 & & 0 & & $\alpha_2$
+& $\mbf{a}$ & = & $\grad a_0$ & + & $\curl \mbf{a}_1$ & + & $\mbf{a}_2$ \\ \hline
+$\div\star$ & 0 & & $\laplace a_0$ & & 0 & & 0\\ \hline
+$\star\cdot \mbf{n}\restr{\Gamma}$ & $\alpha_0$ & & $\alpha_0$ & & 0 & & 0\\ \hline
+  $\curl\star\cdot \mbf{n}\restr{\Gamma}$ & $\alpha_1$ & & 0 & & $\alpha_1$ & & 0\\ \hline
+  $\curll\star\cdot\mbf{n}\restr{\Gamma}$ & $\alpha_2$ & & 0 & & 0 & & $\alpha_2$
 \end{tabular}
 \end{center}
-En utilisant la première et la deuxième ligne du tableau, on obtient le problème :
-\begin{pb}\label{psi0}
-Trouver $\psi^0$ tel que :
+With the two first ligns of the table, we get the problem :
+\begin{pb}\label{pba0}
+Find $a_0$ such that :
 \begin{equation*}
 \left\{\begin{aligned}
-&-\laplace\psi^0 = 0\\
-&\grad\psi^0\cdot \mathbf{n}\restr{\Gamma}=\alpha_0
+&-\laplace a_0 = 0\\
+&\grad a_0\cdot \mbf{n}\restr{\Gamma}=\alpha_0
 \end{aligned}\right.
 \end{equation*}\end{pb}
-Ce problème permet de trouver $\psi^0$ à une constante près, on va donc utiliser un multiplicateur de Lagrange pour ajouter une contrainte sur $\psi^0$, par exemple $\int_\Omega \psi^0 = 0$, cette constante est sans importance car on cherche le gradient de $\psi^0$.\\
-Il y a plusieurs manières de résoudre le problème \ref{psi0}, la solution choisie sera discutée plus loin.\\
+This problem allows us to find $a_0$ up to a constant, we need to use Lagrange multiplier to add a constraint, for example $\int_Omega a_0=0$. We can choose the constant because we only need the gradient.\\
+We'll discuss which way we solve the problem \ref{pba0} further.\\
 
-Soit $\mathbf{b}$ solution du problème mixte suivant
-\begin{pb}\label{curlb}
-Trouver $(\mathbf{b},\psi^1)$ tel que :
+Let $\mbf{a}_1$ solution of the mixed problem :
+\begin{pb}\label{pba1}
+Find $(\mbf{a}_1,\psi^1)$ tel que :
 \begin{equation*}
 \left\{\begin{aligned}
-&\curll \mathbf{b} = \grad\psi^1\\
-&\div \mathbf{b} = 0\\
-&\mathbf{b}\cdot \mathbf{n}\restr{\Gamma} = 0\\
-&\curl \mathbf{b}\cdot \mathbf{n}\restr{\Gamma} = 0\\
-&\grad\psi^1\cdot \mathbf{n}\restr{\Gamma} = \alpha_1
+&\curll \mbf{a}_1 = \grad\psi^1\\
+&\div \mbf{a}_1 = 0\\
+&\mbf{a}_1\cdot \mbf{n}\restr{\Gamma} = 0\\
+&\curl \mbf{a}_1\cdot \mbf{n}\restr{\Gamma} = 0\\
+&\grad\psi^1\cdot \mbf{n}\restr{\Gamma} = \alpha_1
 \end{aligned}\right.
 \end{equation*}\end{pb}
 
-Soit $\mathbf{e}$ solution du problème suivant :
-\begin{pb}
-  Trouver $\mathbf{e}$ tel que :
+Let $\mbf{a}_2$ solution of the following problem :
+\begin{pb}\label{pba2}
+  Find $\mbf{a}_2$ such that :
   \begin{equation*}
     \left\{\begin{aligned}
-    &\curll\mathbf{e} = \mathbf{A_2}\\
-    &\div \mathbf{e} = 0\\
-    &\mathbf{e}\cdot\mathbf{n}\restr{\Gamma} = 0\\
-    &\curl\mathbf{e}\cdot\mathbf{n}\restr{\Gamma} = 0\\
-    &\curll\mathbf{e}\cdot\mathbf{n}\restr{\Gamma} = \alpha_2
+    &\curll\mbf{a}_2 = \bm{\epsilon}\\
+    &\div \mbf{a}_2 = 0\\
+    &\mbf{a}_2\cdot\mbf{n}\restr{\Gamma} = 0\\
+    &\curl\mbf{a}_2\cdot\mbf{n}\restr{\Gamma} = 0\\
+    &\curll\mbf{a}_2\cdot\mbf{n}\restr{\Gamma} = \alpha_2
     \end{aligned}\right.
   \end{equation*}
-  Tel que $\mathbf{A_2}\cdot\mathbf{n} = \alpha_2$
+  Such that $\bm{\epsilon}\cdot\mbf{n} = \alpha_2$
 \end{pb}
 
-% Il reste encore plusieurs questions concernant la manière de relever $\alpha_1$. En effet, écris de cette manière, $\mathbf{b}\in D^1(\Omega)$ et donc si $\mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=0$ alors $\curll\mathbf{b}\cdot\mathbf{n}\restr{\Gamma}=0$ aussi. Ce problème est donc encore ouvert.\\
+Once we know $\grad a_0$, $\curl\mbf{a}_1$ and $\mbf{a}_2$, we have $\mbf{a}$.\\
 
-Une fois $\grad\psi^0$, $\curl \mathbf{b}$ connus, on peut retrouver $\mathbf{a}$.\\
-
-On remplace maintenant $\mathbf{v}$ par $\mathbf{u}+\mathbf{a}$ dans le problème \ref{depart} :
-\[ \frac{\partial(\mathbf{u}+\mathbf{a})}{\partial t}+(\curl(\mathbf{u}+\mathbf{a}))\times(\mathbf{u}+\mathbf{a}) + \grad (\frac{|\mathbf{u}+\mathbf{a}|^2}{2}+p) + \frac{1}{Re}\curll(\mathbf{u}+\mathbf{a}) - \mathbf{f} = 0 \]
-Ce qui donne en notant $\pi_a=\frac{|\mathbf{u}+\mathbf{a}|^2}{2}+p$ :
-\[ \frac{\partial \mathbf{u}}{\partial t}+\frac{\partial \mathbf{a}}{\partial t} + (\curl \mathbf{u}+\curl \mathbf{a})\times(\mathbf{u}+\mathbf{a}) + \grad\pi_{\mathbf{a}} + \frac{1}{Re}(\curll \mathbf{u}+\curll \mathbf{a}) - \mathbf{f} = 0 \]
-Comme $\curll \mathbf{a} = 0$ et en notant $\mathbf{f_a}=\mathbf{f}-\frac{\partial \mathbf{a}}{\partial t} - (\curl \mathbf{a})\times \mathbf{a}$, on a le problème suivant :
+We can replace $\mbf{v}$ by $\mbf{u}+\mbf{a}$ in problem \ref{start} :
+\[ \frac{\partial(\mbf{u}+\mbf{a})}{\partial t}+(\curl(\mbf{u}+\mbf{a}))\times(\mbf{u}+\mbf{a}) + \grad (\frac{|\mbf{u}+\mbf{a}|^2}{2}+p) + \frac{1}{Re}\curll(\mbf{u}+\mbf{a}) - \mbf{f} = 0 \]
+Which leads to, by noting $\pi_a=\frac{|\mbf{u}+\mbf{a}|^2}{2}+p$ :
+\[ \frac{\partial \mbf{u}}{\partial t}+\frac{\partial \mbf{a}}{\partial t} + (\curl \mbf{u}+\curl \mbf{a})\times(\mbf{u}+\mbf{a}) + \grad\pi_{\mbf{a}} + \frac{1}{Re}(\curll \mbf{u}+\curll \mbf{a}) - \mbf{f} = 0 \]
+We have that $\curll \mbf{a} = \bm{\epsilon}$, then if $\mbf{f_a}=\mbf{f}-\frac{\partial \mbf{a}}{\partial t} - (\curl \mbf{a})\times \mbf{a} - \bm{\epsilon}$, we have the following problem :
 \begin{pb}\label{pbu}
-Trouver $\mathbf{u}$ tel que :
+Find $\mbf{u}$ such that :
 \begin{equation*}
 \left\{\begin{aligned}
-&\frac{\partial \mathbf{u}}{\partial t} + (\curl \mathbf{u})\times \mathbf{u} + (\curl \mathbf{u})\times \mathbf{a} +(\curl \mathbf{a})\times \mathbf{u} + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\curll  \mathbf{u} - \mathbf{f_a} = 0\\
-&\div \mathbf{u} = 0\\
-&\mathbf{u}\big\rvert_{t=0} = \mathbf{v}_0 - \mathbf{a}(0,\cdot)\\
-&\mathbf{u}\cdot \mathbf{n}\restr{\Gamma} = 0\\
-&(\curl \mathbf{u})\cdot \mathbf{n}\restr{\Gamma} = 0\\
-&(\curll  \mathbf{u})\cdot \mathbf{n}\restr{\Gamma} = \alpha_2
+&\frac{\partial \mbf{u}}{\partial t} + (\curl \mbf{u})\times \mbf{u} + (\curl \mbf{u})\times \mbf{a} +(\curl \mbf{a})\times \mbf{u} + \grad \pi_{\mbf{a}} +\frac{1}{Re}\curll  \mbf{u} - \mbf{f_a} = 0\\
+&\div \mbf{u} = 0\\
+&\mbf{u}\big\rvert_{t=0} = \mbf{v}_0 - \mbf{a}(0,\cdot)\\
+&\mbf{u}\cdot \mbf{n}\restr{\Gamma} = 0\\
+&(\curl \mbf{u})\cdot \mbf{n}\restr{\Gamma} = 0\\
+&(\curll  \mbf{u})\cdot \mbf{n}\restr{\Gamma} = 0
 \end{aligned}\right.
 \end{equation*}\end{pb}
 
-On cherche donc $\mathbf{u}=\mathbf{v}-\mathbf{a}$, et en utilisant une décomposition de Galerkin, on a :
+Using a Galerkin decomposition, we have :
 \begin{equation}\label{u}
-\mathbf{u}(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)\mathbf{g}_i(\cdot)
+\mbf{u}(t,\cdot) = \sum_{i=1}^{\infty} c_i(t)\mbf{g}_i(\cdot)
 \end{equation}
-où on sépare les variables en temps et en espace. Les coefficients $c_i$ contiennent toutes les informations dépendantes du temps, tandis que les fonctions $\mathbf{g}_i$ portent la composante spatiale.\\
+where we have separeted the variables depending on time and space. The coefficients $c_i$ include all informations depending on the time, whereas the functions $\mbf{g}_i$ carry the spacial component.\\
 
-Comme $\mathbf{u}\in D^1(\Omega)=D(\mathrm{rot}_{imperm})$, d'après \cite{Penel2004}, on peut choisir les fonctions de base
-$\mathbf{g}_i$ comme étant les fonctions propres de l'opérateur rotationnel. Ces
-fonctions sont les mêmes que celles de l'opérateur $\curll$.
-
-En effet, soit $(\lambda_i,\mathbf{g}_i)$ solutions de $\curl \mathbf{g}_i = \lambda_i\mathbf{g}_i$ et $(\Lambda_i,\mathbf{G}_i)$ solutions de $\curll \mathbf{G}_i = \Lambda_i\mathbf{G_i}$. Alors :
-\[ \curll \mathbf{g}_i = \curl(\curl \mathbf{g}_i)=\curl(\lambda_i\mathbf{g}_i)=\lambda^2\mathbf{g}_i \]
-Par identification, on voit que $\mathbf{g}_i=\mathbf{i}_i$ et que $\lambda_i=\pm\sqrt\Lambda_i$. Pour n'avoir que des valeurs propres de multiplicité une, on ne garde que les valeurs propres positives, le signe étant porté par le coefficient $c_i$.
-
-On cherche donc à résoudre le problème aux valeurs propres suivant :
-\begin{pb}\label{curlcurl}
-Trouver$(\lambda_i,\mathbf{g}_i)\in\R\times D^1(\Omega)$ tel que :
+Since $\mbf{u}\in D^1(\Omega)=D(\mathrm{rot}_{imperm})$, according to \cite{Penel2004}, a basis of this space is the eigen functions $\mbf{g}_i$ of the curl operator.
+So, we want to solve the eigen problem :
+\begin{pb}\label{pbcurl}
+Find $(\lambda_i,\mbf{g}_i)\in\R\times D^1(\Omega)$ such that :
 \begin{equation*}
 \left\{\begin{aligned}
-&\curll  \mathbf{g}_i = \lambda_i^2 \mathbf{g}_i\\
-&\mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0\\
-&\curl \mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0\\
-&\curll  \mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0
+&\curl  \mbf{g}_i = \lambda_i \mbf{g}_i\\
+&\div\mbf{g}_i = 0\\
+&\mbf{g}_i\cdot \mbf{n}\restr{\Gamma} = 0\\
+&\curl \mbf{g}_i\cdot \mbf{n}\restr{\Gamma} = 0
 \end{aligned}\right.
 \end{equation*}\end{pb}
 
-En injectant (\ref{u}) dans le problème \ref{pbu}, on obtient :
+By injecting \ref{u} in the problem \ref{pbu}, we get :
 \begin{align*}
-\frac{\partial}{\partial t}\left(\sum_{i=1}^\infty c_i\mathbf{g}_i\right) &+ \left(\curl \left(\sum_{i=1}^\infty c_i\mathbf{g}_i\right)\right)\times \left(\sum_{i=1}^\infty c_i\mathbf{g}_i\right) + \left(\curl \left(\sum_{i=1}^\infty c_i\mathbf{g}_i\right)\right)\times \mathbf{a}&\\
-&+ (\curl \mathbf{a})\times \left(\sum_{i=1}^\infty c_i\mathbf{g}_i\right) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\curll  \left(\sum_{i=1}^\infty c_i\mathbf{g}_i\right) - \mathbf{f_a} =0\\
+\frac{\partial}{\partial t}\left(\sum_{i=1}^\infty c_i\mbf{g}_i\right) &+ \left(\curl \left(\sum_{i=1}^\infty c_i\mbf{g}_i\right)\right)\times \left(\sum_{i=1}^\infty c_i\mbf{g}_i\right) + \left(\curl \left(\sum_{i=1}^\infty c_i\mbf{g}_i\right)\right)\times \mbf{a}&\\
+&+ (\curl \mbf{a})\times \left(\sum_{i=1}^\infty c_i\mbf{g}_i\right) + \grad \pi_{\mbf{a}} +\frac{1}{Re}\curll  \left(\sum_{i=1}^\infty c_i\mbf{g}_i\right) - \mbf{f_a} =0\\
 \end{align*}
 
-En utilisant la linéarité de la dérivée, ainsi que celle de l'opérateur rotationnel et le fait que les fonctions $\bm{g_i}$ soient les modes propres de cet opérateur, on obtient le problème suivant :
+Using the linearity of the derivative operator, as well as that of the curl operator, we have :
 \begin{pb}\label{pbc}
-Trouver $(c_i)$ tel que :
+Find $(c_i)$ such that :
 \begin{align*}
-\sum_{i=1}^\infty\frac{\partial c_i}{\partial t}\mathbf{g}_i &+ \sum_{i=1}^\infty\sum_{j=1}^\infty c_i\lambda_ic_j(\mathbf{g}_i\times \mathbf{g}_j) + \sum_{i=1}^\infty c_i\lambda_i(\mathbf{g}_i\times \mathbf{a})\\
-& + \sum_{i=1}^\infty c_i((\curl\mathbf{a})\times \mathbf{g}_i) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^\infty c_i\lambda_i^2\mathbf{g}_i - \mathbf{f_a} = 0\\
+\sum_{i=1}^\infty\frac{\partial c_i}{\partial t}\mbf{g}_i &+ \sum_{i=1}^\infty\sum_{j=1}^\infty c_i c_j((\curl\mbf{g}_i)\times \mbf{g}_j) + \sum_{i=1}^\infty c_i((\curl\mbf{g}_i)\times \mbf{a})\\
+& + \sum_{i=1}^\infty c_i((\curl\mbf{a})\times \mbf{g}_i) + \grad \pi_{\mbf{a}} +\frac{1}{Re}\sum_{i=1}^\infty c_i\curll\mbf{g}_i - \mbf{f_a} = 0\\
 \end{align*}
-avec \[ \sum_{i=1}^\infty c_i(0)\mathbf{g}_i = \mathbf{v_0}-\mathbf{a}(0,\cdot) \]
+with \[ \sum_{i=1}^\infty c_i(0)\mbf{g}_i = \mbf{v_0}-\mbf{a}(0,\cdot) \]
 \end{pb}
 
-%% Comme les conditions aux bords sont respectées par tous les $\mathbf{g}_i$, $\mathbf{u}$, en tant que combinaison linéaire de ceux-ci, les respectent aussi.\\
-
-Pour résumer, on doit donc :
+To summarize, we have to :
 \begin{enumerate}
-\item générer la base $\mathbf{g}_i$ des fonctions propres de l'opérateur curl en résolvant le problème aux valeurs propres \ref{curlcurl} comme expliqué dans le chapitre \ref{eigen}.
-\item trouver $\mathbf{a}$ pour pouvoir décomposer $\mathbf{v}$ en $\mathbf{u}+\mathbf{a}$, pour cela, on résout les problèmes \ref{psi0} et \ref{curlb}. Ce qui permet de trouver $\mathbf{a}$ grâce au problème \ref{a}. Cette partie est détaillé dans \ref{relev}.
-\item résoudre le problème \ref{pbc} pour trouver les coefficients $c_i$. Cela est expliqué dans \ref{spectre}.
-\item recomposer $\mathbf{v}=\mathbf{u}+\mathbf{a}$, et chercher $p$ pour avoir la solution du problème \ref{depart}. Cette dernière partie est montré dans \ref{pression}.
+\item generate the basis $\{\mbf{g}_i\}$ from the eigen functions of the curl operator by solving \ref{pbcurl} as explain in the chapter \ref{eigen}.
+\item find $\mbf{a}$ to decompose $\mbf{v}$ as $\mbf{u}+\mbf{a}$, for this, we solve the problems \ref{pba0},\ref{pba1} and \ref{pba2}. Which allows us to compute $\mbf{a}$ with \ref{a}. This part is details in \ref{relev}.
+\item solve problem \ref{pbc} to find the coefficients $c_i$. This is explain in chapter \ref{spectre}.
+\item recompose $\mbf{v}=\mbf{u}+\mbf{a}$, and find $p$ to get the solution of the problem \ref{start}. The chapter \ref{pressure} explains how to do it.
 \end{enumerate}
-Cette stratégie est présenté dans la figure \ref{org1}.
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}
-\node[draw,scale=\taille,fill=green!50] (alpha0) at (0,10) {$\alpha_0$};
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.9cm]\ref{psi0}}] (pbpsi0) at (0,8) {$\begin{aligned}
--\laplace\psi^0&=0\\
-\grad\psi^0\cdot \mathbf{n} &= \alpha_0 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (gradpsi0) at (0,5.5) {$\grad\psi^0$} ;
-\node[draw,scale=\taille,fill=green!50] (alpha1) at (3,10) {$\alpha_1$};
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.1cm]\ref{curlb}}] (pbcurlb) at (3,8) {$\begin{aligned}\curll \mathbf{b} = \grad\psi^1\\
-\div \mathbf{b} = 0\\
-\mathbf{b}\cdot \mathbf{n}\restr{\Gamma} = 0\\
-\curl \mathbf{b}\cdot \mathbf{n}\restr{\Gamma} = 0\\
-\grad\psi^1\cdot \mathbf{n}\restr{\Gamma} = \alpha_1 \end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (curlb) at (3,5.5) {$(\curl\mathbf{b},\grad\psi^1)$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.1cm]\ref{a}}] (pba) at (1.5,4) {$\mathbf{a}=\grad\psi^0+\curl\mathbf{b}$};
-\node[draw,scale=\taillem,fill=blue!50] (a) at (1.5,3) {$\mathbf{a}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.3cm]\ref{curlcurl}}] (pbeigen) at (10,8) {$\begin{aligned}
-\curll \mathbf{g}_i = \lambda_i^2\mathbf{g}_i\\
-\div\mathbf{g}_i = 0\\
-\mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0\\
-\curl \mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0\\
-(\curll \mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0) \end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (10, 5.5) {$(\lambda_i,\mathbf{g}_i)$} ;
-\node[draw,scale=\taille,fill=green!50] (alpha2) at (5.75,5.5) {$\alpha_2$};
-\node[draw,scale=\taille,fill=green!50] (f) at (6.75,5.5) {$\mathbf{f}$};
-\node[draw,scale=\taille,fill=green!50] (c0) at (7.75,5.5) {$c_i(0)$};
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=4.2cm]\ref{pbc}}] (pbc) at (8.5,3) {$\begin{aligned}
-\sum_{i=1}^\infty\frac{\partial c_i}{\partial t}\bm{g_i} &+ \sum_{i=1}^\infty\sum_{j=1}^\infty c_i\lambda_ic_j(\bm{g_i}\times \bm{g_j}) + \sum_{i=1}^\infty c_i\lambda_i(\bm{g_i}\times \mathbf{a})\\
-& + \sum_{i=1}^\infty c_i((\curl\mathbf{a})\times \mathbf{g}_i) + \grad \pi_{\mathbf{a}} +\frac{1}{Re}\sum_{i=1}^\infty c_i\lambda_i^2\mathbf{g}_i - \mathbf{h_a} = 0 \end{aligned}$};
-\node[draw,scale=\taillem,fill=blue!50] (u) at (8.5,1) {$\mathbf{u}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbv) at (5,-0.5) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (5,-2) {$(\mathbf{v},p)$} ;
 
-\draw[->,>=latex] (alpha0) -- (pbpsi0); \draw[->,>=latex] (pbpsi0) -- (gradpsi0); \draw[->,>=latex] (alpha1) -- (pbcurlb); \draw[->,>=latex] (pbcurlb) -- (curlb); \draw[->,>=latex] (gradpsi0) -- (pba); \draw[->,>=latex] (curlb) -- (pba); \draw[->,>=latex] (pba) -- (a); \draw[->,>=latex] (pbeigen) -- (lambdagi); \draw[->,>=latex] (a) -- (pbc); \draw[->,>=latex] (alpha2) -- (pbc); \draw[->,>=latex] (f) -- (pbc); \draw[->,>=latex] (c0) -- (pbc); \draw[->,>=latex] (lambdagi) -- (pbc); \draw[->,>=latex] (pbc) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv); \draw[->,>=latex] (pbv) -- (v);
-\end{tikzpicture}
-\caption{Organigramme de la stratégie de résolution}\label{org1}
+The strategy is presented in the figure \ref{org1}.
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \node[draw,scale=\taille,fill=green!50] (alpha0) at (-1,10) {$\alpha_0$};
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=0.9cm]\ref{pba0}}] (pba0) at (-1,8){
+      $\begin{aligned}
+        -\laplace a_0&=0\\
+        \grad a_0\cdot \mbf{n} &= \alpha_0
+      \end{aligned}$
+    };
+    \node[draw,scale=\taille,fill=blue!50] (grada0) at (-1,5.5) {$\grad a_0$} ;
+    \node[draw,scale=\taille,fill=green!50] (alpha1) at (1.5,10) {$\alpha_1$};
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.1cm]\ref{pba1}}] (pba1) at (1.5,8){
+      $\begin{aligned}
+        \curll \mbf{a}_1 = \grad\psi^1\\
+        \div \mbf{a}_1 = 0\\
+        \mbf{a}_1\cdot \mbf{n}\restr{\Gamma} = 0\\
+        \curl \mbf{a}_1\cdot \mbf{n}\restr{\Gamma} = 0\\
+        \grad\psi^1\cdot \mbf{n}\restr{\Gamma} = \alpha_1
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (curla1) at (1.5,5.5) {$(\curl\mbf{a}_1,\grad\psi^1)$} ;
+    \node[draw,scale=\taille,fill=green!50] (alpha2) at (4,10) {$\alpha_2$};
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.1cm]\ref{pba2}}] (pba2) at (4,8){
+      $\begin{aligned}
+        \curll \mbf{a}_2 = \bm{\epsilon}\\
+        \div \mbf{a}_2 = 0\\
+        \mbf{a}_2\cdot \mbf{n}\restr{\Gamma} = 0\\
+        \curl \mbf{a}_2\cdot \mbf{n}\restr{\Gamma} = 0\\
+        \bm{\epsilon}\cdot \mbf{n}\restr{\Gamma} = \alpha_2
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (a2) at (4,5.5) {$(\curl\mbf{a}_2,\bm{\epsilon})$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.5cm]\ref{a}}] (pba) at (1.5,4) {$\mbf{a}=\grad a_0+\curl\mbf{a}_1+\mbf{a}_2$};
+    \node[draw,scale=\taillem,fill=blue!50] (a) at (1.5,3) {$\mbf{a}$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=1.1cm]\ref{pbcurl}}] (pbcurl) at (10,8) {
+      $\begin{aligned}
+        \curl \mbf{g}_i = \lambda_i\mbf{g}_i\\
+        \div\mbf{g}_i = 0\\
+        \mbf{g}_i\cdot \mbf{n}\restr{\Gamma} = 0\\
+        \curl\mbf{g}_i\cdot \mbf{n}\restr{\Gamma} = 0
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (10, 5.5) {$(\lambda_i,\mbf{g}_i)$} ;
+    \node[draw,scale=\taille,fill=green!50] (f) at (6.75,5.5) {$\mbf{f}$};
+    \node[draw,scale=\taille,fill=green!50] (c0) at (7.75,5.5) {$c_i(0)$};
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=4.5cm]\ref{pbc}}] (pbc) at (8.5,3) {
+      $\begin{aligned}
+        \sum_{i=1}^\infty\frac{\partial c_i}{\partial t}\mbf{g}_i &+ \sum_{i=1}^\infty\sum_{j=1}^\infty c_i c_j((\curl\mbf{g}_i)\times \mbf{g}_j) + \sum_{i=1}^\infty c_i((\curl\mbf{g}_i)\times \mbf{a})\\
+        & + \sum_{i=1}^\infty c_i((\curl\mbf{a})\times \mbf{g}_i) + \grad \pi_{\mbf{a}} +\frac{1}{Re}\sum_{i=1}^\infty c_i\curll\mbf{g}_i - \mbf{f_a} = 0
+      \end{aligned}$
+    };
+    \node[draw,scale=\taillem,fill=blue!50] (u) at (8.5,1) {$\mbf{u}$} ;
+    \node[draw,scale=\taille,fill=gray!50] (pbv) at (5,-0.5) {$\mbf{v}=\mbf{a}+\mbf{u}$} ;
+    \node[draw,scale=\tailleg,fill=red!50] (v) at (5,-2) {$(\mbf{v},p)$} ;
+
+    \draw[->,>=latex] (alpha0) -- (pba0); \draw[->,>=latex] (pba0) -- (grada0); \draw[->,>=latex] (alpha1) -- (pba1); \draw[->,>=latex] (pba1) -- (curla1); \draw[->,>=latex] (alpha2) -- (pba2); \draw[->,>=latex] (pba2) -- (a2); \draw[->,>=latex] (grada0) -- (pba); \draw[->,>=latex] (curla1) -- (pba); \draw[->,>=latex] (a2) -- (pba); \draw[->,>=latex] (pba) -- (a); \draw[->,>=latex] (pbcurl) -- (lambdagi); \draw[->,>=latex] (a) -- (pbc); \draw[->,>=latex] (f) -- (pbc); \draw[->,>=latex] (c0) -- (pbc); \draw[->,>=latex] (lambdagi) -- (pbc); \draw[->,>=latex] (pbc) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv); \draw[->,>=latex] (pbv) -- (v);
+  \end{tikzpicture}
+  \caption{Flow chart of the resolution's strategy}\label{org1}
 \end{figure}
 
-\chapter{Formulations variationnelles}
+\chapter{Weak Formulations}
 \label{fv}
-Maintenant que l'on sait comment nous allons procéder pour résoudre le problème \ref{depart}, on va examiner plus en détail chacun des problèmes le composant, en particulier, on va chercher les formulations variationnelles de chacun.
+Now that how we proceed to solve the problem \ref{start} is clear, we can detail each step mentionned before.
 
 \input{./tex/problem/mode}
 
@@ -249,301 +261,136 @@ Maintenant que l'on sait comment nous allons procéder pour résoudre le problè
 
 \input{./tex/problem/press}
 
-\chapter{Récapitulatif}
+\chapter{Recapitulatif}
 
-Les différentes étapes pour résoudre le problème sont donc :
+The steps to resolve the problm are :
 \begin{enumerate}
-\item calculer les valeurs et fonctions propres de l'opérateur rotationnel avec le problème \ref{pbweak},
-  \todo[inline]{Utiliser des solveurs itératifs}
-\item décomposer ces fonctions propres en résolvant \ref{fvgi0} et \ref{fvpsiml},
-  \todo[inline]{Peut-être pas nécessaire}
-\item trouver $\psi^0$, pour cela, on peut :
+\item compute the eigenpairs of the curl operator with problem \ref{pbweak},
+  \todo[inline]{Ok}
+\item decompose those functions with \ref{fvgi0} and \ref{fvpsiml},
+  \todo[inline]{May be not necessary}
+\item find $a_0$, using one of the following :
   \begin{itemize}
-  \item résoudre \ref{fvpsi0} pour avoir $\psi^0\in H^1$,
-  \item résoudre \ref{fvpsidiv} pour avoir $\psi^0\in H(\mathrm{div})$,
+  \item solve \ref{fvpsi0} to have $a_0\in H^1$,
+  \item solve \ref{fvpsidiv} to have $a_0\in H(\mathrm{div})$,
   \end{itemize}
-  \todo[inline]{ok}
-\item résoudre \ref{fvbcurl} ou \ref{pbbd1} pour trouver $\curl\mathbf{b}$,
-  \todo[inline]{à voir}
-\item résoudre un système à déterminer pour trouver $\mathbf{e}$,
-  \todo[inline]{à voir}
-\item recomposer $\mathbf{a}$ grâce à $\psi^0$ et $\curl\mathbf{b}$,
-\item résoudre le problème spectral \ref{fvc} afin de trouver les coefficients $c_i$ pour $i=0\dots M$,
-  \todo[inline]{prendre en compte ou pas $\alpha_2$}
-\item reconstruire $\mathbf{u}=\sum c_i \mathbf{g}_i$ et $\mathbf{v}=\mathbf{a}+\mathbf{u}$,
-\item calculer la pression en post-traitement avec le problème \ref{fvq}.
+  \todo[inline]{Ok}
+\item solve \ref{fvbcurl} or \ref{pbbd1} to find $\curl\mbf{a}_1$,
+  \todo[inline]{to check}
+\item solve a system to determine to find $\mbf{a}_2$;
+  \todo[inline]{to check}
+\item recompose $\mbf{a}$ thanks to $\grad a_0$, $\curl\mbf{a}_1$ and $\mbf{a}_2$,
+\item \label{itemsp} solve the spectral proble \ref{fvc} in order to find the coefficients $c_i$ for $i=0\dots M$,
+  \todo[inline]{Ok}
+\item rebuild $\mbf{u}=\sum c_i \mbf{g}_i$ and $\mbf{v}=\mbf{a}+\mbf{u}$,
+\item compute the pressure in post-traitment with \ref{fvq}.
 \end{enumerate}
 
-On a ainsi trouver notre solution $(\mathbf{v},p)$.\\
-L'étape une est très coûteuse en temps de calcul, mais elle ne dépend que de la géométrie, ainsi, on peut réutiliser les fonctions propres même si l'on change certains paramètres. On a donc à réaliser cette étape seulement une fois par géométrie.\\
-Les autres étapes dépendants de différents paramètres, on devra de nouveau les exécuter si l'on change les paramètres, notamment l'étape 6, qui prend en compte tous les paramètres et qui est elle aussi coûteuse en temps de calcul.\\
+We now have find our solution $(\mbf{v},p)$.\\
+The first step depends only on the geometry, so we can reuse the eigen functions even after changing some parameters. The step \ref{itemsp} is the most time consumming one. We need to compute a lot of coefficient before starting. Luckily, the most of them depend only on the geometry, so we can compute them only once, but the others depend on the parameters and even worse, can also depend on the time, si we could have to recompute them at each time step.\\
 
-La figure \ref{org3} présente graphiquement les problèmes à résoudre.\\
-
-\begin{figure}
-\centering
-\begin{tikzpicture}[scale=\taille]
-\node[draw,scale=\taille,fill=green!50] (di) at (3,8) {Données initiales} ;
-\node[draw,scale=\taille,fill=gray!50] (pb) at (3,7) {Problèmes à résoudre} ;
-\node[draw,scale=\taille,fill=blue!50] (si) at (3,6) {Solutions intermédiaires} ;
-\node[draw,scale=\taille,fill=yellow!50] (sim) at (3,5) {Sol. inter. dépendantes de la géométrie} ;
-\node[draw,scale=\taille,fill=red!50] (sf) at (3,4) {Solutions finales} ;
-\node[scale=\taille,text width=10cm] (coblig) at (15,8) {Chemins obligatoires} ;
-\node[scale=\taille,text width=10cm] (cpurple) at (15,7.5) {{\color{purple} Chemins pour $\psi^0\in H^1$}} ;
-\node[scale=\taille,text width=10cm] (cgreen) at (15,7) {{\color{green} Chemins pour $\psi^0\in H(\mathrm{div})$}} ;
-\node[scale=\taille,text width=10cm] (cmagenta) at (15,6.5) {{\color{magenta} Chemins pour $\curl \mathbf{b} \in H(\mathrm{rot})$}} ;
-\node[scale=\taille,text width=10cm] (ccyan) at (15,6) {{\color{cyan} Chemins pour $\curl \mathbf{b} \in D^1$}} ;
-\node[scale=\taille,text width=10cm] (cred) at (15,5.5) {{\color{red} Chemins pour $\psi^1 \in H^1$}} ;
-\node[scale=\taille,text width=10cm] (corange) at (15,5) {{\color{orange} Chemins pour $\psi^1 \in H(\mathrm{div})$}} ;
-
-\node[draw,scale=\taille,fill=green!50] (a0) at (0.75,2) {$\alpha_0$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=-0.8cm]\ref{fvpsi0}}] (pbpsi0lp) at (-0.5,-2)
-{$\begin{aligned}
--\laplace\psi^0&=0\\
-\grad\psi^0\cdot \mathbf{n} &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi0) at (-0.5,-3.5) {$\psi^0$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgradpsi0) at (-0.5,-4.75) {$w=\grad\psi^0$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.8cm]\ref{fvpsidiv}}] (pbpsi0div) at (2,-2)
-{$\begin{aligned}
-\mathbf{w}&=\grad\psi^0\\
-\div\mathbf{w}&=0\\
-\mathbf{w}\cdot \mathbf{n} &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (gradpsi0) at (0.75,-8.75) {$\grad\psi^0$} ;
-
-\node[draw,scale=\taille,fill=green!50] (a1) at (5.5,2) {$\alpha_1$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.0cm]\ref{fvbcurl}}] (pbbcurl) at (4,-5)
-{$\begin{aligned}
-\curll \mathbf{b} &= \grad\psi^1\\
-\div \mathbf{b} &=0\\
-\mathbf{b}\cdot \mathbf{n} &= 0\\
-\curl \mathbf{b}\cdot \mathbf{n} &= 0\\
-\grad \psi^1\cdot \mathbf{n} &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=-0.8cm]\ref{fvpsi0}}] (pbpsi1lp) at (7,-2)
-{$\begin{aligned}
--\laplace\psi^1&=0\\
-\grad\psi^1\cdot \mathbf{n} &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi1) at (7,-3.5) {$\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgradpsi1) at (7,-4.75) {$w=\grad\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.8cm]\ref{fvpsidiv}}] (pbpsi1div) at (9.5,-2)
-{$\begin{aligned}
-\mathbf{w}&=\grad\psi^1\\
-\div \mathbf{w}&=0\\
-\mathbf{w}\cdot \mathbf{n} &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (gradpsi1) at (8.25,-6) {$\grad\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.8cm]\ref{pbbd1}}
-] (pbb) at (8,-7.5) 
-{$
-d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
-$} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (5.5,-8.75) {$\curl \mathbf{b}$} ;
-
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.3cm]\ref{fveigen}}] (pbeigen) at (13.5,2)
-{$\begin{aligned}
-\curll \mathbf{g}_i = \lambda_i^2\mathbf{g}_i\\
-\div\mathbf{g}_i = 0\\
-\mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0\\
-\curl \mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0\\
-(\curll \mathbf{g}_i\cdot \mathbf{n}\restr{\Gamma} = 0)
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (13.5,-0.5) {$(\lambda_i,\mathbf{g}_i)$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=1.6cm]\ref{fvgi0}}] (pbgi0) at (13.5,-3)
-{$\begin{aligned}
-\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} &= \lambda_i^2\mathbf{g}_i\\
-\mathbf{g_i^0} &= 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi0) at (13.5,-4.5) {$\mathbf{g_i^0}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=-0.9cm]\ref{fvpsiml}}] (pbpsi) at (13,-6)
-{$\begin{aligned}
--\laplace\psi_i = \div \mathbf{g_i^0}\\
-\grad\psi_i\cdot \mathbf{n}\restr{\Gamma} = 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (psi) at (12.5,-7.5) {$\psi_i$} ;
-
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.1cm]\ref{a}}] (pba) at (2,-10.5) {$\mathbf{a} = \curl \mathbf{b} + \grad\psi^0$} ;
-\node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$\mathbf{a}$} ;
-
-\node[draw,scale=\taille,fill=green!50] (f) at (7,-9) {$f$} ;
-\node[draw,scale=\taille,fill=green!50] (a2) at (8,-9) {$\alpha_2$} ;
-\node[draw,scale=\taille,fill=green!50] (ck0) at (9,-9) {$c_k^0$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=3.3cm]\ref{fvc}}] (pbs) at (9,-12)
-{$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_i\sum_j c_i c_j R_{ijk}\\
-&+ \sum_i c_i R_{iak} + \sum_i c_i R_{raik} = R_{fk} + \frac{1}{Re}R_{pk}\\
-c_k(0)&=c_k^0
-\end{aligned}
-$} ;
-\node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.6cm]\ref{u}}] (pbu) at (9,-16) {$\mathbf{u}=\sum c_kg_k$} ;
-\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$\mathbf{u}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.5cm]\ref{v}}] (pbv) at (3,-18) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (3,-19) {$\mathbf{v}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=3.6cm]\ref{fvq}}] (pbq) at (9,-19)
-{$\begin{aligned}
--\laplace q = \div((\curl \mathbf{v})\times \mathbf{v}) - \div \mathbf{f}\\
-\grad q\cdot \mathbf{n}\restr{\Gamma} =  \mathbf{f}\cdot \mathbf{n}\restr{\Gamma} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} - \frac{\alpha_2}{Re}
-\end{aligned}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (q) at(15,-19) {$p$} ;
-
-\draw[->,>=latex] (9,8) -- (coblig) ;
-\draw[->,>=latex,purple] (9,7.5) -- (cpurple) ;
-\draw[->,>=latex,green] (9,7) -- (cgreen) ;
-\draw[->,>=latex,magenta] (9,6.5) -- (cmagenta) ;
-\draw[->,>=latex,cyan] (9,6) -- (ccyan) ;
-\draw[->,>=latex,red] (9,5.5) -- (cred) ;
-\draw[->,>=latex,orange] (9,5) -- (corange) ;
-
-\draw (a0) -- (0.75,0);
-\draw[->,>=latex] (gradpsi0) -- (pba) ;
-\draw[->,>=latex,purple] (0.75,0) -| (pbpsi0lp) ;
-\draw[->,>=latex,purple] (pbpsi0lp) -- (psi0) ;
-\draw[->,>=latex,purple] (psi0) -- (pbgradpsi0) ;
-\draw[->,>=latex,purple] (pbgradpsi0) -- (gradpsi0) ;
-\draw[->,>=latex,green] (0.75,0) -| (pbpsi0div) ;
-\draw[->,>=latex,green] (pbpsi0div) -- (gradpsi0) ;
-
-\draw (a1) -- (5.5,1);
-\draw[->,>=latex,magenta] (5.5,1) -| (pbbcurl) ;
-\draw[->,>=latex,magenta] (pbbcurl) -- (b) ;
-\draw[cyan] (5.5,1) -| (8.25,0);
-\draw[->,>=latex,orange] (8.25,0) -| (pbpsi1div);
-\draw[->,>=latex,red] (8.25,0) -| (pbpsi1lp);
-\draw[->,>=latex,red] (pbpsi1lp) -- (psi1);
-\draw[->,>=latex,red] (psi1) -- (pbgradpsi1);
-\draw[->,>=latex,red] (pbgradpsi1) -- (gradpsi1);
-\draw[->,>=latex,orange] (pbpsi1div) -- (gradpsi1);
-\draw[->,>=latex,cyan] (gradpsi1) -- (pbb);
-\draw[->,>=latex,cyan] (psi) -- (pbb);
-\draw[->,>=latex,cyan] (lambdagi) to[out=180,in=40] (pbb.15);
-\draw[->,>=latex,cyan] (pbb) -- (b);
-\draw[->,>=latex] (b) -- (pba);
-
-\draw[->,>=latex] (pba) -- (a);
-\draw[->,>=latex] (pbeigen) -- (lambdagi);
-\draw[->,>=latex] (lambdagi) -- (pbgi0);
-\draw[->,>=latex] (pbgi0) -- (gi0);
-\draw[->,>=latex] (gi0) -- (pbpsi);
-\draw[->,>=latex] (pbpsi) -- (psi);
-\draw[->,>=latex] (a) -- (pbs);
-\draw[->,>=latex] (f) -- (pbs);
-\draw[->,>=latex] (a2) -- (pbs);
-\draw[->,>=latex] (ck0) -- (pbs);
-\draw[->,>=latex] (lambdagi) to[out=-10,in=20] (pbs.east);
-\draw[->,>=latex] (psi) -- (pbs);
-\draw[->,>=latex] (pbs) -- (ck);
-\draw[->,>=latex] (ck) -- (pbu);
-\draw[->,>=latex] (pbu) -- (u);
-\draw[->,>=latex] (u) -- (pbv);
-\draw[->,>=latex] (a) -- (pbv);
-\draw[->,>=latex] (pbv) -- (v);
-\draw[->,>=latex] (v) -- (pbq);
-\draw[->,>=latex] (pbq) -- (q);
-\end{tikzpicture}
-\caption{Organigramme présentant les différents chemins possibles}
-\label{org3}
-\end{figure}
+The figure \ref{org3} graphically represents the problems to solve.\\
 
 \begin{figure}
-\centering
-\begin{tikzpicture}[scale=\taille]
-\node[scale=\taille,text width=10cm] (ccyan) at (5,4) {{\color{cyan} Chemins pour $\psi^0\in H^1$}} ;
-\node[scale=\taille,text width=10cm] (cmagenta) at (5,3.5) {{\color{magenta} Chemins pour $\psi^0\in H(\mathrm{div})$}} ;
-\node[draw,scale=\taille,fill=LimeGreen] (pbok) at (7,5) {Problèmes résolu} ;
-\node[draw,scale=\taille,fill=ProcessBlue] (pbc) at (7,4) {Problèmes en cours} ;
-\node[draw,scale=\taille,fill=gray!50] (pb) at (7,3) {Problèmes à résoudre} ;
-\node[draw,scale=\taille,fill=green!50] (di) at (12,5) {Données initiales} ;
-\node[draw,scale=\taille,fill=blue!50] (si) at (12,4) {Solutions intermédiaires} ;
-\node[draw,scale=\taille,fill=yellow!50] (sim) at (12,3) {Sol. inter. dép. de la géométrie} ;
-\node[draw,scale=\taille,fill=red!50] (sf) at (12,2) {Solutions finales} ;
+  \centering
+  \begin{tikzpicture}[scale=\taille]
+    \node[scale=\taille,text width=10cm] (ccyan) at (5,4) {{\color{cyan} Chemins pour $\psi^0\in H^1$}} ;
+    \node[scale=\taille,text width=10cm] (cmagenta) at (5,3.5) {{\color{magenta} Chemins pour $\psi^0\in H(\mathrm{div})$}} ;
+    \node[draw,scale=\taille,fill=green!50] (di) at (12,5) {Données initiales} ;
+    \node[draw,scale=\taille,fill=blue!50] (si) at (12,4) {Solutions intermédiaires} ;
+    \node[draw,scale=\taille,fill=yellow!50] (sim) at (12,3) {Sol. inter. dép. de la géométrie} ;
+    \node[draw,scale=\taille,fill=red!50] (sf) at (12,2) {Solutions finales} ;
 
-\node[draw,scale=\taille,fill=green!50] (a0) at (0.75,2) {$\alpha_0$} ;
-\node[draw,scale=\taille,fill=LimeGreen,label={[xshift=-0.7cm](\ref{fvpsi0})}] (pbpsi0lp) at (-0.5,-2)
-{$\begin{aligned}
--\laplace\psi^0&=0\\
-\grad\psi^0\cdot \mathbf{n} &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi0) at (-0.5,-3.5) {$\psi^1$} ;
-\node[draw,scale=\taille,fill=LimeGreen] (pbgradpsi0) at (-0.5,-4.75) {$w=\grad\psi^0$} ;
-\node[draw,scale=\taille,fill=LimeGreen,label={[xshift=0.8cm](\ref{fvpsidiv})}] (pbpsi0div) at (2,-2)
-{$\begin{aligned}
-\mathbf{w}&=\grad\psi^0\\
-\div\mathbf{w}&=0\\
-\mathbf{w}\cdot \mathbf{n} &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (gradpsi0) at (0.75,-6.5) {$\grad\psi^0$} ;
+    \node[draw,scale=\taille,fill=green!50] (alpha0) at (0.75,2) {$\alpha_0$} ;
+    \node[draw,scale=\taille,fill=LimeGreen,label={[xshift=-0.7cm](\ref{fvpsi0})}] (pba0) at (-0.5,-2){
+      $\begin{aligned}
+        -\laplace\psi^0&=0\\
+        \grad\psi^0\cdot \mbf{n} &= \alpha_0
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (a0) at (-0.5,-3.5) {$a_0$} ;
+    \node[draw,scale=\taille,fill=LimeGreen] (pbgrada0) at (-0.5,-4.75) {$w=\grad a_0$} ;
+    \node[draw,scale=\taille,fill=LimeGreen,label={[xshift=0.8cm](\ref{fvpsidiv})}] (pba0div) at (2,-2){
+      $\begin{aligned}
+        \mbf{w}&=\grad a_0\\
+        \div\mbf{w}&=0\\
+        \mbf{w}\cdot \mbf{n} &= \alpha_0
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (grada0) at (0.75,-6.5) {$\grad a_0$} ;
 
-\node[draw,scale=\taille,fill=green!50] (a1) at (5,2) {$\alpha_1$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbbcurl) at (5,-2)
-     {$\begin{aligned}
-         \curll \mathbf{b} &= \grad\psi^1\\
-         \div \mathbf{b} &=0\\
-         \mathbf{b}\cdot \mathbf{n} &= 0\\
-         \curl \mathbf{b}\cdot \mathbf{n} &= 0\\
-         \grad \psi^1\cdot \mathbf{n} &= \alpha_1
-       \end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (5,-6.5) {$\curl \mathbf{b}$} ;
+    \node[draw,scale=\taille,fill=green!50] (alpha1) at (5,2) {$\alpha_1$} ;
+    \node[draw,scale=\taille,fill=gray!50] (pba1) at (5,-2){
+      $\begin{aligned}
+        \curll \mbf{a}_1 &= \grad\psi^1\\
+        \div \mbf{a}_1 &=0\\
+        \mbf{a}_1\cdot \mbf{n} &= 0\\
+        \curl \mbf{a}_1\cdot \mbf{n} &= 0\\
+        \grad \psi^1\cdot \mbf{n} &= \alpha_1
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (a1) at (5,-6.5) {$\curl\mbf{a}_1$} ;
 
-\node[draw,scale=\taille,fill=green!50] (a2) at (8,2) {$\alpha_2$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbe) at (8,-2)
-     {$\begin{aligned}
-         \curll \mathbf{e} &= \mathbf{A_2}\\
-         \div \mathbf{b} &=0\\
-         \mathbf{b}\cdot \mathbf{n} &= 0\\
-         \curl \mathbf{b}\cdot \mathbf{n} &= 0\\
-         \curll\mathbf{e}\cdot \mathbf{n} &= \alpha_2
-       \end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (e) at (8,-6.5) {$\mathbf{e}$} ;
+    \node[draw,scale=\taille,fill=green!50] (alpha2) at (8,2) {$\alpha_2$} ;
+    \node[draw,scale=\taille,fill=gray!50] (pba2) at (8,-2){
+      $\begin{aligned}
+        \curll \mbf{a}_2 &= \bm{\epsilon}\\
+        \div \mbf{a}_2 &=0\\
+        \mbf{a}_2\cdot \mbf{n} &= 0\\
+        \curl \mbf{a}_2\cdot \mbf{n} &= 0\\
+        \bm{\epsilon}\cdot \mbf{n} &= \alpha_2
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (a2) at (8,-6.5) {$\mbf{a}_2$} ;
 
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.3cm](\ref{a})}] (pba) at (3,-9) {$\mathbf{a} = \grad\psi^0 + \curl \mathbf{b} + \mathbf{e}$} ;
-\node[draw,scale=\taillem,fill=blue!50] (a) at (3,-12) {$\mathbf{a}$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=-1.3cm](\ref{a})}] (pba) at (3,-9) {$\mbf{a} = \grad a_0 + \curl \mbf{a}_1 + \mbf{a}_2$} ;
+    \node[draw,scale=\taillem,fill=blue!50] (a) at (3,-12) {$\mbf{a}$} ;
 
-\node[draw,scale=\taille,fill=LimeGreen,label={[xshift=1.0cm](\ref{pbcond})}] (pbeigen) at (11.5,-2)
-     {$\begin{aligned}
-         \curl \mbf{u} = \lambda \mbf{u} & \quad \mbox{in }\Omega\\
-         \curl \mbf{u}\cdot\mbf{n} = 0 & \quad \mbox{on }\Gamma
-       \end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (11.5,-6.5) {$(\lambda_i^2,\mathbf{g}_i)$} ;
+    \node[draw,scale=\taille,fill=LimeGreen,label={[xshift=1.0cm](\ref{pbcond})}] (pbcond) at (11.5,-2){
+      $\begin{aligned}
+        \curl \mbf{u} = \lambda \mbf{u} & \quad \mbox{in }\Omega\\
+        \curl \mbf{u}\cdot\mbf{n} = 0 & \quad \mbox{on }\Gamma
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (11.5,-6.5) {$(\lambda_i^2,\mbf{g}_i)$} ;
 
-\node[draw,scale=\taille,fill=green!50] (f) at (8,-9) {$f$} ;
-\node[draw,scale=\taille,fill=green!50] (ck0) at (9,-9) {$c_k^0$} ;
-\node[draw,scale=\taille,fill=ProcessBlue,label={[xshift=3.2cm](\ref{fvc})}] (pbs) at (9,-12)
-{$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i c_j(\curl\mathbf{g}_i\times \mathbf{g_j}, \mathbf{g_k}) \\
-&+ \sum_i c_i(\curl\mathbf{g}_i\times \mathbf{a},\mathbf{g_k}) + \sum_i c_i((\curl \mathbf{a})\times \mathbf{g}_i, \mathbf{g_k}) \\
-&+ \frac{1}{Re}c_k\lambda_k^2 = (\mathbf{f_a},\mathbf{g_k})
-\end{aligned}
-$} ;
-\node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.7cm](\ref{u})}] (pbu) at (9,-16) {$\mathbf{u}=\sum c_kg_k$} ;
-\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$\mathbf{u}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=0.6cm](\ref{v})}] (pbv) at (3,-18) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (3,-19) {$\mathbf{v}$} ;
-\node[draw,scale=\taille,fill=gray!50,label={[xshift=3.1cm](\ref{fvq})}] (pbq) at (9,-19)
-{$\begin{aligned}
--\laplace q = \div((\curl \mathbf{v})\times \mathbf{v}) - \div \mathbf{f}\\
-\grad q\cdot \mathbf{n}\restr{\Gamma} =  \mathbf{f}\cdot \mathbf{n}\restr{\Gamma} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} - \frac{\alpha_2}{Re}
-\end{aligned}$} ;
-\node[draw,scale=\tailleg,fill=red!50] (q) at(15,-19) {$p$} ;
+    \node[draw,scale=\taille,fill=green!50] (f) at (8,-9) {$f$} ;
+    \node[draw,scale=\taille,fill=green!50] (c0) at (9,-9) {$c_k^0$} ;
+    \node[draw,scale=\taille,fill=ProcessBlue,label={[xshift=3.2cm](\ref{fvc})}] (pbsp) at (9,-12){
+      $\begin{aligned}
+        \frac{\partial c_k}{\partial t} &+ \sum_i\sum_j c_i c_j(\curl\mbf{g}_i\times \mbf{g_j}, \mbf{g_k}) \\
+        &+ \sum_i c_i(\curl\mbf{g}_i\times \mbf{a},\mbf{g_k}) + \sum_i c_i((\curl \mbf{a})\times \mbf{g}_i, \mbf{g_k}) \\
+        &+ \frac{1}{Re}c_k\lambda_k^2 = (\mbf{f_a},\mbf{g_k})
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\taille,fill=blue!50] (ck) at (9,-15) {$c_k$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=0.7cm](\ref{u})}] (pbu) at (9,-16) {$\mbf{u}=\sum c_kg_k$} ;
+    \node[draw,scale=\taillem,fill=blue!50] (u) at (9,-17) {$\mbf{u}$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=0.6cm](\ref{v})}] (pbv) at (3,-18) {$\mbf{v}=\mbf{a}+\mbf{u}$} ;
+    \node[draw,scale=\tailleg,fill=red!50] (v) at (3,-19) {$\mbf{v}$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=3.1cm](\ref{fvq})}] (pbq) at (9,-19){
+      $\begin{aligned}
+        -\laplace q = \div((\curl \mbf{v})\times \mbf{v}) - \div \mbf{f}\\
+        \grad q\cdot \mbf{n}\restr{\Gamma} =  \mbf{f}\cdot \mbf{n}\restr{\Gamma} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mbf{v})\times \mbf{v})\cdot \mbf{n}\restr{\Gamma} - \frac{\alpha_2}{Re}
+      \end{aligned}$
+    } ;
+    \node[draw,scale=\tailleg,fill=red!50] (q) at(15,-19) {$p$} ;
 
-\draw[->,>=latex,cyan] (-1,4) -- (ccyan) ; \draw[->,>=latex,magenta] (-1,3.5) -- (cmagenta) ;
-\draw (a0) -- (0.75,0); \draw[->,>=latex] (gradpsi0) -- (pba) ; \draw[->,>=latex,cyan] (0.75,0) -| (pbpsi0lp) ; \draw[->,>=latex,cyan] (pbpsi0lp) -- (psi0) ; \draw[->,>=latex,cyan] (psi0) -- (pbgradpsi0) ; \draw[->,>=latex,cyan] (pbgradpsi0) -- (gradpsi0) ; \draw[->,>=latex,magenta] (0.75,0) -| (pbpsi0div) ; \draw[->,>=latex,magenta] (pbpsi0div) -- (gradpsi0) ; \draw[->,>=latex] (gradpsi0) -- (pba) ;
-\draw[->,>=latex] (a1) -- (pbbcurl) ; \draw[->,>=latex] (pbbcurl) -- (b) ; \draw[->,>=latex] (b) -- (pba) ;
-\draw[->,>=latex] (a2) -- (pbe) ; \draw[->,>=latex] (pbe) -- (e) ; \draw[->,>=latex] (e) -- (pba) ;
-\draw[->,>=latex] (pba) -- (a);
-\draw[->,>=latex] (pbeigen) -- (lambdagi); \draw[->,>=latex] (lambdagi) -- (pbs) ;
-\draw[->,>=latex] (a) -- (pbs); \draw[->,>=latex] (f) -- (pbs); \draw[->,>=latex] (ck0) -- (pbs);
-\draw[->,>=latex] (pbs) -- (ck); \draw[->,>=latex] (ck) -- (pbu); \draw[->,>=latex] (pbu) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv); \draw[->,>=latex] (pbv) -- (v); \draw[->,>=latex] (v) -- (pbq); \draw[->,>=latex] (pbq) -- (q);
-\end{tikzpicture}
-\caption{Organigramme présentant les différents problèmes à résoudre}
-\label{org3}
+    \draw[->,>=latex,cyan] (-1,4) -- (ccyan) ; \draw[->,>=latex,magenta] (-1,3.5) -- (cmagenta) ;
+    \draw (alpha0) -- (0.75,0); \draw[->,>=latex] (grada0) -- (pba) ; \draw[->,>=latex,cyan] (0.75,0) -| (pba0) ; \draw[->,>=latex,cyan] (pba0) -- (a0) ; \draw[->,>=latex,cyan] (a0) -- (pbgrada0) ; \draw[->,>=latex,cyan] (pbgrada0) -- (grada0) ; \draw[->,>=latex,magenta] (0.75,0) -| (pba0div) ; \draw[->,>=latex,magenta] (pba0div) -- (grada0) ; \draw[->,>=latex] (grada0) -- (pba) ;
+    \draw[->,>=latex] (alpha1) -- (pba1) ; \draw[->,>=latex] (pba1) -- (a1) ; \draw[->,>=latex] (a1) -- (pba) ;
+    \draw[->,>=latex] (alpha2) -- (pba2) ; \draw[->,>=latex] (pba2) -- (a2) ; \draw[->,>=latex] (a2) -- (pba) ;
+    \draw[->,>=latex] (pba) -- (a);
+    \draw[->,>=latex] (pbcond) -- (lambdagi); \draw[->,>=latex] (lambdagi) -- (pbsp) ;
+    \draw[->,>=latex] (a) -- (pbsp); \draw[->,>=latex] (f) -- (pbsp); \draw[->,>=latex] (c0) -- (pbsp);
+    \draw[->,>=latex] (pbsp) -- (ck); \draw[->,>=latex] (ck) -- (pbu); \draw[->,>=latex] (pbu) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv); \draw[->,>=latex] (pbv) -- (v); \draw[->,>=latex] (v) -- (pbq); \draw[->,>=latex] (pbq) -- (q);
+  \end{tikzpicture}
+  \caption{Flow chart of the problems to solve}
+  \label{org3}
 \end{figure}
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
 %%% eval: (flyspell-mode 1)
-%%% ispell-local-dictionary: "french"
+%%% ispell-local-dictionary: "english"
 %%% End:

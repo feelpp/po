@@ -1,30 +1,30 @@
-\section{Pression : Post-traitement de la vitesse}
-\label{pression}
-Pour retrouver la vitesse $\mathbf{v}$, il suffit maintenant d'additionner $\mathbf{a}$ et $\mathbf{u}$.\\
-Le terme correspondant à la pression ayant été relayé en post-traitement de la vitesse, il faut le recalculer à partir de l'équation du problème \ref{depart}.
+\section{Pressure : Post-traitment of the velocity}
+\label{pressure}
+To find the velocity $\mbf{v}$, we just need to add $\mbf{a}$ and $\mbf{u}$.\\
+Since we need to post-trait the velocity to find the pressure term, we start from the equation of the problem \ref{start}.
 
-On applique la divergence sur cette équation et on utilise le fait que $\mathbf{v}$ soit à divergence nulle, et que la divergence d'un rotationnel soit toujours nulle. On a alors :
+We apply divergence on it and use the fact that the velocity is divergence free, and that the one of a curl is also always null. We have then :
 \begin{equation*}
--\laplace q = \div((\curl \mathbf{v})\times \mathbf{v}) - \div \mathbf{f}
+-\laplace q = \div((\curl \mbf{v})\times \mbf{v}) - \div \mbf{f}
 \end{equation*}
 
-Pour obtenir une condition au bord, on utilise la composante normale de l'équation (\ref{depart}) et les conditions aux bords de $\mathbf{v}$ :
-\[ \grad q\cdot \mathbf{n}\restr{\Gamma} =  \mathbf{f}\cdot \mathbf{n}\restr{\Gamma} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n}\restr{\Gamma} - \frac{\alpha_2}{Re} \]
-On cherche maintenant la forme variationnelle du problème :
-\[ \int_\Omega -\laplace q\varphi = \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi \]
-En intégrant par partie le terme de gauche, on a :
-\[ \int_\Omega \grad q\grad\varphi - \int_{\partial\Omega} (\grad q\cdot \mathbf{n})\varphi = \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi \]
+To get a boundary condition, we use the normal component of the equation and the boundary conditions of $\mbf{v}$ :
+\[ \grad q\cdot \mbf{n}\restr{\Gamma} =  \mbf{f}\cdot \mbf{n}\restr{\Gamma} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mbf{v})\times \mbf{v})\cdot \mbf{n}\restr{\Gamma} - \frac{\alpha_2}{Re} \]
+We want now the weak formulation of the problem :
+\[ \int_\Omega -\laplace q\varphi = \int_\Omega (\div((\curl \mbf{v})\times \mbf{v}) -\div \mbf{f})\varphi \]
+By integrating by parts the left term, we have :
+\[ \int_\Omega \grad q\grad\varphi - \int_{\partial\Omega} (\grad q\cdot \mbf{n})\varphi = \int_\Omega (\div((\curl \mbf{v})\times \mbf{v}) -\div \mbf{f})\varphi \]
 
-Toujours de même manière, on va trouver la pression à une constante près, on utilise donc encore une fois les multiplicateur de Lagrange afin de fixer cette constante. Comme dans \ref{multLagrange}, on obtient donc au final :
+Again, we find the pressure up to a constant, we use the Lagrange multiplier to fix this constant. As in \ref{multLagrange}, we get :
 \begin{pb}\label{fvq}
-Trouver $p=q-\frac{\mathbf{v}\cdot\mathbf{v}}{2} \in L^2(\Omega)$ tel que $\forall \varphi\in L^2(\Omega)$, on a :
+Find $p=q-\frac{\mbf{v}\cdot\mbf{v}}{2} \in L^2(\Omega)$ such that $\forall \varphi\in L^2(\Omega)$, we have :
 \begin{align*}
-\int_\Omega \grad q\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega q\nu &= \int_\Omega (\div((\curl \mathbf{v})\times \mathbf{v}) -\div \mathbf{f})\varphi\\
-&+ \int_{\partial\Omega} \left(f\cdot \mathbf{n} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mathbf{v})\times \mathbf{v})\cdot \mathbf{n} - \frac{\alpha_2}{Re}\right)\varphi
+\int_\Omega \grad q\grad\varphi + \int_\Omega \lambda\varphi + \int_\Omega q\nu &= \int_\Omega (\div((\curl \mbf{v})\times \mbf{v}) -\div \mbf{f})\varphi\\
+&+ \int_{\partial\Omega} \left(f\cdot \mbf{n} - \frac{\partial\alpha_0}{\partial t} - ((\curl \mbf{v})\times \mbf{v})\cdot \mbf{n} - \frac{\alpha_2}{Re}\right)\varphi
 \end{align*}\end{pb}
 
 %%% Local Variables:
 %%% TeX-master: "../report.tex"
 %%% eval: (flyspell-mode 1)
-%%% ispell-local-dictionary: "french"
+%%% ispell-local-dictionary: "english"
 %%% End:

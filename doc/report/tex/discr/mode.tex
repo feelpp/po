@@ -1,5 +1,5 @@
-\chapter{Problème aux valeurs propres}
-On peut maintenant implémenter le problème aux valeurs propres du chapitre \ref{eigen} afin de trouver les couples $(\lambda_i,\mathbf{g_i})$ tel que $\curl\mathbf{g_i}=\lambda_i\mathbf{g_i}$ pour $i=1,\dots,M$. Les fonctions propres seront la base sur laquelle on va projeter $\mathbf{u}$ pour la décomposition de Galerkin \[ \mathbf{u}=\sum_{i=1}^M c_i\mathbf{g_i} \]
+\chapter{Eigen Values problem}
+We can now implement the eigenvalues problem from chapter \ref{eigen} to find the eigenpairs $(\lambda_i,\mathbf{g_i})$ such that $\curl\mathbf{g_i}=\lambda_i\mathbf{g_i}$ for $i=1,\dots,M$. Those functions will be the basis on which we will project $\mbf{u}$ for the Galerkin decomposition \[ \mathbf{u}=\sum_{i=1}^M c_i\mathbf{g_i} \]
 
 \section{Discretization}
 From now on, we'll use the following notations :
@@ -280,15 +280,10 @@ I find the 6 first eigenvalue in the sphere, using the following configuration :
 \item[solver] krylovschur
 \item[problem] ghep
 \item[transform] shift\_invert
-\item[interval] 19,21
+\item[spectrum] smallest\_magnitude
+\item[target] 15
 \end{description}
 
-The \texttt{interval}  option is \texttt{eps\_interval}, which retrieve all the eigenvalues in a given interval. This interval can be open in one end, so we could use $[a, \infty)$ with $a$ very small but positive.\\
-There is some limitations with this option as exposed in the \href{http://slepc.upv.es/documentation/slepc.pdf}{documentation of SLEPc} \S 3.4.5. We have to use KrylovSchur as solver and shift and invert as transform.\\
-Furthermore, direct linear solvers are required. This linear solver must provide the matrix inertia and must use a symmetric factorization (\texttt{cholesky}).\\
-
-To use it in parallel, we have to use MUMPS. So the command looks like :\\
-\texttt{./feelpp\_po\_basischange --solvereigen.solver krylovschur -eps\_interval 19,30 -st\_ksp\_type preonly -st\_pc\_type cholesky -st\_pc\_factor\_mat\_solver\_package mumps -mat\_mumps\_icntl\_13 1}\\
 The figure \ref{feelModes} presents the first mode for the sphere and for the rectangular box.
 \begin{figure}[H]
   \makebox[\textwidth][c]{
@@ -303,6 +298,7 @@ To understand the link between those functions and the eigen functions of the cu
 \begin{italicquotes}
   According to the theoretical results, the invariant subspace spanned by the six eigenfunctions of Problem \ref{pbdiscr} corresponding to $\lambda_{h,1},\dots,\lambda_{h,6}$ yields an approximation of the eigenspace of $\lambda^2$ in Problem \ref{pbweak}. However, the latter is the direct sum of two three-dimensional eigenspaces of Problem \ref{pbstart}, those corresponding to $\lambda$ and $-\lambda$. Therefore, the eigenfunctions of Problem \ref{pbdiscr} are not in general eigenfunctions of Problem \ref{pbstart} (and hence Beltrami fields), but a linear combination of eigenfunctions corresponding to both eigenvalues, $\lambda$ and $-\lambda$.
 \end{italicquotes}
+It means that if we have $(\lambda^2,\mbf{u}_i)$ solutions of Problem \ref{pbdiscr}, and $(\pm\lambda,\mbf{v}_i)_{i=1,\dots,m}$ solutions of Problem \ref{pbstart}, we have : $\mbf{u}_i=\sum_{j=1}^m \beta_j\mbf{v}_i$.\\
 
 And indeed, we do not have that $\curl\mbf{u}_i-\lambda_i\mbf{u}_i = 0$.\\
 For the first eigenvalue, we have the following results :
@@ -324,6 +320,14 @@ For the first eigenvalue, we have the following results :
   \caption{Results in the sphere}
 \end{table}
 where $\widehat{\lambda}_h=\sum_{i=1}^6\lambda_{i,h}/6$
+\begin{rk}\label{curll}
+  To check if $\curll\mbf{u}=\lambda^2\mbf{u}$, we can solve two systems :
+  \begin{itemize}
+  \item $-\laplace\mbf{x}=\lambda^2\mbf{u}$
+  \item $\curll\mbf{u}=\lambda^2\mbf{u}$
+  \end{itemize}
+  and check if $\mbf{x}=\mbf{u}$, but in the first case, the boundary conditions are not set correctly, and in the second case, the solver doesn't converge, certainly because we are not in the space $\ZZ_h$ but in $\NN_h$.
+\end{rk}
 
 \begin{table}[H]
   \centering
