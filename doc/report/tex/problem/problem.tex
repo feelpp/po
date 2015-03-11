@@ -271,13 +271,13 @@ The steps to resolve the problm are :
   \todo[inline]{May be not necessary}
 \item find $a_0$, using one of the following :
   \begin{itemize}
-  \item solve \ref{fvpsi0} to have $a_0\in H^1$,
-  \item solve \ref{fvpsidiv} to have $a_0\in H(\mathrm{div})$,
+  \item solve \ref{fva0} to have $a_0\in H^1$,
+  \item solve \ref{fva0div} to have $a_0\in H(\mathrm{div})$,
   \end{itemize}
   \todo[inline]{Ok}
-\item solve \ref{fvbcurl} or \ref{pbbd1} to find $\curl\mbf{a}_1$,
+\item solve \ref{fva1} or \ref{pbbd1} to find $\curl\mbf{a}_1$,
   \todo[inline]{to check}
-\item solve a system to determine to find $\mbf{a}_2$;
+\item solve \ref{fva2} to find $\mbf{a}_2$;
   \todo[inline]{to check}
 \item recompose $\mbf{a}$ thanks to $\grad a_0$, $\curl\mbf{a}_1$ and $\mbf{a}_2$,
 \item \label{itemsp} solve the spectral proble \ref{fvc} in order to find the coefficients $c_i$ for $i=0\dots M$,
@@ -287,6 +287,7 @@ The steps to resolve the problm are :
 \end{enumerate}
 
 We now have find our solution $(\mbf{v},p)$.\\
+
 The first step depends only on the geometry, so we can reuse the eigen functions even after changing some parameters. The step \ref{itemsp} is the most time consumming one. We need to compute a lot of coefficient before starting. Luckily, the most of them depend only on the geometry, so we can compute them only once, but the others depend on the parameters and even worse, can also depend on the time, si we could have to recompute them at each time step.\\
 
 The figure \ref{org3} graphically represents the problems to solve.\\
@@ -302,15 +303,15 @@ The figure \ref{org3} graphically represents the problems to solve.\\
     \node[draw,scale=\taille,fill=red!50] (sf) at (12,2) {Solutions finales} ;
 
     \node[draw,scale=\taille,fill=green!50] (alpha0) at (0.75,2) {$\alpha_0$} ;
-    \node[draw,scale=\taille,fill=LimeGreen,label={[xshift=-0.7cm](\ref{fvpsi0})}] (pba0) at (-0.5,-2){
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=-0.7cm](\ref{fva0})}] (pba0) at (-0.5,-2){
       $\begin{aligned}
         -\laplace\psi^0&=0\\
         \grad\psi^0\cdot \mbf{n} &= \alpha_0
       \end{aligned}$
     } ;
     \node[draw,scale=\taille,fill=blue!50] (a0) at (-0.5,-3.5) {$a_0$} ;
-    \node[draw,scale=\taille,fill=LimeGreen] (pbgrada0) at (-0.5,-4.75) {$w=\grad a_0$} ;
-    \node[draw,scale=\taille,fill=LimeGreen,label={[xshift=0.8cm](\ref{fvpsidiv})}] (pba0div) at (2,-2){
+    \node[draw,scale=\taille,fill=gray!50] (pbgrada0) at (-0.5,-4.75) {$w=\grad a_0$} ;
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=0.8cm](\ref{fva0div})}] (pba0div) at (2,-2){
       $\begin{aligned}
         \mbf{w}&=\grad a_0\\
         \div\mbf{w}&=0\\
@@ -320,7 +321,7 @@ The figure \ref{org3} graphically represents the problems to solve.\\
     \node[draw,scale=\taille,fill=blue!50] (grada0) at (0.75,-6.5) {$\grad a_0$} ;
 
     \node[draw,scale=\taille,fill=green!50] (alpha1) at (5,2) {$\alpha_1$} ;
-    \node[draw,scale=\taille,fill=gray!50] (pba1) at (5,-2){
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=0.8cm](\ref{fva1})}] (pba1) at (5,-2){
       $\begin{aligned}
         \curll \mbf{a}_1 &= \grad\psi^1\\
         \div \mbf{a}_1 &=0\\
@@ -332,7 +333,7 @@ The figure \ref{org3} graphically represents the problems to solve.\\
     \node[draw,scale=\taille,fill=blue!50] (a1) at (5,-6.5) {$\curl\mbf{a}_1$} ;
 
     \node[draw,scale=\taille,fill=green!50] (alpha2) at (8,2) {$\alpha_2$} ;
-    \node[draw,scale=\taille,fill=gray!50] (pba2) at (8,-2){
+    \node[draw,scale=\taille,fill=gray!50,label={[xshift=0.8cm](\ref{fva2})}] (pba2) at (8,-2){
       $\begin{aligned}
         \curll \mbf{a}_2 &= \bm{\epsilon}\\
         \div \mbf{a}_2 &=0\\
