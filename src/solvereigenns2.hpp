@@ -1,4 +1,5 @@
 #include <feel/feeldiscr/pch.hpp>
+#include <feel/feeldiscr/pchv.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
 #include <feel/feelvf/vf.hpp>
 #include <feel/feelalg/solvereigen.hpp>
@@ -21,7 +22,7 @@ struct DofEdgeInfo
 
 };
 
-template<typename FunctionSpaceType>
+template<typename FunctionSpaceType1, typename FunctionSpaceType2,typename FunctionSpaceType3>
 class SolverEigenNS2
 {
     typedef double value_type;
@@ -29,10 +30,17 @@ class SolverEigenNS2
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
     typedef typename mesh_type::element_type::edge_permutation_type edge_permutation_type;
 
-    typedef FunctionSpaceType space_ptrtype;
+    typedef FunctionSpaceType1 space_ptrtype;
     typedef typename space_ptrtype::element_type space_type;
 
-    typedef SolverEigenNS2<space_ptrtype> solvereigenns2_type;
+    typedef FunctionSpaceType2 ml_space_ptrtype;
+    typedef typename ml_space_ptrtype::element_type ml_space_type;
+
+    typedef FunctionSpaceType3 vec_space_ptrtype;
+    typedef typename vec_space_ptrtype::element_type vec_space_type;
+    typedef typename vec_space_type::element_type vec_element_type;
+
+    typedef SolverEigenNS2<space_ptrtype, ml_space_ptrtype, vec_space_ptrtype> solvereigenns2_type;
     typedef typename boost::shared_ptr<solvereigenns2_type> solvereigenns2_ptrtype;
 
     typedef typename space_type::template sub_functionspace<0>::type space_edge_type;
@@ -41,25 +49,35 @@ class SolverEigenNS2
     typedef typename space_type::template sub_functionspace<1>::type space_vertex_type;
     typedef boost::shared_ptr<space_vertex_type> space_vertex_ptrtype;
 
+    typedef typename ml_space_type::template sub_functionspace<0>::type scalar_space_type;
+    typedef boost::shared_ptr<scalar_space_type> scalar_space_ptrtype;
+    typedef typename scalar_space_type::element_type scalar_element_type;
+
     typedef MatrixSparse<value_type> sparse_matrix_type;
     typedef boost::shared_ptr<sparse_matrix_type> sparse_matrix_ptrtype;
 
-    typedef std::pair<value_type, element_type> eigenpair_type;
-    typedef std::vector<eigenpair_type> eigenmodes_type;
+    typedef std::tuple<value_type, element_type, scalar_element_type> eigentuple_type;
+    typedef std::vector<eigentuple_type> eigenmodes_type;
 
     mesh_ptrtype mesh;
     space_ptrtype Xh;
     space_edge_ptrtype Nh;
     space_vertex_ptrtype Lh;
+    ml_space_ptrtype Mh;
+    scalar_space_ptrtype Sh;
+    vec_space_ptrtype Vh;
+
     std::vector<DofEdgeInfo> dof_edge_info;
     std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
     std::vector<size_type> indexesToKeep;
+
     sparse_matrix_ptrtype matA;
     sparse_matrix_ptrtype matB;
     sparse_matrix_ptrtype C;
     sparse_matrix_ptrtype aHat;
     sparse_matrix_ptrtype bHat;
+
     eigenmodes_type modes;
 
     void setForms();
@@ -72,63 +90,70 @@ class SolverEigenNS2
     void load();
     void logInfo();
 
+    void decomp();
+
 public:
-    static solvereigenns2_ptrtype build(const mesh_ptrtype& mesh, const FunctionSpaceType& Xh);
+    static solvereigenns2_ptrtype build(const mesh_ptrtype& mesh, const FunctionSpaceType1& Xh, const FunctionSpaceType2& Mh, const FunctionSpaceType3& Vh);
     eigenmodes_type solve();
 };
 
-template<typename T>
-typename SolverEigenNS2<T>::solvereigenns2_ptrtype
-SolverEigenNS2<T>::build(const mesh_ptrtype& mesh, const T& Xh)
+template<typename T1, typename T2, typename T3>
+typename SolverEigenNS2<T1,T2,T3>::solvereigenns2_ptrtype
+SolverEigenNS2<T1,T2,T3>::build(const mesh_ptrtype& mesh, const T1& Xh, const T2& Mh, const T3& Vh)
 {
-    solvereigenns2_ptrtype ap( new SolverEigenNS2<T> );
+    solvereigenns2_ptrtype ap( new SolverEigenNS2<T1,T2,T3> );
     ap->mesh = mesh;
     ap->Xh = Xh;
+    ap->Nh = Xh->template functionSpace<0>();
+    ap->Lh = Xh->template functionSpace<1>();
+    ap->Mh = Mh;
+    ap->Sh = Mh->template functionSpace<0>();
+    ap->Vh = Vh;
     return ap;
 }
 
-template<typename T>
-typename SolverEigenNS2<T>::eigenmodes_type
-SolverEigenNS2<T>::solve()
+template<typename T1, typename T2, typename T3>
+typename SolverEigenNS2<T1,T2,T3>::eigenmodes_type
+SolverEigenNS2<T1,T2,T3>::solve()
 {
-    Nh = Xh->template functionSpace<0>();
-    Lh = Xh->template functionSpace<1>();
-
     boost::mpi::timer t;
 
-    if( boption("computeEigen"))
+    if( boption("solverns2.computeEigen"))
     {
         setForms();
-        logTime(t, "form", FLAGS_v > 1);
+        logTime(t, "form", ioption("solverns2.verbose") > 1);
 
         setInfo();
         setDofsToRemove();
-        logTime(t, "dofinfo", FLAGS_v > 1);
+        logTime(t, "dofinfo", ioption("solverns2.verbose") > 1);
 
         setMatrices();
-        logTime(t, "matrices", FLAGS_v > 1);
+        logTime(t, "matrices", ioption("solverns2.verbose") > 1);
 
         solveEigen();
-        logTime(t, "eigs", FLAGS_v > 1);
+        logTime(t, "eigs", ioption("solverns2.verbose") > 1);
+
+        decomp();
+        logTime(t, "decomp", ioption("solverns2.verbose") > 1);
 
         save();
-        logTime(t, "save", FLAGS_v > 1);
+        logTime(t, "save", ioption("solverns2.verbose") > 1);
     }
     else
     {
         load();
-        logTime(t, "loadEigen", FLAGS_v > 1);
+        logTime(t, "loadEigen", ioption("solverns2.verbose") > 1);
     }
 
-    if( boption("print") )
+    if( boption("solverns2.print") )
         print();
 
     return modes;
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::setForms()
+SolverEigenNS2<T1,T2,T3>::setForms()
 {
     // [forms]
     auto u = Nh->element();
@@ -146,9 +171,9 @@ SolverEigenNS2<T>::setForms()
     // [forms]
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::setInfo()
+SolverEigenNS2<T1,T2,T3>::setInfo()
 {
     std::vector<bool> doneNh( Nh->nLocalDof(), false );
     std::vector<bool> doneLh( Lh->nLocalDof(), false );
@@ -266,12 +291,12 @@ SolverEigenNS2<T>::setInfo()
     }
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::setDofsToRemove()
+SolverEigenNS2<T1,T2,T3>::setDofsToRemove()
 {
     // [remove]
-    auto markers = Environment::vm()["markerList"].as<std::vector<std::string> >();
+    auto markers = Environment::vm()["solverns2.markerList"].as<std::vector<std::string> >();
     auto s = markers.size();
     auto dofsToRemove = std::vector<int>();
 
@@ -308,9 +333,9 @@ SolverEigenNS2<T>::setDofsToRemove()
     // [remove]
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::setMatrices()
+SolverEigenNS2<T1,T2,T3>::setMatrices()
 {
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
@@ -370,9 +395,9 @@ SolverEigenNS2<T>::setMatrices()
     // [ptap]
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::solveEigen()
+SolverEigenNS2<T1,T2,T3>::solveEigen()
 {
     if ( Environment::worldComm().isMasterRank() )
         std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
@@ -384,19 +409,59 @@ SolverEigenNS2<T>::solveEigen()
                    );
 
     int i = 0;
-    modes = eigenmodes_type(vecmodes.size(), std::make_pair(0, Nh->element()) );
+    modes = eigenmodes_type(vecmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
     for( auto const& pair: vecmodes )
     {
         if(Environment::isMasterRank())
             std::cout << i << " eigenvalue = " << pair.first << std::endl;
-        modes[i].first = pair.first;
-        modes[i++].second = *(pair.second);
+        std::get<0>(modes[i]) = pair.first;
+        std::get<1>(modes[i++]) = *(pair.second);
     }
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::print()
+SolverEigenNS2<T1,T2,T3>::decomp()
+{
+    auto vg0 = Vh->element();
+    auto a2 = form2( _test=Vh, _trial=Vh );
+    auto l2 = form1( _test=Vh );
+    a2 = integrate( _range=elements(mesh),
+                    _expr=trans(curlt(vg0))*curl(vg0) );
+
+    auto Psi = Mh->element();
+    auto psii = Psi.template element<0>();
+    auto nu = Psi.template element<1>();
+    auto a3 = form2( _test=Mh, _trial=Mh );
+    auto l3 = form1( _test=Mh );
+    a3 = integrate( _range=elements(mesh),
+                    _expr=inner(gradt(psii),grad(psii) )
+                    + id(psii)*idt(nu) + idt(psii)*id(nu) );
+
+    for( int i = 0; i < modes.size(); i++ )
+    {
+        l2 = integrate( _range=elements(mesh),
+                        _expr=std::get<0>(modes[i]) * inner(idv(std::get<1>(modes[i])),id(vg0)) );
+        a2+= on( _range=boundaryfaces(mesh),
+                 _element=vg0, _rhs=l2, _expr=zero<3,1>() );
+
+        a2.solve( _name="gi0", _rhs=l2, _solution=vg0 );
+
+        double meanPsi = 0;
+
+        l3 = integrate( _range=elements(mesh),
+                        _expr=divv(vg0)*id(psii)
+                        + meanPsi*id(nu)
+                        );
+
+        a3.solve( _name="psi", _rhs=l3, _solution=Psi );
+        std::get<2>(modes[i]) = Psi.template element<0>();
+    }
+}
+
+template<typename T1, typename T2, typename T3>
+void
+SolverEigenNS2<T1,T2,T3>::print()
 {
     if( Environment::worldComm().isMasterRank() )
         std::cout << "Start printing" << std::endl;
@@ -406,9 +471,9 @@ SolverEigenNS2<T>::print()
     C->printMatlab("c.m");
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::save()
+SolverEigenNS2<T1,T2,T3>::save()
 {
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
@@ -416,22 +481,25 @@ SolverEigenNS2<T>::save()
 
     for( int i = 0; i < modes.size(); i++)
     {
-        std::string path = (boost::format("mode-%1%")%i).str();
-        modes[i].second.save(_path=path);
         if ( Environment::worldComm().isMasterRank() )
-            s << modes[i].first << std::endl;
+            s << std::get<0>(modes[i]) << std::endl;
+
+        std::string path = (boost::format("mode-%1%")%i).str();
+        std::get<1>(modes[i]).save(_path=path);
+        std::string pathP = (boost::format("psi-%1%")%i).str();
+        std::get<2>(modes[i]).save(_path=pathP);
     }
 
     if ( Environment::worldComm().isMasterRank() )
         s.close();
 }
 
-template<typename T>
+template<typename T1, typename T2, typename T3>
 void
-SolverEigenNS2<T>::load()
+SolverEigenNS2<T1,T2,T3>::load()
 {
-    int nbMode = ioption("nbMode");
-    modes = eigenmodes_type(nbMode, make_pair(0,Nh->element()));
+    int nbMode = ioption("solverns2.nbMode");
+    modes = eigenmodes_type(nbMode, make_tuple(0, Nh->element(), Sh->element()));
 
     std::fstream s;
     s.open ("lambda", std::fstream::in);
@@ -441,10 +509,11 @@ SolverEigenNS2<T>::load()
     }
 
     for( int i = 0; i < nbMode && s.good(); i++ ){
+        s >> std::get<0>(modes[i]);
         std::string path = (boost::format("mode-%1%")%i).str();
-        modes[i].second.load(_path=path);
-
-        s >> modes[i].first;
+        std::get<1>(modes[i]).load(_path=path);
+        std::string pathP = (boost::format("psi-%1%")%i).str();
+        std::get<2>(modes[i]).load(_path=pathP);
     }
 
     s.close();

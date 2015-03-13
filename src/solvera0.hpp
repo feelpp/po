@@ -42,7 +42,7 @@ template<typename T>
 typename SolverA0<T>::element_type
 SolverA0<T>::solve()
 {
-    if( boption("computeA0"))
+    if( boption("solverns2.computeA0"))
         computeA0();
     else
         loadA0();
@@ -55,13 +55,13 @@ void
 SolverA0<T>::computeA0()
 {
     // [option]
-    auto g_s = soption("alpha0");
+    auto g_s = soption("solverns2.alpha0");
     auto vars = Symbols{ "x", "y", "radius", "speed" };
     auto g_e = parse( g_s, vars );
     auto g = expr( g_e, vars );
     g.setParameterValues( {
-            { "radius", doption( _name="radius" ) },
-                { "speed", doption( _name="speed" ) } } );
+            { "radius", doption( "solverns2.radius" ) },
+                { "speed", doption( "solverns2.speed" ) } } );
     // [option]
 
     auto Mh = ml_space_type::New( mesh );
