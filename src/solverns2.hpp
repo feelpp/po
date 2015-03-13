@@ -241,14 +241,10 @@ SolverNS2::post()
 {
     v = a + u;
 
-    auto v_s = soption("solverns2.v_ex");
-    auto vars = Symbols{ "x", "y", "radius", "speed" };
-    auto v_e = parse( v_s, vars );
-    auto v_ex = expr( v_e, vars );
-    v_ex.setParameterValues( {
-            { "radius", doption( "solverns2.radius" ) },
-                { "speed", doption( "solverns2.speed" ) } } );
-
+    auto v_ex = expr<3,1>( soption("solverns2.v_ex") );
+    auto err = normL2(elements(mesh), idv(v)-v_ex);
+    if(Environment::isMasterRank())
+        std::cout << "error(" << eigenModes.size() << ") : " << err << std::endl;
 }
 
 void
@@ -297,13 +293,14 @@ makeOptions()
 
         ( "solverns2.needSP", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
         ( "solverns2.nu", po::value<double>()->default_value( 1 ), "viscosity" )
-        ( "solverns2.computeRijk", po::value<bool>()->default_value( true ), "compute or load Rijk" )
+        ( "solverns2.computeRijk", po::value<bool>()->default_value( false ), "compute or load Rijk" )
         //( "solverns2.computeRaik", po::value<bool>()->default_value( false ), "compute or load Raik" )
-        ( "solverns2.computeRiak", po::value<bool>()->default_value( false ), "compute or load Riak" )
-        ( "solverns2.computeRfk", po::value<bool>()->default_value( false ), "compute or load Rfk" )
+        ( "solverns2.computeRiak", po::value<bool>()->default_value( true ), "compute or load Riak" )
+        ( "solverns2.computeRfk", po::value<bool>()->default_value( true ), "compute or load Rfk" )
+        ( "solverns2.computeRpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
         ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
 
-        ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,2*speed*(1-(x*x + y*y) / (radius*radius))}"), "v exacte" )
+        ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,8*(1-(x*x + y*y))}"), "v exacte" )
         ;
     return myappOptions;
 }

@@ -118,6 +118,7 @@ template<typename T>
 void
 SolverA0<T>::loadA0()
 {
+    a0 = Vh->element();
     std::string path = "a0";
     a0.load(_path=path);
 }
