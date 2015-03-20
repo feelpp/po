@@ -1,7 +1,7 @@
 \documentclass{beamer}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[frenchb]{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{subfig}
 \usepackage{colortbl}
@@ -55,10 +55,17 @@ tabsize=2}
 \setbeamercolor{block title example}{bg=vertfonce,fg=white}
 \setbeamercolor{block body example}{bg=grisvert}
 
+\newtheorem{pb}{Problem}
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Z}{{\bm{\mathcal{Z}}}}
+\newcommand{\PP}{{\mathbb{P}}}
+\newcommand{\TT}{{\bm{\mathcal{T}}}}
+\newcommand{\NN}{{\bm{\mathcal{N}}}}
+\newcommand{\LLL}{{\bm{\mathcal{L}}}}
 \newcommand{\grad}{{\nabla}}
 \newcommand{\laplace}{{\Delta}}
-\newcommand{\rot}{{\nabla\times}}
-\newcommand{\rott}{{\nabla^2\times}}
+\newcommand{\curl}{{\nabla\times}}
+\newcommand{\curll}{{\nabla^2\times}}
 \renewcommand{\div}{{\nabla\cdot}}
 \newcommand{\restr}{{\big\rvert_{\partial\Omega}}}
 \newcommand{\taille}{0.4}
@@ -68,8 +75,7 @@ tabsize=2}
 \newcommand{\Ctaillem}{0.6}
 \newcommand{\Ctailleg}{0.8}
 
-\title[Stage]{Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
-\subtitle{Plastic Omnium, M2 CSMI}
+\title[$NS^2_{++}$]{$NS^2_{++}$ : a non standard strategy for solving the incompressible Navier-Stokes equations in Feel++}
 
 \author{Romain HILD}
 \institute{Université de Strasbourg}
@@ -82,63 +88,63 @@ tabsize=2}
 \end{frame}
 
 \begin{frame}{Plastic Omnium}
-\begin{itemize}
-\item Société fondée en 1946 par Pierre Burelle.
-\item Transforme et commercialise des matières plastiques.
-\item Scindée en deux entités :
-\begin{itemize}
-\item Plastic Omnium Environnement
-\item Plastic Omnium Automobile
-\end{itemize}
-\item Objectifs :
-\begin{itemize}
-\item réduire le poids
-\item augmenter l'aérodynamisme
-\item équiper les véhicules hybrides et électriques
-\end{itemize}
-\end{itemize}
-\centering
-\includegraphics[scale=0.5]{sigma}
+%% \begin{itemize}
+%% \item Société fondée en 1946 par Pierre Burelle.
+%% \item Transforme et commercialise des matières plastiques.
+%% \item Scindée en deux entités :
+%% \begin{itemize}
+%% \item Plastic Omnium Environnement
+%% \item Plastic Omnium Automobile
+%% \end{itemize}
+%% \item Objectifs :
+%% \begin{itemize}
+%% \item réduire le poids
+%% \item augmenter l'aérodynamisme
+%% \item équiper les véhicules hybrides et électriques
+%% \end{itemize}
+%% \end{itemize}
+%% \centering
+%% \includegraphics[scale=0.5]{sigma}
 \end{frame}
 
-\section{Problème}
-\begin{frame}{Problème}
-\begin{block}{On cherche $(\mathbf{v},p)$ solution de :}
+\section{Problem}
+\begin{frame}{Problem}
+\begin{block}{We look for $(\mathbf{v},p)$ solution of :}
 \begin{equation}
-\label{depart}
+\label{start}
 \left\{\begin{aligned}
-&\frac{\partial \mathbf{v}}{\partial t} + (\rot  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\rott  \mathbf{v}-\mathbf{f} = 0\\
+&\frac{\partial \mathbf{v}}{\partial t} + (\curl  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\curll  \mathbf{v}-\mathbf{f} = 0\\
 &\div \mathbf{v} = 0\\
 &\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0\\
 &\mathbf{v}\cdot \mathbf{n}\restr = \alpha_0\\
-&(\rot  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_1\\
-&(\rott  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_2
+&(\curl  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_1\\
+&(\curll  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_2
 \end{aligned}\right.
 \end{equation}
-où $q = \frac{|\mathbf{v}|^2}{2}+p$.
+where $q = \frac{|\mathbf{v}|^2}{2}+p$.
 \end{block}
-Conditions aux bords :
+Bonudary conditions :
 \begin{itemize}
-\item condition d'ordre 2
-\item composante normale nulle
-\item composante tangentielle libre
+\item boundary conditions of order 2
+\item null normal component
+\item free tangential component
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Problème}
-\begin{block}{Séparation des variables}
-On veut exprimer la solution sous la forme
+\begin{frame}{Problem}
+\begin{block}{Variables separation}
+We want to write the solution as
 \[ \sum_i c_i(t) \mathbf{g}_i(x,y,z) \]
 \begin{itemize}
-\item les coefficients $c_i$ portent la dimension temporelle.
-\item les fonctions de base $(\mathbf{g}_i)$ portent la dimension spatiale.
+\item the coefficients $c_i$ handle the time dimension.
+\item the basis funcitons $(\mathbf{g}_i)$ handle the spatial dimension.
 \end{itemize}
 \end{block}
-Utilisation des travaux de P. Penel :
+Use of the works of P. Penel :
 \begin{itemize}
 \item $D^1(\Omega) = \{\mathbf{v} \in [H^1(\Omega)]^3\; |\; \div\mathbf{v}=0,\nabla^k\times \mathbf{v}\cdot \mathbf{n} = 0, k=0,1 \}$
-\item engendré par les fonctions propres de l'opérateur rotationnel
-\item relèvement des conditions aux limites,
+\item span by the eigen functions of the curl operator
+\item need to handle the boundary conditons apart
 \end{itemize}
 \end{frame}
 
@@ -146,19 +152,19 @@ Utilisation des travaux de P. Penel :
 \centering
 \begin{tikzpicture}
 \node[draw,fill=green!50] (alpha0) at (0,10) {$\alpha_0$};
-\node[draw,fill=gray!50,align=center] (pbpsi0) at (0,8.5) {Problème\\ Poisson} ;
+\node[draw,fill=gray!50,align=center] (pbpsi0) at (0,8.5) {Laplace\\ Problem} ;
 \node[draw,fill=blue!50] (gradpsi0) at (0,7) {$\grad\psi^0$} ;
 \node[draw,fill=green!50] (alpha1) at (2.5,10) {$\alpha_1$};
-\node[draw,fill=gray!50,align=center] (pbcurlb) at (2.5,8.5) {Problème\\ mixte} ;
-\node[draw,fill=blue!50] (curlb) at (2.5,7) {$(\rot\mathbf{b},\grad\psi^1)$} ;
-\node[draw,fill=gray!50] (pba) at (1.25,6) {$\mathbf{a}=\grad\psi^0+\rot\mathbf{b}$};
+\node[draw,fill=gray!50,align=center] (pbcurlb) at (2.5,8.5) {Mixed\\ Problem} ;
+\node[draw,fill=blue!50] (curlb) at (2.5,7) {$(\curl\mathbf{b},\grad\psi^1)$} ;
+\node[draw,fill=gray!50] (pba) at (1.25,6) {$\mathbf{a}=\grad\psi^0+\curl\mathbf{b}$};
 \node[draw,fill=blue!50] (a) at (1.25,5) {$\mathbf{a}$} ;
-\node[draw=red,align=center,fill=gray!50] (pbeigen) at (7.5,8.5) {Problème\\ aux valeurs\\ propres} ;
+\node[draw=red,align=center,fill=gray!50] (pbeigen) at (7.5,8.5) {Eigen\\ Value\\ Problem};
 \node[draw,fill=yellow!50] (lambdagi) at (7.5, 7) {$(\Lambda_i,\mathbf{g_i})$} ;
 \node[draw,fill=green!50] (alpha2) at (4.25,7) {$\alpha_2$};
 \node[draw,fill=green!50] (f) at (5,7) {$\mathbf{f}$};
 \node[draw,fill=green!50] (c0) at (6,7) {$c_i(0)$};
-\node[draw=red,align=center,fill=gray!50] (pbc) at (6,5) {Problème spectral};
+\node[draw=red,align=center,fill=gray!50] (pbc) at (6,5) {Spectral Problem};
 \node[draw,fill=blue!50] (u) at (5,3.75) {$\mathbf{u}$} ;
 \node[draw,fill=gray!50] (pbv) at (3,3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
 \node[draw,fill=red!50] (v) at (3,2) {$(\mathbf{v},p)$} ;
@@ -167,108 +173,164 @@ Utilisation des travaux de P. Penel :
 \end{tikzpicture}
 \end{frame}
 
-\section{Fonctions propres}
+\section{Eigen Functions}
 \begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
-\begin{block}{Propriétés des modes propres}
-\begin{itemize}
-\item les fonctions propres de $\rot\star$ sont aussi celles de $\rott\star$.
-\item les valeurs propres de $\rot\star$ sont les racines carrées de celles de $\rott\star$.
-\item pour ne pas avoir de multiplicité > 1, on ne garde que les positives : $\lambda_i=\sqrt{\Lambda_i}$
-\item le signe est porté par le coefficient $c_k$.
-\end{itemize}
-\end{block}
-\begin{block}{Trouver $(\mathbf{g},\lambda)\in D^1\times \mathbb{R}$ tel que}
-\[\left\{\begin{aligned}
-&\rott  \mathbf{g}_i = \lambda_i^2 \mathbf{g}_i\\
-&(\div \mathbf{g}_i = 0)\\
-&\mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
-&\rot \mathbf{g}_i\cdot \mathbf{n}\restr = 0\\
-&(\rott  \mathbf{g}_i\cdot \mathbf{n}\restr = 0)
-\end{aligned}\right.\]
-\end{block}
+  We use the work of R. Rodriguez and P. Venegas who studied the problem
+  \begin{equation}\label{eigenStart}
+    \left\{
+    \begin{aligned}
+      \curl\mathbf{g}&=\lambda\mathbf{g}\\
+      \curl\mathbf{g}\cdot\mathbf{n}&=0
+    \end{aligned}
+    \right.
+  \end{equation}
+  Using the space $\Z=\{\mathbf{v}\in H(\mathrm{curl}) \quad|\quad \curl\mathbf{v}\cdot\mathbf{n} = 0 \mbox{ on } \Gamma\}$ this leads to :
+  \begin{pb}\label{eigenwf}
+    Find $\lambda\in\R$ and $\mathbf{g}\in \Z$, $\mathbf{g}\neq 0$ such that
+    \[\int_\Omega \curl\mathbf{g}\cdot\curl\mathbf{v} = \lambda^2\int_\Omega \mathbf{g}\cdot\mathbf{v} \quad \forall\mathbf{v}\in \Z \]
+    \end{pb}
 \end{frame}
 
-\begin{frame}{Résultats}
-\begin{figure}[H]
-	\makebox[\textwidth][c]{
-		\subfloat[mode 0]{\includegraphics[scale=0.15,trim=0mm 10mm 0mm 40mm,clip]{curl-grad-1e3-mode0}}\ 
-		\subfloat[mode 45]{\includegraphics[scale=0.15,trim=0mm 10mm 0mm 40mm,clip]{curl-grad-1e3-mode45}}
-	}
-	\makebox[\textwidth][c]{
-		\subfloat[tps/nombre de modes]{\includegraphics[scale=0.3]{timeM}}\ 
-		\subfloat[tps/taille maillage]{\includegraphics[scale=0.3]{timeH}}
-	}
-\end{figure}
-
+\begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
+  In the case where the domain is symmetric, $\lambda$ and $-\lambda$ are eigen values, and $\mathbf{g}$ is not an eigen function of problem \ref{eigenStart}.\\
+  It is a linear combination of the eigen functions associated to $\lambda$ and $-\lambda$.\\
+  And the eigen space of $\mathbf{g}$ is the sum of the eigen spaces associated to $\lambda$ and $-\lambda$.
+  \begin{block}{Discretization}
+    Since $\Z\subset H(\mathrm{curl})$ we use Nedelec elements.\\
+    \begin{align*}
+      &\NN^k(T)=[\PP_{k-1}(T)]^3\oplus\{\mathbf{p}\in[\PP_k(T)]^3 \,|\,
+      \mathbf{p(x)}\cdot\mathbf{x}=0 \}\\
+      &\NN_h=\{\mathbf{v}_h\in H(\mathrm{curl};\Omega) \,|\,
+      \mathbf{v}_h\restr{T}\in\NN^k(T)\, \forall T\in \TT_h \}\\
+    \end{align*}
+    We need to find a way to impose the boundary condition $\curl\mathbf{v}\cdot\mathbf{n}=0$.
+  \end{block}
 \end{frame}
 
-\section{Relèvement}
-\begin{frame}{Relèvement}
+\begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
+  We have that $\forall\mathbf{v}\in\Z$, $\mathbf{v}=\mathbf{w}+\nabla q$ with $\mathbf{w}\in H(\mathrm{curl})$ and $\mathbf{w}\times\mathbf{n}=0$, and $q \in H^1(\Omega)$.\\
+  Then, if we note
+  \begin{itemize}
+  \item $\{\bm{\phi}_i\}_{i=1}^M$, basis of $\NN_h(\Omega)$,
+  \item $\{\bm{\phi}_i\}_{i=1}^N$, basis of $\NN_h(\Omega\setminus\Gamma)$,
+  \item $\{\varphi_i\}_{i=1}^J$, basis of $\LLL_h(\Gamma)$,
+  \end{itemize}
+  and we choose one vertex on each connected component of $\Gamma=\cup_{i=0}^I\Gamma_i$, and assume that the corresponding functions are the last ones, then
+  \begin{block}{A basis of $\Z_h$ is}
+    \[ \{\bm{\phi}_i\}_{i=1}^N\cup\{\nabla\varphi_i\}_{i=1}^L \]
+  \end{block}
+\end{frame}
+
+\begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
+  We can write
+  \[ \mathbf{v}=\sum_{m=1}^M\alpha_m\bm{\phi}_m=\sum_{m=1}^N\alpha_m'\bm{\phi}_m+ \sum_{j=0}^L \beta_j\nabla\varphi_j \]
+  and in the lowest order, we have :
+  \[
+  \alpha_m=\left\{\begin{aligned}
+  &\alpha_m', &&\mbox{if } e_m\cap\Gamma = \emptyset,\\
+  &\alpha_m'\pm \beta_j, &&\mbox{if } e_m\cap\Gamma = \{P_j\},\\
+  &\alpha_m'\pm (\beta_j-\beta_k), &&\mbox{if } e_m\cap\Gamma = \{P_j,P_k\}
+  (e_m\notin\Gamma),\\
+  &\pm (\beta_j-\beta_k), &&\mbox{if } e_m=[P_j,P_k]\subset\Gamma
+  \end{aligned}\right.
+  \]
+\end{frame}
+
+\begin{frame}{$\alpha=C\alpha'$}
+  We note :
+  \begin{itemize}
+  \item $\bm{\alpha}=(\alpha_1,\dots,\alpha_M)^t$,
+  \item $\widehat{\bm{\alpha}}=(\alpha_1',\dots,\alpha_M',\beta_1,\dots,\beta_J)^t$,
+  \item $\bm{\alpha} = C\widehat{\bm{\alpha}}$,
+  \item $A=(\curl\bm{\phi}_i\cdot\curl\bm{\phi}_j)_{ij}$,
+  \item $B=(\bm{\phi}_i\cdot\bm{\phi}_j)_{ij}$
+  \end{itemize}
+  and then the problem \ref{eigenwf} is :
+  \begin{pb}
+    Find $\widehat{\bm{\alpha}}$ such that :
+    \[ C^tAC\widehat{\bm{\alpha}}=\lambda C^tBC\widehat{\bm{\alpha}} \]
+  \end{pb}
+\end{frame}
+
+\begin{frame}{Results}
+  \begin{figure}[H]
+    \makebox[\textwidth][c]{
+      \subfloat[mode 0]{\includegraphics[scale=0.15]{sphMode0}}\ 
+      \subfloat[mode 45]{\includegraphics[scale=0.15,trim=0mm 10mm 0mm 40mm,clip]{curl-grad-1e3-mode45}}
+    }
+    \makebox[\textwidth][c]{
+      \includegraphics[scale=0.3]{completeChBase}
+    }
+  \end{figure}
+\end{frame}
+
+\section{Boundary conditions}
+\begin{frame}{Boundary conditions}
 \label{psi0}
-\begin{block}{Décomposition de $\mathbf{a}$}
+\begin{block}{Decomposition of $\mathbf{a}$}
 \begin{center}
 \begin{tabular}{c|ccccc}
-& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\rot \mathbf{b}$ \\ \hline
+& $\mathbf{a}$ & = & $\grad\psi^0$ & + & $\curl \mathbf{b}$ \\ \hline
 $\div\star$ & 0 & & $\laplace\psi^0$ & & 0\\ \hline
 $\star\cdot \mathbf{n}\restr$ & $\alpha_0$ & & $\alpha_0$ & & 0\\ \hline
-$\rot\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
+$\curl\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{tabular}
 \end{center}
 \end{block}
-2 choix pour le relèvement de $\alpha_0$ par $\grad\psi^0$ :
+2 choices to handle $\alpha_0$ by $\grad\psi^0$ :
 \begin{itemize}
-\item Laplacien dans $H^1$
-\item Problème mixte dans $H(\mathrm{div})$
+\item Laplacian in $H^1$
+\item Mixed problem in $H(\mathrm{div})$
 \end{itemize}
-2 choix pour le relèvement de $\alpha_1$ par $\rot\mathbf{b}$ :
+2 choices to handle $\alpha_1$ by $\curl\mathbf{b}$ :
 \begin{itemize}
-\item Problème mixte dans $H(\mathrm{rot})$
-\item utilisation de la base $(\mathbf{g}_i)$ dans $D^1$
+\item Mixed problem in $H(\mathrm{curl})$
+\item using the basis $(\mathbf{g}_i)$ in $D^1$
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Résultats}
+\begin{frame}{Results}
 \centering
 \includegraphics[scale=0.2]{psi0-clip}
 \begin{figure}[H]
 	\makebox[\textwidth][c]{
-		\subfloat[entrée]{\includegraphics[scale=0.15]{aIn}}\ 
-		\subfloat[sortie]{\includegraphics[scale=0.15]{aOut}}
+		\subfloat[inflow]{\includegraphics[scale=0.15]{aIn}}\ 
+		\subfloat[outflow]{\includegraphics[scale=0.15]{aOut}}
 	}
 \end{figure}
 \end{frame}
 
-\section{Problème spectral}
-\begin{frame}{Problème spectral}
-En utilisant $\mathbf{v}=\mathbf{u}+\mathbf{a}$ dans (\ref{depart}), on obtient :
+\section{Spectral Problem}
+\begin{frame}{Spectral Problem}
+Using $\mathbf{v}=\mathbf{u}+\mathbf{a}$ in (\ref{start}), we get :
 \begin{align*}
-\frac{\partial \mathbf{u}}{\partial t} &+ (\rot \mathbf{u})\times \mathbf{u} + (\rot \mathbf{u})\times \mathbf{a} + \left(\rot \mathbf{a}\right)\times \mathbf{u} \\
-&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\rott \mathbf{u} - \mathbf{f_a} = 0
+\frac{\partial \mathbf{u}}{\partial t} &+ (\curl \mathbf{u})\times \mathbf{u} + (\curl \mathbf{u})\times \mathbf{a} + \left(\curl \mathbf{a}\right)\times \mathbf{u} \\
+&+ \grad\pi_\mathbf{a} + \frac{1}{Re}\curll \mathbf{u} - \mathbf{f_a} = 0
 \end{align*}
-où : $\pi_a=\frac{|\mathbf{u}+\mathbf{a}|^2}{2}$ et $\mathbf{f_a}=\mathbf{f}-\frac{\partial \mathbf{a}}{\partial t}-(\rot\mathbf{a})\times\mathbf{a}$.
-\begin{block}{Trouver $\mathbf{u}\in D^1$ tel que $\forall \bm{\varphi}=\bm{\varphi}_0+\grad\phi\in D^1$ :}
+where : $\pi_a=\frac{|\mathbf{u}+\mathbf{a}|^2}{2}$ and $\mathbf{f_a}=\mathbf{f}-\frac{\partial \mathbf{a}}{\partial t}-(\curl\mathbf{a})\times\mathbf{a}$.
+\begin{block}{Find $\mathbf{u}\in D^1$ such that $\forall \bm{\varphi}=\bm{\varphi}_0+\grad\phi\in D^1$ :}
 \begin{align*}
-\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\rot \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\rot \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
-&+ \int_\Omega ((\rot \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\rot \mathbf{u})\cdot(\rot\bm{\varphi}) \\
+\int_\Omega \frac{\partial \mathbf{u}}{\partial t}\cdot \bm{\varphi} &+ \int_\Omega ((\curl \mathbf{u})\times \mathbf{u})\cdot \bm{\varphi} + \int_\Omega ((\curl \mathbf{u})\times \mathbf{a})\cdot\bm{\varphi} \\
+&+ \int_\Omega ((\curl \mathbf{a})\times \mathbf{u})\cdot\bm{\varphi} + \frac{1}{Re}\int_\Omega (\curl \mathbf{u})\cdot(\curl\bm{\varphi}) \\
 &-\frac{1}{Re}\int_{\partial\Omega} \alpha_2\phi = \int_\Omega \mathbf{f_a}\cdot\bm{\varphi}
 \end{align*}
 \end{block}
 \end{frame}
 
-\begin{frame}{Discrétisation}
-En utilisant $\mathbf{u}_M=\sum_{i=1}^M c_i\mathbf{g}_i$ et en notant :
+\begin{frame}{Discretisation}
+By using $\mathbf{u}_M=\sum_{i=1}^M c_i\mathbf{g}_i$ and by noting :
 \begin{align*}
-R_{ijk} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \lambda_i\int_\Omega(\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
-R_{raij} &= \int_\Omega((\rot\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{hk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
+R_{ijk} &= \int_\Omega(\curl\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \int_\Omega(\curl\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
+R_{iak} &= \int_\Omega((\curl\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
 R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
 \end{align*}
-On a le problème suivant :
-\begin{block}{Trouver $(c_i)_{i=1,\dots,M}$ tel que $\forall k=1,\dots,M$ :}
-\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i,j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_i\left(R_{iak} + R_{raij}\right) = R_{hk} + \frac{1}{Re}R_{pk} \]
+We get the following problem :
+\begin{block}{Find $(c_i)_{i=1,\dots,M}$ such that $\forall k=1,\dots,M$ :}
+\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i,j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_i\left(R_{iak} + R_{iak}\right) = R_{fk} + \frac{1}{Re}R_{pk} \]
 \end{block}
 \end{frame}
 
-\begin{frame}{Résultats}
+\begin{frame}{Results}
 \begin{figure}[H]
 	\makebox[\textwidth][c]{
       \subfloat{\includegraphics[scale=0.15,trim=0mm 20mm 0mm 20mm,clip]{v100modes}}\ 
@@ -309,10 +371,10 @@ On a le problème suivant :
 \node[draw,scale=\taille,fill=green!50] (a1) at (5.5,2) {$\alpha_1$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbbcurl) at (4,-5)
 {$\begin{aligned}
-\rott \mathbf{b} &= \grad\psi^1\\
+\curll \mathbf{b} &= \grad\psi^1\\
 \div \mathbf{b} &=0\\
 \mathbf{b}\cdot \mathbf{n} &= 0\\
-\rot \mathbf{b}\cdot \mathbf{n} &= 0\\
+\curl \mathbf{b}\cdot \mathbf{n} &= 0\\
 \grad \psi^1\cdot \mathbf{n} &= \alpha_1
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbpsi1lp) at (7,-2)
@@ -334,15 +396,15 @@ On a le problème suivant :
 {$
 d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
 $} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (5.5,-8.75) {$\rot \mathbf{b}$} ;
+\node[draw,scale=\taille,fill=blue!50] (b) at (5.5,-8.75) {$\curl \mathbf{b}$} ;
 
 \node[draw,scale=\taille,fill=gray!50] (pbeigen) at (13.5,2)
 {$\begin{aligned}
-\rott \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
+\curll \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
 \div\mathbf{g_i} = 0\\
 \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\rot \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-(\rott \mathbf{g_i}\cdot \mathbf{n}\restr = 0)
+\curl \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
+(\curll \mathbf{g_i}\cdot \mathbf{n}\restr = 0)
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (13.5,-0.5) {$(\Lambda_i,\mathbf{g_i})$} ;
 \node[draw,scale=\taille,fill=gray!50] (pbgi0) at (13.5,-3)
@@ -358,7 +420,7 @@ $} ;
 \end{aligned}$} ;
 \node[draw,scale=\taille,fill=yellow!50] (psi) at (12.5,-7.5) {$\psi_i$} ;
 
-\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-10.5) {$\mathbf{a} = \rot \mathbf{b} + \grad\psi^0$} ;
+\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-10.5) {$\mathbf{a} = \curl \mathbf{b} + \grad\psi^0$} ;
 \node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$\mathbf{a}$} ;
 
 \node[draw,scale=\taille,fill=green!50] (f) at (7,-9) {$f$} ;
@@ -422,34 +484,30 @@ $} ;
 \end{figure}
 \end{frame}
 
-\begin{frame}{Temps de calcul}
+\begin{frame}{Computing time}
 \centering
 \includegraphics[scale=0.6]{histo}
 \end{frame}
 
 \begin{frame}{Perspectives}
 \begin{itemize}
-\item Tests sur une machine plus puissante
+\item Tests on more processors
 \begin{itemize}
-\item Plus de modes
-\item Taille de mailles plus petites
+\item Compute more modes
+\item More elements
 \end{itemize}
-\item Utilisation des éléments conformes
+\item Use of conforming elements ($\Z_h$)
+\item Handle $\alpha_2$ with $\mathbf{a}$
 \begin{itemize}
-\item Nedelec
-\item $D^1$
+\item No need to decompose the modes
 \end{itemize}
-\item Relèvement de $\alpha_2$
-\begin{itemize}
-\item Décomposition des modes inutiles
-\end{itemize}
-\item Géométries industrielles
+\item Plastic Omnium geometries 
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \begin{center}
-Merci de votre attention !
+Thanks !
 \end{center}
 \end{frame}
 
