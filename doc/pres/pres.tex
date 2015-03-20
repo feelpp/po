@@ -28,14 +28,30 @@ tabsize=2}
 \usetheme{Hannover}
 
 \beamertemplatenavigationsymbolsempty
-
-\AtBeginSection[]
-  {
-     \begin{frame}<beamer>
-     \frametitle{Plan}
-     \tableofcontents[currentsection]
-     \end{frame}
-  }
+\def\swidth{1.6cm}
+\setbeamersize{sidebar width left=\swidth}
+\setbeamertemplate{sidebar left}{
+  {\usebeamerfont{title in sidebar}%
+    \vskip1.5em%
+    \usebeamercolor[fg]{title in sidebar}%
+    \insertshorttitle[width=\swidth,center,respectlinebreaks]\par%
+    \vskip1.25em%
+  }%
+  {%
+    \usebeamercolor[fg]{author in sidebar}%
+    \usebeamerfont{author in sidebar}%
+    \insertshortauthor[width=\swidth,center,respectlinebreaks]\par%
+    \vskip1.25em%
+  }%
+  \hbox to2cm{\hss\insertlogo\hss}
+  \vskip1.25em%
+  \insertverticalnavigation{\swidth}%
+  \vfill
+  \hbox to2cm{\hskip0.6cm\usebeamerfont{subsection in
+      sidebar}\strut\usebeamercolor[fg]{subsection in
+      sidebar}\insertframenumber/\inserttotalframenumber\hfill}%
+  \vskip3pt%
+}%
 
 \definecolor{bleufonce}{rgb}{0.1,0.1,0.8}
 \definecolor{grisbleu}{rgb}{0.8,0.8,0.9}
@@ -76,14 +92,14 @@ tabsize=2}
 \newcommand{\Ctailleg}{0.8}
 
 \title[$NS^2_{++}$]{$NS^2_{++}$ : a non standard strategy for solving the incompressible Navier-Stokes equations in Feel++}
-
-\author{Romain HILD}
-\institute{Université de Strasbourg}
+\subtitle{PEPS}
+\author[Romain Hild]{Romain Hild \inst{1} \and Christophe Prud'homme \inst{1}\\ \and Philippe Gilotte \inst{2} \and Benjamin Surowiec \inst{2}}
+\institute[shortinst]{\inst{1} Université de Strasbourg \and \inst{2} Plastic Omnium}
 
 \begin{document}
 
 \begin{frame}
-\includegraphics[scale=0.2]{uds.jpg}\includegraphics[scale=0.15]{po.jpg}
+\makebox[\textwidth][c]{\includegraphics[scale=0.14]{uds.jpg}\includegraphics[scale=0.09]{po.jpg}}
 \titlepage
 \end{frame}
 
@@ -108,27 +124,49 @@ tabsize=2}
 \end{frame}
 
 \section{Problem}
+\begin{frame}<beamer>
+  \frametitle{Plan}
+  \tableofcontents[currentsection]
+\end{frame}
+  
 \begin{frame}{Problem}
-\begin{block}{We look for $(\mathbf{v},p)$ solution of :}
-\begin{equation}
-\label{start}
-\left\{\begin{aligned}
-&\frac{\partial \mathbf{v}}{\partial t} + (\curl  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\curll  \mathbf{v}-\mathbf{f} = 0\\
-&\div \mathbf{v} = 0\\
-&\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0\\
-&\mathbf{v}\cdot \mathbf{n}\restr = \alpha_0\\
-&(\curl  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_1\\
-&(\curll  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_2
-\end{aligned}\right.
-\end{equation}
-where $q = \frac{|\mathbf{v}|^2}{2}+p$.
-\end{block}
-Bonudary conditions :
-\begin{itemize}
-\item boundary conditions of order 2
-\item null normal component
-\item free tangential component
-\end{itemize}
+  \begin{block}{We are interested in the Navier-Stokes problem :}
+    \[ \left\{
+    \begin{aligned}
+      &\frac{\partial\mathbf{v}}{\partial t} + (\mathbf{v}\cdot\grad)\mathbf{v} + \grad p + \frac{1}{Re}\laplace\mathbf{v} -f = 0\\
+      &\div\mathbf{v} = 0\\
+      &\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0\\
+      &\mathbf{v}\restr = 0
+    \end{aligned}
+    \right.\]
+    \end{block}
+  But Dirichlet conditions are too restricting, we want general impermeable boundary conditions.\\
+  We'll use the curl formulation of Navier-Stokes
+\end{frame}
+
+\begin{frame}{Problem}
+  \begin{block}{Curl formulation of Navier-Stokes :}
+    \begin{equation}
+      \label{start}
+      \left\{\begin{aligned}
+      &\frac{\partial \mathbf{v}}{\partial t} + (\curl  \mathbf{v})\times \mathbf{v} + \grad q + \frac{1}{Re}\curll  \mathbf{v}-\mathbf{f} = 0\\
+      &\div \mathbf{v} = 0\\
+      &\mathbf{v}\big\rvert_{t=0} = \mathbf{v}_0
+      \end{aligned}\right.
+    \end{equation}
+    where $q = \frac{|\mathbf{v}|^2}{2}+p$.
+  \end{block}
+  For the impermeability, we need :
+  \begin{align}
+    &\mathbf{v}\cdot \mathbf{n}\restr = \alpha_0 \label{bc0}\\
+    &(\curl  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_1 \label{bc1}\\
+    &(\curll  \mathbf{v})\cdot \mathbf{n}\restr = \alpha_2 \label{bc2}
+  \end{align}
+  \begin{itemize}
+  \item (\ref{bc2}) is a boundary condition of order 2
+  \item null normal component
+  \item free tangential component
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Problem}
@@ -137,45 +175,97 @@ We want to write the solution as
 \[ \sum_i c_i(t) \mathbf{g}_i(x,y,z) \]
 \begin{itemize}
 \item the coefficients $c_i$ handle the time dimension.
-\item the basis funcitons $(\mathbf{g}_i)$ handle the spatial dimension.
+\item the basis functions $(\mathbf{g}_i)$ handle the spatial dimension.
 \end{itemize}
 \end{block}
-Use of the works of P. Penel :
+Use of the works of P. Penel and J. Neustupa \cite{Penel2004} :
 \begin{itemize}
 \item $D^1(\Omega) = \{\mathbf{v} \in [H^1(\Omega)]^3\; |\; \div\mathbf{v}=0,\nabla^k\times \mathbf{v}\cdot \mathbf{n} = 0, k=0,1 \}$
-\item span by the eigen functions of the curl operator
-\item need to handle the boundary conditons apart
+\item spanned by the eigen functions of the curl operator
+\item need to handle the boundary conditons apart (B. Surowiec)
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \centering
 \begin{tikzpicture}
-\node[draw,fill=green!50] (alpha0) at (0,10) {$\alpha_0$};
-\node[draw,fill=gray!50,align=center] (pbpsi0) at (0,8.5) {Laplace\\ Problem} ;
-\node[draw,fill=blue!50] (gradpsi0) at (0,7) {$\grad\psi^0$} ;
-\node[draw,fill=green!50] (alpha1) at (2.5,10) {$\alpha_1$};
-\node[draw,fill=gray!50,align=center] (pbcurlb) at (2.5,8.5) {Mixed\\ Problem} ;
-\node[draw,fill=blue!50] (curlb) at (2.5,7) {$(\curl\mathbf{b},\grad\psi^1)$} ;
-\node[draw,fill=gray!50] (pba) at (1.25,6) {$\mathbf{a}=\grad\psi^0+\curl\mathbf{b}$};
-\node[draw,fill=blue!50] (a) at (1.25,5) {$\mathbf{a}$} ;
-\node[draw=red,align=center,fill=gray!50] (pbeigen) at (7.5,8.5) {Eigen\\ Value\\ Problem};
-\node[draw,fill=yellow!50] (lambdagi) at (7.5, 7) {$(\Lambda_i,\mathbf{g_i})$} ;
-\node[draw,fill=green!50] (alpha2) at (4.25,7) {$\alpha_2$};
-\node[draw,fill=green!50] (f) at (5,7) {$\mathbf{f}$};
-\node[draw,fill=green!50] (c0) at (6,7) {$c_i(0)$};
-\node[draw=red,align=center,fill=gray!50] (pbc) at (6,5) {Spectral Problem};
-\node[draw,fill=blue!50] (u) at (5,3.75) {$\mathbf{u}$} ;
-\node[draw,fill=gray!50] (pbv) at (3,3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
-\node[draw,fill=red!50] (v) at (3,2) {$(\mathbf{v},p)$} ;
-
-\draw[->,>=latex] (alpha0) -- (pbpsi0); \draw[->,>=latex] (pbpsi0) -- (gradpsi0); \draw[->,>=latex] (alpha1) -- (pbcurlb); \draw[->,>=latex] (pbcurlb) -- (curlb); \draw[->,>=latex] (gradpsi0) -- (pba); \draw[->,>=latex] (curlb) -- (pba); \draw[->,>=latex] (pba) -- (a); \draw[->,>=latex] (pbeigen) -- (lambdagi); \draw[->,>=latex] (a) -- (pbc); \draw[->,>=latex] (alpha2) -- (pbc); \draw[->,>=latex] (f) -- (pbc); \draw[->,>=latex] (c0) -- (pbc); \draw[->,>=latex] (lambdagi) -- (pbc); \draw[->,>=latex] (pbc) -- (u); \draw[->,>=latex] (u) -- (pbv); \draw[->,>=latex] (a) -- (pbv); \draw[->,>=latex] (pbv) -- (v);
+\uncover<1-11>{\node[draw,fill=red!50] (v) at (3,-2) {$(\mathbf{v},p)$} ;}
+\uncover<2-11>{\node[draw,fill=gray!50] (pbv) at (3,-3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;}
+\uncover<2-11>{\draw[->,>=latex] (pbv) -- (v);}
+\uncover<3-11>{\node[draw,fill=blue!50] (a) at (1.25,-5) {$\mathbf{a}$} ;}
+\uncover<3-11>{\draw[->,>=latex] (a) -- (pbv);}
+\uncover<4-11>{\node[draw,fill=gray!50,align=center] (pbpsi0) at (0,-7) {Laplace\\ Problem} ;}
+\uncover<4-11>{\draw[->,>=latex] (pbpsi0) -- (a);}
+\uncover<4-11>{\node[draw,fill=green!50] (alpha0) at (0,-8.5) {$\alpha_0$};}
+\uncover<4-11>{\draw[->,>=latex] (alpha0) -- (pbpsi0);}
+\uncover<5-11>{\node[draw,fill=gray!50,align=center] (pbcurlb) at (2.5,-7) {Mixed\\ Problem} ;}
+\uncover<5-11>{\draw[->,>=latex] (pbcurlb) -- (a);}
+\uncover<5-11>{\node[draw,fill=green!50] (alpha1) at (2.5,-8.5) {$\alpha_1$};}
+\uncover<5-11>{\draw[->,>=latex] (alpha1) -- (pbcurlb);}
+\uncover<6-11>{\node[draw,fill=blue!50] (u) at (5,-4) {$\mathbf{u}=\sum c_i\mathbf{g}_i$} ;}
+\uncover<6-11>{\draw[->,>=latex] (u) -- (pbv);}
+\uncover<6-11>{\node[draw,align=center,fill=gray!50] (pbc) at (6,-5) {Spectral Problem};}
+\uncover<6-11>{\draw[->,>=latex] (pbc) -- (u);}
+\uncover<7-11>{\draw[->,>=latex] (a) -- (pbc);}
+\uncover<8-11>{\node[draw,fill=green!50] (alpha2) at (4.25,-7) {$\alpha_2$};}
+\uncover<8-11>{\draw[->,>=latex] (alpha2) -- (pbc);}
+\uncover<9-11>{\node[draw,fill=green!50] (f) at (5,-7) {$\mathbf{f}$};}
+\uncover<9-11>{\draw[->,>=latex] (f) -- (pbc);}
+\uncover<10-11>{\node[draw,fill=green!50] (c0) at (6,-7) {$c_i(0)$};}
+\uncover<10-11>{\draw[->,>=latex] (c0) -- (pbc);}
+\uncover<11-11>{\node[draw,fill=yellow!50] (lambdagi) at (7.5,- 7) {$(\Lambda_i,\mathbf{g_i})$} ;}
+\uncover<11-11>{\draw[->,>=latex] (lambdagi) -- (pbc);}
+\uncover<11-11>{\node[draw,align=center,fill=gray!50] (pbeigen) at (7.5,-8.5) {Eigen\\ Value\\ Problem};}
+\uncover<11-11>{\draw[->,>=latex] (pbeigen) -- (lambdagi);}
 \end{tikzpicture}
 \end{frame}
 
 \section{Eigen Functions}
+\begin{frame}<beamer>
+  \frametitle{Plan}
+  \begin{columns}[onlytextwidth]
+    \begin{column}{0.35\textwidth}
+      \tableofcontents[currentsection]
+    \end{column}
+    \begin{column}{0.65\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \node[draw,scale=\tailleg,fill=red!50,opacity=0.2] (v) at (2.5,-2) {$(\mathbf{v},p)$} ;
+        \node[draw,scale=\tailleg,fill=gray!50,opacity=0.2] (pbv) at (2.5,-3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
+        \draw[->,>=latex,opacity=0.2] (pbv) -- (v);
+        \node[draw,scale=\tailleg,fill=blue!50,opacity=0.2] (a) at (0.75,-5) {$\mathbf{a}$} ;
+        \draw[->,>=latex,opacity=0.2] (a) -- (pbv);
+        \node[draw,scale=\tailleg,fill=gray!50,align=center,opacity=0.2] (pbpsi0) at (0,-7) {Laplace\\ Problem} ;
+        \draw[->,>=latex,opacity=0.2] (pbpsi0) -- (a);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (alpha0) at (0,-8.5) {$\alpha_0$};
+        \draw[->,>=latex,opacity=0.2] (alpha0) -- (pbpsi0);
+        \node[draw,scale=\tailleg,fill=gray!50,align=center,opacity=0.2] (pbcurlb) at (1.5,-7) {Mixed\\ Problem} ;
+        \draw[->,>=latex,opacity=0.2] (pbcurlb) -- (a);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (alpha1) at (1.5,-8.5) {$\alpha_1$};
+        \draw[->,>=latex,opacity=0.2] (alpha1) -- (pbcurlb);
+        \node[draw,scale=\tailleg,fill=blue!50,opacity=0.2] (u) at (3.75,-4) {$\mathbf{u}=\sum c_i\mathbf{g}_i$} ;
+        \draw[->,>=latex,opacity=0.2] (u) -- (pbv);
+        \node[draw,scale=\tailleg,align=center,fill=gray!50,opacity=0.2] (pbc) at (3.75,-5) {Spectral Problem};
+        \draw[->,>=latex,opacity=0.2] (pbc) -- (u);
+        \draw[->,>=latex,opacity=0.2] (a) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (alpha2) at (2.5,-7) {$\alpha_2$};
+        \draw[->,>=latex,opacity=0.2] (alpha2) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (f) at (3.25,-7) {$\mathbf{f}$};
+        \draw[->,>=latex,opacity=0.2] (f) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (c0) at (4,-7) {$c_i(0)$};
+        \draw[->,>=latex,opacity=0.2] (c0) -- (pbc);
+        \node[draw,scale=\tailleg,fill=yellow!50] (lambdagi) at (5,- 7) {$(\Lambda_i,\mathbf{g_i})$} ;
+        \draw[->,>=latex,opacity=0.2] (lambdagi) -- (pbc);
+        \node[draw,scale=\tailleg,align=center,fill=gray!50] (pbeigen) at (5,-8.5) {Eigen\\ Value\\ Problem};
+        \draw[->,>=latex] (pbeigen) -- (lambdagi);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+  
 \begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
-  We use the work of R. Rodriguez and P. Venegas who studied the problem
+  We use the work of R. Rodriguez and P. Venegas \cite{Venegas2013} as a base, so we can compare and analyse our implementation.\\
+  They studied the following problem on the sphere
   \begin{equation}\label{eigenStart}
     \left\{
     \begin{aligned}
@@ -185,10 +275,11 @@ Use of the works of P. Penel :
     \right.
   \end{equation}
   Using the space $\Z=\{\mathbf{v}\in H(\mathrm{curl}) \quad|\quad \curl\mathbf{v}\cdot\mathbf{n} = 0 \mbox{ on } \Gamma\}$ this leads to :
-  \begin{pb}\label{eigenwf}
-    Find $\lambda\in\R$ and $\mathbf{g}\in \Z$, $\mathbf{g}\neq 0$ such that
-    \[\int_\Omega \curl\mathbf{g}\cdot\curl\mathbf{v} = \lambda^2\int_\Omega \mathbf{g}\cdot\mathbf{v} \quad \forall\mathbf{v}\in \Z \]
-    \end{pb}
+  \begin{block}{Find $\lambda\in\R$ and $\mathbf{g}\in \Z$, $\mathbf{g}\neq 0$ such that}
+    \begin{equation}\label{eigenwf}
+      \int_\Omega \curl\mathbf{g}\cdot\curl\mathbf{v} = \lambda^2\int_\Omega \mathbf{g}\cdot\mathbf{v} \quad \forall\mathbf{v}\in \Z
+    \end{equation}
+    \end{block}
 \end{frame}
 
 \begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
@@ -208,22 +299,22 @@ Use of the works of P. Penel :
 \end{frame}
 
 \begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
-  We have that $\forall\mathbf{v}\in\Z$, $\mathbf{v}=\mathbf{w}+\nabla q$ with $\mathbf{w}\in H(\mathrm{curl})$ and $\mathbf{w}\times\mathbf{n}=0$, and $q \in H^1(\Omega)$.\\
+  We have that (see \cite{girault90-1}) $\forall\mathbf{v}\in\Z$, $\mathbf{v}=\mathbf{w}+\grad q$ with $\mathbf{w}\in H(\mathrm{curl})$ and $\mathbf{w}\times\mathbf{n}=0$, and $q \in H^1(\Omega)$.\\
   Then, if we note
   \begin{itemize}
   \item $\{\bm{\phi}_i\}_{i=1}^M$, basis of $\NN_h(\Omega)$,
   \item $\{\bm{\phi}_i\}_{i=1}^N$, basis of $\NN_h(\Omega\setminus\Gamma)$,
   \item $\{\varphi_i\}_{i=1}^J$, basis of $\LLL_h(\Gamma)$,
   \end{itemize}
-  and we choose one vertex on each connected component of $\Gamma=\cup_{i=0}^I\Gamma_i$, and assume that the corresponding functions are the last ones, then
+  and we choose one vertex on each connected component of $\Gamma=\cup_{i=0}^I\Gamma_i$, and assume that the corresponding functions are the last ones, then with $L=J-(I+1)$
   \begin{block}{A basis of $\Z_h$ is}
-    \[ \{\bm{\phi}_i\}_{i=1}^N\cup\{\nabla\varphi_i\}_{i=1}^L \]
+    \[ \{\bm{\phi}_i\}_{i=1}^N\cup\{\grad\varphi_i\}_{i=1}^L \]
   \end{block}
 \end{frame}
 
 \begin{frame}{$\mathbf{u}=\sum_{i=1}^\infty c_i\mathbf{g}_i$}
-  We can write
-  \[ \mathbf{v}=\sum_{m=1}^M\alpha_m\bm{\phi}_m=\sum_{m=1}^N\alpha_m'\bm{\phi}_m+ \sum_{j=0}^L \beta_j\nabla\varphi_j \]
+  We can write $\forall \mathbf{v}\in \Z_h \subset \NN_h$
+  \[ \mathbf{v}=\underbrace{\sum_{m=1}^M\alpha_m\bm{\phi}_m}_{\NN_h}=\underbrace{\sum_{m=1}^N\alpha_m'\bm{\phi}_m+ \sum_{j=0}^L \beta_j\grad\varphi_j}_{\Z_h} \]
   and in the lowest order, we have :
   \[
   \alpha_m=\left\{\begin{aligned}
@@ -236,19 +327,19 @@ Use of the works of P. Penel :
   \]
 \end{frame}
 
-\begin{frame}{$\alpha=C\alpha'$}
+\begin{frame}{$\alpha=C\widehat{\alpha}$}
   We note :
   \begin{itemize}
   \item $\bm{\alpha}=(\alpha_1,\dots,\alpha_M)^t$,
   \item $\widehat{\bm{\alpha}}=(\alpha_1',\dots,\alpha_M',\beta_1,\dots,\beta_J)^t$,
   \item $\bm{\alpha} = C\widehat{\bm{\alpha}}$,
-  \item $A=(\curl\bm{\phi}_i\cdot\curl\bm{\phi}_j)_{ij}$,
-  \item $B=(\bm{\phi}_i\cdot\bm{\phi}_j)_{ij}$
+  \item $A=(\int_\Omega\curl\bm{\phi}_i\cdot\curl\bm{\phi}_j)_{ij}$ and $\widehat{A}=C^tAC$,
+  \item $B=(\int_\Omega\bm{\phi}_i\cdot\bm{\phi}_j)_{ij}$ and $\widehat{B}=C^tBC$
   \end{itemize}
   and then the problem \ref{eigenwf} is :
   \begin{pb}
-    Find $\widehat{\bm{\alpha}}$ such that :
-    \[ C^tAC\widehat{\bm{\alpha}}=\lambda C^tBC\widehat{\bm{\alpha}} \]
+    Solve the generalized hermitian eigen problem :
+    \[ \widehat{A}\widehat{\bm{\alpha}}=\lambda \widehat{B}\widehat{\bm{\alpha}} \]
   \end{pb}
 \end{frame}
 
@@ -265,6 +356,48 @@ Use of the works of P. Penel :
 \end{frame}
 
 \section{Boundary conditions}
+\begin{frame}<beamer>
+  \frametitle{Plan}
+  \begin{columns}[onlytextwidth]
+    \begin{column}{0.35\textwidth}
+      \tableofcontents[currentsection]
+    \end{column}
+    \begin{column}{0.65\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \node[draw,scale=\tailleg,fill=red!50,opacity=0.2] (v) at (2.5,-2) {$(\mathbf{v},p)$} ;
+        \node[draw,scale=\tailleg,fill=gray!50,opacity=0.2] (pbv) at (2.5,-3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
+        \draw[->,>=latex,opacity=0.2] (pbv) -- (v);
+        \node[draw,scale=\tailleg,fill=blue!50] (a) at (0.75,-5) {$\mathbf{a}$} ;
+        \draw[->,>=latex,opacity=0.2] (a) -- (pbv);
+        \node[draw,scale=\tailleg,fill=gray!50,align=center] (pbpsi0) at (0,-7) {Laplace\\ Problem} ;
+        \draw[->,>=latex] (pbpsi0) -- (a);
+        \node[draw,scale=\tailleg,fill=green!50] (alpha0) at (0,-8.5) {$\alpha_0$};
+        \draw[->,>=latex] (alpha0) -- (pbpsi0);
+        \node[draw,scale=\tailleg,fill=gray!50,align=center] (pbcurlb) at (1.5,-7) {Mixed\\ Problem} ;
+        \draw[->,>=latex] (pbcurlb) -- (a);
+        \node[draw,scale=\tailleg,fill=green!50] (alpha1) at (1.5,-8.5) {$\alpha_1$};
+        \draw[->,>=latex] (alpha1) -- (pbcurlb);
+        \node[draw,scale=\tailleg,fill=blue!50,opacity=0.2] (u) at (3.75,-4) {$\mathbf{u}=\sum c_i\mathbf{g}_i$} ;
+        \draw[->,>=latex,opacity=0.2] (u) -- (pbv);
+        \node[draw,scale=\tailleg,align=center,fill=gray!50,opacity=0.2] (pbc) at (3.75,-5) {Spectral Problem};
+        \draw[->,>=latex,opacity=0.2] (pbc) -- (u);
+        \draw[->,>=latex,opacity=0.2] (a) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (alpha2) at (2.5,-7) {$\alpha_2$};
+        \draw[->,>=latex,opacity=0.2] (alpha2) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (f) at (3.25,-7) {$\mathbf{f}$};
+        \draw[->,>=latex,opacity=0.2] (f) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (c0) at (4,-7) {$c_i(0)$};
+        \draw[->,>=latex,opacity=0.2] (c0) -- (pbc);
+        \node[draw,scale=\tailleg,fill=yellow!50,opacity=0.2] (lambdagi) at (5,- 7) {$(\Lambda_i,\mathbf{g_i})$} ;
+        \draw[->,>=latex,opacity=0.2] (lambdagi) -- (pbc);
+        \node[draw,scale=\tailleg,align=center,fill=gray!50,opacity=0.2] (pbeigen) at (5,-8.5) {Eigen\\ Value\\ Problem};
+        \draw[->,>=latex,opacity=0.2] (pbeigen) -- (lambdagi);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+  
 \begin{frame}{Boundary conditions}
 \label{psi0}
 \begin{block}{Decomposition of $\mathbf{a}$}
@@ -301,8 +434,50 @@ $\curl\star\cdot \mathbf{n}\restr$ & $\alpha_1$ & & 0 & & $\alpha_1$
 \end{frame}
 
 \section{Spectral Problem}
+\begin{frame}<beamer>
+  \frametitle{Plan}
+  \begin{columns}[onlytextwidth]
+    \begin{column}{0.35\textwidth}
+      \tableofcontents[currentsection]
+    \end{column}
+    \begin{column}{0.65\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \node[draw,scale=\tailleg,fill=red!50,opacity=0.2] (v) at (2.5,-2) {$(\mathbf{v},p)$} ;
+        \node[draw,scale=\tailleg,fill=gray!50,opacity=0.2] (pbv) at (2.5,-3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
+        \draw[->,>=latex,opacity=0.2] (pbv) -- (v);
+        \node[draw,scale=\tailleg,fill=blue!50] (a) at (0.75,-5) {$\mathbf{a}$} ;
+        \draw[->,>=latex,opacity=0.2] (a) -- (pbv);
+        \node[draw,scale=\tailleg,fill=gray!50,align=center,opacity=0.2] (pbpsi0) at (0,-7) {Laplace\\ Problem} ;
+        \draw[->,>=latex,opacity=0.2] (pbpsi0) -- (a);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (alpha0) at (0,-8.5) {$\alpha_0$};
+        \draw[->,>=latex,opacity=0.2] (alpha0) -- (pbpsi0);
+        \node[draw,scale=\tailleg,fill=gray!50,align=center,opacity=0.2] (pbcurlb) at (1.5,-7) {Mixed\\ Problem} ;
+        \draw[->,>=latex,opacity=0.2] (pbcurlb) -- (a);
+        \node[draw,scale=\tailleg,fill=green!50,opacity=0.2] (alpha1) at (1.5,-8.5) {$\alpha_1$};
+        \draw[->,>=latex,opacity=0.2] (alpha1) -- (pbcurlb);
+        \node[draw,scale=\tailleg,fill=blue!50] (u) at (3.75,-4) {$\mathbf{u}=\sum c_i\mathbf{g}_i$} ;
+        \draw[->,>=latex,opacity=0.2] (u) -- (pbv);
+        \node[draw,scale=\tailleg,align=center,fill=gray!50] (pbc) at (3.75,-5) {Spectral Problem};
+        \draw[->,>=latex] (pbc) -- (u);
+        \draw[->,>=latex] (a) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50] (alpha2) at (2.5,-7) {$\alpha_2$};
+        \draw[->,>=latex] (alpha2) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50] (f) at (3.25,-7) {$\mathbf{f}$};
+        \draw[->,>=latex] (f) -- (pbc);
+        \node[draw,scale=\tailleg,fill=green!50] (c0) at (4,-7) {$c_i(0)$};
+        \draw[->,>=latex] (c0) -- (pbc);
+        \node[draw,scale=\tailleg,fill=yellow!50] (lambdagi) at (5,- 7) {$(\Lambda_i,\mathbf{g_i})$} ;
+        \draw[->,>=latex] (lambdagi) -- (pbc);
+        \node[draw,scale=\tailleg,align=center,fill=gray!50,opacity=0.2] (pbeigen) at (5,-8.5) {Eigen\\ Value\\ Problem};
+        \draw[->,>=latex,opacity=0.2] (pbeigen) -- (lambdagi);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+  
 \begin{frame}{Spectral Problem}
-Using $\mathbf{v}=\mathbf{u}+\mathbf{a}$ in (\ref{start}), we get :
+Considering the solution $\mathbf{v}=\mathbf{u}+\mathbf{a}$ in (\ref{start}), we get :
 \begin{align*}
 \frac{\partial \mathbf{u}}{\partial t} &+ (\curl \mathbf{u})\times \mathbf{u} + (\curl \mathbf{u})\times \mathbf{a} + \left(\curl \mathbf{a}\right)\times \mathbf{u} \\
 &+ \grad\pi_\mathbf{a} + \frac{1}{Re}\curll \mathbf{u} - \mathbf{f_a} = 0
@@ -317,16 +492,16 @@ where : $\pi_a=\frac{|\mathbf{u}+\mathbf{a}|^2}{2}$ and $\mathbf{f_a}=\mathbf{f}
 \end{block}
 \end{frame}
 
-\begin{frame}{Discretisation}
-By using $\mathbf{u}_M=\sum_{i=1}^M c_i\mathbf{g}_i$ and by noting :
+\begin{frame}{Discretization}
+By using $\mathbf{u}_M(x,y,z,t)=\sum_{i=1}^M c_i(t)\mathbf{g}_i(x,y,z)$ and by noting :
 \begin{align*}
-R_{ijk} &= \int_\Omega(\curl\mathbf{g_i}\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \int_\Omega(\curl\mathbf{g_i}\times \mathbf{a})\cdot\mathbf{g_k}\\
+R_{ijk} &= \int_\Omega((\curl\mathbf{g_i})\times \mathbf{g_j})\cdot\mathbf{g_k} & R_{iak} &= \int_\Omega((\curl\mathbf{g_i})\times \mathbf{a})\cdot\mathbf{g_k}\\
 R_{iak} &= \int_\Omega((\curl\mathbf{a})\times \mathbf{g_i})\cdot\mathbf{g_k} & R_{fk} &= \int_\Omega\mathbf{f_a}\cdot\mathbf{g_k}\\
 R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
 \end{align*}
 We get the following problem :
 \begin{block}{Find $(c_i)_{i=1,\dots,M}$ such that $\forall k=1,\dots,M$ :}
-\[ \frac{\partial c_k}{\partial t} + \frac{1}{Re}c_k\lambda_k^2 + \sum_{i,j=1}^Mc_ic_jR_{ijk} + \sum_{i=1}^Mc_i\left(R_{iak} + R_{iak}\right) = R_{fk} + \frac{1}{Re}R_{pk} \]
+\[ \frac{\partial {\color{red}c_k}}{\partial t} + \frac{1}{Re}{\color{red}c_k}\lambda_k^2 + \sum_{i,j=1}^M{\color{red}c_ic_j}{\color{green}R_{ijk}} + \sum_{i=1}^M{\color{red}c_i}\left({\color{green}R_{iak}} + {\color{green}R_{iak}}\right) = {\color{green}R_{fk}} + \frac{1}{Re}{\color{green}R_{pk}} \]
 \end{block}
 \end{frame}
 
@@ -347,141 +522,46 @@ We get the following problem :
 \end{frame}
 
 \section{Conclusion}
+\begin{frame}<beamer>
+  \frametitle{Plan}
+  \tableofcontents[currentsection]
+\end{frame}
+
 \begin{frame}
-\begin{figure}
 \centering
-\begin{tikzpicture}[scale=0.4] 
-\node[draw,scale=\taille,fill=green!50] (a0) at (0.75,2) {$\alpha_0$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi0lp) at (-0.5,-2)
-{$\begin{aligned}
--\laplace\psi^0&=0\\
-\grad\psi^0\cdot \mathbf{n} &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi0) at (-0.5,-3.5) {$\psi^0$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgradpsi0) at (-0.5,-4.75) {$w=\grad\psi^0$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi0div) at (2,-2)
-{$\begin{aligned}
-\mathbf{w}&=\grad\psi^0\\
-\div\mathbf{w}&=0\\
-\mathbf{w}\cdot \mathbf{n} &= \alpha_0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (gradpsi0) at (0.75,-8.75) {$\grad\psi^0$} ;
-\node (psi0Im) at (-3.5,-8.75) {\includegraphics[scale=0.1,angle=90,trim=35mm 0mm 80mm 0mm,clip]{psi0-clip}} ;
-
-\node[draw,scale=\taille,fill=green!50] (a1) at (5.5,2) {$\alpha_1$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbbcurl) at (4,-5)
-{$\begin{aligned}
-\curll \mathbf{b} &= \grad\psi^1\\
-\div \mathbf{b} &=0\\
-\mathbf{b}\cdot \mathbf{n} &= 0\\
-\curl \mathbf{b}\cdot \mathbf{n} &= 0\\
-\grad \psi^1\cdot \mathbf{n} &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi1lp) at (7,-2)
-{$\begin{aligned}
--\laplace\psi^1&=0\\
-\grad\psi^1\cdot \mathbf{n} &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (psi1) at (7,-3.5) {$\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgradpsi1) at (7,-4.75) {$w=\grad\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi1div) at (9.5,-2)
-{$\begin{aligned}
-\mathbf{w}&=\grad\psi^1\\
-\div \mathbf{w}&=0\\
-\mathbf{w}\cdot \mathbf{n} &= \alpha_1
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=blue!50] (gradpsi1) at (8.25,-6) {$\grad\psi^1$} ;
-\node[draw,scale=\taille,fill=gray!50
-] (pbb) at (8,-7.5) 
-{$
-d_k\lambda_k^2 = (\grad\psi^1,\mathbf{g_k}) - \langle\alpha_1,\psi_k\rangle
-$} ;
-\node[draw,scale=\taille,fill=blue!50] (b) at (5.5,-8.75) {$\curl \mathbf{b}$} ;
-
-\node[draw,scale=\taille,fill=gray!50] (pbeigen) at (13.5,2)
-{$\begin{aligned}
-\curll \mathbf{g_i} = \Lambda_i\mathbf{g_i}\\
-\div\mathbf{g_i} = 0\\
-\mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-\curl \mathbf{g_i}\cdot \mathbf{n}\restr = 0\\
-(\curll \mathbf{g_i}\cdot \mathbf{n}\restr = 0)
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (lambdagi) at (13.5,-0.5) {$(\Lambda_i,\mathbf{g_i})$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbgi0) at (13.5,-3)
-{$\begin{aligned}
-\grad(\div \mathbf{g_i^0})-\laplace \mathbf{g_i^0} &= \Lambda_i\mathbf{g_i}\\
-\mathbf{g_i^0} &= 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (gi0) at (13.5,-4.5) {$\mathbf{g_i^0}$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbpsi) at (13,-6)
-{$\begin{aligned}
--\laplace\psi_i = \div \mathbf{g_i^0}\\
-\grad\psi_i\cdot \mathbf{n}\restr = 0
-\end{aligned}$} ;
-\node[draw,scale=\taille,fill=yellow!50] (psi) at (12.5,-7.5) {$\psi_i$} ;
-
-\node[draw,scale=\taille,fill=gray!50] (pba) at (2,-10.5) {$\mathbf{a} = \curl \mathbf{b} + \grad\psi^0$} ;
-\node[draw,scale=\taillem,fill=blue!50] (a) at (2,-12) {$\mathbf{a}$} ;
-
-\node[draw,scale=\taille,fill=green!50] (f) at (7,-9) {$f$} ;
-\node[draw,scale=\taille,fill=green!50] (a2) at (8,-9) {$\alpha_2$} ;
-\node[draw,scale=\taille,fill=green!50] (ck0) at (9,-9) {$c_k^0$} ;
-\node[draw,scale=\taille,fill=gray!50] (pbs) at (9,-12)
-{$\begin{aligned}
-\frac{\partial c_k}{\partial t} &+ \frac{1}{Re}c_k\lambda_k^2 + \sum_i\sum_j c_i c_j R_{ijk}\\
-&+ \sum_i c_i R_{iak} + \sum_i c_i R_{raik} = R_{fk} + \frac{1}{Re}R_{pk}
-\end{aligned}
-$} ;
-\node[draw,scale=\taillem,fill=blue!50] (u) at (9,-14.5) {$\mathbf{u}$} ;
-\node (uIm) at (15,-15) {\includegraphics[scale=0.1,trim=0mm 40mm 20mm 15mm,clip]{u-clip}} ;
-\node[draw,scale=\tailleg,fill=red!50] (v) at (5,-16) {$(\mathbf{v},p)$} ;
-\node (vIm) at (-1,-16) {\includegraphics[scale=0.1,trim=0mm 30mm 20mm 30mm,clip]{v100modes}} ;
-
-\draw (a0) -- (0.75,0);
-\draw[->,>=latex] (gradpsi0) -- (pba) ;
-\draw[->,>=latex,purple] (0.75,0) -| (pbpsi0lp) ;
-\draw[->,>=latex,purple] (pbpsi0lp) -- (psi0) ;
-\draw[->,>=latex,purple] (psi0) -- (pbgradpsi0) ;
-\draw[->,>=latex,purple] (pbgradpsi0) -- (gradpsi0) ;
-\draw[->,>=latex,green] (0.75,0) -| (pbpsi0div) ;
-\draw[->,>=latex,green] (pbpsi0div) -- (gradpsi0) ;
-\draw[<->,>=latex] (gradpsi0) -- (psi0Im) ;
-
-\draw (a1) -- (5.5,1);
-\draw[->,>=latex,magenta] (5.5,1) -| (pbbcurl) ;
-\draw[->,>=latex,magenta] (pbbcurl) -- (b) ;
-\draw[cyan] (5.5,1) -| (8.25,0);
-\draw[->,>=latex,orange] (8.25,0) -| (pbpsi1div);
-\draw[->,>=latex,red] (8.25,0) -| (pbpsi1lp);
-\draw[->,>=latex,red] (pbpsi1lp) -- (psi1);
-\draw[->,>=latex,red] (psi1) -- (pbgradpsi1);
-\draw[->,>=latex,red] (pbgradpsi1) -- (gradpsi1);
-\draw[->,>=latex,orange] (pbpsi1div) -- (gradpsi1);
-\draw[->,>=latex,cyan] (gradpsi1) -- (pbb);
-\draw[->,>=latex,cyan] (psi) -- (pbb);
-\draw[->,>=latex,cyan] (lambdagi) to[out=180,in=40] (pbb.15);
-\draw[->,>=latex,cyan] (pbb) -- (b);
-\draw[->,>=latex] (b) -- (pba);
-
-\draw[->,>=latex] (pba) -- (a);
+\begin{tikzpicture}
+\node[draw,fill=red!50] (v) at (3,2) {$(\mathbf{v},p)$} ;
+\node (vIm) at (0,2) {\includegraphics[scale=0.1,trim=0mm 30mm 20mm 30mm,clip]{v100modes}} ;
+\node[draw,fill=gray!50] (pbv) at (3,3) {$\mathbf{v}=\mathbf{a}+\mathbf{u}$} ;
+\draw[->,>=latex] (pbv) -- (v);
+\node[draw,fill=blue!50] (a) at (1.25,5) {$\mathbf{a}$} ;
+\node (psi0Im) at (0,5) {\includegraphics[scale=0.1,angle=90,trim=35mm 0mm 80mm 0mm,clip]{psi0-clip}} ;
+\draw[->,>=latex] (a) -- (pbv);
+\node[draw,fill=gray!50,align=center] (pbpsi0) at (0,7) {Laplace\\ Problem} ;
+\draw[->,>=latex] (pbpsi0) -- (a);
+\node[draw,fill=green!50] (alpha0) at (0,8.5) {$\alpha_0$};
+\draw[->,>=latex] (alpha0) -- (pbpsi0);
+\node[draw,fill=gray!50,align=center] (pbcurlb) at (2.5,7) {Mixed\\ Problem} ;
+\draw[->,>=latex] (pbcurlb) -- (a);
+\node[draw,fill=green!50] (alpha1) at (2.5,8.5) {$\alpha_1$};
+\draw[->,>=latex] (alpha1) -- (pbcurlb);
+\node[draw,fill=blue!50] (u) at (5,4) {$\mathbf{u}=\sum c_i\mathbf{g}_i$} ;
+\node (uIm) at (5.75,2.75) {\includegraphics[scale=0.1,trim=0mm 40mm 20mm 15mm,clip]{u-clip}} ;
+\draw[->,>=latex] (u) -- (pbv);
+\node[draw,align=center,fill=gray!50] (pbc) at (6,5) {Spectral Problem};
+\draw[->,>=latex] (pbc) -- (u);
+\draw[->,>=latex] (a) -- (pbc);
+\node[draw,fill=green!50] (alpha2) at (4.25,7) {$\alpha_2$};
+\draw[->,>=latex] (alpha2) -- (pbc);
+\node[draw,fill=green!50] (f) at (5,7) {$\mathbf{f}$};
+\draw[->,>=latex] (f) -- (pbc);
+\node[draw,fill=green!50] (c0) at (6,7) {$c_i(0)$};
+\draw[->,>=latex] (c0) -- (pbc);
+\node[draw,fill=yellow!50] (lambdagi) at (7.5, 7) {$(\Lambda_i,\mathbf{g_i})$} ;
+\draw[->,>=latex] (lambdagi) -- (pbc);
+\node[draw,align=center,fill=gray!50] (pbeigen) at (7.5,8.5) {Eigen\\ Value\\ Problem};
 \draw[->,>=latex] (pbeigen) -- (lambdagi);
-\draw[->,>=latex] (lambdagi) -- (pbgi0);
-\draw[->,>=latex] (pbgi0) -- (gi0);
-\draw[->,>=latex] (gi0) -- (pbpsi);
-\draw[->,>=latex] (pbpsi) -- (psi);
-\draw[->,>=latex] (a) -- (pbs);
-\draw[->,>=latex] (f) -- (pbs);
-\draw[->,>=latex] (a2) -- (pbs);
-\draw[->,>=latex] (ck0) -- (pbs);
-\draw[->,>=latex] (lambdagi) to[out=-10,in=20] (pbs.east);
-\draw[->,>=latex] (psi) -- (pbs);
-\draw[->,>=latex] (pbs) -- (u);
-\draw[<->,>=latex] (u) -- (uIm) ;
-\draw[->,>=latex] (u) -- (v);
-\draw[->,>=latex] (a) -- (v);
-\draw[<->,>=latex] (v) -- (vIm) ;
 \end{tikzpicture}
-\end{figure}
 \end{frame}
 
 \begin{frame}{Computing time}
@@ -511,5 +591,25 @@ Thanks !
 \end{center}
 \end{frame}
 
+\begin{frame}[allowframebreaks]
+  \frametitle<presentation>{Further Reading}
+  \begin{thebibliography}{10}
+    \beamertemplatebookbibitems
+  \bibitem{girault90-1}
+    V.~Girault.
+    \newblock Curl-conforming finite element methods for Navier-Stokes equations with non-standard boundary conditions in $R^3$.
+    \newblock {\em The Navier-Stokes Equations Theory and Numerical Methods}, volume 1431 of {\em Lecture Notes in Mathematics}, 1990.
+    \beamertemplatearticlebibitems
+  \bibitem{Penel2004}
+    Bellout, Hamid and Neustupa, Jiří and Penel, Patrick.
+    \newblock On the Navier-Stokes equation with boundary conditions based on vorticity.
+    \newblock {\em Mathematische Nachrichten}, 269-270(1):59-72, 2004.
+    \beamertemplatearticlebibitems
+  \bibitem{Venegas2013}
+    Rodr\'{\i}guez, Rodolfo and Venegas, Pablo
+    \newblock Numerical approximation of the spectrum of the curl operator.
+    \newblock {\em Math. Comput.}, 83(286):553–577, 2014.
+  \end{thebibliography}
+  \end{frame}
 
 \end{document}
