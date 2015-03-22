@@ -14,6 +14,7 @@
   language=C++,
   frame=single,
   keywordstyle=\color{magenta}\bfseries,
+  basicstyle=\footnotesize,
   commentstyle=\color{green}\itshape,
   stringstyle=\color{blue},
   showstringspaces=true,
@@ -104,23 +105,39 @@
 \end{frame}
 
 \begin{frame}{Plastic Omnium}
-  %% \begin{itemize}
-  %% \item Société fondée en 1946 par Pierre Burelle.
-  %% \item Transforme et commercialise des matières plastiques.
-  %% \item Scindée en deux entités :
-  %% \begin{itemize}
-  %% \item Plastic Omnium Environnement
-  %% \item Plastic Omnium Automobile
-  %% \end{itemize}
-  %% \item Objectifs :
-  %% \begin{itemize}
-  %% \item réduire le poids
-  %% \item augmenter l'aérodynamisme
-  %% \item équiper les véhicules hybrides et électriques
-  %% \end{itemize}
-  %% \end{itemize}
-  %% \centering
-  %% \includegraphics[scale=0.5]{sigma}
+  \begin{columns}[onlytextwidth,t]
+    \begin{column}{0.6\textwidth}
+      Auto Exterior Division :\\
+      Product lines
+      \includegraphics[scale=0.65]{image1-1}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      SUV drag reduction study
+      \includegraphics[scale=0.65]{image1-2}
+    \end{column}
+  \end{columns}
+  \begin{columns}[onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      Wind tunnel measurment and\\
+      aerodynamic LES computations\\
+      pressure coefficient : $C_p=\frac{P-P_\infty}{1/2pv^2}$
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \includegraphics[scale=0.6]{image1-3} \\
+      \quad computed $C_p$ \quad measured $C_p$
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Plastic Omnium}
+  Wake analysis on square back mock up :\\
+  Frequency identification with cross-corelation and spectral coherency\\
+  Phase average visualization at identified frequencies\\
+  \includegraphics[scale=0.7]{image2-1}\\
+  \quad \small Average $C_p$ \quad\quad\quad Spectral Coherency \quad\quad\quad Cross corelation\\
+  \includegraphics[scale=0.7]{image2-2}\\
+  \quad\quad\quad\quad $C_p$ phase average at 20Hz\\
+  High Number of time steps needed
 \end{frame}
 
 \section{Problem}
@@ -329,21 +346,46 @@
   &\pm (\beta_j-\beta_k), &&\mbox{if } e_m=[P_j,P_k]\subset\Gamma
   \end{aligned}\right.
   \]
+  With $\bm{\alpha}=(\alpha_1,\dots,\alpha_M)^t$ and $\widehat{\bm{\alpha}}=(\alpha_1',\dots,\alpha_M',\beta_1,\dots,\beta_J)^t$,\\
+  there exists a matric $C$, of size $M\times(N+L)$ such that \[\bm{\alpha}=C\widehat{\bm{\alpha}} \]
 \end{frame}
 
-%% add frame for the steps to change the basis with code
-%% add profile before/after (spy)
+\begin{frame}[fragile]{Matric C}
+  For all dof of $\NN_h$, we need to :
+  \begin{itemize}
+  \item find the associated edge, with the correct permutation,
+    \begin{lstlisting}
+auto const& eltLocalId = dof.first.elementId();
+auto const& elt = mesh->element(eltLocalId);
+auto const& edgeLocalId = dof.first.localDof();
+auto perm = elt.edgePermutation( edgeLocalId );
+    \end{lstlisting}
+  \item find the vertex of the edge, with correct numbering,
+    \begin{lstlisting}
+auto i1 = elt.eToP(edgeLocalId, 0);
+auto i2 = elt.eToP(edgeLocalId, 1);
+auto const& pt1 = elt.point( i1 );
+auto const& pt2 = elt.point( i2 );
+    \end{lstlisting}
+  \item find the position of the edge with respect to the boundary,
+  \item remove one dof per connected component by using markers,
+  \item create a matrix of size $M\times(M+K)$ and create the correct submatrix,
+  \end{itemize}
+\end{frame}
 
 \begin{frame}{$\alpha=C\widehat{\alpha}$}
-  We note :
   \begin{itemize}
-  \item $\bm{\alpha}=(\alpha_1,\dots,\alpha_M)^t$,
-  \item $\widehat{\bm{\alpha}}=(\alpha_1',\dots,\alpha_M',\beta_1,\dots,\beta_J)^t$,
-  \item $\bm{\alpha} = C\widehat{\bm{\alpha}}$,
   \item $A=(\int_\Omega\curl\bm{\phi}_i\cdot\curl\bm{\phi}_j)_{ij}$ and $\widehat{A}=C^tAC$,
   \item $B=(\int_\Omega\bm{\phi}_i\cdot\bm{\phi}_j)_{ij}$ and $\widehat{B}=C^tBC$
   \end{itemize}
-  and then the problem \ref{eigenwf} is :
+  we use \texttt{PtAP} to create $\widehat{A}$ and $\widehat{B}$.
+  \begin{figure}[H]
+    \makebox[\textwidth][c]{
+      \subfloat[spy $A$]{\includegraphics[scale=0.3]{spyA}}\ 
+      \subfloat[spy $\widehat{A}$]{\includegraphics[scale=0.3]{spyAA}}
+    }
+  \end{figure}
+  And then we use SLEPc to solve the following problem :
   \begin{block}{Solve the generalized hermitian eigen problem :}
     \begin{equation}\label{eigenhat}
       \widehat{A}\widehat{\bm{\alpha}}=\lambda \widehat{B}\widehat{\bm{\alpha}}
@@ -430,6 +472,87 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}{Example}
+  \begin{center}
+  \begin{tikzpicture}
+    \begin{scope}[x={(.7cm,-.3cm)}]
+      \path (1,0,0);
+      \pgfgetlastxy{\cylxx}{\cylxy}
+      \path (0,1,0);
+      \pgfgetlastxy{\cylyx}{\cylyy}
+      \path (0,0,1);
+      \pgfgetlastxy{\cylzx}{\cylzy}
+      \pgfmathsetmacro{\cylt}{(\cylzy * \cylyx - \cylzx * \cylyy)/ (\cylzy * \cylxx - \cylzx * \cylxy)}
+      \pgfmathsetmacro{\ang}{atan(\cylt)}
+      \pgfmathsetmacro{\ct}{1/sqrt(1 + (\cylt)^2)}
+      \pgfmathsetmacro{\st}{\cylt * \ct}
+      \begin{scope}[every path/.style={ultra thick}]
+        \draw[scale=0.7] (0,0,0) circle[radius=1];
+        \draw[->,scale=0.7] (-1,3,1) -- (0,3,1);
+        \draw[scale=0.7] (0,3,1) node [right] {$x$};
+        \draw[->,scale=0.7] (-1,3,1) -- (-1,4,1);
+        \draw[scale=0.7] (-1,4,1) node [right] {$y$};
+        \draw[->,scale=0.7] (-1,3,1) -- (-1,3,-1);
+        \draw[scale=0.7] (-1,3,-1) node [right] {$z$};
+        \draw[scale=0.7] (\ct,\st,0) -- ++(0,0,-8);
+        \draw[scale=0.7] (-\ct,-\st,0) -- ++(0,0,-8);
+        \draw[scale=0.7] (\ct,\st,-8) arc[start angle=\ang,delta angle=180,radius=1];
+        \draw[dashed,scale=0.7] (\ct,\st,-8) arc[start angle=\ang,delta angle=-180,radius=1];
+        \draw[scale=0.7] (0,0,0) node {$\Gamma_1$};
+        \draw[scale=0.7] (0,0,-8) node {$\Gamma_2$};
+        \draw[scale=0.7] (1,0,-4) node {$\Gamma_3$};
+      \end{scope}
+    \end{scope}
+  \end{tikzpicture}
+  \begin{tikzpicture}
+    \draw[very thick] (0,0) -- (4,0) ;
+    \draw[dashed] plot[smooth] coordinates{(1,0)(1.5,0.15)(2.1,0.45)(2.5,0.75)(2.8,1.05)(3,1.35)(3,1.65)(2.8,1.95)(2.5,2.25)(2.1,2.55)(1.5,2.85)(1,3)} ;
+    \draw[->] (1,0.15) -- (1.5,0.15) ;
+    \draw[->] (1,0.45) -- (2.1,0.45) ;
+    \draw[->] (1,0.75) -- (2.5,0.75) ;
+    \draw[->] (1,1.05) -- (2.8,1.05) ;
+    \draw[->] (1,1.35) -- (3,1.35) ;
+    \draw[->, dashed] (0,1.5) -- (3.5,1.5) node[right] {$z$} ;
+    \draw[->] (1,1.65) -- (3,1.65) ;
+    \draw[->] (1,1.95) -- (2.8,1.95) ;
+    \draw[->] (1,2.25) -- (2.5,2.25) ;
+    \draw[->] (1,2.55) -- (2.1,2.55) ;
+    \draw[->] (1,2.85) -- (1.5,2.85) ;
+    \draw[very thick] (0,3) -- (4,3) ;
+  \end{tikzpicture}
+  \end{center}
+  \[
+  n\big\rvert_{\Gamma_1} =
+  \begin{pmatrix}
+    0\\0\\-1
+  \end{pmatrix}
+  n\big\rvert_{\Gamma_2} =
+  \begin{pmatrix}
+    0\\0\\1
+  \end{pmatrix}
+  n\big\rvert_{\Gamma_3} =
+  \begin{pmatrix}
+    x/R\\y/R\\0
+  \end{pmatrix}
+  \]
+  \[
+  \alpha_0 =
+  \begin{cases}
+    -2v\left(1-\frac{x^2+y^2}{R^2}\right)\\2v\left(1-\frac{x^2+y^2}{R^2}\right)\\0
+  \end{cases}
+  \alpha_1 =
+  \begin{cases}
+    0\\0\\0
+  \end{cases}
+  \alpha_2 =
+  \begin{cases}
+    -8v/R^2 & \mbox{ on } \Gamma_1\\
+    8v/R^2 & \mbox{ on } \Gamma_2\\
+    0 & \mbox{ on } \Gamma_3
+  \end{cases}
+  \]
+\end{frame}
+
 \begin{frame}{Results}
   \centering
   \includegraphics[scale=0.2]{psi0-clip}
@@ -508,7 +631,7 @@
     R_{pk} &= \int_{\partial\Omega} \alpha_2\phi_k
   \end{align*}
 
-  We use Eigen3 to solve the following problem :
+  We use the Eigen library to solve the following problem :
   \begin{block}{Find $(c_i)_{i=1,\dots,M}$ such that $\forall k=1,\dots,M$ :}
     \[ \frac{\partial {\color{red}c_k}}{\partial t} + \frac{1}{Re}{\color{red}c_k}\lambda_k^2 + \sum_{i,j=1}^M{\color{red}c_ic_j}{\color{green}R_{ijk}} + \sum_{i=1}^M{\color{red}c_i}\left({\color{green}R_{iak}} + {\color{green}R_{iak}}\right) = {\color{green}R_{fk}} + \frac{1}{Re}{\color{green}R_{pk}} \]
   \end{block}
