@@ -8,6 +8,7 @@
 \usepackage{tikz}
 \usepackage{bm}
 \usepackage{listings}
+\usepackage{floatrow}
 
 %listins
 \lstset{
@@ -396,12 +397,37 @@ auto const& pt2 = elt.point( i2 );
 \begin{frame}{Results}
   \begin{figure}[H]
     \makebox[\textwidth][c]{
-      \subfloat[mode 0]{\includegraphics[scale=0.15]{sphMode0}}\ 
-      \subfloat[mode 45]{\includegraphics[scale=0.15,trim=0mm 10mm 0mm 40mm,clip]{curl-grad-1e3-mode45}}
+      \subfloat[mode 2]{\includegraphics[scale=0.1]{mode2}}\ 
+      \subfloat[mode 6]{\includegraphics[scale=0.1]{mode6}}
     }
     \makebox[\textwidth][c]{
-      \includegraphics[scale=0.3]{completeChBase}
+      \subfloat[mode 14]{\includegraphics[scale=0.1]{mode14}}\ 
+      \subfloat[mode 32]{\includegraphics[scale=0.1]{mode32}}
     }
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Results}
+  \begin{table}[H]
+    \small
+    \centering
+    \begin{tabular}{r|c|c|c}
+      h & 0.15 & 0.075 & 0.05 \\
+      \# elements & 7000 & 50000 & 150000 \\
+      \hline
+      $\widehat{\lambda}_h$ & 4.49481924 & 4.49377347 & 4.49361\\
+      $|\widehat{\lambda}_h-\lambda|$ & 0.00141024 & 0.00036447 & 0.000201 \\
+      order & $-$ & 1.9521 & 1.4678 \\
+      \hline
+      $||\div\mathbf{u}||_2$ & 2.88311e-14 & 6.60701e-14 & 9.22039e-14 \\
+      $||\mathbf{u}\cdot\mathbf{n}||_2$ & 0.216208 & 0.112487 & 0.0737108 \\
+      $||\curl\mathbf{u}\cdot\mathbf{n}||_2$ & 5.11927e-15 & 9.48309e-15 & 1.47194e-14 \\
+    \end{tabular}
+  \end{table}
+  \begin{figure}[H]
+    \floatbox[{\capbeside\thisfloatsetup{capbesideposition={left,bottom},capbesidewidth=4cm}}]{figure}[\FBwidth]
+             {\caption{Scalability for 50 modes}}
+             {\includegraphics[scale=0.3]{eigen}}\centering
   \end{figure}
 \end{frame}
 
@@ -703,21 +729,21 @@ auto const& pt2 = elt.point( i2 );
 \end{frame}
 
 \begin{frame}{Perspectives}
-  
-  %% Zh as a basis, scalability, timing, interfaced, ...
-  
   \begin{itemize}
-  \item Tests on more processors
+  \item Improve SLEPc interface
+  \item Tests intensively
     \begin{itemize}
-    \item Compute more modes
-    \item More elements
+    \item scalability
+    \item max capacity
     \end{itemize}
   \item Use of conforming elements ($\Z_h$)
-  \item Handle $\alpha_2$ with $\mathbf{a}$
+  \item Improve the framework
     \begin{itemize}
-    \item No need to decompose the modes
+    \item decomposition using $\beta_j$
+    \item handle $\alpha_2$ apart
+    \item choices of problems for $\alpha_i$
     \end{itemize}
-  \item Plastic Omnium geometries 
+  \item Work on Plastic Omnium geometries 
   \end{itemize}
 \end{frame}
 
