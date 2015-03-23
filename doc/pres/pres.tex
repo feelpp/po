@@ -8,7 +8,6 @@
 \usepackage{tikz}
 \usepackage{bm}
 \usepackage{listings}
-\usepackage{floatrow}
 
 %listins
 \lstset{
@@ -376,14 +375,14 @@ auto const& pt2 = elt.point( i2 );
 
 \begin{frame}{$\alpha=C\widehat{\alpha}$}
   \begin{itemize}
-  \item $A=(\int_\Omega\curl\bm{\phi}_i\cdot\curl\bm{\phi}_j)_{ij}$ and $\widehat{A}=C^tAC$,
-  \item $B=(\int_\Omega\bm{\phi}_i\cdot\bm{\phi}_j)_{ij}$ and $\widehat{B}=C^tBC$
+  \item $A=(\int_\Omega\curl\bm{\phi}_i\cdot\curl\bm{\phi}_j)_{ij}$, $B=(\int_\Omega\bm{\phi}_i\cdot\bm{\phi}_j)_{ij}$
+  \item we use \texttt{PtAP} to create $\widehat{A}=C^tAC$, and $\widehat{B}=C^tBC$
   \end{itemize}
-  we use \texttt{PtAP} to create $\widehat{A}$ and $\widehat{B}$.
+  
   \begin{figure}[H]
     \makebox[\textwidth][c]{
-      \subfloat[spy $A$]{\includegraphics[scale=0.3]{spyA}}\ 
-      \subfloat[spy $\widehat{A}$]{\includegraphics[scale=0.3]{spyAA}}
+      \subfloat[spy $A$]{\includegraphics[scale=0.28]{spyA}}\ 
+      \subfloat[spy $\widehat{A}$]{\includegraphics[scale=0.28]{spyAA}}
     }
   \end{figure}
   And then we use SLEPc to solve the following problem :
@@ -424,11 +423,17 @@ auto const& pt2 = elt.point( i2 );
       $||\curl\mathbf{u}\cdot\mathbf{n}||_2$ & 5.11927e-15 & 9.48309e-15 & 1.47194e-14 \\
     \end{tabular}
   \end{table}
-  \begin{figure}[H]
-    \floatbox[{\capbeside\thisfloatsetup{capbesideposition={left,bottom},capbesidewidth=4cm}}]{figure}[\FBwidth]
-             {\caption{Scalability for 50 modes}}
-             {\includegraphics[scale=0.3]{eigen}}\centering
-  \end{figure}
+  \begin{columns}[onlytextwidth]
+    \begin{column}{0.3\textwidth}
+      Scalability for 50 modes :
+    \end{column}
+    \begin{column}{0.7\textwidth}
+      \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.3]{eigen}
+      \end{figure}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \section{Boundary conditions}
@@ -548,6 +553,7 @@ auto const& pt2 = elt.point( i2 );
   \end{tikzpicture}
   \end{center}
   \[
+  R=0.5,\ v=1\quad
   n\big\rvert_{\Gamma_1} =
   \begin{pmatrix}
     0\\0\\-1
