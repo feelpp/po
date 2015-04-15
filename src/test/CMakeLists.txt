@@ -28,5 +28,5 @@ feelpp_add_application( po_test_cyl SRCS test_cyl.cpp DEFS PO_CYL CFG po_test_cy
 feelpp_add_application( po_test_car SRCS test_cyl.cpp CFG po_test_car.cfg GEO ../mesh/cylCooCar.geo  )
 feelpp_add_application( po_test_sph_sph SRCS test_sph.cpp DEFS PO_SPH CFG po_test_sph_sph.cfg GEO ../mesh/sphCooSph.geo  )
 feelpp_add_application( po_test_sph_car SRCS test_sph.cpp CFG po_test_sph_car.cfg GEO ../mesh/sphCooCar.geo  )
-feelpp_add_application( po_test_spheromak SRCS spheromak.cpp CFG po_spheromak.cfg GEO ../mesh/doubleSphere.geo )
+feelpp_add_application( po_test_spheromak SRCS spheromak.cpp CFG po_spheromak.cfg GEO ../mesh/shell.geo )
 feelpp_add_application( po_test_eigencube SRCS eigencube.cpp CFG po_eigencube.cfg GEO ../mesh/cubepi.geo )
