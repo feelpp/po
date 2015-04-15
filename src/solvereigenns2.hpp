@@ -90,8 +90,6 @@ class SolverEigenNS2
     void load();
     void logInfo();
 
-    void decomp();
-
 public:
     static solvereigenns2_ptrtype build(const mesh_ptrtype& mesh, const FunctionSpaceType1& Xh, const FunctionSpaceType2& Mh, const FunctionSpaceType3& Vh);
     eigenmodes_type solve();
@@ -121,20 +119,16 @@ SolverEigenNS2<T1,T2,T3>::solve()
     if( boption("solverns2.computeEigen"))
     {
         setForms();
-        logTime(t, "form", ioption("solverns2.verbose") > 1);
 
         setInfo();
         setDofsToRemove();
-        logTime(t, "dofinfo", ioption("solverns2.verbose") > 1);
 
         setMatrices();
+
         logTime(t, "matrices", ioption("solverns2.verbose") > 1);
 
         solveEigen();
         logTime(t, "eigs", ioption("solverns2.verbose") > 1);
-
-        decomp();
-        logTime(t, "decomp", ioption("solverns2.verbose") > 1);
 
         save();
         logTime(t, "save", ioption("solverns2.verbose") > 1);
@@ -310,7 +304,9 @@ SolverEigenNS2<T1,T2,T3>::setDofsToRemove()
             auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
             auto globalDof = map[localDof];
             int minGlobalDof;
+
             MPI_Allreduce( &globalDof, &minGlobalDof, 1, MPI_INT, MPI_MIN, Environment::worldComm());
+
             auto itToRemove = std::find(map.begin(), map.end(), minGlobalDof);
             if( itToRemove != map.end())
             {
@@ -403,59 +399,44 @@ SolverEigenNS2<T1,T2,T3>::solveEigen()
         std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
                   << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
 
-    auto vecmodes = eigs2( _matrixA=aHat,
-                   _matrixB=bHat,
-                   _matrixC=C
-                   );
+    auto zhmodes = eigs( _matrixA=aHat,
+                         _matrixB=bHat,
+                         _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
+                         _problem=(EigenProblemType)EigenMap[soption("solvereigen.problem")],
+                         _transform=(SpectralTransformType)EigenMap[soption("solvereigen.transform")],
+                         _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")]
+                         );
 
     int i = 0;
-    modes = eigenmodes_type(vecmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
-    for( auto const& pair: vecmodes )
+    modes = eigenmodes_type(zhmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
+    for( auto const& pair: zhmodes )
     {
         if(Environment::isMasterRank())
-            std::cout << i << " eigenvalue = " << pair.first << std::endl;
-        std::get<0>(modes[i]) = pair.first;
-        std::get<1>(modes[i++]) = *(pair.second);
-    }
-}
+            std::cout << i << " eigenvalue = " << boost::get<0>(pair.second) << std::endl;
+        std::get<0>(modes[i]) = boost::get<0>(pair.second);
 
-template<typename T1, typename T2, typename T3>
-void
-SolverEigenNS2<T1,T2,T3>::decomp()
-{
-    auto vg0 = Vh->element();
-    auto a2 = form2( _test=Vh, _trial=Vh );
-    auto l2 = form1( _test=Vh );
-    a2 = integrate( _range=elements(mesh),
-                    _expr=trans(curlt(vg0))*curl(vg0) );
+        auto alphaHat = boost::get<2>(pair.second);
 
-    auto Psi = Mh->element();
-    auto psii = Psi.template element<0>();
-    auto nu = Psi.template element<1>();
-    auto a3 = form2( _test=Mh, _trial=Mh );
-    auto l3 = form1( _test=Mh );
-    a3 = integrate( _range=elements(mesh),
-                    _expr=inner(gradt(psii),grad(psii) )
-                    + id(psii)*idt(nu) + idt(psii)*id(nu) );
+        // alpha = C*alphaHat
+        auto tmpVec = backend()->newVector( Nh );
+        C->multVector( alphaHat, tmpVec);
+        tmpVec->close();
+        std::get<1>(modes[i]) = *tmpVec;
 
-    for( int i = 0; i < modes.size(); i++ )
-    {
-        l2 = integrate( _range=elements(mesh),
-                        _expr=std::get<0>(modes[i]) * inner(idv(std::get<1>(modes[i])),id(vg0)) );
-        a2+= on( _range=boundaryfaces(mesh),
-                 _element=vg0, _rhs=l2, _expr=zero<3,1>() );
+        // decomposition : keep only beta coefficients
+        auto tmpVec2 = backend()->newVector( Lh );
+        for(int i = 0; i < boundaryIndexesToKeep.size(); i++)
+        {
+            auto indexPtr = std::find(indexesToKeep.begin(), indexesToKeep.end(), boundaryIndexesToKeep[i]);
+            auto index = indexPtr - indexesToKeep.begin();
+            tmpVec2->set(boundaryIndexesToKeep[i] - Nh->nLocalDofWithGhost(), (*alphaHat)(index));
+        }
+        tmpVec2->close();
+        auto tmp = Lh->element();
+        tmp = *tmpVec2;
+        std::get<2>(modes[i]) = vf::project(_space=Sh, _range=elements(mesh), _expr=idv(tmp));
 
-        a2.solve( _name="gi0", _rhs=l2, _solution=vg0 );
-
-        double meanPsi = 0;
-
-        l3 = integrate( _range=elements(mesh),
-                        _expr=divv(vg0)*id(psii)
-                        + meanPsi*id(nu)
-                        );
-
-        a3.solve( _name="psi", _rhs=l3, _solution=Psi );
-        std::get<2>(modes[i]) = Psi.template element<0>();
+        i++;
     }
 }
 
