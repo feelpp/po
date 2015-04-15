@@ -6,14 +6,12 @@
 
 #include "utilities.h"
 #include "solvereigenns2.hpp"
-#include "solvera0.hpp"
-// #include "solvera1.hpp"
-#include "solvera2.hpp"
+#include "solvera.hpp"
 #include "solverspectralproblem.hpp"
 
 using namespace Feel;
 using namespace Feel::vf;
-                                                               // move logInfo here + retrieve Zhsize
+
 class SolverNS2
 {
 public:
@@ -63,17 +61,15 @@ private:
 
     eigenmodes_type eigenModes;
     vec_element_type a;
-    // vec_element_type a2;
 
     vec_element_type u;
     vec_element_type v;
+    vec_element_type vex;
 
     void load_mesh();
     void initSpaces();
     void setEigen();
-    void setA0();
-    void setA1();
-    void setA2();
+    void setA();
     void solveSP();
     void post();
     void logInfo(std::ostream& out);
@@ -83,6 +79,7 @@ void
 SolverNS2::solve()
 {
     boost::mpi::timer t;
+    boost::mpi::timer total;
 
     load_mesh();
     logTime(t, "mesh", ioption("solverns2.verbose") > 0);
@@ -104,35 +101,18 @@ SolverNS2::solve()
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(tuple) );
             e->add( ( boost::format( "psi-%1%" ) % i++ ).str(), std::get<2>(tuple) );
         }
-        logTime(t, "eigs", ioption("solverns2.verbose") > 0);
+        logTime(t, "eigenmodes", ioption("solverns2.verbose") > 0);
     }
 
-    if( boption("solverns2.needA0") || boption("solverns2.needSP"))
+    if( boption("solverns2.needA0") || boption("solverns2.needA1") || boption("solverns2.needA2") || boption("solverns2.needSP"))
     {
         if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-            std::cout << " ---------- compute a0 ----------\n";
+            std::cout << " ---------- compute a ----------\n";
 
-        setA0();
+        setA();
         e->add( "a", a);
         logTime(t, "a", ioption("solverns2.verbose") > 0);
     }
-
-    // if( boption("solverns2.needA1") || boption("solverns2.needSP"))
-    // {
-    //     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-    //         std::cout << " ---------- compute a1 ----------\n";
-
-    //     setA1();
-    // }
-
-    // if( boption("solverns2.needA2") || boption("solverns2.needSP"))
-    // {
-    //     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-    //         std::cout << " ---------- compute a2 ----------\n";
-
-    //     setA2();
-    //     e->add( "a2", a2);
-    // }
 
     if( boption("solverns2.needSP"))
     {
@@ -144,6 +124,7 @@ SolverNS2::solve()
         logTime(t, "sp", ioption("solverns2.verbose") > 0);
         post();
         e->add("v", v);
+        e->add("vex", vex);
         logTime(t, "post", ioption("solverns2.verbose") > 0);
     }
 
@@ -151,6 +132,8 @@ SolverNS2::solve()
     logInfo(LOG(INFO));
     logInfo(std::cout);
     e->save();
+
+    logTime(total, "total", ioption("solverns2.verbose") > 0);
 }
 
 void
@@ -202,22 +185,10 @@ SolverNS2::setEigen()
 }
 
 void
-SolverNS2::setA0()
+SolverNS2::setA()
 {
-    auto solvera0 = SolverA0<vec_space_ptrtype>::build(mesh, Vh);
-    a = solvera0->solve();
-}
-
-void
-SolverNS2::setA1()
-{
-}
-
-void
-SolverNS2::setA2()
-{
-    // auto solvera2 = SolverA2<vec_space_ptrtype>::build(mesh, Vh);
-    // a2 = solvera2->solve();
+    auto solvera = SolverA<vec_space_ptrtype>::build(mesh, Vh);
+    a = solvera->solve();
 }
 
 void
@@ -239,10 +210,9 @@ SolverNS2::solveSP()
 void
 SolverNS2::post()
 {
-    v = a + u;
-
-    auto v_ex = expr<3,1>( soption("solverns2.v_ex") );
-    auto err = normL2(elements(mesh), idv(v)-v_ex);
+    v = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(a) + idv(u));
+    vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
+    auto err = normL2(elements(mesh), idv(v)-idv(vex));
     if(Environment::isMasterRank())
         std::cout << "error(" << eigenModes.size() << ") : " << err << std::endl;
 }
@@ -255,11 +225,9 @@ SolverNS2::logInfo(std::ostream& out)
         out << "[info] np = " << Environment::numberOfProcessors() << std::endl
             << "[info] geo = " << soption("gmsh.filename") << std::endl
             << "[info] h = " << doption("gmsh.hsize") << std::endl
-            << "[info] elt = " << mesh->numGlobalElements() << std::endl;
-        if(boption("solverns2.needEigen") || boption("solverns2.needSP"))
-            out << "[info] Nh dof = " << Nh->nDof() << std::endl;
-        if(boption("solverns2.needA0") || boption("solverns2.needA2") || boption("solverns2.needSP"))
-            out << "[info] Vh dof = " << Vh->nDof() << std::endl;
+            << "[info] elt = " << mesh->numGlobalElements() << std::endl
+            << "[info] Nh dof = " << Nh->nDof() << std::endl
+            << "[info] Vh dof = " << Vh->nDof() << std::endl;
     }
 }
 
@@ -300,7 +268,7 @@ makeOptions()
         ( "solverns2.computeRpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
         ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
 
-        ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,8*(1-(x*x + y*y))}"), "v exacte" )
+        ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,8*(1-(x*x + y*y))}:x:y"), "v exacte" )
         ;
     return myappOptions;
 }
@@ -311,7 +279,6 @@ makeLibOptions()
     po::options_description libOptions( "Lib options" );
     libOptions.add( backend_options( "a0" ) ).add( backend_options( "grada0" ) );
     libOptions.add( backend_options( "a2" ) );
-    libOptions.add( backend_options( "gi0" ) ).add( backend_options( "psi" ) ).add( backend_options( "gradpsi" ) );
     return libOptions.add( feel_options() );
 }
 

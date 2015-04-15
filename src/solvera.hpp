@@ -1,7 +1,7 @@
 using namespace Feel;
 
 template<typename FunctionSpaceType>
-class SolverA0
+class SolverA
 {
     typedef double value_type;
     typedef Mesh<Simplex<3> > mesh_type;
@@ -11,48 +11,79 @@ class SolverA0
     typedef typename space_ptrtype::element_type space_type;
     typedef typename space_type::element_type element_type;
 
-    typedef SolverA0<space_ptrtype> solvera0_type;
-    typedef typename boost::shared_ptr<solvera0_type> solvera0_ptrtype;
+    typedef SolverA<space_ptrtype> solvera_type;
+    typedef typename boost::shared_ptr<solvera_type> solvera_ptrtype;
 
     typedef FunctionSpace<mesh_type, bases<Lagrange<2, Scalar>, Lagrange<0, Scalar> > > ml_space_type;
 
     mesh_ptrtype mesh;
     space_ptrtype Vh;
+    element_type a;
     element_type a0;
+    element_type a1;
+    element_type a2;
 
     void computeA0();
     void loadA0();
+    void computeA1();
+    void loadA1();
+    void computeA2();
+    void loadA2();
 
 public:
-    static solvera0_ptrtype build(const mesh_ptrtype& mesh, const space_ptrtype& Vh);
+    static solvera_ptrtype build(const mesh_ptrtype& mesh, const space_ptrtype& Vh);
     element_type solve();
 };
 
 template<typename T>
-typename SolverA0<T>::solvera0_ptrtype
-SolverA0<T>::build(const mesh_ptrtype& mesh, const space_ptrtype& Vh)
+typename SolverA<T>::solvera_ptrtype
+SolverA<T>::build(const mesh_ptrtype& mesh, const space_ptrtype& Vh)
 {
-    solvera0_ptrtype solvera0( new SolverA0<T> );
-    solvera0->mesh = mesh;
-    solvera0->Vh = Vh;
-    return solvera0;
+    solvera_ptrtype solvera( new SolverA<T> );
+    solvera->mesh = mesh;
+    solvera->Vh = Vh;
+    return solvera;
 }
 
 template<typename T>
-typename SolverA0<T>::element_type
-SolverA0<T>::solve()
+typename SolverA<T>::element_type
+SolverA<T>::solve()
 {
-    if( boption("solverns2.computeA0"))
-        computeA0();
-    else
-        loadA0();
+    a = Vh->element();
 
-    return a0;
+    if( boption("solverns2.needA0") )
+    {
+        if( boption("solverns2.computeA0"))
+            computeA0();
+        else
+            loadA0();
+        a += a0;
+    }
+
+    if( boption("solverns2.needA1") )
+    {
+        if( boption("solverns2.computeA1"))
+            computeA1();
+        else
+            loadA1();
+        a += a1;
+    }
+
+    if( boption("solverns2.needA2") )
+    {
+        if( boption("solverns2.computeA2"))
+            computeA2();
+        else
+            loadA2();
+        a += a2;
+    }
+
+    return a;
 }
 
 template<typename T>
 void
-SolverA0<T>::computeA0()
+SolverA<T>::computeA0()
 {
     // [option]
     auto g_s = soption("solverns2.alpha0");
@@ -116,9 +147,40 @@ SolverA0<T>::computeA0()
 
 template<typename T>
 void
-SolverA0<T>::loadA0()
+SolverA<T>::loadA0()
 {
     a0 = Vh->element();
     std::string path = "a0";
     a0.load(_path=path);
 }
+
+template<typename T>
+void
+SolverA<T>::computeA1()
+{
+}
+
+template<typename T>
+void
+SolverA<T>::loadA1()
+{
+    a1 = Vh->element();
+    std::string path = "a1";
+    a1.load(_path=path);
+}
+
+template<typename T>
+void
+SolverA<T>::computeA2()
+{
+}
+
+template<typename T>
+void
+SolverA<T>::loadA2()
+{
+    a2 = Vh->element();
+    std::string path = "a2";
+    a2.load(_path=path);
+}
+
