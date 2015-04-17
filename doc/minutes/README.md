@@ -14,3 +14,4 @@ Chaque réunion est nommé AAMMJJ.md suivie par une brève description.
 - [06/02/15](150206.md) : Discussions sur les résultats trouvés et réflexions sur l'algorithme général
 - [13/02/15](150213.md) : Premiers modes propres obtenus, problèmes de stabilité et de scalabilité
 - [27/02/15](150227.md) : Résolution des problèmes sus-cité, réflexions sur le relévement de alpha2
+- [17/04/15](150417.md) : Réflexions sur la propagation des conditions en entrée à la sortie
