@@ -1,36 +1,53 @@
 \documentclass[a4paper,11pt]{report}
-\usepackage{todonotes}
 \usepackage{mystyle}
-
-\title{\includegraphics[scale=0.4]{uds.jpg}\\Parallélisation d'un code de calcul aérodynamique instationnaire et validation par comparaison avec des données existantes.}
+\title{\includegraphics[scale=0.4]{uds.jpg}\\$$ \mbox{\Huge
+    $\mbf{NS_{++}^2}$}$$\\Non Standard Navier
+  Stokes formulation in Feel++}
 \author{Romain HILD}
 \date{\today\\ \includegraphics[scale=0.4]{po.jpg}}
 
+\includeonly{./tex/problem/problem,./tex/discr/prog,./tex/discr/relev,./tex/discr/mode,./tex/discr/ps,./tex/ccl}
+
 \begin{document}
+
 \maketitle
+
+\include{./tex/remerciement}
 
 \tableofcontents
 
-%\include{./tex/intro}
+\include{./tex/intro}
 
-\include{./tex/probleme}
+\include{./tex/problem/problem}
 
-\include{./tex/prog}
+\include{./tex/discr/prog}
 
-\include{./tex/result}
+\include{./tex/discr/relev}
+
+\include{./tex/discr/mode}
+
+\include{./tex/discr/ps}
+
+\include{./tex/discr/pression}
+
+\include{./tex/discr/ccl}
+
+\part{Annexes}
 
 \appendix
 \makeatletter
 \def\@seccntformat#1{Annexe~\csname the#1\endcsname:\quad}
 \makeatother
 
-%\include{./tex/mesh}
+\include{./tex/annexes/mesh}
 
-%\include{./tex/reunion}
+\include{./tex/annexes/algo}
 
-%\include{./tex/algo}
+\include{./tex/annexes/test}
 
-\bibliographystyle{plain}
+\include{./tex/annexes/reunion}
+
+\bibliographystyle{alpha}
 \bibliography{ref}
 
 \end{document}

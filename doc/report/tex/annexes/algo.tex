@@ -1,0 +1,110 @@
+\chapter{Algorithmes}
+
+\section{Méthode des éléments finis}
+\label{eltfinis}
+Le principe de la méthode des éléments finis pour résoudre un problème aux équations dérivées partielles sur un domaine $\Omega$ est de regarder un problème proche dont les solutions sont les mêmes que celles du problème d'origine, mais qui est plus facile à résoudre. Ce problème est appelé la formulation faible du problème EDP. Elle s'obtient en multipliant l'équation par une fonction test et en intégrant sur $\Omega$. On peut l'exprimer sous la forme :
+\[ \mbox{Trouver } u \in V \mbox{ tel que } a(u,v)=l(v)\quad \forall v\in V \]
+où $a$ est bilinéaire sur $V\times V$ et $l$ une forme linéaire sur $V$.\\
+
+L'existence d'une solution à ce problème est démontrée par le théorème de Lax-Milgram. Tout d'abord, on a besoin de définir trois propriétés :
+\begin{mydef}
+Une forme linéaire $l(u)$ sur $V$ est {\bf continue} si et seulement si il existe une constante $K \mbox{ telle que } l(u)\leq K||u||\quad \forall u\in V$
+\end{mydef}
+\begin{mydef}
+Une forme bilinéaire $a(u,v)$ sur $V\times V$ est {\bf continue} si et seulement si il existe une constante $M \mbox{ telle que } a(u,v)\leq M||u||\,||v||\quad \forall (u,v)\in V\times V$
+\end{mydef}
+\begin{mydef}
+Une forme bilinéaire $a(u,v)$ sur $V\times V$ est {\bf coercive} si et seulement si il existe une constante $\alpha>0 \mbox{ telle que } a(u,u)\geq \alpha ||u||^2\quad \forall u\in V$
+\end{mydef}
+
+\begin{thm}
+Soit $V$ un espace de Hilbert. Soit $a$ une forme bilinéaire continue coercive sur $V$. Soit $l$ une forme linéaire continue sur $V$.\\
+Alors il existe un unique $u\in V$ tel que $a(u,v)=l(v),\ \forall v\in V$.\\
+\end{thm}
+
+\begin{thm}
+Sous les mêmes hypothèses que pour le théorème précédent, avec en plus $a$ symétrique. On définit la fonctionnelle $J(v)=\frac{1}{2}a(v,v)-l(v)$, et on considère le problème de minimisation :
+\[ \mbox{Trouver }u\in V \mbox{ tel que } J(u)=\min_{u\in V} J(v) \]
+Alors, ce problème admet une unique solution, qui est la même que celle du problème précédent.
+\end{thm}
+
+On sait maintenant que notre problème variationnel admet une unique solution sous certaines conditions. Cependant, ce problème est toujours continue et on ne peut donc pas le résoudre par ordinateur, on va donc essayer d'approcher ce problème par un problème discret.\\
+Pour cela, on cherche une approximation discrète de $u$ par une méthode de Galerkin.\\
+
+On définit d'abord un maillage du domaine $\mathcal{T}_h\subset\Omega$, qui est composé d'une famille d'éléments $\{K_e\}_{e=1,\dots,N_e}$. Cela nous permet de définir un espace d'approximation $V_h$, sous-espace-vectoriel de $V$ de dimension finie $N_h$. Le problème discret est :
+\[ \mbox{Trouver } u_h\in V_h \mbox{ tel que } a(u_h,v_h)=l(v_h)\quad \forall v_h\in V_h \]
+
+Soit $(\varphi_1,\dots,\varphi_{N_h})$ une base de $V_h$, alors on peut décomposer $u_h$ sur cette base :
+\[ u_h = \sum_{i=1}^{N_h} \mu_i\varphi_i \]
+et le problème devient :
+\[ \mbox{Trouver } \mu_1,\dots,\mu_{N_h} \mbox{ tels que } \sum_{i=1}^{N_h} \mu_i\,a(\varphi_i,v_h)=l(v_h),\quad \forall v_h\in V_h \]
+Considérer cette équation $\forall v_h\in V_h$ revient à la considérer pour $\varphi_i,\ i=1,\dots,N_h$ :
+\[ \mbox{Trouver } \mu_1,\dots,\mu_{N_h} \mbox{ tels que } \sum_{i=1}^{N_h} \mu_i\,a(\varphi_i,\varphi_j)=l(\varphi_j),\quad \forall j=1,\dots,\N_h \]
+
+Ceci est un système linéaire $A\mu = b$ avec :
+\[ A=\begin{pmatrix} a(\varphi_1,\varphi_1) & \dots & a(\varphi_{N_h},\varphi_1)\\
+\vdots & \ddots & \vdots\\
+a(\varphi_1,\varphi_{N_h}) & \dots & a(\varphi_{N_h},\varphi_{N_h}) \end{pmatrix},\ 
+\mu=\begin{pmatrix} \mu_1\\ \vdots\\ \mu_{N_h}\end{pmatrix},\ 
+b=\begin{pmatrix} l(\varphi_1)\\ \vdots\\ l(\varphi_{N_h}) \end{pmatrix}\]
+
+Afin de pouvoir résoudre ce système le plus simplement possible, on cherche à rendre la matrice $A$ creuse.\\
+Pour cela, on définit des fonctions de base $\varphi_i$ à support petit, concrètement, seulement quelques mailles. D'où, $a(\varphi_i,\varphi_j)$ sera nul sauf pour les fonctions ayant des supports dont l'intersection est non nul.\\
+Afin d'utiliser des algorithmes connus, on veut ordonner les $\varphi_i$ de telle manière que $A$ soit une matrice diagonale, ou au moins à bande.\\
+
+On peut ramener les intégrales à une somme d'intégrales sur chaque mailles du domaine. Toutes ces mailles sont identiques à une transformation affine près, ainsi, tous les calculs d'intégrales peuvent se ramener sur une maille de référence par un changement de variable. On a donc $\mathcal{T}_h=\{\psi_e(\hat{K})\}_{e=1,\dots,N_e}$ où $\hat{K}$ est la maille de référence et $\psi_e$ sont des transformations affines.\\
+
+Pour choisir les fonctions de base de $V_h$, on trouve des degrés de liberté, tel que leur donnée détermine toute fonction de $V_h$ de manière unique. C'est le principe d'unisolvance.\\
+Les fonctions $\varphi_i$ sont  définies telles que $\varphi_i(ddl_j)=\delta_{ij}$ où $ddl_j$ est le $j$\ieme\ degré de liberté et $\delta_{ij}$ est le symbole de Kronecker.\\
+Il existe plusieurs familles d'éléments finis, les plus utilisés sont les éléments de Lagrange :
+\begin{mydef} Un élément fini de Lagrange est un triplet $(K,\Sigma,P)$ tel que
+\begin{itemize}
+\item $K$ est un élément géométrique de $\R^n$, compact, connexe, et d'intérieur non vide.
+\item $\Sigma = \{a_i\}_{i=1,\dots,N}$ est un ensemble fini de N points distincts de $K$.
+\item $P$ est un espace vectoriel de dimension finie de fonctions réelles définies sur $K$ et tel que $\Sigma$ soit $P$-unisolvant.
+\end{itemize}
+\end{mydef}
+
+
+\section{Méthode d'Arnoldi}
+\label{arnoldi}
+L'algorithme d'Arnoldi permet de réduire une matrice carrée $A$ d'ordre $n$ sous la forme d'une matrice de Hessenberg, avec $AV = VH$, où $H$ est une matrice de Hessenberg supérieure et $V$ une matrice orthogonale.\\
+Si l'on arrête l'algorithme après $m$ étapes, on obtient une matrice $n\times m$ $V_m$ dont les colonnes sont orthogonales et une matrice de Hessenberg $H_m$ d'ordre $m$, qui vérifient $AV_m - V_mH_m = fe_m$, où $f$ est le résidu et $e_m$ est le $m$\ieme\ vecteur de la base canonique.\\
+Alors $H_m$ est le projeté orthogonal de $A$ sur l'espace $\mathcal{V}$ généré par les vecteurs colonnes de $V_m$. Si $(\lambda_i, y_i)$ est un couple de valeur et de vecteur propres pour $H_m$, alors $(\lambda_i, V_my_i)$ sont appelés respectivement la valeur de Ritz et le vecteur de Ritz, ce sont les approximations de Rayleigh-Ritz des vecteurs et valeurs propres de $A$.\\
+En pratique, on utilise $\mathcal{V}= vec<v_1, Av_1, A^2v_1,\dots,A^{m-1}v_1>$, l'espace de Krylov associé à $A$ et au vecteur initial $v_1$.\\
+
+Ce qui donne l'algorithme suivant :
+\begin{enumerate}
+\item Pour $j=1,2,\dots,m-1$,
+\begin{enumerate}
+\item $w=Av_j$
+\item orthonormalisation par Graam-Schmidt de $w$ par rapport à $v_i$ et obtention des coefficients d'orthonormalisation $h_{i,j}$ $i=1,2,\dots,j$
+\item $h_{j+1,j}=||w||_2$
+\item $v_{j+1}=w/h_{j+1,j}$
+\end{enumerate}
+\item $f=Av_m$
+\item orthonormalisation par Graam-Schmidt de $f$ par rapport à $v_i$ et obtention des coefficients d'orthonormalisation $h_{i,m}$ $i=1,2,\dots,m$
+\item $\beta=||f||_2$
+\end{enumerate}
+
+Alors on a les deux matrices suivantes :
+\[ V_m = \begin{pmatrix} v_1 & v_2 & \dots & v_m \end{pmatrix},\quad H_m=\begin{pmatrix} h_{1,1} & h_{1,2} & h_{1,3} & \dots & h_{1,m}\\
+h_{2,1} & h_{2,2} & h_{2,3} & \dots & h_{2,m} \\
+0 & h_{3,2} & h_{3,3} & \dots & h_{3,m}\\
+\vdots & \ddots & \ddots & \vdots\\
+0 & \cdots & 0 & h_{m,m-1} & h_{m,m} \end{pmatrix} \]
+Alors, on a $H_m=V_m^TAV_m$.\\
+De plus, $H_m$ étant une matrice de Hessenberg supérieur, on peut facilement trouver ses valeurs et vecteurs propres par un algorithme QR.\\
+
+Toutes les approximations ne sont pas bonnes, pour vérifier on calcul :
+\[ ||Ax_i-\lambda_ix_i||_2 = ||AV_my_i-\lambda_iV_my_i||_2 = ||(AV_m-V_mH_m)y_i||_2 = \beta|e_my_i| \]
+
+Lorsque l'on veut un grand nombre de valeurs propres, il faut augmenter la taille de la base $m$, cependant, cela entraîne une consommation de ressources importantes. Au lieu d'augmenter $m$, on recommence l'algorithme avec un autre vecteur initial. Il existe plusieurs méthodes pour choisir ce vecteur, on peut par exemple prendre $V_my_i$.\\
+
+La méthode de Krylov-Schur utilisé par SLEPc est une variante de cet algorithme.
+
+%%% Local Variables:
+%%% TeX-master: "../report.tex"
+%%% eval: (flyspell-mode 1)
+%%% ispell-local-dictionary: "french"
+%%% End:

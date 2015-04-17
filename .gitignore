@@ -8,7 +8,10 @@
 /doc/**/*.toc
 /doc/**/*.snm
 /doc/**/*.nav
+/doc/**/**/*.aux
 *~
+*.DS_Store
+*.AppleDouble
 \#*\#
 .\#*
 /doc/report/auto/mystyle.el
@@ -21,3 +24,4 @@
 /src/freefem/Stokes-curlcurl-eigen.edp
 /src/freefem/Stokes-eigen.edp
 /o/
+/doc/funding/auto/cemosis-po.el
