@@ -80,6 +80,8 @@ class SolverEigenNS2
 
     eigenmodes_type modes;
 
+    double tol = 1.e-3;
+
     void setForms();
     void setInfo();
     void setDofsToRemove();
@@ -413,6 +415,11 @@ SolverEigenNS2<T1,T2,T3>::solveEigen()
     {
         if(Environment::isMasterRank())
             std::cout << i << " eigenvalue = " << boost::get<0>(pair.second) << std::endl;
+
+        // zero eigenvalues discarded
+        if( pair.first < tol )
+            continue;
+
         std::get<0>(modes[i]) = boost::get<0>(pair.second);
 
         auto alphaHat = boost::get<2>(pair.second);
@@ -438,6 +445,8 @@ SolverEigenNS2<T1,T2,T3>::solveEigen()
 
         i++;
     }
+    if( Environment::isMasterRank() )
+        std::cout << "number of converged eigenmodes : " << i << std::endl;
 }
 
 template<typename T1, typename T2, typename T3>
