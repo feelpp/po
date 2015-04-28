@@ -50,32 +50,60 @@ typename SolverA<T>::element_type
 SolverA<T>::solve()
 {
     a = Vh->element();
+    boost::mpi::timer t;
 
     if( boption("solverns2.needA0") )
     {
         if( boption("solverns2.computeA0"))
+        {
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+                std::cout << " ---------- compute a0 ----------\n";
             computeA0();
+        }
         else
+        {
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+                std::cout << " ---------- load a0 ----------\n";
             loadA0();
+        }
         a += a0;
+        logTime(t, "a0", ioption("solverns2.verbose") > 1);
     }
 
     if( boption("solverns2.needA1") )
     {
         if( boption("solverns2.computeA1"))
+        {
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+                std::cout << " ---------- compute a1 ----------\n";
             computeA1();
+        }
         else
+        {
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+                std::cout << " ---------- load a1 ----------\n";
             loadA1();
+        }
         a += a1;
+        logTime(t, "a1", ioption("solverns2.verbose") > 1);
     }
 
     if( boption("solverns2.needA2") )
     {
         if( boption("solverns2.computeA2"))
+        {
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+                std::cout << " ---------- compute a2 ----------\n";
             computeA2();
+        }
         else
+        {
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+                std::cout << " ---------- load a2 ----------\n";
             loadA2();
+        }
         a += a2;
+        logTime(t, "a2", ioption("solverns2.verbose") > 1);
     }
 
     return a;

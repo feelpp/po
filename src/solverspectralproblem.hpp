@@ -114,7 +114,7 @@ SolverSpectralProblem<F,E>::init()
     Re = 2*r*s/n;
     u = Vh->element();
 
-    if ( Environment::worldComm().isMasterRank() )
+    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Initialization Spectral Problem -----" << std::endl
                   << "----- Re = " << Re << " -----" << std::endl;
 
@@ -136,7 +136,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRijk()
 {
-    if ( Environment::worldComm().isMasterRank() )
+    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Rijk -----" << std::endl;
 
     Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
@@ -203,7 +203,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRiak()
 {
-    if ( Environment::worldComm().isMasterRank() )
+    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Riak -----" << std::endl;
 
     Riak = MatrixXd(M,M);
@@ -249,6 +249,8 @@ SolverSpectralProblem<F,E>::initRiak()
             {
                 s >> Riak(k,i);
                 Riak(i,k) = -Riak(k,i);
+                if( ioption("solverns2.verbose") > 2 )
+                    std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
             }
             Riak(i,i) = 0;
         }
@@ -260,7 +262,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRfk()
 {
-    if ( Environment::worldComm().isMasterRank() )
+    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Rfk -----" << std::endl;
 
     Rfk = VectorXd(M);
@@ -297,7 +299,12 @@ SolverSpectralProblem<F,E>::initRfk()
             exit(0);
         }
         for(int k = 0; k < M; k++)
+        {
             s >> Rfk(k);
+            if( ioption("solverns2.verbose") > 2)
+                std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
+        }
+
         s.close();
     }
 }
@@ -306,7 +313,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRpk()
 {
-    if ( Environment::worldComm().isMasterRank() )
+    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Rpk -----" << std::endl;
 
     Rpk = VectorXd(M);
@@ -346,7 +353,12 @@ SolverSpectralProblem<F,E>::initRpk()
             exit(0);
         }
         for(int k = 0; k < M; k++)
+        {
             s >> Rpk(k);
+            if( ioption("solverns2.verbose") > 2 )
+                std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
+        }
+
         s.close();
     }
 }
@@ -365,7 +377,7 @@ SolverSpectralProblem<F,E>::solve()
 
     // [StokesB]
     VectorXd b = VectorXd(M);
-    b = Rfk + Rpk;
+    b = Rfk - Rpk;
     // [StokesB]
 
     // [StokesSolve]

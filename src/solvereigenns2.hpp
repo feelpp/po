@@ -118,6 +118,9 @@ SolverEigenNS2<T1,T2,T3>::solve()
 
     if( boption("solverns2.computeEigen"))
     {
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            std::cout << " ---------- compute eigenmodes ----------\n";
+
         setForms();
 
         setInfo();
@@ -135,6 +138,9 @@ SolverEigenNS2<T1,T2,T3>::solve()
     }
     else
     {
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            std::cout << " ---------- load eigenmodes ----------\n";
+
         load();
         logTime(t, "loadEigen", ioption("solverns2.verbose") > 1);
     }
@@ -413,6 +419,9 @@ SolverEigenNS2<T1,T2,T3>::solveEigen()
     {
         if(Environment::isMasterRank())
             std::cout << i << " eigenvalue = " << boost::get<0>(pair.second) << std::endl;
+        if( pair.first < 1e-8 )
+            continue;
+
         std::get<0>(modes[i]) = boost::get<0>(pair.second);
 
         auto alphaHat = boost::get<2>(pair.second);
@@ -438,6 +447,7 @@ SolverEigenNS2<T1,T2,T3>::solveEigen()
 
         i++;
     }
+    modes.resize(i);
 }
 
 template<typename T1, typename T2, typename T3>
