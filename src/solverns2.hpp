@@ -173,14 +173,14 @@ SolverNS2::initSpaces()
 void
 SolverNS2::setEigen()
 {
-    auto solverEigen = SolverEigenNS2<eigen_space_ptrtype, ml_space_ptrtype, vec_space_ptrtype>::build(mesh, Xh, Mh, Vh);
+    auto solverEigen = SolverEigenNS2<eigen_space_ptrtype, scalar_space_ptrtype>::build(mesh, Xh, Sh);
     eigenModes = solverEigen->solve();
 }
 
 void
 SolverNS2::setA()
 {
-    auto solvera = SolverA<vec_space_ptrtype>::build(mesh, Vh);
+    auto solvera = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
     a = solvera->solve();
 }
 
