@@ -61,6 +61,7 @@ private:
 
     eigenmodes_type eigenModes;
     vec_element_type a;
+    scalar_element_type psi0;
 
     vec_element_type u;
     vec_element_type v;
@@ -94,11 +95,10 @@ SolverNS2::solve()
     if( boption("solverns2.needEigen") || boption("solverns2.needSP"))
     {
         setEigen();
-        int i = 0;
-        for( auto const& tuple : eigenModes)
+        for( int i = 0; i < eigenModes.size(); i = i + 10)
         {
-            e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(tuple) );
-            e->add( ( boost::format( "psi-%1%" ) % i++ ).str(), std::get<2>(tuple) );
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(eigenModes[i]) );
+            e->add( ( boost::format( "psi-%1%" ) % i++ ).str(), std::get<2>(eigenModes[i]) );
         }
         logTime(t, "eigenmodes", ioption("solverns2.verbose") > 0);
     }
@@ -107,6 +107,7 @@ SolverNS2::solve()
     {
         setA();
         e->add( "a", a);
+        e->add( "psi0", psi0);
         logTime(t, "a", ioption("solverns2.verbose") > 0);
     }
 
@@ -182,6 +183,7 @@ SolverNS2::setA()
 {
     auto solvera = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
     a = solvera->solve();
+    psi0 = solvera->psi0;
 }
 
 void
@@ -220,7 +222,8 @@ SolverNS2::logInfo(std::ostream& out)
             << "[info] h = " << doption("gmsh.hsize") << std::endl
             << "[info] elt = " << mesh->numGlobalElements() << std::endl
             << "[info] Nh dof = " << Nh->nDof() << std::endl
-            << "[info] Vh dof = " << Vh->nDof() << std::endl;
+            << "[info] Vh dof = " << Vh->nDof() << std::endl
+            << "[info] Sh dof = " << Sh->nDof() << std::endl;
     }
 }
 

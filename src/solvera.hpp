@@ -14,12 +14,17 @@ class SolverA
     typedef FunctionSpaceType2 ml_space_ptrtype;
     typedef typename ml_space_ptrtype::element_type ml_space_type;
 
+    typedef typename ml_space_type::template sub_functionspace<0>::type scalar_space_type;
+    typedef boost::shared_ptr<scalar_space_type> scalar_space_ptrtype;
+    typedef typename scalar_space_type::element_type scalar_element_type;
+
     typedef SolverA<space_ptrtype, ml_space_ptrtype> solvera_type;
     typedef typename boost::shared_ptr<solvera_type> solvera_ptrtype;
 
     mesh_ptrtype mesh;
     space_ptrtype Vh;
     ml_space_ptrtype Mh;
+    scalar_space_ptrtype Sh;
     element_type a;
     element_type a0;
     element_type a1;
@@ -35,6 +40,8 @@ class SolverA
 public:
     static solvera_ptrtype build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml_space_ptrtype& Mh);
     element_type solve();
+
+    scalar_element_type psi0;
 };
 
 template<typename T, typename T2>
@@ -45,6 +52,7 @@ SolverA<T,T2>::build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml
     solvera->mesh = mesh;
     solvera->Vh = Vh;
     solvera->Mh = Mh;
+    solvera->Sh = Mh->template functionSpace<0>();
     return solvera;
 }
 
@@ -155,6 +163,8 @@ SolverA<T,T2>::computeA0()
 
     a.solve( _name="a0", _rhs=l, _solution=U );
 
+    psi0 = Sh->element();
+    psi0 = u;
 
     // [gradpsi0]
     auto w = Vh->element();
