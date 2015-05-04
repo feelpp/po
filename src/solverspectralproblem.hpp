@@ -43,12 +43,14 @@ class SolverSpectralProblem
 
     // [ri]
     Matrix<MatrixXd, Dynamic, 1 > Rijk;
+    MatrixXd Raik;
     MatrixXd Riak;
     VectorXd Rfk;
     VectorXd Rpk;
     // [ri]
 
     void initRijk();
+    void initRaik();
     void initRiak();
     void initRfk();
     void initRpk();
@@ -122,12 +124,14 @@ SolverSpectralProblem<F,E>::init()
 
     // initRijk();
     // logTime(t, "Rijk", ioption("solverns2.verbose") > 1);
+    initRaik();
+    logTime(t, "Raik", ioption("solverns2.verbose") > 1);
     initRiak();
     logTime(t, "Riak", ioption("solverns2.verbose") > 1);
     initRfk();
     logTime(t, "Rfk", ioption("solverns2.verbose") > 1);
-    initRpk();
-    logTime(t, "Rpk", ioption("solverns2.verbose") > 1);
+    // initRpk();
+    // logTime(t, "Rpk", ioption("solverns2.verbose") > 1);
 
     c = VectorXd::Ones(M);
 }
@@ -201,6 +205,65 @@ SolverSpectralProblem<F,E>::initRijk()
 
 template<typename F, typename E>
 void
+SolverSpectralProblem<F,E>::initRaik()
+{
+    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+        std::cout << "----- Raik -----" << std::endl;
+
+    Raik = MatrixXd(M,M);
+
+    if( boption("solverns2.computeRaik") )
+    {
+        std::fstream s;
+        if ( Environment::worldComm().isMasterRank() )
+            s.open ("raik", std::fstream::out);
+
+        for(int i = 0; i< M ; i++)
+        {
+            for(int k = 0; k < i; k++)
+            {
+                Raik(k,i) = integrate( _range=elements( mesh ),
+                                       _expr=inner( cross( curlv(a),idv(g[i]) ), idv(g[k])) ).evaluate()(0,0);
+                Raik(i,k) = -Raik(k,i);
+
+                if ( Environment::worldComm().isMasterRank() )
+                {
+                    if( ioption("solverns2.verbose") > 2 )
+                        std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
+                    s << Raik(k,i) << std::endl;
+                }
+            }
+            Raik(i,i) = 0;
+        }
+        if ( Environment::worldComm().isMasterRank() )
+            s.close();
+    }
+    else
+    {
+        std::fstream s;
+        s.open ("raik", std::fstream::in);
+        if( !s.is_open() )
+        {
+            std::cout << "Raik not found\ntry to launch with --computeRaik=true" << std::endl;
+            exit(0);
+        }
+        for(int i = 0; i< M ; i++)
+        {
+            for(int k = 0; k < i; k++)
+            {
+                s >> Raik(k,i);
+                Raik(i,k) = -Raik(k,i);
+                if( ioption("solverns2.verbose") > 2 )
+                    std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
+            }
+            Raik(i,i) = 0;
+        }
+        s.close();
+    }
+}
+
+template<typename F, typename E>
+void
 SolverSpectralProblem<F,E>::initRiak()
 {
     if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
@@ -216,11 +279,10 @@ SolverSpectralProblem<F,E>::initRiak()
 
         for(int i = 0; i< M ; i++)
         {
-            for(int k = 0; k < i; k++)
+            for(int k = 0; k < M; k++)
             {
                 Riak(k,i) = integrate( _range=elements( mesh ),
-                                       _expr=inner( cross( idv(g[i]),idv(a) ), idv(g[k])) ).evaluate()(0,0);
-                Riak(i,k) = -Riak(k,i);
+                                       _expr=inner( cross( curlv(g[i]),idv(a) ), idv(g[k])) ).evaluate()(0,0);
 
                 if ( Environment::worldComm().isMasterRank() )
                 {
@@ -229,7 +291,6 @@ SolverSpectralProblem<F,E>::initRiak()
                     s << Riak(k,i) << std::endl;
                 }
             }
-            Riak(i,i) = 0;
         }
         if ( Environment::worldComm().isMasterRank() )
             s.close();
@@ -245,14 +306,12 @@ SolverSpectralProblem<F,E>::initRiak()
         }
         for(int i = 0; i< M ; i++)
         {
-            for(int k = 0; k < i; k++)
+            for(int k = 0; k < M; k++)
             {
                 s >> Riak(k,i);
-                Riak(i,k) = -Riak(k,i);
                 if( ioption("solverns2.verbose") > 2 )
                     std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
             }
-            Riak(i,i) = 0;
         }
         s.close();
     }
@@ -371,13 +430,13 @@ SolverSpectralProblem<F,E>::solve()
 
     // [StokesA]
     MatrixXd A = MatrixXd(M,M);
-    A = Riak;
+    A = Riak + Raik;
     A += (lambda/Re).asDiagonal();
     // [StokesA]
 
     // [StokesB]
     VectorXd b = VectorXd(M);
-    b = Rfk - Rpk;
+    b = Rfk;
     // [StokesB]
 
     // [StokesSolve]
