@@ -440,6 +440,7 @@ SolverEigenNS2<T1,T2>::solveEigen()
 
         i++;
     }
+    LOG(INFO) << "number of converged eigenmodes : " << i;
     if( Environment::isMasterRank() )
         std::cout << "number of converged eigenmodes : " << i << std::endl;
 

@@ -98,7 +98,7 @@ SolverNS2::solve()
         for( int i = 0; i < eigenModes.size(); i = i + 10)
         {
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(eigenModes[i]) );
-            e->add( ( boost::format( "psi-%1%" ) % i++ ).str(), std::get<2>(eigenModes[i]) );
+            e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(eigenModes[i]) );
         }
         logTime(t, "eigenmodes", ioption("solverns2.verbose") > 0);
     }
@@ -107,7 +107,7 @@ SolverNS2::solve()
     {
         setA();
         e->add( "a", a);
-        e->add( "psi0", psi0);
+        //e->add( "psi0", psi0);
         logTime(t, "a", ioption("solverns2.verbose") > 0);
     }
 
@@ -184,7 +184,7 @@ SolverNS2::setA()
 {
     auto solvera = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
     a = solvera->solve();
-    psi0 = solvera->psi0;
+    //psi0 = solvera->psi0;
 }
 
 void
@@ -209,6 +209,8 @@ SolverNS2::post()
     v = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(a) + idv(u));
     vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
     auto err = normL2(elements(mesh), idv(v)-idv(vex));
+
+    LOG(INFO) << "error(" << eigenModes.size() << ") : " << err;
     if(Environment::isMasterRank())
         std::cout << "error(" << eigenModes.size() << ") : " << err << std::endl;
 }
