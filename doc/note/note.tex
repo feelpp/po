@@ -1,6 +1,6 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage{mystyle}
-
+\usepackage[bottom]{footmisc}
 \begin{document}
 
 \section{Algorithme}
@@ -43,64 +43,66 @@ On sait aussi que l'écoulement est stationnaire donc $\frac{\partial\mbf{v}}{\p
 De plus, le terme non linéaire de Navier-Stokes est nul, il reste donc
 \begin{gather}
   \frac{1}{Re}\curll\mbf{v}=-\grad p\\
-  \frac{1}{Re}\left( \sum_i c_i\int_\Omega (\curll\mbf{g}_i)\cdot\mbf{g}_k + \int_\Omega (\curll\mbf{a})\cdot\mbf{g}_k \right) = \int_\Omega p\div\mbf{g}_k - \int_\Gamma p\mbf{g}_k\cdot\mbf{n}\\
-  \frac{1}{Re}\lambda_k^2 c_k = -\frac{1}{Re}\int_\Omega (\curll\mbf{a})\cdot\mbf{g}_k\\
-  c_k = -\frac{1}{\lambda_k^2}\int_\Omega (\curll\mbf{a})\cdot\mbf{g}_k
+  \frac{1}{Re}\left( \int_\Omega(\curll\mbf{u})\cdot\mbf{g}_k  + \int_\Omega(\curll\mbf{a})\cdot\mbf{g}_k \right) = \int_\Omega p\div\mbf{g}_k - \int_\Gamma p\mbf{g}_k\cdot\mbf{n}\\
+  \frac{1}{Re}\left( \int_\Omega(\curl\mbf{u})\cdot(\curl\mbf{g}_k)  + \int_\Omega(\curl\mbf{a})\cdot(\curl\mbf{g}_k) + \int_\Gamma \alpha_2\phi_k \right) = 0\\
+  \frac{1}{Re}\sum_i c_i\lambda_i\lambda_k\int_\Omega \mbf{g}_i\cdot\mbf{g}_k = -\frac{1}{Re}\left( \int_\Omega (\curl\mbf{a})\cdot(\curl\mbf{g}_k) + \int_\Gamma \alpha_2\phi_k \right)\\
+  c_k = -\frac{1}{\lambda_k^2}\left( \int_\Omega (\curl\mbf{a})\cdot(\curl\mbf{g}_k) + \int_\Gamma \alpha_2\phi_k \right)
 \end{gather}
 
 \subsection{Relévement}
 \label{relev}
-Pour relever $\alpha_0$, on pourrait utiliser
-\begin{equation*}
-  \mbf{a}\restr{\Gamma_{1,2}}= \begin{pmatrix}
-    0\\0\\\alpha_0
-  \end{pmatrix}
-  \quad\Longrightarrow\quad
-  \curll\mbf{a}\restr{\Gamma_{1,2}}= \begin{pmatrix}
-    0\\0\\-\laplace\alpha_0
-  \end{pmatrix}
-\end{equation*}
-on rappel que $\div\mbf{a}=0$, ce qui implique que $\alpha_2=-\laplace\alpha_0$.\\
-De plus, ainsi on relève $\alpha_0$ et $\alpha_2$ en même temps.\\
+On suit ce qui est décrit dans l'article de J. Neustuppa et P. Penel\footnote{The Navier-Stokes equation with inhomogeneous boundary conditions based on vorticity, 2008} :
 
-Cependant, il semble que lors des calculs des coefficients, les produits scalaire impliquant $\mbf{a}$ et $\mbf{g}_i$ soient nuls. Une explication peut être que la seule composante non nulle de $\mbf{a}$ est la composante normale sur les bords et que cette composante est nulle pour les $\mbf{g}_i$.\\
-
-On utilise donc le relévement suivant :\\
-On écrit $\mbf{a} = \mbf{q}_0 + \curl\bm{\psi}^1 + \bm{\psi}^2$ tel que :
-\begin{align}
+Pour relever $\alpha_1$, on utilise
+\begin{equation}\label{a1}
   \left\{
   \begin{aligned}
-    \mbf{q}_i - \grad{\phi}_i &= 0 &\mbox{ sur }\Omega\\
-    \div\mbf{q}_i &= 0 &\mbox{ sur }\Omega\\
-    \mbf{q}_i\cdot\mbf{n} &= \alpha_i &\mbox{ sur }\Gamma
+    \bm{\psi}_1 - \grad p_1 &= 0 &\mbox{ sur }\Omega\\
+    \div\bm{\psi}_1 &= 0 &\mbox{ sur }\Omega\\
+    \bm{\psi}_1\cdot\mbf{n} &= \alpha_1 &\mbox{ sur }\Gamma
   \end{aligned}
-  \right.\quad i=0,1,2\label{darcy}\\
-  \nonumber\\
-  \left\{
-  \begin{aligned}
-    \curll\bm{\psi}^i &= \mbf{q}_i &\mbox{ sur }\Omega\\
-    \div\bm{\psi}^i &= 0 &\mbox{ sur }\Omega\\
-    \bm{\psi}^i\cdot\mbf{n} &= 0 &\mbox{ sur }\Gamma\\
-    \curl\bm{\psi}^i\cdot\mbf{n} &= 0 &\mbox{ sur }\Gamma
-  \end{aligned}
-  \right.\quad i=1,2\label{curlzh}
-\end{align}
-
-Où les problèmes (\ref{darcy}) sont des problèmes mixte de type Darcy que l'on peut résoudre à l'aide des éléments de Raviart-Thomas.\\
-Tandis que les problèmes (\ref{curlzh}) sont des problèmes dont la solution se trouve dans l'espace $\ZZ_h$, le même que celui dans lequel nous avons résolu le problème aux valeurs propres. De plus, ce problème peut se ramener à un problème de Stokes pour lequel V. Girault donne la formulation faible suivante :
-\begin{pb}
-  Trouver $\bm{\psi}_i$ dans $U_0=\{\mbf{v}\in\ZZ_h\;|\; (\mbf{v},\grad q) = 0\; \forall q\in H^1\}$ tel que :
-  \begin{equation*}
-    \int_\Omega \curl\bm{\psi}_i\cdot\curl \mbf{v} = \int_\Omega \mbf{q}_i\cdot\mbf{v}\quad\forall\mbf{v}\in U_0
-  \end{equation*}
-\end{pb}
-
-On devra donc résoudre le problème sous forme matricielle :
-\begin{equation}
-  C^TAC\tilde{\bm{\psi}}^i = C^T\mbf{q}_i
+  \right.
 \end{equation}
-avec :
-\[ A_{ij} = \int_\Omega \curl\varphi_i\cdot\curl\varphi_j\quad\quad \bm{\psi}^i = C\tilde{\bm{\psi}}^i \]
+et
+\begin{equation}
+  \left\{
+  \begin{aligned}
+    \curl\bm{\varphi}_0 &= \bm{\psi}_1 &\mbox{ sur }\Omega\\
+    \bm{\varphi}_0 &= 0 &\mbox{ sur }\Gamma
+  \end{aligned}
+  \right.
+\end{equation}
+
+Puis pour $\alpha_0$ :
+\begin{equation}\label{a0}
+  \left\{
+  \begin{aligned}
+    \bm{\psi}_0 - \grad p_0 &= 0 &\mbox{ sur }\Omega\\
+    \div\bm{\psi}_0 &= \div\bm{\varphi}_0 &\mbox{ sur }\Omega\\
+    \bm{\psi}_0\cdot\mbf{n} &= \alpha_0 &\mbox{ sur }\Gamma
+  \end{aligned}
+  \right.
+\end{equation}
+
+Alors, $\mbf{a}=\bm{\varphi}_0+\bm{\psi}_0$.\\
+
+Dans le cas où $\alpha_1=0$, on n'a plus qu'à résoudre \ref{a0} avec $\div\bm{\varphi}_0=0$, et alors $\mbf{a}=\bm{\psi}_0$.\\
+
+Où les problèmes (\ref{a1}) et (\ref{a0}) sont des problèmes mixte de type Darcy que l'on peut résoudre à l'aide des éléments de Raviart-Thomas. Ce qui mène aux formulations faibles suivantes :\\
+Trouver $(\bm{\psi}_i,p_i)\in \mathcal{U}\times\mathcal{Q}$ tel que :
+\begin{equation}
+  \int_\Omega\bm{\psi}_i\cdot\mbf{v} + \int_\Omega p_i(\div\mbf{v}) - \int_\Gamma p_i\mbf{v}\cdot\mbf{n} + \int_\Omega (\div\bm{\psi})q = \int_\Omega fq \quad \forall (\mbf{v},q)\in \mathcal{V}\times\mathcal{Q}
+\end{equation}
+où
+\begin{gather*}
+  \mathcal{U} = \{\mbf{u}\in H(\mathrm{div},\Omega) \;|\; \mbf{u}\cdot\mbf{n} = \alpha_i\}\\
+  \mathcal{V} = \{\mbf{u}\in H(\mathrm{div},\Omega) \;|\; \mbf{u}\cdot\mbf{n} = 0\}\\
+  \mathcal{Q} = \{p\in L_2(\Omega) \;|\; \int_\Omega p = 0 \}\\
+  f=\begin{cases}
+    0 &\mbox{pour } i=1\\
+    \div\bm{\varphi}_0 &\mbox{pour } i=0
+  \end{cases}
+\end{gather*}
 
 \subsection{Résultats}
 \begin{figure}[H]
