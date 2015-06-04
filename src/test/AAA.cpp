@@ -37,13 +37,13 @@ int main(int argc, char** argv)
 
     auto a = form2( _trial=XVh2, _test=XVh2 );
 
-    a = integrate( _range=element(Th),
+    a = integrate( _range=elements(Th),
                    _expr=inner(gradt(u),grad(v)) );
 
-    a += integrate( _range=element(Th),
+    a += integrate( _range=elements(Th),
                     _expr=idt(u)*id(q) );
 
-    a += integrate( _range=element(Th),
+    a += integrate( _range=elements(Th),
                     _expr=id(v)*idt(p) );
 
     auto f = expr(soption("functions.f"));
