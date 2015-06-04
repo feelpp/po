@@ -33,3 +33,4 @@ feelpp_add_application( po_test_eigencube SRCS eigencube.cpp CFG po_eigencube.cf
 feelpp_add_application( po_eigenmixed_curl SRCS eigenmixed.cpp CFG po_eigenmixed.cfg DEFS PO_UHCURL )
 feelpp_add_application( po_eigenmixed_div SRCS eigenmixed.cpp CFG po_eigenmixed.cfg )
 feelpp_add_application( po_stokesmixed SRCS stokesmixed.cpp CFG po_stokesmixed.cfg )
+feelpp_add_application( AAA SRCS AAA.cpp )
