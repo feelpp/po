@@ -55,8 +55,8 @@ int main(int argc, char** argv)
             { "radius", 0.5 },
                 { "meanvel", 1 } } );
 
-    auto d = integrate(markedfaces(mesh, 1), -alpha0).evaluate()(0,0);
-    d += integrate(markedfaces(mesh, 2), alpha0).evaluate()(0,0);
+    auto d = integrate(markedfaces(Th, 1), -alpha0).evaluate()(0,0);
+    d += integrate(markedfaces(Th, 2), alpha0).evaluate()(0,0);
     std::cout << " alpha0 : " << h_s << "\nint : " << d << std::endl;
 
     auto l = form1( _test=XVh2);
