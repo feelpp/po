@@ -60,6 +60,8 @@ private:
     vec_space_ptrtype Vh;
 
     eigenmodes_type eigenModes;
+    std::vector<size_type> indexesToKeep;
+    sparse_matrix_ptrtype C;
     vec_element_type a;
     scalar_element_type psi0;
 
@@ -177,6 +179,8 @@ SolverNS2::setEigen()
 {
     auto solverEigen = SolverEigenNS2<eigen_space_ptrtype, scalar_space_ptrtype>::build(mesh, Xh, Sh);
     eigenModes = solverEigen->solve();
+    C = solverEigen->C;
+    indexesToKeep = solverEigen->indexesToKeep;
 }
 
 void
@@ -190,13 +194,9 @@ SolverNS2::setA()
 void
 SolverNS2::solveSP()
 {
-    auto solversp = SolverSpectralProblem<vec_space_ptrtype, eigentuple_type>::build(mesh, Vh);
+    auto solversp = SolverSpectralProblem<vec_space_ptrtype, eigen_space_ptrtype>::build(mesh, Vh, Xh);
     solversp->setA(a);
-    solversp->setEigen(eigenModes);
-
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-        std::cout << " ---------- init R coeff ----------\n";
-    solversp->init();
+    solversp->setEigen(C, indexesToKeep);
 
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
         std::cout << " ---------- solve spectral problem ----------\n";
@@ -280,4 +280,3 @@ makeLibOptions()
     libOptions.add( backend_options( "a2" ) );
     return libOptions.add( feel_options() );
 }
-

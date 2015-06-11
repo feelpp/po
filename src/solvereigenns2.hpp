@@ -61,11 +61,9 @@ class SolverEigenNS2
     std::vector<DofEdgeInfo> dof_edge_info;
     std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
-    std::vector<size_type> indexesToKeep;
 
     sparse_matrix_ptrtype matA;
     sparse_matrix_ptrtype matB;
-    sparse_matrix_ptrtype C;
     sparse_matrix_ptrtype aHat;
     sparse_matrix_ptrtype bHat;
 
@@ -86,6 +84,8 @@ class SolverEigenNS2
 public:
     static solvereigenns2_ptrtype build(const mesh_ptrtype& mesh, const FunctionSpaceType1& Xh, const FunctionSpaceType2& Sh);
     eigenmodes_type solve();
+    std::vector<size_type> indexesToKeep;
+    sparse_matrix_ptrtype C;
 };
 
 template<typename T1, typename T2>
