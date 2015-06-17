@@ -88,9 +88,12 @@ SolverSpectralProblem<F,E>::solve()
     boost::mpi::timer t;
     u = Nh->element();
 
-    // Block matrices for AA
+    auto P0 = Pch<0>(mesh);
+    auto lambda  = P0->element();
     auto v = Nh->element();
     auto p = Lh->element();
+
+    // Block matrices for AA
     auto a = form2( _test=Nh, _trial=Nh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(v))*curl(v));
     auto matA = a.matrixPtr();
@@ -103,14 +106,24 @@ SolverSpectralProblem<F,E>::solve()
     bt = integrate( _range=elements(mesh), _expr=div(v)*idt(p));
     auto matBt = bt.matrixPtr();
     matBt->close();
+    auto ql = form2(_test=Lh, _trial=P0);
+    ql = integrate( _range=elements(mesh), _expr=id(p)*idt(lambda));
+    auto matQl = ql.matrixPtr();
+    matQl->close();
+    auto qlt = form2(_test=P0, _trial=Lh);
+    qlt = integrate( _range=elements(mesh), _expr=idt(p)*id(lambda));
+    auto matQlt = qlt.matrixPtr();
+    matQlt->close();
 
-    // Matrix AA = ( A  Bt )
-    //             ( B  0  )
-    BlocksBaseSparseMatrix<double> aaBlock(2,2);
+    // Matrix AA = ( A  Bt  0  )
+    //             ( B  0   Ql )
+    //             ( 0  Qlt 0  )
+    BlocksBaseSparseMatrix<double> aaBlock(3,3);
     aaBlock(0,0) = matA;
     aaBlock(0,1) = matBt;
     aaBlock(1,0) = matB;
-    aaBlock(1,1) = backend()->newMatrix( _test=Lh, _trial=Lh );
+    aaBlock(1,2) = matQl;
+    aaBlock(2,1) = matQlt;
     auto AA = backend()->newBlockMatrix(_block=aaBlock, _copy_values=true);
     AA->close();
 
@@ -127,22 +140,26 @@ SolverSpectralProblem<F,E>::solve()
 
     // Vector LL = ( L )
     //             ( 0 )
-    BlocksBaseVector<double> lBlock(2);
+    //             ( 0 )
+    BlocksBaseVector<double> lBlock(3);
     lBlock(0) = L;
     lBlock(1) = backend()->newVector( _test=Lh );
+    lBlock(2) = backend()->newVector( _test=P0 );
     auto LL = backend()->newBlockVector(_block=lBlock, _copy_values=true);
 
     // Matrix CC = ( C  0  )
     //             ( 0  Id )
-    BlocksBaseSparseMatrix<double> ccBlock(2,2);
-    ccBlock(0,0) = C;//backend()->newMatrix( Nh->dof(), C->mapColPtr() );
+    BlocksBaseSparseMatrix<double> ccBlock(3,3);
+    ccBlock(0,0) = C;
     auto ccBlock11 = backend()->newMatrix( _test=Lh, _trial=Lh );
     auto d = backend()->newVector(Lh);
     d->setOnes();
     d->close();
     backend()->diag(d, ccBlock11);
     ccBlock(1,1) = ccBlock11;
-    ccBlock.close();
+    auto d2 = backend()->newMatrix( _test=P0, _trial=P0 );
+    d2->set(0,0,1);
+    ccBlock(2,2) = d2;
     auto CC = backend()->newBlockMatrix(_block=ccBlock, _copy_values=true);
     CC->close();
 
@@ -150,16 +167,53 @@ SolverSpectralProblem<F,E>::solve()
     backend()->PtAP( AA, CC, aaHat );
     aaHat->close();
 
+    C->printMatlab("c.m");
+    matA->printMatlab("a.m");
+    matB->printMatlab("b.m");
+    matBt->printMatlab("bt.m");
+    AA->printMatlab("aa.m");
+    CC->printMatlab("cc.m");
+    L->printMatlab("l.m");
+    LL->printMatlab("ll.m");
+    aaHat->printMatlab("ah.m");
+
     logTime(t, "matrices", ioption("solverns2.verbose") > 1);
+
+    // std::fstream sv;
+    // sv.open ( "vec", std::fstream::in);
+    // if( !sv.is_open() )
+    // {
+    //     std::cout << "vector not found" << std::endl;
+    //     exit(0);
+    // }
+    // vector_ptrtype s = backend()->newVector( CC->mapColPtr() );
+    // double val;
+    // for( int j = 0; j < CC->mapColPtr()->nDof() && sv.good(); j++ )
+    // {
+    //     sv >> val;
+    //     s->set(j, val);
+    // }
+    // sv.close();
+    // s->close();
 
     // solve aHat X = L (with precontditionner ?)
     auto s = LL;
     backend(_name="sp")->solve(_matrix=aaHat, _solution=s, _rhs=LL);
+
     auto tmpVec = backend()->newVector( Xh );
     CC->multVector( s, tmpVec);
     tmpVec->close();
     auto U = Xh->element();
     U = *tmpVec;
     u = U.template element<0>();
+
+    auto du = normL2(elements(mesh), divv(u));
+    auto nu = normL2(boundaryfaces(mesh), trans(idv(u))*N());
+    auto cnu = normL2(boundaryfaces(mesh), trans(curlv(u))*N());
+    if( Environment::isMasterRank() )
+        std::cout << "||div u|| = " << du << std::endl
+                  << "||u . n|| = " << nu << std::endl
+                  << "||cu. n|| = " << cnu << std::endl;
+
     return u;
 }
