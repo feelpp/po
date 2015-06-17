@@ -65,7 +65,7 @@ private:
     vec_element_type a;
     scalar_element_type psi0;
 
-    vec_element_type u;
+    ned_element_type u;
     vec_element_type v;
     vec_element_type vex;
 
@@ -278,5 +278,6 @@ makeLibOptions()
     po::options_description libOptions( "Lib options" );
     libOptions.add( backend_options( "a0" ) ).add( backend_options( "grada0" ) );
     libOptions.add( backend_options( "a2" ) );
+    libOptions.add( backend_options( "sp" ) );
     return libOptions.add( feel_options() );
 }

@@ -71,10 +71,10 @@ class SolverEigenNS2
 
     double tol = 1.e-3;
 
-    void setForms();
     void setInfo();
     void setDofsToRemove();
-    void setMatrices();
+    void setMatrix();
+    void setForms();
     void solveEigen();
     void print();
     void save();
@@ -112,12 +112,12 @@ SolverEigenNS2<T1,T2>::solve()
         if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
             std::cout << " ---------- compute eigenmodes ----------\n";
 
-        setForms();
-
         setInfo();
         setDofsToRemove();
 
-        setMatrices();
+        setMatrix();
+
+        setForms();
 
         logTime(t, "matrices", ioption("solverns2.verbose") > 1);
 
@@ -132,6 +132,13 @@ SolverEigenNS2<T1,T2>::solve()
         if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
             std::cout << " ---------- load eigenmodes ----------\n";
 
+        setInfo();
+        setDofsToRemove();
+
+        setMatrix();
+
+        logTime(t, "matrices", ioption("solverns2.verbose") > 1);
+
         load();
         logTime(t, "loadEigen", ioption("solverns2.verbose") > 1);
     }
@@ -140,26 +147,6 @@ SolverEigenNS2<T1,T2>::solve()
         print();
 
     return modes;
-}
-
-template<typename T1, typename T2>
-void
-SolverEigenNS2<T1,T2>::setForms()
-{
-    // [forms]
-    auto u = Nh->element();
-    auto v = Nh->element();
-
-    auto a = form2( _test=Nh, _trial=Nh);
-    a = integrate( _range=elements( mesh ), _expr=trans(curlt(u))*curl(v));
-    matA = a.matrixPtr();
-    matA->close();
-
-    auto b = form2( _test=Nh, _trial=Nh);
-    b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
-    matB = b.matrixPtr();
-    matB->close();
-    // [forms]
 }
 
 template<typename T1, typename T2>
@@ -328,7 +315,7 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
 
 template<typename T1, typename T2>
 void
-SolverEigenNS2<T1,T2>::setMatrices()
+SolverEigenNS2<T1,T2>::setMatrix()
 {
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
@@ -377,6 +364,26 @@ SolverEigenNS2<T1,T2>::setMatrices()
     C = cTilde->createSubMatrix(rows, indexesToKeep);
     C->close();
     // [submatrix]
+}
+
+template<typename T1, typename T2>
+void
+SolverEigenNS2<T1,T2>::setForms()
+{
+    // [forms]
+    auto u = Nh->element();
+    auto v = Nh->element();
+
+    auto a = form2( _test=Nh, _trial=Nh);
+    a = integrate( _range=elements( mesh ), _expr=trans(curlt(u))*curl(v));
+    matA = a.matrixPtr();
+    matA->close();
+
+    auto b = form2( _test=Nh, _trial=Nh);
+    b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
+    matB = b.matrixPtr();
+    matB->close();
+    // [forms]
 
     // [ptap]
     aHat = backend()->newMatrix(C->mapColPtr(), C->mapColPtr() );
