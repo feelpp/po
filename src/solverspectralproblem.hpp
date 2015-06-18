@@ -93,23 +93,27 @@ SolverSpectralProblem<F,E>::solve()
     auto v = Nh->element();
     auto p = Lh->element();
 
-    // Block matrices for AA
+    // Block A
     auto a = form2( _test=Nh, _trial=Nh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(v))*curl(v));
     auto matA = a.matrixPtr();
     matA->close();
+    // Block B
     auto b = form2(_test=Lh, _trial=Nh);
-    b = integrate( _range=elements(mesh), _expr=divt(v)*id(p));
+    b = integrate( _range=elements(mesh), _expr=grad(p)*idt(v));
     auto matB = b.matrixPtr();
     matB->close();
+    // Block Bt
     auto bt = form2(_test=Nh, _trial=Lh);
-    bt = integrate( _range=elements(mesh), _expr=div(v)*idt(p));
+    bt = integrate( _range=elements(mesh), _expr=gradt(p)*id(v));
     auto matBt = bt.matrixPtr();
     matBt->close();
+    // Block Ql
     auto ql = form2(_test=Lh, _trial=P0);
     ql = integrate( _range=elements(mesh), _expr=id(p)*idt(lambda));
     auto matQl = ql.matrixPtr();
     matQl->close();
+    // Block Qlt
     auto qlt = form2(_test=P0, _trial=Lh);
     qlt = integrate( _range=elements(mesh), _expr=idt(p)*id(lambda));
     auto matQlt = qlt.matrixPtr();
@@ -138,9 +142,9 @@ SolverSpectralProblem<F,E>::solve()
     // vector in Nh(Omega\Gamma) x Lh(Gamma)
     auto L = ll->createSubVector(indexesToKeep);
 
-    // Vector LL = ( L )
-    //             ( 0 )
-    //             ( 0 )
+    // Vector LL = ( L )   Zh
+    //             ( 0 )   Lh
+    //             ( 0 )   P0
     BlocksBaseVector<double> lBlock(3);
     lBlock(0) = L;
     lBlock(1) = backend()->newVector( _test=Lh );
@@ -163,22 +167,27 @@ SolverSpectralProblem<F,E>::solve()
     auto CC = backend()->newBlockMatrix(_block=ccBlock, _copy_values=true);
     CC->close();
 
+    // Matrix CC'*AA*CC
     auto aaHat = backend()->newMatrix(CC->mapColPtr(), CC->mapColPtr() );
     backend()->PtAP( AA, CC, aaHat );
     aaHat->close();
 
-    C->printMatlab("c.m");
-    matA->printMatlab("a.m");
-    matB->printMatlab("b.m");
-    matBt->printMatlab("bt.m");
-    AA->printMatlab("aa.m");
-    CC->printMatlab("cc.m");
-    L->printMatlab("l.m");
-    LL->printMatlab("ll.m");
-    aaHat->printMatlab("ah.m");
+    if( Environment::numberOfProcessors() == 1 )
+    {
+        C->printMatlab("c.m");
+        matA->printMatlab("a.m");
+        matB->printMatlab("b.m");
+        matBt->printMatlab("bt.m");
+        AA->printMatlab("aa.m");
+        CC->printMatlab("cc.m");
+        L->printMatlab("l.m");
+        LL->printMatlab("ll.m");
+        aaHat->printMatlab("ah.m");
+    }
 
     logTime(t, "matrices", ioption("solverns2.verbose") > 1);
 
+    // load from Matlab
     // std::fstream sv;
     // sv.open ( "vec", std::fstream::in);
     // if( !sv.is_open() )
@@ -200,6 +209,8 @@ SolverSpectralProblem<F,E>::solve()
     auto s = LL;
     backend(_name="sp")->solve(_matrix=aaHat, _solution=s, _rhs=LL);
 
+    // vector C*s in Xh=Nh x Lh
+    // pb tmpVec in Xh x P0
     auto tmpVec = backend()->newVector( Xh );
     CC->multVector( s, tmpVec);
     tmpVec->close();
