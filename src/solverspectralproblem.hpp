@@ -138,7 +138,8 @@ SolverSpectralProblem<F,E>::solve()
     // vector in Nh x Lh
     auto ll = backend()->newVector( Xh );
     auto l = form1(_test=Xh, _vector=ll);
-    l = integrate( _range=boundaryfaces(mesh), _expr=alpha2*id(psi));
+    l = integrate( _range=markedfaces(mesh,1), _expr=alpha2*id(psi));
+    l += integrate( _range=markedfaces(mesh,2), _expr=-alpha2*id(psi));
     // vector in Nh(Omega\Gamma) x Lh(Gamma)
     auto L = ll->createSubVector(indexesToKeep);
 
@@ -187,43 +188,57 @@ SolverSpectralProblem<F,E>::solve()
 
     logTime(t, "matrices", ioption("solverns2.verbose") > 1);
 
-    // load from Matlab
-    // std::fstream sv;
-    // sv.open ( "vec", std::fstream::in);
-    // if( !sv.is_open() )
-    // {
-    //     std::cout << "vector not found" << std::endl;
-    //     exit(0);
-    // }
-    // vector_ptrtype s = backend()->newVector( CC->mapColPtr() );
-    // double val;
-    // for( int j = 0; j < CC->mapColPtr()->nDof() && sv.good(); j++ )
-    // {
-    //     sv >> val;
-    //     s->set(j, val);
-    // }
-    // sv.close();
-    // s->close();
-
     // solve aHat X = L (with precontditionner ?)
     auto s = LL;
     backend(_name="sp")->solve(_matrix=aaHat, _solution=s, _rhs=LL);
 
+    logTime(t, "solve", ioption("solverns2.verbose") > 1);
+
     // vector C*s in Xh=Nh x Lh
     // pb tmpVec in Xh x P0
+    BlocksBaseSparseMatrix<double> c2Block(2,3);
+    c2Block(0,0) = C;
+    c2Block(1,1) = ccBlock11;
+    c2Block(0,2) = backend()->newMatrix( _test=P0, _trial=P0 );
+    auto C2 = backend()->newBlockMatrix(_block=c2Block, _copy_values=true);
+    C2->close();
     auto tmpVec = backend()->newVector( Xh );
-    CC->multVector( s, tmpVec);
+    C2->multVector( s, tmpVec);
     tmpVec->close();
     auto U = Xh->element();
     U = *tmpVec;
     u = U.template element<0>();
 
+    auto unG = form1(_test=Lh);
+    unG = integrate(boundaryfaces(mesh), trans(idv(u))*N()*id(p));
+    unG.close();
+    auto unG1 = form1(_test=Lh);
+    unG1 = integrate(markedfaces(mesh,1), trans(idv(u))*N()*id(p));
+    unG1.close();
+    auto unG2 = form1(_test=Lh);
+    unG2 = integrate(markedfaces(mesh,2), trans(idv(u))*N()*id(p));
+    unG2.close();
+    auto unG3 = form1(_test=Lh);
+    unG3 = integrate(markedfaces(mesh,3), trans(idv(u))*N()*id(p));
+    unG3.close();
+
+    if( Environment::numberOfProcessors() == 1 )
+    {
+        unG.vectorPtr()->printMatlab("unG.m");
+        unG1.vectorPtr()->printMatlab("unG1.m");
+        unG2.vectorPtr()->printMatlab("unG2.m");
+        unG3.vectorPtr()->printMatlab("unG3.m");
+    }
+
     auto du = normL2(elements(mesh), divv(u));
+    auto intun = integrate(boundaryfaces(mesh),
+                           trans(idv(u))*N()).evaluate()(0,0);
     auto nu = normL2(boundaryfaces(mesh), trans(idv(u))*N());
     auto cnu = normL2(boundaryfaces(mesh), trans(curlv(u))*N());
     if( Environment::isMasterRank() )
         std::cout << "||div u|| = " << du << std::endl
                   << "||u . n|| = " << nu << std::endl
+                  << "int u.n   = " << intun <<  std::endl
                   << "||cu. n|| = " << cnu << std::endl;
 
     return u;

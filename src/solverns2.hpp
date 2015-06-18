@@ -140,14 +140,9 @@ SolverNS2::load_mesh()
                               %mypath.stem().string() ).str();
 
 
-    if( boption("solverns2.computeEigen")
-        && boption("solverns2.computeA0")
+    if( boption("solverns2.computeA0")
         && boption("solverns2.computeA1")
-        && boption("solverns2.computeA2")
-        && boption("solverns2.computeRijk")
-        && boption("solverns2.computeRiak")
-        && boption("solverns2.computeRaik")
-        && boption("solverns2.computeRfk") )
+        && boption("solverns2.computeA2") )
     {
         mesh = loadMesh( _mesh=new mesh_type,
                          _rebuild_partitions=(mypath.extension() == ".msh"),
@@ -206,7 +201,13 @@ SolverNS2::solveSP()
 void
 SolverNS2::post()
 {
-    v = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(a) + idv(u));
+    v = Vh->element();
+    auto form2V = form2(_test=Vh, _trial=Vh);
+    form2V = integrate(elements(mesh), inner(idt(v),id(v)));
+    auto form1V = form1(_test=Vh);
+    form1V = integrate( elements(mesh), inner(idv(a) + idv(u), id(v)));
+    form2V.solve(_rhs=form1V, _solution=v);
+
     vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
     auto err = normL2(elements(mesh), idv(v)-idv(vex));
 
