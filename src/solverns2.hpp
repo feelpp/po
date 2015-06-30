@@ -228,13 +228,17 @@ SolverNS2::post()
     form2V.solve(_rhs=form1V, _solution=v);
 
     vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
+    auto uex = Vh->element();
+    uex = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(vex) - idv(a));
     verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(v) - idv(vex));
     err = normL2(elements(mesh), idv(verr));
+    auto errU = normL2(elements(mesh), idv(u) - idv(uex));
 
     LOG(INFO) << "error(" << eigenModes.size() << ") : " << err;
     if(Environment::isMasterRank())
     {
-        std::cout << "error(" << eigenModes.size() << ") : " << err << std::endl;
+        std::cout << "errorV(" << eigenModes.size() << ") : " << err << std::endl;
+        std::cout << "errorU(" << eigenModes.size() << ") : " << errU << std::endl;
         auto filename = (boost::format("%1%-info.md") %Environment::about().appName()).str();
         std::fstream s;
         s.open (filename, std::fstream::out|std::fstream::app);
@@ -242,6 +246,41 @@ SolverNS2::post()
           << "error(" << eigenModes.size() << ") : " << err << std::endl;
         s.close();
     }
+
+    auto g_s = soption("solverns2.alpha0");
+    auto vars = Symbols{ "x", "y", "radius", "speed" };
+    auto g_e = parse( g_s, vars );
+    auto g = expr( g_e, vars );
+    g.setParameterValues( {
+            { "radius", doption( "solverns2.radius" ) },
+                { "speed", doption( "solverns2.speed" ) } } );
+
+    auto divvex = normL2(elements(mesh), divv(vex));
+    auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
+    auto cvexn = normL2(boundaryfaces(mesh), inner(curlv(vex), N()));
+    auto divv = normL2(elements(mesh), divv(v));
+    auto vn = normL2(markedfaces(mesh,1), inner(idv(v), N()) + g );
+    auto cvn = normL2(boundaryfaces(mesh), inner(curlv(v), N()));
+    auto diva = normL2(elements(mesh), divv(a));
+    auto an = normL2(markedfaces(mesh,1), inner(idv(a), N()) + g );
+    auto can = normL2(boundaryfaces(mesh), inner(curlv(a), N()));
+    auto divu = normL2(elements(mesh), divv(u));
+    auto un = normL2(boundaryfaces(mesh), inner(idv(uex), N()));
+    auto cun = normL2(boundaryfaces(mesh), inner(curlv(uex), N()));
+
+    if( Environment::isMasterRank() )
+        std::cout << "||div vex|| = " << divvex << std::endl
+                  << "||vex.n-a0||= " << vexn << std::endl
+                  << "||cvex.n||  = " << cvexn << std::endl
+                  << "||div v||   = " << divvex << std::endl
+                  << "||v.n-a0||  = " << vexn << std::endl
+                  << "||cv.n||    = " << cvexn << std::endl
+                  << "||div a||   = " << diva << std::endl
+                  << "||a.n-a0||  = " << an << std::endl
+                  << "||ca.n||    = " << can << std::endl
+                  << "||div u||   = " << divuex << std::endl
+                  << "||u.n||     = " << uexn << std::endl
+                  << "||cu.n||    = " << cuexn << std::endl;
 }
 
 void
