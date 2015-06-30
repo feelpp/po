@@ -120,18 +120,24 @@ SolverSpectralProblem<F,E>::init()
         std::cout << "----- Initialization Spectral Problem -----" << std::endl
                   << "----- Re = " << Re << " -----" << std::endl;
 
-    boost::mpi::timer t;
-
-    // initRijk();
-    // logTime(t, "Rijk", ioption("solverns2.verbose") > 1);
-    initRaik();
-    logTime(t, "Raik", ioption("solverns2.verbose") > 1);
-    initRiak();
-    logTime(t, "Riak", ioption("solverns2.verbose") > 1);
-    initRfk();
-    logTime(t, "Rfk", ioption("solverns2.verbose") > 1);
-    // initRpk();
-    // logTime(t, "Rpk", ioption("solverns2.verbose") > 1);
+    if( ! boption("solverns2.stokes"))
+    {
+        tic();
+        initRijk();
+        toc( "Rijk", ioption("solverns2.verbose") > 1);
+        tic();
+        initRaik();
+        toc( "Raik", ioption("solverns2.verbose") > 1);
+        tic();
+        initRiak();
+        toc( "Riak", ioption("solverns2.verbose") > 1);
+    }
+    // tic();
+    // initRfk();
+    // toc( "Rfk", ioption("solverns2.verbose") > 1);
+    tic();
+    initRpk();
+    toc( "Rpk", ioption("solverns2.verbose") > 1);
 
     c = VectorXd::Ones(M);
 }
@@ -426,88 +432,97 @@ template<typename F, typename E>
 typename SolverSpectralProblem<F,E>::vec_element_type
 SolverSpectralProblem<F,E>::solve()
 {
-    boost::mpi::timer t;
 
-    // [StokesA]
-    MatrixXd A = MatrixXd(M,M);
-    A = Riak + Raik;
-    A += (lambda/Re).asDiagonal();
-    // [StokesA]
+    if( boption("solverns2.stokes"))
+    {
+        tic();
+        // [StokesA]
+        MatrixXd A = MatrixXd(M,M);
+        A = (lambda/Re).asDiagonal();
+        // [StokesA]
 
-    // [StokesB]
-    VectorXd b = VectorXd(M);
-    b = Rfk;
-    // [StokesB]
+        // [StokesB]
+        VectorXd b = VectorXd(M);
+        // b = Rfk;
+        b = -Rpk;
+        // [StokesB]
 
-    // [StokesSolve]
-    HouseholderQR<MatrixXd> qr(M,M);
-    qr.compute(A);
-    c = qr.solve(b);
-    // [StokesSolve]
+        // [StokesSolve]
+        HouseholderQR<MatrixXd> qr(M,M);
+        qr.compute(A);
+        c = qr.solve(b);
+        // [StokesSolve]
 
-    logTime(t, "stokes", ioption("solverns2.verbose") > 1);
+        toc( "stokes", ioption("solverns2.verbose") > 1);
+    }
+    else
+    {
+        tic();
+        // [NSInit]
+        VectorXd dc = VectorXd::Matrix(M);
+        double tol = 1.e-8;
+        // [NSInit]
+        // [NSSys1]
+        HouseholderQR<MatrixXd> qr(M,M);
+        // [NSSys1]
 
+        int i=0;
+        do{
+            // [NSMatF]
+            f = c.cwiseProduct(lambda)/Re + Riak*c + Raik*c + Rpk;// - Rfk;
+            for (int k = 0; k < M; k++)
+                f(k) += c.transpose()*Rijk(k)*c;
+            // [NSMatF]
+
+            // [NSMatJ]
+            for (int k = 0; k < M; k++)
+                j.row(k) = c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
+            j += Riak;
+            j += Raik;
+            j += lambda.asDiagonal();
+            // [NSMatJ]
+
+            // [NSSys2]
+            qr.compute(j);
+            dc = qr.solve(-f);
+            // [NSSys2]
+            // [NSAdd]
+            c += dc;
+            // [NSAdd]
+
+            if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+                std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
+
+            if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 3 )
+                std::cout << c << std::endl;
+
+            i++;
+        } while(i < 10 && dc.norm() > tol);
+
+        if(i==10)
+            std::cout << "Newton does not converge\n";
+
+        else{
+            for( i = 0; i < M; i++){
+                u += vf::project( _space=Vh, _range=elements(mesh),
+                                  _expr = c(i)*idv(g[i]) );
+            }
+        }
+        toc( "navier stokes", ioption("solverns2.verbose") > 1 );
+    }
+
+    tic();
+    auto lhs = form2(_test=Vh,_trial=Vh);
+    lhs = integrate(_range=elements(mesh), _expr=inner(idt(u),id(u)));
+    auto rhs = form1(_test=Vh);
     for(int i=0; i<M; i++)
     {
         if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 2 )
             std::cout << "c(" << i << ") = " << c(i) << std::endl;
-        u += vf::project( _space=Vh, _range=elements(mesh),
-                          _expr = c(i)*idv(g[i]) );
+        rhs += integrate( _range=elements(mesh), _expr = c(i)*trans(idv(g[i]))*id(u) );
     }
+    lhs.solve(_rhs=rhs, _solution=u);
+    toc( "compute u", ioption("solverns2.verbose") > 1 );
 
     return u;
-
-    // // [NSInit]
-    // VectorXd dc = VectorXd::Matrix(M);
-    // double tol = 1.e-6;
-    // // [NSInit]
-    // // [NSSys1]
-    // HouseholderQR<MatrixXd> qr(M,M);
-    // // [NSSys1]
-
-    // int i=0;
-    // do{
-    //     // [NSMatF]
-    //     f = c.cwiseProduct(lambda)/Re + Riak*c - Rfk;
-    //     for (int k = 0; k < M; k++)
-    //         f(k) += c.transpose()*Rijk(k)*c;
-    //     // [NSMatF]
-
-    //     // [NSMatJ]
-    //     for (int k = 0; k < M; k++)
-    //         j.row(k) = c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
-    //     j += Riak;
-    //     j += lambda.asDiagonal();
-    //     // [NSMatJ]
-
-    //     if ( Environment::worldComm().isMasterRank() )
-    //         std::cout << "j = " << j << std::endl << "f = " << f << std::endl;
-
-    //     // [NSSys2]
-    //     qr.compute(j);
-    //     dc = qr.solve(-f);
-    //     // [NSSys2]
-    //     // [NSAdd]
-    //     c += dc;
-    //     // [NSAdd]
-
-    //     if ( Environment::worldComm().isMasterRank() )
-    //         std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
-
-    //     if ( Environment::worldComm().isMasterRank() )
-    //         std::cout << c << std::endl;
-
-    //     i++;
-    // } while(i < 10 && dc.norm() > tol);
-
-    // if(i==10)
-    //     std::cout << "Newton does not converge\n";
-
-    // else{
-    //     for( i = 0; i < M; i++){
-    //         u += vf::project( _space=Vh, _range=elements(mesh),
-    //                           _expr = c(i)*idv(g[i]) );
-    //     }
-    //     u += a;
-    // }
 }

@@ -4,6 +4,8 @@
 #include <feel/feelvf/vf.hpp>
 #include <feel/feelalg/solvereigen.hpp>
 
+using namespace Feel;
+
 enum EdgeType {
     EDGE_INTERIOR = 0, // edge in the interior
     EDGE_BOUNDARY, // edge on boundary
@@ -105,7 +107,7 @@ template<typename T1, typename T2>
 typename SolverEigenNS2<T1,T2>::eigenmodes_type
 SolverEigenNS2<T1,T2>::solve()
 {
-    boost::mpi::timer t;
+    tic();
 
     if( boption("solverns2.computeEigen"))
     {
@@ -119,13 +121,18 @@ SolverEigenNS2<T1,T2>::solve()
 
         setMatrices();
 
-        logTime(t, "matrices", ioption("solverns2.verbose") > 1);
+        if( boption("solverns2.print") )
+            print();
+
+        toc( "matrices", ioption("solverns2.verbose") > 1);
+        tic();
 
         solveEigen();
-        logTime(t, "eigs", ioption("solverns2.verbose") > 1);
+        toc( "eigs", ioption("solverns2.verbose") > 1);
+        tic();
 
         save();
-        logTime(t, "save", ioption("solverns2.verbose") > 1);
+        toc( "save", ioption("solverns2.verbose") > 1);
     }
     else
     {
@@ -133,11 +140,9 @@ SolverEigenNS2<T1,T2>::solve()
             std::cout << " ---------- load eigenmodes ----------\n";
 
         load();
-        logTime(t, "loadEigen", ioption("solverns2.verbose") > 1);
+        toc( "loadEigen", ioption("solverns2.verbose") > 1);
     }
 
-    if( boption("solverns2.print") )
-        print();
 
     return modes;
 }
