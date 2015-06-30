@@ -54,6 +54,8 @@ class SolverEigenNS2
     typedef std::tuple<value_type, element_type, scalar_element_type> eigentuple_type;
     typedef std::vector<eigentuple_type> eigenmodes_type;
 
+    typedef std::vector<element_type> eigen0_type;
+
     mesh_ptrtype mesh;
     space_ptrtype Xh;
     space_edge_ptrtype Nh;
@@ -73,6 +75,8 @@ class SolverEigenNS2
 
     eigenmodes_type modes;
 
+    eigen0_type modes0;
+
     double tol = 1.e-3;
 
     void setForms();
@@ -83,7 +87,8 @@ class SolverEigenNS2
     void print();
     void save();
     void load();
-    void logInfo();
+
+    void testEigs();
 
 public:
     static solvereigenns2_ptrtype build(const mesh_ptrtype& mesh, const FunctionSpaceType1& Xh, const FunctionSpaceType2& Sh);
@@ -143,6 +148,8 @@ SolverEigenNS2<T1,T2>::solve()
         toc( "loadEigen", ioption("solverns2.verbose") > 1);
     }
 
+    if( boption("solverns2.testEigs") )
+        testEigs();
 
     return modes;
 }
@@ -155,8 +162,12 @@ SolverEigenNS2<T1,T2>::setForms()
     auto u = Nh->element();
     auto v = Nh->element();
 
+    // penalizaion for g.n, default value 0
+    auto gamma = doption("parameters.gamma");
+
     auto a = form2( _test=Nh, _trial=Nh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(u))*curl(v));
+    a += integrate( boundaryfaces(mesh), gamma*(trans(idt(u))*N())*(trans(id(v))*N()) );
     matA = a.matrixPtr();
     matA->close();
 
@@ -411,6 +422,7 @@ SolverEigenNS2<T1,T2>::solveEigen()
 
     int i = 0;
     modes = eigenmodes_type(zhmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
+    modes0 = eigen0_type(zhmodes.size(), Nh->element());
     for( auto const& pair: zhmodes )
     {
         if(Environment::isMasterRank())
@@ -430,7 +442,8 @@ SolverEigenNS2<T1,T2>::solveEigen()
         tmpVec->close();
         std::get<1>(modes[i]) = *tmpVec;
 
-        // decomposition : keep only beta coefficients
+        // g = g0 + grad(psi)
+        // decomposition : keep only beta coefficients (psi)
         auto tmpVec2 = backend()->newVector( Lh );
         for(int i = 0; i < boundaryIndexesToKeep.size(); i++)
         {
@@ -442,6 +455,17 @@ SolverEigenNS2<T1,T2>::solveEigen()
         auto tmp = Lh->element();
         tmp = *tmpVec2;
         std::get<2>(modes[i]) = vf::project(_space=Sh, _range=elements(mesh), _expr=idv(tmp));
+
+        // decomposition : keep only alpha coefficients (g0)
+        auto tmpVec3 = backend()->newVector( Nh );
+        for(int i = 0; i < interiorIndexesToKeep.size(); i++)
+        {
+            auto indexPtr = std::find(indexesToKeep.begin(), indexesToKeep.end(), interiorIndexesToKeep[i]);
+            auto index = indexPtr - indexesToKeep.begin();
+            tmpVec3->set(interiorIndexesToKeep[i], (*alphaHat)(index));
+        }
+        tmpVec3->close();
+        modes0[i] = *tmpVec3;
 
         i++;
     }
@@ -510,4 +534,42 @@ SolverEigenNS2<T1,T2>::load()
     }
 
     s.close();
+}
+
+template<typename T1, typename T2>
+void
+SolverEigenNS2<T1,T2>::testEigs()
+{
+    for( int i = 0; i < modes.size(); i++)
+    {
+        auto gn = normL2(_range=boundaryfaces(mesh), _expr=trans(idv(std::get<1>(modes[i])))*N());
+        auto divg = normL2(_range=elements(mesh), _expr=divv(std::get<1>(modes[i])));
+        auto curlgn = normL2(_range=boundaryfaces(mesh), _expr=trans(curlv(std::get<1>(modes[i])))*N());
+        auto g0xn = normL2(_range=boundaryfaces(mesh), _expr=cross(idv(modes0[i]),N()));
+        auto g0n = normL2(_range=boundaryfaces(mesh), _expr=trans(idv(modes0[i]))*N());
+        auto g0 = normL2(_range=boundaryfaces(mesh), _expr=idv(modes0[i]));
+        auto e = normL2(_range=elements(mesh), _expr=idv(std::get<1>(modes[i]))-(idv(modes0[i])+trans(gradv(std::get<2>(modes[i])))));
+        auto e2 = normL2(_range=elements(mesh), _expr=curlv(std::get<1>(modes[i]))-std::sqrt(std::get<0>(modes[i]))*idv(std::get<1>(modes[i])));
+        auto curl2 = integrate(_range=elements(mesh), _expr=trans(curlv(std::get<1>(modes[i])))*curlv(std::get<1>(modes[i]))).evaluate()(0,0);
+        auto norm = normL2(_range=elements(mesh), _expr=idv(std::get<1>(modes[i])));
+        auto psi = integrate(_range=boundaryfaces(mesh), _expr=idv(std::get<2>(modes[i]))).evaluate()(0,0);
+        auto psin = normL2(_range=boundaryfaces(mesh), _expr=gradv(std::get<2>(modes[i]))*N());
+
+        if( Environment::isMasterRank())
+        {
+            std::cout << "i : " << i << std::endl
+                      << "\t ||g.n||      = " << gn << std::endl
+                      << "\t ||divg||     = " << divg << std::endl
+                      << "\t ||curlg.n||  = " << curlgn << std::endl
+                      << "\t ||g0xn||     = " << g0xn << std::endl
+                      << "\t ||g0.n||     = " << g0n << std::endl
+                      << "\t ||g0||       = " << g0 << std::endl
+                      << "\t ||err||      = " << e << std::endl
+                      << "\t ||curlg-lg|| = " << e2 << std::endl
+                      << "\t (curl,curl)  = " << curl2 << std::endl
+                      << "\t ||gi||       = " << norm << std::endl
+                      << "\t ||Gpsi.n||   = " << psin << std::endl
+                      << "\t int psi      = " << psi << std::endl;
+        }
+    }
 }

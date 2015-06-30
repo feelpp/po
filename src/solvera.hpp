@@ -176,7 +176,7 @@ SolverA<T,T2>::computeA0()
                    _expr=inner(id(w),idt(w)) );
     auto k = form1( _test=Vh );
     k = integrate( _range=elements(mesh),
-                   _expr=inner(trans(gradv( U.template element<0>() )),id(w)) );
+                   _expr=gradv(u)*id(w));
     // [gradpsi0]
 
     // a0 is the L2 projection of grad(psi0) over Vh
@@ -224,4 +224,3 @@ SolverA<T,T2>::loadA2()
     std::string path = "a2";
     a2.load(_path=path);
 }
-
