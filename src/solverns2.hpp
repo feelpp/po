@@ -141,7 +141,7 @@ SolverNS2::solve()
     e->save();
 
     toc("total", ioption("solverns2.verbose") > 0);
-    Environment::saveTimers(ioption("solverns2.verbose") > 1);
+    // Environment::saveTimers(ioption("solverns2.verbose") > 1);
 }
 
 void
@@ -258,7 +258,7 @@ SolverNS2::post()
     auto divvex = normL2(elements(mesh), divv(vex));
     auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
     auto cvexn = normL2(boundaryfaces(mesh), inner(curlv(vex), N()));
-    auto divv = normL2(elements(mesh), divv(v));
+    auto divvh = normL2(elements(mesh), divv(v));
     auto vn = normL2(markedfaces(mesh,1), inner(idv(v), N()) + g );
     auto cvn = normL2(boundaryfaces(mesh), inner(curlv(v), N()));
     auto diva = normL2(elements(mesh), divv(a));
@@ -272,15 +272,15 @@ SolverNS2::post()
         std::cout << "||div vex|| = " << divvex << std::endl
                   << "||vex.n-a0||= " << vexn << std::endl
                   << "||cvex.n||  = " << cvexn << std::endl
-                  << "||div v||   = " << divvex << std::endl
-                  << "||v.n-a0||  = " << vexn << std::endl
-                  << "||cv.n||    = " << cvexn << std::endl
+                  << "||div v||   = " << divvh << std::endl
+                  << "||v.n-a0||  = " << vn << std::endl
+                  << "||cv.n||    = " << cvn << std::endl
                   << "||div a||   = " << diva << std::endl
                   << "||a.n-a0||  = " << an << std::endl
                   << "||ca.n||    = " << can << std::endl
-                  << "||div u||   = " << divuex << std::endl
-                  << "||u.n||     = " << uexn << std::endl
-                  << "||cu.n||    = " << cuexn << std::endl;
+                  << "||div u||   = " << divu << std::endl
+                  << "||u.n||     = " << un << std::endl
+                  << "||cu.n||    = " << cun << std::endl;
 }
 
 void
