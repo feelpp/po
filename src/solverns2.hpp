@@ -4,7 +4,6 @@
 #include <feel/feeldiscr/ned1h.hpp>
 #include <feel/feelfilters/exporter.hpp>
 
-//#include "utilities.h"
 #include "solvereigenns2.hpp"
 #include "solvera.hpp"
 #include "solverspectralproblem.hpp"

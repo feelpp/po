@@ -116,7 +116,7 @@ SolverSpectralProblem<F,E>::init()
     Re = 2*r*s/n;
     u = Vh->element();
 
-    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Initialization Spectral Problem -----" << std::endl
                   << "----- Re = " << Re << " -----" << std::endl;
 
@@ -146,7 +146,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRijk()
 {
-    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Rijk -----" << std::endl;
 
     Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
@@ -156,7 +156,7 @@ SolverSpectralProblem<F,E>::initRijk()
     if( boption("solverns2.computeRijk") )
     {
         std::fstream s;
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.open ("rijk", std::fstream::out);
 
         // Rijk = - Rikj && Rijj = 0
@@ -171,7 +171,7 @@ SolverSpectralProblem<F,E>::initRijk()
                                               ).evaluate()(0,0);
                     Rijk(j)(i,k) = -Rijk(k)(i,j);
 
-                    if ( Environment::worldComm().isMasterRank() )
+                    if ( Environment::isMasterRank() )
                     {
                         if( ioption("solverns2.verbose") > 2 )
                             std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
@@ -181,7 +181,7 @@ SolverSpectralProblem<F,E>::initRijk()
                 Rijk(k)(i,k) = 0;
             }
         }
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.close();
     }
     else
@@ -213,7 +213,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRaik()
 {
-    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Raik -----" << std::endl;
 
     Raik = MatrixXd(M,M);
@@ -221,7 +221,7 @@ SolverSpectralProblem<F,E>::initRaik()
     if( boption("solverns2.computeRaik") )
     {
         std::fstream s;
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.open ("raik", std::fstream::out);
 
         for(int i = 0; i< M ; i++)
@@ -232,7 +232,7 @@ SolverSpectralProblem<F,E>::initRaik()
                                        _expr=inner( cross( curlv(a),idv(g[i]) ), idv(g[k])) ).evaluate()(0,0);
                 Raik(i,k) = -Raik(k,i);
 
-                if ( Environment::worldComm().isMasterRank() )
+                if ( Environment::isMasterRank() )
                 {
                     if( ioption("solverns2.verbose") > 2 )
                         std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
@@ -241,7 +241,7 @@ SolverSpectralProblem<F,E>::initRaik()
             }
             Raik(i,i) = 0;
         }
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.close();
     }
     else
@@ -259,7 +259,7 @@ SolverSpectralProblem<F,E>::initRaik()
             {
                 s >> Raik(k,i);
                 Raik(i,k) = -Raik(k,i);
-                if( ioption("solverns2.verbose") > 2 )
+                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
                     std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
             }
             Raik(i,i) = 0;
@@ -272,7 +272,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRiak()
 {
-    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Riak -----" << std::endl;
 
     Riak = MatrixXd(M,M);
@@ -280,7 +280,7 @@ SolverSpectralProblem<F,E>::initRiak()
     if( boption("solverns2.computeRiak") )
     {
         std::fstream s;
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.open ("riak", std::fstream::out);
 
         for(int i = 0; i< M ; i++)
@@ -290,7 +290,7 @@ SolverSpectralProblem<F,E>::initRiak()
                 Riak(k,i) = integrate( _range=elements( mesh ),
                                        _expr=inner( cross( curlv(g[i]),idv(a) ), idv(g[k])) ).evaluate()(0,0);
 
-                if ( Environment::worldComm().isMasterRank() )
+                if ( Environment::isMasterRank() )
                 {
                     if( ioption("solverns2.verbose") > 2 )
                         std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
@@ -298,7 +298,7 @@ SolverSpectralProblem<F,E>::initRiak()
                 }
             }
         }
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.close();
     }
     else
@@ -315,7 +315,7 @@ SolverSpectralProblem<F,E>::initRiak()
             for(int k = 0; k < M; k++)
             {
                 s >> Riak(k,i);
-                if( ioption("solverns2.verbose") > 2 )
+                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
                     std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
             }
         }
@@ -327,7 +327,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRfk()
 {
-    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Rfk -----" << std::endl;
 
     Rfk = VectorXd(M);
@@ -335,7 +335,7 @@ SolverSpectralProblem<F,E>::initRfk()
     if( boption("solverns2.computeRfk") )
     {
         std::fstream s;
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.open ("rfk", std::fstream::out);
 
         auto ff = expr<3,1>(soption("solverns2.f"));
@@ -344,14 +344,14 @@ SolverSpectralProblem<F,E>::initRfk()
             Rfk(k) = integrate( _range=elements( mesh ),
                                 _expr=trans(ff)*idv(g[k]) ).evaluate()(0,0);
 
-            if ( Environment::worldComm().isMasterRank() )
+            if ( Environment::isMasterRank() )
             {
                 if( ioption("solverns2.verbose") > 2)
                     std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
                 s << Rfk(k) << std::endl;
             }
         }
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.close();
     }
     else
@@ -366,7 +366,7 @@ SolverSpectralProblem<F,E>::initRfk()
         for(int k = 0; k < M; k++)
         {
             s >> Rfk(k);
-            if( ioption("solverns2.verbose") > 2)
+            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
         }
 
@@ -378,7 +378,7 @@ template<typename F, typename E>
 void
 SolverSpectralProblem<F,E>::initRpk()
 {
-    if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "----- Rpk -----" << std::endl;
 
     Rpk = VectorXd(M);
@@ -388,7 +388,7 @@ SolverSpectralProblem<F,E>::initRpk()
         auto a2 = expr(soption("solverns2.alpha2"));
 
         std::fstream s;
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.open ("rpk", std::fstream::out);
 
         for(int k = 0; k < M; k++)
@@ -398,14 +398,14 @@ SolverSpectralProblem<F,E>::initRpk()
             Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
                                  _expr=a2*idv(psi[k]) ).evaluate()(0,0);
 
-            if ( Environment::worldComm().isMasterRank())
+            if ( Environment::isMasterRank())
             {
                 if( ioption("solverns2.verbose") > 2 )
                     std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
                 s << Rpk(k) << std::endl;
             }
         }
-        if ( Environment::worldComm().isMasterRank() )
+        if ( Environment::isMasterRank() )
             s.close();
     }
     else
@@ -420,7 +420,7 @@ SolverSpectralProblem<F,E>::initRpk()
         for(int k = 0; k < M; k++)
         {
             s >> Rpk(k);
-            if( ioption("solverns2.verbose") > 2 )
+            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
                 std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
         }
 
@@ -490,10 +490,10 @@ SolverSpectralProblem<F,E>::solve()
             c += dc;
             // [NSAdd]
 
-            if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 1 )
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
                 std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
 
-            if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 3 )
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                 std::cout << c << std::endl;
 
             i++;
@@ -517,7 +517,7 @@ SolverSpectralProblem<F,E>::solve()
     auto rhs = form1(_test=Vh);
     for(int i=0; i<M; i++)
     {
-        if ( Environment::worldComm().isMasterRank() && ioption("solverns2.verbose") > 2 )
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
             std::cout << "c(" << i << ") = " << c(i) << std::endl;
         rhs += integrate( _range=elements(mesh), _expr = c(i)*trans(idv(g[i]))*id(u) );
     }
