@@ -1,6 +1,8 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage{mystyle}
 \usepackage[bottom]{footmisc}
+\usepackage{mathrsfs}
+
 \begin{document}
 
 \section{Algorithme}
@@ -197,8 +199,9 @@ On résout donc le problème suivant :
   \caption{$\mbf{v}_h$ pour $h=0.075$ et 200 modes}
 \end{figure}
 
+L'erreur $||\mbf{v}_h - \mbf{v}||$ reste cependant vers 0.40, en augmentant le nombre de modes. Il faudrait donc utiliser une taille de maille plus petite.\\
 
-La résolution de ce problème fonctionne mais présente certains inconvénients.
+La résolution de ce problème fonctionne donc mais présente certains inconvénients.
 \begin{itemize}
 \item
   La solution est plus sensible à la précision du relévement $\mbf{a}$.
@@ -209,10 +212,12 @@ Pour le premier, la résolution d'un système mixte, plutôt que deux problèmes
 Pour le second, une idée est d'utiliser un préconditionneur pour le problème aux valeurs propres.\\
 Au lieu de résoudre le problème $(Ax-\lambda Bx) = 0$, on résout $P^{-1}(Ax-\lambda Bx) = 0$ où le conditionnement de $P^{-1}A$ est meilleur que celui de $A$. Une difficulté pourait être de faire cohabiter le préconditionneur et la matrice de changement de base.\\
 Mais appliquer d'abord le préconditionneur et ensuite le changement de base, devrait fonctionner, car une fois le précondionneur appliqué, les éléments se trouvent toujours dans $\N_h$ et donc, appliquer la matrice permet toujours de passer dans $\Z_h$.\\
-Ce qui devrait donner dans notre cas :
-\[ C^t P^{-1}ACx = \lambda C^t P^{-1}BCx \]
 
-L'idée est d'utiliser le préconditionneur définit dans \textit{Parallel numerical solution of the time-harmonic Maxwell equations in mixed form} par D. Li, G. Greif et D. Schötzau.
+L'idée est d'utiliser le préconditionneur définit dans \textit{Parallel numerical solution of the time-harmonic Maxwell equations in mixed form} par D. Li, G. Greif et D. Schötzau.\\
+
+Ce qui devrait donner dans notre cas :
+\[ C^t \mathscr{P}_M^{-1}ACx = \lambda C^t \mathscr{P}_M^{-1}BCx \]
+
 
 \iffalse
 \subsection{Relévement}
