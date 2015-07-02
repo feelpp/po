@@ -61,10 +61,10 @@ typename SolverA<T,T2>::element_type
 SolverA<T,T2>::solve()
 {
     a = Vh->element();
-    boost::mpi::timer t;
 
     if( boption("solverns2.needA0") )
     {
+        tic();
         if( boption("solverns2.computeA0"))
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
@@ -78,11 +78,12 @@ SolverA<T,T2>::solve()
             loadA0();
         }
         a += a0;
-        logTime(t, "a0", ioption("solverns2.verbose") > 1);
+        toc( "a0", ioption("solverns2.verbose") > 1);
     }
 
     if( boption("solverns2.needA1") )
     {
+        tic();
         if( boption("solverns2.computeA1"))
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
@@ -96,11 +97,12 @@ SolverA<T,T2>::solve()
             loadA1();
         }
         a += a1;
-        logTime(t, "a1", ioption("solverns2.verbose") > 1);
+        toc( "a1", ioption("solverns2.verbose") > 1);
     }
 
     if( boption("solverns2.needA2") )
     {
+        tic();
         if( boption("solverns2.computeA2"))
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
@@ -114,7 +116,7 @@ SolverA<T,T2>::solve()
             loadA2();
         }
         a += a2;
-        logTime(t, "a2", ioption("solverns2.verbose") > 1);
+        toc( "a2", ioption("solverns2.verbose") > 1);
     }
 
     return a;
@@ -174,7 +176,7 @@ SolverA<T,T2>::computeA0()
                    _expr=inner(id(w),idt(w)) );
     auto k = form1( _test=Vh );
     k = integrate( _range=elements(mesh),
-                   _expr=inner(trans(gradv( U.template element<0>() )),id(w)) );
+                   _expr=gradv(u)*id(w));
     // [gradpsi0]
 
     // a0 is the L2 projection of grad(psi0) over Vh
@@ -222,4 +224,3 @@ SolverA<T,T2>::loadA2()
     std::string path = "a2";
     a2.load(_path=path);
 }
-

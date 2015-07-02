@@ -4,7 +4,7 @@
 #include <feel/feeldiscr/ned1h.hpp>
 #include <feel/feelfilters/exporter.hpp>
 
-#include "utilities.h"
+//#include "utilities.h"
 #include "solvereigenns2.hpp"
 #include "solvera.hpp"
 #include "solverspectralproblem.hpp"
@@ -23,7 +23,7 @@ public:
     typedef Lagrange<0, Scalar> cst_fct_type;
     typedef Lagrange<1, Scalar> scalar1_fct_type;
     typedef Lagrange<2, Scalar> scalar2_fct_type;
-    typedef Lagrange<1, Vectorial> vec_fct_type;
+    typedef Lagrange<2, Vectorial> vec_fct_type;
 
     typedef bases<ned_fct_type, scalar1_fct_type> eigen_basis_type;
     typedef FunctionSpace<mesh_type, eigen_basis_type> eigen_space_type;
@@ -66,6 +66,9 @@ private:
     vec_element_type u;
     vec_element_type v;
     vec_element_type vex;
+    vec_element_type verr;
+
+    double err;
 
     void load_mesh();
     void initSpaces();
@@ -73,42 +76,49 @@ private:
     void setA();
     void solveSP();
     void post();
-    void logInfo(std::ostream& out);
+    void logInfo();
+    void logMesh();
 };
 
 void
 SolverNS2::solve()
 {
-    boost::mpi::timer t;
-    boost::mpi::timer total;
+    tic();
+    tic();
 
     load_mesh();
-    logTime(t, "mesh", ioption("solverns2.verbose") > 1);
+    toc("mesh", ioption("solverns2.verbose") > 1);
+    tic();
 
     auto e = exporter( mesh );
 
     initSpaces();
-    logTime(t, "spaces", ioption("solverns2.verbose") > 1);
-    logInfo(LOG(INFO));
-    logInfo(std::cout);
+    a = Vh->element();
+    psi0 = Sh->element();
+    u = Vh->element();
+    v = Vh->element();
+    toc("spaces", ioption("solverns2.verbose") > 1);
+    logInfo();
 
     if( boption("solverns2.needEigen") || boption("solverns2.needSP"))
     {
+        tic();
         setEigen();
         for( int i = 0; i < eigenModes.size(); i = i + 10)
         {
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(eigenModes[i]) );
             e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(eigenModes[i]) );
         }
-        logTime(t, "eigenmodes", ioption("solverns2.verbose") > 0);
+        toc("eigenmodes", ioption("solverns2.verbose") > 0);
     }
 
     if( boption("solverns2.needA0") || boption("solverns2.needA1") || boption("solverns2.needA2") || boption("solverns2.needSP"))
     {
+        tic();
         setA();
         e->add( "a", a);
-        //e->add( "psi0", psi0);
-        logTime(t, "a", ioption("solverns2.verbose") > 0);
+        e->add( "psi0", psi0);
+        toc("a", ioption("solverns2.verbose") > 0);
     }
 
     if( boption("solverns2.needSP"))
@@ -116,18 +126,22 @@ SolverNS2::solve()
         if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
             std::cout << " ---------- compute spectral problem ----------\n";
 
+        tic();
         solveSP();
         e->add("u", u);
-        logTime(t, "sp", ioption("solverns2.verbose") > 0);
+        toc("sp", ioption("solverns2.verbose") > 0);
+        tic();
         post();
         e->add("v", v);
         e->add("vex", vex);
-        logTime(t, "post", ioption("solverns2.verbose") > 0);
+        e->add("verr", verr);
+        toc("post", ioption("solverns2.verbose") > 0);
     }
 
     e->save();
 
-    logTime(total, "total", ioption("solverns2.verbose") > 0);
+    toc("total", ioption("solverns2.verbose") > 0);
+    // Environment::saveTimers(ioption("solverns2.verbose") > 1);
 }
 
 void
@@ -158,8 +172,7 @@ SolverNS2::load_mesh()
                          );
     }
 
-    logMesh(LOG(INFO), mesh);
-    logMesh(std::cout, mesh);
+    logMesh();
 }
 
 void
@@ -184,7 +197,8 @@ SolverNS2::setA()
 {
     auto solvera = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
     a = solvera->solve();
-    //psi0 = solvera->psi0;
+    if( boption("solverns2.computeA0"))
+        psi0 = solvera->psi0;
 }
 
 void
@@ -206,78 +220,144 @@ SolverNS2::solveSP()
 void
 SolverNS2::post()
 {
-    v = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(a) + idv(u));
+    v = Vh->element();
+    auto form2V = form2(_test=Vh, _trial=Vh);
+    form2V = integrate(elements(mesh), inner(idt(v),id(v)));
+    auto form1V = form1(_test=Vh);
+    form1V = integrate( elements(mesh), inner(idv(a) + idv(u), id(v)));
+    form2V.solve(_rhs=form1V, _solution=v);
+
     vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
-    auto err = normL2(elements(mesh), idv(v)-idv(vex));
+    auto uex = Vh->element();
+    uex = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(vex) - idv(a));
+    verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(v) - idv(vex));
+    err = normL2(elements(mesh), idv(verr));
+    auto errU = normL2(elements(mesh), idv(u) - idv(uex));
 
     LOG(INFO) << "error(" << eigenModes.size() << ") : " << err;
     if(Environment::isMasterRank())
-        std::cout << "error(" << eigenModes.size() << ") : " << err << std::endl;
+    {
+        std::cout << "errorV(" << eigenModes.size() << ") : " << err << std::endl;
+        std::cout << "errorU(" << eigenModes.size() << ") : " << errU << std::endl;
+        auto filename = (boost::format("%1%-info.md") %Environment::about().appName()).str();
+        std::fstream s;
+        s.open (filename, std::fstream::out|std::fstream::app);
+        s << "\n#Results\n"
+          << "error(" << eigenModes.size() << ") : " << err << std::endl;
+        s.close();
+    }
+
+    auto g_s = soption("solverns2.alpha0");
+    auto vars = Symbols{ "x", "y", "radius", "speed" };
+    auto g_e = parse( g_s, vars );
+    auto g = expr( g_e, vars );
+    g.setParameterValues( {
+            { "radius", doption( "solverns2.radius" ) },
+                { "speed", doption( "solverns2.speed" ) } } );
+
+    auto divvex = normL2(elements(mesh), divv(vex));
+    auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
+    auto cvexn = normL2(boundaryfaces(mesh), inner(curlv(vex), N()));
+    auto divvh = normL2(elements(mesh), divv(v));
+    auto vn = normL2(markedfaces(mesh,1), inner(idv(v), N()) + g );
+    auto cvn = normL2(boundaryfaces(mesh), inner(curlv(v), N()));
+    auto diva = normL2(elements(mesh), divv(a));
+    auto an = normL2(markedfaces(mesh,1), inner(idv(a), N()) + g );
+    auto can = normL2(boundaryfaces(mesh), inner(curlv(a), N()));
+    auto divu = normL2(elements(mesh), divv(u));
+    auto un = normL2(boundaryfaces(mesh), inner(idv(uex), N()));
+    auto cun = normL2(boundaryfaces(mesh), inner(curlv(uex), N()));
+
+    if( Environment::isMasterRank() )
+        std::cout << "||div vex|| = " << divvex << std::endl
+                  << "||vex.n-a0||= " << vexn << std::endl
+                  << "||cvex.n||  = " << cvexn << std::endl
+                  << "||div v||   = " << divvh << std::endl
+                  << "||v.n-a0||  = " << vn << std::endl
+                  << "||cv.n||    = " << cvn << std::endl
+                  << "||div a||   = " << diva << std::endl
+                  << "||a.n-a0||  = " << an << std::endl
+                  << "||ca.n||    = " << can << std::endl
+                  << "||div u||   = " << divu << std::endl
+                  << "||u.n||     = " << un << std::endl
+                  << "||cu.n||    = " << cun << std::endl;
 }
 
 void
-SolverNS2::logInfo(std::ostream& out)
+SolverNS2::logInfo()
 {
+    LOG(INFO) << "[info] np = " << Environment::numberOfProcessors() << std::endl
+              << "[info] geo = " << soption("gmsh.filename") << std::endl
+              << "[info] h = " << doption("gmsh.hsize") << std::endl
+              << "[info] elt = " << mesh->numGlobalElements() << std::endl
+              << "[info] Nh dof = " << Nh->nDof() << std::endl
+              << "[info] Vh dof = " << Vh->nDof() << std::endl
+              << "[info] Sh dof = " << Sh->nDof() << std::endl;
+
     if(Environment::isMasterRank())
     {
-        out << "[info] np = " << Environment::numberOfProcessors() << std::endl
-            << "[info] geo = " << soption("gmsh.filename") << std::endl
-            << "[info] h = " << doption("gmsh.hsize") << std::endl
-            << "[info] elt = " << mesh->numGlobalElements() << std::endl
-            << "[info] Nh dof = " << Nh->nDof() << std::endl
-            << "[info] Vh dof = " << Vh->nDof() << std::endl
-            << "[info] Sh dof = " << Sh->nDof() << std::endl;
+        auto filename = (boost::format("%1%-info.md") %Environment::about().appName()).str();
+        std::fstream s;
+        s.open (filename, std::fstream::out|std::fstream::app);
+        s << "\n#Environment\n"
+          << "x | Environment\n"
+          << ":-: | :-:\n"
+          << "geo | " << soption("gmsh.filename") << "\n"
+          << "h | " << doption("gmsh.hsize") << "\n"
+          << "np | " << Environment::numberOfProcessors() << "\n";
+        if( boption("solverns2.computeEigen"))
+            s << "modes | " << ioption("solvereigen.nev") << "\n";
+        else
+            s << "modes | " << ioption("solverns2.nbMode") << "\n";
+        s << "alpha0 | " << soption("solverns2.alpha0") << "\n"
+          << "alpha2 | " << soption("solverns2.alpha2") << "\n";
+        s << "\n#Spaces\n"
+          << "x | Nh | Vh | Sh\n"
+          << ":-: | :-: | :-: | :-:\n"
+          << "global dof | " << Nh->nDof() << " | " << Vh->nDof() << " | " << Sh->nDof() << "\n"
+          << "local dof | " << Nh->nLocalDof() << " | " << Vh->nLocalDof() << " | " << Sh->nLocalDof() << std::endl;
+        s.close();
+    }
+
+}
+
+void SolverNS2::logMesh()
+{
+    LOG(INFO) << "[mesh]  - mesh entities" << std::endl
+              << "[mesh]  number of elements : " << mesh->numGlobalElements() << std::endl
+              << "[mesh]  number of faces : " << mesh->numGlobalFaces() << std::endl
+              << "[mesh]  number of edges : " << mesh->numGlobalEdges() << std::endl
+              << "[mesh]  number of points : " << mesh->numGlobalPoints() << std::endl
+              << "[mesh]  number of vertices : " << mesh->numGlobalVertices() << std::endl
+              << "[mesh]  - mesh sizes" << std::endl
+              << "[mesh]  h max : " << mesh->hMax() << std::endl
+              << "[mesh]  h min : " << mesh->hMin() << std::endl
+              << "[mesh]  h avg : " << mesh->hAverage() << std::endl
+              << "[mesh]  measure : " << mesh->measure() << std::endl;
+
+    for( auto marker: mesh->markerNames() )
+        LOG(INFO) << "[mesh]  - Marker " << marker.first << std::endl;
+
+    if(Environment::isMasterRank())
+    {
+        auto filename = (boost::format("%1%-info.md") %Environment::about().appName()).str();
+        std::fstream s;
+        s.open (filename, std::fstream::out);
+        s << "#Mesh\n"
+          << "x | " << soption( _name="gmsh.filename" ) << "\n"
+          << ":-: | :-:\n"
+          << "number of elements | " << mesh->numGlobalElements() << "\n"
+          << "number of faces | " << mesh->numGlobalFaces() << "\n"
+          << "number of edges | " << mesh->numGlobalEdges() << "\n"
+          << "number of points | " << mesh->numGlobalPoints() << "\n"
+          << "number of vertices | " << mesh->numGlobalVertices() << "\n"
+          << "h max | " << mesh->hMax() << "\n"
+          << "h min | " << mesh->hMin() << "\n"
+          << "h avg | " << mesh->hAverage() << "\n"
+          << "measure | " << mesh->measure() << "\n";
+
+        for( auto marker: mesh->markerNames() )
+            s << "marker | " << marker.first << std::endl;
+        s.close();
     }
 }
-
-inline
-po::options_description
-makeOptions()
-{
-    po::options_description myappOptions( "PlasticOmnium options" );
-    myappOptions.add_options()
-        ( "solverns2.verbose", po::value<int>()->default_value( 0 ), "level of verbosity" )
-
-        ( "solverns2.needEigen", po::value<bool>()->default_value( true ), "need eigenmodes" )
-        ( "solverns2.markerList", po::value<std::vector<std::string> >()->multitoken(), "list of markers of the boundary" )
-        ( "solverns2.computeEigen", po::value<bool>()->default_value( true ), "need to compute eigenmodes, else load them" )
-        ( "solverns2.nbMode", po::value<int>()->default_value( 1 ), "number of modes to load" )
-        ( "solverns2.print", po::value<bool>()->default_value( false ), "print matrices" )
-
-        ( "solverns2.needA0", po::value<bool>()->default_value( false ), "need relief a0" )
-        ( "solverns2.computeA0", po::value<bool>()->default_value( true ), "need to compute a0, else load it" )
-        ( "solverns2.radius", po::value<double>()->default_value( 0.5 ), "cylinder's radius" )
-        ( "solverns2.speed", po::value<double>()->default_value( 1 ), "average speed" )
-        ( "solverns2.alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
-
-        ( "solverns2.needA1", po::value<bool>()->default_value( false ), "need relief a1" )
-        ( "solverns2.computeA1", po::value<bool>()->default_value( true ), "need to compute a1, else load it" )
-        ( "solverns2.alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
-
-        ( "solverns2.needA2", po::value<bool>()->default_value( false ), "need relief a2" )
-        ( "solverns2.computeA2", po::value<bool>()->default_value( true ), "need to compute a2, else load it" )
-        ( "solverns2.alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
-
-        ( "solverns2.needSP", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
-        ( "solverns2.nu", po::value<double>()->default_value( 1 ), "viscosity" )
-        ( "solverns2.computeRijk", po::value<bool>()->default_value( false ), "compute or load Rijk" )
-        ( "solverns2.computeRaik", po::value<bool>()->default_value( false ), "compute or load Raik" )
-        ( "solverns2.computeRiak", po::value<bool>()->default_value( true ), "compute or load Riak" )
-        ( "solverns2.computeRfk", po::value<bool>()->default_value( true ), "compute or load Rfk" )
-        ( "solverns2.computeRpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
-        ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
-
-        ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,2*(1-4*(x*x + y*y))}:x:y"), "v exacte" )
-        ;
-    return myappOptions;
-}
-
-po::options_description
-makeLibOptions()
-{
-    po::options_description libOptions( "Lib options" );
-    libOptions.add( backend_options( "a0" ) ).add( backend_options( "grada0" ) );
-    libOptions.add( backend_options( "a2" ) );
-    return libOptions.add( feel_options() );
-}
-
