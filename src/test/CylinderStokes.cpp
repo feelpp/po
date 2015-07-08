@@ -19,14 +19,19 @@ typedef Mesh<Simplex<FEELPP_DIM>> MeshDim;
 typedef Lagrange<0,Scalar> LagrP0;
 typedef Lagrange<1,Scalar> LagrP1;
 typedef Lagrange<2,Scalar> LagrP2;
+typedef Lagrange<3,Scalar> LagrP3;
 typedef Lagrange<1,Vectorial> LagrVecP1;
 typedef Lagrange<2,Vectorial> LagrVecP2;
 typedef bases<LagrP2,LagrP1> BaseP2P1;
+typedef bases<LagrP3,LagrP2> BaseP3P2;
 typedef bases<LagrVecP1> BaseVP1;
+typedef bases<LagrVecP2> BaseVP2;
 typedef bases<LagrVecP1,LagrP0> BaseVP1P0;
 typedef bases<LagrVecP2,LagrP1> BaseVP2P1;
 typedef FunctionSpace<MeshDim,BaseP2P1> FESpaceP2P1;
+typedef FunctionSpace<MeshDim,BaseP3P2> FESpaceP3P2;
 typedef FunctionSpace<MeshDim,BaseVP1> FESpaceVP1;
+typedef FunctionSpace<MeshDim,BaseVP2> FESpaceVP2;
 typedef FunctionSpace<MeshDim,BaseVP1P0> FESpaceVP1P0;
 typedef FunctionSpace<MeshDim,BaseVP2P1> FESpaceVP2P1;
 
@@ -38,10 +43,12 @@ MakeOptions( )
 {
     po::options_description EXPRoptions( "CylinderStokes EXPR options" );
         EXPRoptions.add_options( )
+        ( "MaxVel", po::value<double>( )->default_value( 2. ),
+          "Max Velovity of the Fluid Flow" )
         ( "MeanVel", po::value<double>( )->default_value( 1. ),
           "Mean Velovity of the Fluid Flow" )
         ( "Radius", po::value<double>( )->default_value( 0.5 ),
-          "Radius of the Domain Cylinder" );
+          "Radius of the Cylinder Domain" );
     return EXPRoptions;
 }
 inline po::options_description
@@ -53,6 +60,7 @@ MakeLibOptions( )
         LIBoptions.add( backend_options( "PBalpha0" ) )
                   .add( backend_options( "PBQ0" ) );
         LIBoptions.add( backend_options( "PBksi2" ) );
+        LIBoptions.add( backend_options( "PBA" ) );
     return LIBoptions.add( feel_options( ) );
 }
 
@@ -75,7 +83,9 @@ int main(int argc, char** argv)
 
     // FINITE ELEMENT SPACE
     auto Xh = FESpaceP2P1::New( Th );
-    auto Vh = FESpaceVP1::New( Th );
+    //auto Xh = FESpaceP3P2::New( Th );
+    //auto Vh = FESpaceVP1::New( Th );
+    auto Vh = FESpaceVP2::New( Th );
     //auto Zh = FESpaceVP1P0::New( Th );
     auto Zh = FESpaceVP2P1::New( Th );
 
@@ -91,6 +101,7 @@ int main(int argc, char** argv)
     auto KSI2 = Zh->element( );
     auto ksi2 = KSI2.template element<0>( );
     auto prksi2 = KSI2.template element<1>( );
+    auto A = Vh->element( );
 
     // TEST FUNCTION
     auto V = Xh->element( );
@@ -102,25 +113,32 @@ int main(int argc, char** argv)
     auto pry = Y.template element<1>( );
 
     // RIGHT HAND SIDE : F, ALPHA0, ALPHA2
-    auto f = expr( soption( "functions.f" ) );
+    //auto f = expr( soption( "functions.f" ) );
     auto alpha2 = expr( soption( "functions.g" ) );
     auto alpha0 = expr( soption( "functions.h" ) );
+    if(Environment::isMasterRank())
+        std::cout << "ALPHA0 EVALUATION" << std::endl;
+    auto eval = integrate( markedfaces( Th, 2 ), alpha0 ).evaluate( )( 0, 0 );
+    if(Environment::isMasterRank())
+        std::cout << "ALPHA0 EVALUATION" << std::endl;
+    if(Environment::isMasterRank())
+        std::cout << eval << std::endl;
 
     // LINEAR FORM
     auto la2 = form1( _test=Xh );
-    la2 = integrate( _range=elements( Th ),
-                     _expr=trans( f )*id( v ) );
-    la2 += integrate( _range=markedfaces( Th, 1 ),
-                      _expr=-alpha2*id( v ) );
+    la2 = integrate( _range=markedfaces( Th, 1 ),
+                     _expr=-alpha2*id( v ) );
     la2 += integrate( _range=markedfaces( Th, 2 ),
                       _expr=alpha2*id( v ) );
+    //la2 += integrate( _range=elements( Th ),
+    //                  _expr=trans( f )*id( v ) );
     auto la0 = form1( _test=Xh );
-    la0 = integrate( _range=elements( Th ),
-                     _expr=trans( f )*id( v ) );
-    la0 += integrate( _range=markedfaces( Th, 1 ),
-                      _expr=-alpha0*id( v ) );
+    la0 = integrate( _range=markedfaces( Th, 1 ),
+                     _expr=-alpha0*id( v ) );
     la0 += integrate( _range=markedfaces( Th, 2 ),
                       _expr=alpha0*id( v ) );
+    //la0 += integrate( _range=elements( Th ),
+    //                 _expr=trans( f )*id( v ) );
 
     // BILINEAR FORM
     auto aa2 = form2( _trial=Xh, _test=Xh );
@@ -170,20 +188,10 @@ int main(int argc, char** argv)
                _rhs=lq0,
                _solution=Q0 );
 
-    ///////////////////////////////////////////////////////////////////////
-    //                   JUSQUE LA... TOUT VA BIEN :-D                   //
-    ///////////////////////////////////////////////////////////////////////
-
     // LINEAR FORM
     auto lk2 = form1( _test=Zh );
     lk2 = integrate( _range=elements( Th ),
                      _expr=inner( idv( Q2 ), id( y ) ) );
-    //lk2 += integrate( _range=elements( Th ),
-    //                  _expr=1.0e-16*idt( prksi2 )*id( pry ) );
-
-    ///////////////////////////////////////////////////////////////////////
-    //                   JUSQUE LA... MOUAIS PAS SUR                     //
-    ///////////////////////////////////////////////////////////////////////
 
     // BILINEAR FORM
     auto ak2 = form2( _trial=Zh, _test=Zh );
@@ -203,17 +211,35 @@ int main(int argc, char** argv)
                _rhs=lk2,
                _solution=KSI2 );
 
+    //LINEAR FORM
+    auto la = form1( _test=Vh );
+    la = integrate( _range=elements( Th ),
+                    _expr=inner( idv( Q0 ), id( W ) ) );
+    la += integrate( _range=elements( Th ),
+                     _expr=inner( idv( ksi2 ), id( W ) ) );
+
+    //BILINEAR FORM
+    auto aa = form2( _trial=Vh, _test=Vh );
+    aa = integrate( _range=elements( Th ),
+                    _expr=inner( idt( A ), id( W ) ) );
+
+    //SOLVING PROBLEM
+    aa.solve( _name="PBA",
+              _rhs=la,
+     _solution=A );
+
     // RESULT STORAGE
     auto e = exporter( Th );
     e->add( "psi2", psi2 );
-    e->add( "psi0", psi0 );
     e->add( "Q2", Q2 );
+    e->add( "psi0", psi0 );
     e->add( "Q0", Q0 );
     e->add( "ksi2", ksi2 );
+    e->add( "A", A );
     e->save( );
 
     // END OF MAIN PROGRAM
     if(Environment::isMasterRank())
-        std::cout << "THE END" << std::endl;
+        std::cout << "THE END : JOB CAN NOW BE KILLED" << std::endl;
     return 0;
 }
