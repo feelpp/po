@@ -1,85 +1,110 @@
-h=0.1;
+h=0.5;
 
-l1=2;
-l2=1;
-l3=2;
+Lt=18;
+r=6;
 
-r1=1;
-r3=0.5;
+angle=35;
+rad=Pi*angle/180;
+ac=16;
+Lc=ac*Sin(rad);
+bc=ac*Cos(rad);
+L=Lt+Lc;
 
-// premier troncon
-Point(1) = {0,0,0,h};
-Point(2) = {-r1,0,0,h};
-Point(3) = {0,r1,0,h};
-Point(4) = {r1,0,0,h};
-Point(5) = {0,-r1,0,h};
+Point(1) = {0,0,-L,h};
+Point(2) = {0,0,-Lc,h};
+Point(3) = {0,0,Lc,h};
+Point(4) = {0,0,L,h};
 
-Circle(1) = {2,1,3};
-Circle(2) = {3,1,4};
-Circle(3) = {4,1,5};
-Circle(4) = {5,1,2};
+Point(5) = {r,0,-L,h};
+Point(6) = {r,0,-Lc,h};
+Point(7) = {r+bc,0,0,h};
+Point(8) = {r,0,Lc,h};
+Point(9) = {r,0,L,h};
 
-Line Loop(1) = {1,2,3,4};
-Translate {0,0,l1}{ Duplicata { Line{1,2,3,4};}}
+Point(10) = {0,r,-L,h};
+Point(11) = {0,r,-Lc,h};
+Point(12) = {0,r+bc,0,h};
+Point(13) = {0,r,Lc,h};
+Point(14) = {0,r,L,h};
 
-Line(9) = {2,6};
-Line(10) = {3,8};
-Line(11) = {4,13};
-Line(12) = {5,18};
+Point(15) = {-r,0,-L,h};
+Point(16) = {-r,0,-Lc,h};
+Point(17) = {-r-bc,0,0,h};
+Point(18) = {-r,0,Lc,h};
+Point(19) = {-r,0,L,h};
 
-Line Loop(2) = {1,10,-5,-9};
-Line Loop(3) = {2,11,-6,-10};
-Line Loop(4) = {3,12,-7,-11};
-Line Loop(5) = {4,9,-8,-12};
+Point(20) = {0,-r,-L,h};
+Point(21) = {0,-r,-Lc,h};
+Point(22) = {0,-r-bc,0,h};
+Point(23) = {0,-r,Lc,h};
+Point(24) = {0,-r,L,h};
 
-Dilate {{0,0,l1+l2},r3/r1}{ Translate {0,0,l2}{Duplicata { Line{5,6,7,8};}}}
+// center lines
+Line(1) = {1,2};
+Line(2) = {2,3};
+Line(3) = {3,4};
 
-Line(17) = {6,19};
-Line(18) = {8,21};
-Line(19) = {13,26};
-Line(20) = {18,31};
+i = 0;
+For(1:4)
 
-Line Loop(6) = {5,18,-13,-17};
-Line Loop(7) = {6,19,-14,-18};
-Line Loop(8) = {7,20,-15,-19};
-Line Loop(9) = {8,17,-16,-20};
+Line(4+i*11) = {5+i*5,1};
+Line(5+i*11) = {6+i*5,2};
+Line(6+i*11) = {8+i*5,3};
+Line(7+i*11) = {9+i*5,4};
 
-Translate {0,0,l3}{ Duplicata { Line{13,14,15,16};}}
+Line(8+i*11) = {5+i*5,6+i*5};
+Circle(9+i*11) = {6+i*5,7+i*5,8+i*5};
+Line(10+i*11) = {8+i*5,9+i*5};
 
-Line(25) = {19,32};
-Line(26) = {21,34};
-Line(27) = {26,39};
-Line(28) = {31,44};
+Circle(11+i*11) = {5+i*5,1,5+((i+1)*5)%20};
+Circle(12+i*11) = {6+i*5,2,6+((i+1)*5)%20};
+Circle(13+i*11) = {8+i*5,3,8+((i+1)*5)%20};
+Circle(14+i*11) = {9+i*5,4,9+((i+1)*5)%20};
 
-Line Loop(10) = {13,26,-21,-25};
-Line Loop(11) = {14,27,-22,-26};
-Line Loop(12) = {15,28,-23,-27};
-Line Loop(13) = {16,25,-24,-28};
 
-Line Loop(14) = {21,22,23,24};
+Line Loop(1+i*6) = {1,-(5+i*11),-(8+i*11),4+i*11};
+Line Loop(2+i*6) = {2,-(6+i*11),-(9+i*11),5+i*11};
+Line Loop(3+i*6) = {3,-(7+i*11),-(10+i*11),6+i*11};
 
-Plane Surface(15) = {1};
-Ruled Surface(16) = {2};
-Ruled Surface(17) = {3};
-Ruled Surface(18) = {4};
-Ruled Surface(19) = {5};
-Ruled Surface(20) = {6};
-Ruled Surface(21) = {7};
-Ruled Surface(22) = {8};
-Ruled Surface(23) = {9};
-Ruled Surface(24) = {10};
-Ruled Surface(25) = {11};
-Ruled Surface(26) = {12};
-Ruled Surface(27) = {13};
-Plane Surface(28) = {14};
+Line Loop(4+i*6) = {8+i*11,12+i*11,-(8+((i+1)*11)%44),-(11+i*11)};
+Line Loop(5+i*6) = {9+i*11,13+i*11,-(9+((i+1)*11)%44),-(12+i*11)};
+Line Loop(6+i*6) = {10+i*11,14+i*11,-(10+((i+1)*11)%44),-(13+i*11)};
 
-Physical Surface("inflow") = {15};
-Physical Surface("wall1") = {16,17,18,19};
-Physical Surface("wall2") = {20,21,22,23};
-Physical Surface("wall3") = {24,25,26,27};
-Physical Surface("outflow") = {28};
+Plane Surface(1+i*6) = {1+i*6};
+Plane Surface(2+i*6) = {2+i*6};
+Plane Surface(3+i*6) = {3+i*6};
 
-Surface Loop(1) = {15,16,17,18,19,20,21,22,23,24,25,26,27,28};
+i = i + 1;
+EndFor
+
+Ruled Surface(4) = {4};
+Ruled Surface(5) = {5};
+Ruled Surface(6) = {6};
+Ruled Surface(10) = {10};
+Ruled Surface(11) = {11};
+Ruled Surface(12) = {12};
+Ruled Surface(16) = {16};
+Ruled Surface(17) = {17};
+Ruled Surface(18) = {18};
+Ruled Surface(22) = {22};
+Ruled Surface(23) = {23};
+Ruled Surface(24) = {24};
+
+Line Loop(25) = {11,22,33,44};
+Line Loop(26) = {12,23,34,45};
+Line Loop(27) = {13,24,35,46};
+Line Loop(28) = {14,25,36,47};
+
+Plane Surface(25) = {25};
+Plane Surface(26) = {26};
+Plane Surface(27) = {27};
+Plane Surface(28) = {28};
+
+Surface Loop(1) = {4,5,6,10,11,12,16,17,18,22,23,24,25,28};
 Volume(1) = {1};
-Physical Volume("volume") = {1};
+
+Physical Surface("inflow") = {25};
+Physical Surface("outflow") = {28};
+Physical Surface("wall") = {4,5,6,10,11,12,16,17,18,22,23,24};
+Physical Volume("domain") = {1};
 
