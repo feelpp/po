@@ -14,9 +14,9 @@ class SolverA
     typedef FunctionSpaceType2 ml_space_ptrtype;
     typedef typename ml_space_ptrtype::element_type ml_space_type;
 
-    typedef typename ml_space_type::template sub_functionspace<0>::type scalar_space_type;
-    typedef boost::shared_ptr<scalar_space_type> scalar_space_ptrtype;
-    typedef typename scalar_space_type::element_type scalar_element_type;
+    typedef typename ml_space_type::template sub_functionspace<0>::type rt_space_type;
+    typedef boost::shared_ptr<rt_space_type> rt_space_ptrtype;
+    typedef typename rt_space_type::element_type rt_element_type;
 
     typedef SolverA<space_ptrtype, ml_space_ptrtype> solvera_type;
     typedef typename boost::shared_ptr<solvera_type> solvera_ptrtype;
@@ -24,11 +24,12 @@ class SolverA
     mesh_ptrtype mesh;
     space_ptrtype Vh;
     ml_space_ptrtype Mh;
-    scalar_space_ptrtype Sh;
-    element_type a;
-    element_type a0;
-    element_type a1;
-    element_type a2;
+    rt_space_ptrtype RTh;
+    // scalar_space_ptrtype Sh;
+    rt_element_type a;
+    rt_element_type a0;
+    rt_element_type a1;
+    rt_element_type a2;
 
     void computeA0();
     void loadA0();
@@ -39,9 +40,8 @@ class SolverA
 
 public:
     static solvera_ptrtype build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml_space_ptrtype& Mh);
-    element_type solve();
+    rt_element_type solve();
 
-    scalar_element_type psi0;
 };
 
 template<typename T, typename T2>
@@ -52,15 +52,15 @@ SolverA<T,T2>::build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml
     solvera->mesh = mesh;
     solvera->Vh = Vh;
     solvera->Mh = Mh;
-    solvera->Sh = Mh->template functionSpace<0>();
+    solvera->RTh = Mh->template functionSpace<0>();
     return solvera;
 }
 
 template<typename T, typename T2>
-typename SolverA<T,T2>::element_type
+typename SolverA<T,T2>::rt_element_type
 SolverA<T,T2>::solve()
 {
-    a = Vh->element();
+    a = RTh->element();
 
     if( boption("solverns2.needA0") )
     {
@@ -134,53 +134,34 @@ SolverA<T,T2>::computeA0()
     g.setParameterValues( {
             { "radius", doption( "solverns2.radius" ) },
                 { "speed", doption( "solverns2.speed" ) } } );
+    auto alpha0  = vec( cst(0.), cst(0.), g);
+    //auto f = div(alpha0);
     // [option]
 
     auto U = Mh->element();
     auto V = Mh->element();
     auto u = U.template element<0>() ;
-    auto lambda = U.template element<1>() ;
+    auto p = U.template element<1>() ;
     auto v = V.template element<0>() ;
-    auto nu = V.template element<1>() ;
+    auto q = V.template element<1>() ;
 
     // [bilinearA]
-    auto a = form2( _trial=Mh, _test=Mh );
-    a = integrate( _range=elements(mesh),
-                   _expr=inner(gradt(u),grad(v))
-                   // [bilinearA]
-                   // [bilinearB]
-                   + id( v )*idt( lambda ) + idt( u )*id( nu )
-    // [bilinearB]
-                   );
-
-    // [rhs]
     auto l = form1( _test=Mh );
-    l = integrate( _range=markedfaces(mesh, 1), // inflow
-                   _expr=-g*id(v) );
-    l += integrate( _range=markedfaces(mesh, 2), // outflow
-                    _expr=g*id(v) );
-    // l += integrate( _range=markedfaces(mesh, 3), // wall
-    //                 _expr=cst(0.)*id(v) );
-    // [rhs]
+    auto a = form2( _trial=Mh, _test=Mh );
+    a = integrate( elements(mesh),
+                   -trans(idt(u))*id(v)
+                   -idt(p)*div(v)
+                   -divt(u)*id(q)
+                   -cst(0.5)*(trans(idt(u)) - gradt(p))*(-id(v)+trans(grad(q)))
+                   -cst(0.5)*(divt(u)*div(v))
+                   -cst(0.5)*(trans(curlt(u))*curl(v))
+                   );
+    a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u, _expr=alpha0);
 
     a.solve( _name="a0", _rhs=l, _solution=U );
 
-    psi0 = Sh->element();
-    psi0 = u;
-
-    // [gradpsi0]
-    auto w = Vh->element();
-    a0 = Vh->element();
-    auto b = form2( _trial=Vh, _test=Vh );
-    b = integrate( _range=elements(mesh),
-                   _expr=inner(id(w),idt(w)) );
-    auto k = form1( _test=Vh );
-    k = integrate( _range=elements(mesh),
-                   _expr=gradv(u)*id(w));
-    // [gradpsi0]
-
-    // a0 is the L2 projection of grad(psi0) over Vh
-    b.solve( _name="grada0", _rhs=k, _solution=a0 );
+    a0 = RTh->element();
+    a0 = u;
 
     std::string path = "a0";
     a0.save(_path=path);
@@ -190,7 +171,7 @@ template<typename T, typename T2>
 void
 SolverA<T,T2>::loadA0()
 {
-    a0 = Vh->element();
+    a0 = RTh->element();
     std::string path = "a0";
     a0.load(_path=path);
 }
@@ -205,7 +186,7 @@ template<typename T, typename T2>
 void
 SolverA<T,T2>::loadA1()
 {
-    a1 = Vh->element();
+    a1 = RTh->element();
     std::string path = "a1";
     a1.load(_path=path);
 }
@@ -220,7 +201,7 @@ template<typename T, typename T2>
 void
 SolverA<T,T2>::loadA2()
 {
-    a2 = Vh->element();
+    a2 = RTh->element();
     std::string path = "a2";
     a2.load(_path=path);
 }
