@@ -6,7 +6,7 @@
 \begin{document}
 
 \section{Algorithme}
-
+\label{algo}
 \begin{enumerate}
 \item
   Résoudre le problème aux valeurs propres pour trouver $(\lambda_i,\mbf{g}_i)_{i=1,\dots,M}$
@@ -181,6 +181,7 @@ Cela prouve donc que le rélévement de $\alpha_0$ et $\alpha_1$ fonctionne, san
 On peut donc bien utiliser les fonctions propres avec le relévement proposé par P.Penel et J. Neustuppa pour résoudre le problème de Stokes.
 
 \subsection{Fonctions propres}
+\subsubsection{Stokes}
 On résout donc le problème suivant :
 \begin{pb}Trouver $\mbf{u}\in D^1$ tel que $\forall k=1,\dots,M$ :
   \[ \int_\Omega(\curl\mbf{u})\cdot(\curl\mbf{g}_k) = - \int_\Gamma \alpha_2\phi_k \]
@@ -218,9 +219,15 @@ L'idée est d'utiliser le préconditionneur définit dans \textit{Parallel numer
 Ce qui devrait donner dans notre cas :
 \[ C^t \mathscr{P}_M^{-1}ACx = \lambda C^t \mathscr{P}_M^{-1}BCx \]
 
+\subsubsection{Navier-Stokes}
+Pour Navier-Stokes on retrouve les mêmes résultats que précédemment, mais comme vu dans la section \ref{algo}, on doit calculer beaucoup de coefficients en plus.\\
+Il y a $M^3 + M^2 + M^2 + M$ coefficients qui rentre en compte, mais en utilisant certaines propriétés de symétrie, on peut réduire ce nombre à $M^2(M-1)/2 + M^2 + M(M-1)/2 + M$.\\
+Pour 100 modes propres, cela fait tout de même 510 050 coefficients à calculer.
+Pour 86 modes et 325 467 coefficients, avec à peine plus de 10000 degrés de liberté sur 15 processeurs, cela prennait plus de 5h pour $R_{ijk}$, 450s pour $R_{aik}$ et $R_{iak}$ et quelques dizaines de seconde pour $R_{fk}$.\\
+En utilisant des formes bilinéaires pour calculer ces coefficients, on arrive à 450s pour $R_{ijk}$, 6s pour $R_{aik}$, 12s pour, $R_{iak}$ et moins d'une seconde pour $R_{fk}$.\\
+On arrive donc à une amélioration d'un facteur 40 pour le calcul de cette partie. Il y a encore peut-être une possibilité d'améliorer ce nombre pour $R_{ijk}$.
 
-\iffalse
-\subsection{Relévement}
+\section{Relévement}
 \label{relev}
 On suit ce qui est décrit dans l'article de J. Neustuppa et P. Penel\footnote{The Navier-Stokes equation with inhomogeneous boundary conditions based on vorticity, 2008} :
 
@@ -267,7 +274,7 @@ Trouver $(\bm{\psi}_i,p_i)\in \mathcal{U}\times\mathcal{Q}$ tel que :
 où
 \begin{gather*}
   \mathcal{U} = \{\mbf{u}\in H(\mathrm{div},\Omega) \;|\; \mbf{u}\cdot\mbf{n} = \alpha_i\}\\
-  \mathcal{V} = \{\mbf{u}\in H(\mathrm{div},\Omega) \;|\; \mbf{u}\cdot\mbf{n} = 0\}\\
+  \mathcal{V} = \{\mbf{v}\in H(\mathrm{div},\Omega) \;|\; \mbf{v}\cdot\mbf{n} = 0\}\\
   \mathcal{Q} = \{p\in L_2(\Omega) \;|\; \int_\Omega p = 0 \}\\
   f=\begin{cases}
     0 &\mbox{pour } i=1\\
@@ -275,31 +282,156 @@ où
   \end{cases}
 \end{gather*}
 
-\subsection{Résultats}
+Pour augmenter la stabilité de la formulation, on utilise des termes supplémentaires définit dans l'article de M. R. Correa et A. F. D. Loula\footnote{Unconditionnaly stable mixed finite element methods for Darcy flow}. Parmi toutes les formulations proposées, j'ai choisi d'utiliser CGLS :
+\begin{equation}
+  \begin{aligned}
+    \int_\Omega\bm{\psi}_i\cdot\mbf{v} &+ \int_\Omega p_i(\div\mbf{v}) + \int_\Omega (\div\bm{\psi}_i)q&\\
+    &-\delta_1 \int_\Omega (\bm{\psi}_i-\grad p_i)\cdot(\mbf{v} +\grad q)&\\
+    &-\delta_2 \int_\Omega \div\bm{\psi}_i\div\mbf{v}&\\
+    &-\delta_3 \int_\Omega \curl\bm{\psi}_i\cdot\curl\mbf{v} &= \int_\Omega fq - \delta_2\int_\Omega f\div\mbf{v}
+  \end{aligned}
+\end{equation}
+
+En choisissant $\delta_3=0$, on retrouve la formulation GCL(Hdiv) avec les estimations d'erreur suivantes :
+\begin{gather}
+  ||p-p_h||_1 \leq Ch^k(|\mbf{u}|_{k+1} + |p|_{k+1}),\\
+  ||\mbf{u}-\mbf{u}_h|| \leq Ch^k(|\mbf{u}|_{k+1} + |p|_{k+1}),\\
+  ||\div\mbf{u}-\div\mbf{u}_h|| \leq Ch^k(|\mbf{u}|_{k+1} + |p|_{k+1})
+\end{gather}
+
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=2D Convergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| \mbf{u}-\mbf{u}_h ||_{L2}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=l2err] {convergence2d_u.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=l2err}}]{convergence2d_u.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+\hskip 10pt
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=2D Convergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| \div\mbf{u}-\div\mbf{u}_h ||_{L2}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=l2err] {convergence2d_divu.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=l2err}}]{convergence2d_divu.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=2D Convergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| p-p_h ||_{H1}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=h1err] {convergence2d_p.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=h1err}}]{convergence2d_p.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+\hskip 10pt
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=3D Convergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| p-p_h ||_{H1}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=l2err] {convergence3d_p.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=l2err}}]{convergence3d_p.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=3D Convergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| \mbf{u}-\mbf{u}_h ||_{L2}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=l2err] {convergence3d_u.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=l2err}}]{convergence3d_u.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+\hskip 10pt
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=3D Convergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| \div\mbf{u}-\div\mbf{u}_h ||_{L2}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=l2err] {convergence3d_divu.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=l2err}}]{convergence3d_divu.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+
+On voit donc que pour les cas tests, on a les ordres de convergence attendus.\\
+Pour le relévement de $\alpha_0$, on ne connait ni le potentiel, ni le champ exact. Les quantités d'intérêts sont donc la divergence et la composante normale du champ.
+
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=Composante normale,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| \alpha_0-\mbf{a}_h\cdot\mbf{n} ||_{L2(\Gamma_1)}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=an] {convergence_a.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=an}}]{convergence_a.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+\hskip 10pt
+\begin{tikzpicture}
+  \begin{loglogaxis}[
+      width=6.5cm,
+      title=Divergence,
+      xlabel=Mesh size ($h$),
+      ylabel=$|| \div\mbf{a}_h ||_{L2}$,
+      legend style = {legend pos = south east},
+    ]
+    \addplot table[x=hsize,y=div] {convergence_a.dat};
+    \addplot[mark=none, style=dashed, forget plot] table[y = {create col/linear regression={y=div}}]{convergence_a.dat};
+    \xdef \slope{\pgfplotstableregressiona};    
+    \addlegendentry{P1 : $\pgfmathprintnumber{\slope}$}
+  \end{loglogaxis}
+\end{tikzpicture}
+
+Un inconvénient à cette méthode est la visualisation des champs vectoriels utilisant les éléments de Raviart-Thomas. 
+
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.4]{vh}
-  \caption{$\mbf{v}_h$ pour $h=0.08$ et $M=237$}
+  \includegraphics[scale=0.5]{aRT}
+  \caption{Z-component with $h=0.05$ and 319343 dofs}
 \end{figure}
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{r|c|c||c|c}
-    h & \# elts & Nh & M & $||\mbf{v}_h-\mbf{v}||_{L^2}$ \\
-    \hline
-    0.1 & 20434 & 26099 & 100 & 0.42 \\
-    & & & 220 & 0.40 \\
-    & & & 230 & 0.32 \\
-    & & & 400 & 0.30 \\
-    \hline
-    0.08 & 36898 & 47808 & 225 & 0.36 \\
-    & & & 227 & 0.27
-  \end{tabular}
-\end{table}
 
-Des calculs sont encore en cours pour essayer de trouver une méthode qui fonctionne.
-\fi
-\section{Conditions aux bords}
+\subsection{Conditions aux bords}
 \label{cdtsortie}
 Sur $\Gamma_3$ :
 \[ \alpha_i=0\quad i=0,1,2\quad \Longrightarrow\quad \mbf{a}=\begin{pmatrix}0\\0\\0\end{pmatrix}\quad \Longrightarrow\quad \mbf{v}=\mbf{u} \]
