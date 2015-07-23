@@ -133,14 +133,14 @@ SolverSpectralProblem<F,F2,F3,E>::init()
     if( ! boption("solverns2.stokes"))
     {
         tic();
-        initRijk();
-        toc( "Rijk", ioption("solverns2.verbose") > 1);
-        tic();
         initRaik();
         toc( "Raik", ioption("solverns2.verbose") > 1);
         tic();
         initRiak();
         toc( "Riak", ioption("solverns2.verbose") > 1);
+        tic();
+        initRijk();
+        toc( "Rijk", ioption("solverns2.verbose") > 1);
     }
     // tic();
     // initRfk();
@@ -164,7 +164,6 @@ SolverSpectralProblem<F,F2,F3,E>::initRijk()
         Rijk(k) = MatrixXd(M,M);
 
     auto w = Nh->element();
-    auto rijkForm = form2( _test=Nh, _trial=Nh );
 
     if( boption("solverns2.computeRijk") )
     {
@@ -175,15 +174,13 @@ SolverSpectralProblem<F,F2,F3,E>::initRijk()
         // Rijk = - Rikj && Rijj = 0
         for(int k = 0; k < M; k++)
         {
+            auto rijkForm = form2( _test=Nh, _trial=Nh );
             rijkForm = integrate( elements(mesh),
                                   inner( cross( curl(w),idt(w) ), idv(g[k]) ));
             for(int i = 0; i < M; i++)
             {
                 for(int j = 0; j < k; j++)
                 {
-                    //Rijk(k)(i,j) = integrate( _range=elements( mesh ),
-                    //                          _expr=inner( cross( curlv(g[i]),idv(g[j]) ), idv(g[k]) )
-                    //).evaluate()(0,0);
                     Rijk(k)(i,j) = rijkForm( g[i], g[j] );
                     Rijk(j)(i,k) = -Rijk(k)(i,j);
 
@@ -248,8 +245,6 @@ SolverSpectralProblem<F,F2,F3,E>::initRaik()
         {
             for(int k = 0; k < i; k++)
             {
-                //Raik(k,i) = integrate( _range=elements( mesh ),
-                //                       _expr=inner( cross( curlv(a),idv(g[i]) ), idv(g[k])) ).evaluate()(0,0);
                 Raik(k,i) = raikForm(g[i], g[k]);
                 Raik(i,k) = -Raik(k,i);
 
@@ -301,6 +296,7 @@ SolverSpectralProblem<F,F2,F3,E>::initRiak()
     auto w = Nh->element();
     auto riakForm = form2( _test=Nh, _trial=Nh );
     riakForm = integrate( elements(mesh), inner( cross( curl(w),idv(a) ), idt(w)) );
+
     if( boption("solverns2.computeRiak") )
     {
         std::fstream s;
@@ -311,8 +307,6 @@ SolverSpectralProblem<F,F2,F3,E>::initRiak()
         {
             for(int k = 0; k < M; k++)
             {
-                //Riak(k,i) = integrate( _range=elements( mesh ),
-                //                       _expr=inner( cross( curlv(g[i]),idv(a) ), idv(g[k])) ).evaluate()(0,0);
                 Riak(k,i) = riakForm( g[i], g[k] );
 
                 if ( Environment::worldComm().isMasterRank() )
@@ -370,8 +364,6 @@ SolverSpectralProblem<F,F2,F3,E>::initRfk()
 
         for(int k = 0; k < M; k++)
         {
-            //Rfk(k) = integrate( _range=elements( mesh ),
-            //                    _expr=trans(ff)*idv(g[k]) ).evaluate()(0,0);
             Rfk(k) = rfkForm( g[k]);
 
             if ( Environment::worldComm().isMasterRank() )
@@ -428,10 +420,6 @@ SolverSpectralProblem<F,F2,F3,E>::initRpk()
 
         for(int k = 0; k < M; k++)
         {
-            // Rpk(k) = integrate( _range=markedfaces( mesh, 1 ),
-            //                     _expr=-a2*idv(psi[k]) ).evaluate()(0,0);
-            // Rpk(k) += integrate( _range=markedfaces( mesh, 2 ),
-            //                      _expr=a2*idv(psi[k]) ).evaluate()(0,0);
             Rpk(k) = rpkForm(psi[k]);
 
             if ( Environment::worldComm().isMasterRank())
