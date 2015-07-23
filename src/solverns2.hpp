@@ -207,8 +207,8 @@ SolverNS2::setA()
 void
 SolverNS2::solveSP()
 {
-    auto solversp = SolverSpectralProblem<vec_space_ptrtype, eigentuple_type>::build(mesh, Vh);
-    //solversp->setA(a);
+    auto solversp = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh, RTh);
+    solversp->setA(a);
     solversp->setEigen(eigenModes);
 
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)

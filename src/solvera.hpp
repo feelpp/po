@@ -165,6 +165,19 @@ SolverA<T,T2>::computeA0()
 
     std::string path = "a0";
     a0.save(_path=path);
+
+    auto diva = normL2(elements(mesh), divv(a0));
+    auto an = normL2(markedfaces(mesh,1), inner(idv(a0), N()) + g );
+
+    std::ofstream s;
+    if( Environment::isMasterRank() )
+    {
+        s.open( "convergence_a.dat", std::ios::out | std::ios::app);
+        s << "hsize" << "\t" << "nDof" << "\t" << "div" << "\t" << "an" << std::endl;
+        s << doption("gmsh.hsize") << "\t" << RTh->nDof() << "\t" << diva << "\t" << an << std::endl;
+        std::cout << "diva = " << diva << std::endl
+                  << "an = " << an << std::endl;
+    }
 }
 
 template<typename T, typename T2>
