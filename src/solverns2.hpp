@@ -2,6 +2,7 @@
 #include <feel/feelfilters/loadmesh.hpp>
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
+#include <feel/feelpoly/raviartthomas.hpp>
 #include <feel/feelfilters/exporter.hpp>
 
 #include "solvereigenns2.hpp"
@@ -23,20 +24,26 @@ public:
     typedef Lagrange<1, Scalar> scalar1_fct_type;
     typedef Lagrange<2, Scalar> scalar2_fct_type;
     typedef Lagrange<2, Vectorial> vec_fct_type;
+    typedef RaviartThomas<0> rt_fct_type;
 
     typedef bases<ned_fct_type, scalar1_fct_type> eigen_basis_type;
     typedef FunctionSpace<mesh_type, eigen_basis_type> eigen_space_type;
     typedef boost::shared_ptr<eigen_space_type> eigen_space_ptrtype;
 
-    typedef bases<scalar2_fct_type, cst_fct_type> ml_basis_type;
-    typedef FunctionSpace<mesh_type, ml_basis_type> ml_space_type;
-    typedef boost::shared_ptr<ml_space_type> ml_space_ptrtype;
-
     typedef typename eigen_space_type::template sub_functionspace<0>::type ned_space_type;
     typedef boost::shared_ptr<ned_space_type> ned_space_ptrtype;
     typedef typename ned_space_type::element_type ned_element_type;
 
-    typedef typename ml_space_type::template sub_functionspace<0>::type scalar_space_type;
+    typedef bases<rt_fct_type, scalar1_fct_type> ml_basis_type;
+    typedef FunctionSpace<mesh_type, ml_basis_type> ml_space_type;
+    typedef boost::shared_ptr<ml_space_type> ml_space_ptrtype;
+
+    typedef typename ml_space_type::template sub_functionspace<0>::type rt_space_type;
+    typedef boost::shared_ptr<rt_space_type> rt_space_ptrtype;
+    typedef typename rt_space_type::element_type rt_element_type;
+
+    typedef bases<scalar2_fct_type> scalar2_basis_type;
+    typedef FunctionSpace<mesh_type, scalar2_basis_type> scalar_space_type;
     typedef boost::shared_ptr<scalar_space_type> scalar_space_ptrtype;
     typedef typename scalar_space_type::element_type scalar_element_type;
 
@@ -55,12 +62,12 @@ private:
     eigen_space_ptrtype Xh;
     ned_space_ptrtype Nh;
     ml_space_ptrtype Mh;
+    rt_space_ptrtype RTh;
     scalar_space_ptrtype Sh;
     vec_space_ptrtype Vh;
 
     eigenmodes_type eigenModes;
-    vec_element_type a;
-    scalar_element_type psi0;
+    rt_element_type a;
 
     vec_element_type u;
     vec_element_type v;
@@ -92,8 +99,7 @@ SolverNS2::solve()
     auto e = exporter( mesh );
 
     initSpaces();
-    a = Vh->element();
-    psi0 = Sh->element();
+    a = RTh->element();
     u = Vh->element();
     v = Vh->element();
     toc("spaces", ioption("solverns2.verbose") > 1);
@@ -116,7 +122,6 @@ SolverNS2::solve()
         tic();
         setA();
         e->add( "a", a);
-        e->add( "psi0", psi0);
         toc("a", ioption("solverns2.verbose") > 0);
     }
 
@@ -180,7 +185,8 @@ SolverNS2::initSpaces()
     Xh = eigen_space_type::New( mesh );
     Nh = Xh->template functionSpace<0>();
     Mh = ml_space_type::New( mesh );
-    Sh = Mh->template functionSpace<0>();
+    RTh = Mh->template functionSpace<0>();
+    Sh = scalar_space_type::New( mesh );
     Vh = vec_space_type::New( mesh );
 }
 
@@ -196,14 +202,12 @@ SolverNS2::setA()
 {
     auto solvera = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
     a = solvera->solve();
-    if( boption("solverns2.computeA0"))
-        psi0 = solvera->psi0;
 }
 
 void
 SolverNS2::solveSP()
 {
-    auto solversp = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh);
+    auto solversp = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh, RTh);
     solversp->setA(a);
     solversp->setEigen(eigenModes);
 
@@ -229,8 +233,8 @@ SolverNS2::post()
     vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
     auto uex = Vh->element();
     uex = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(vex) - idv(a));
-    verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(v) - idv(vex));
-    err = normL2(elements(mesh), idv(verr));
+    verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(u) + idv(a) - idv(vex));
+    err = normL2(elements(mesh), idv(u)+idv(a) - idv(vex));
     auto errU = normL2(elements(mesh), idv(u) - idv(uex));
 
     LOG(INFO) << "error(" << eigenModes.size() << ") : " << err;
@@ -246,6 +250,8 @@ SolverNS2::post()
         s.close();
     }
 
+
+
     auto g_s = soption("solverns2.alpha0");
     auto vars = Symbols{ "x", "y", "radius", "speed" };
     auto g_e = parse( g_s, vars );
@@ -257,9 +263,9 @@ SolverNS2::post()
     auto divvex = normL2(elements(mesh), divv(vex));
     auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
     auto cvexn = normL2(boundaryfaces(mesh), inner(curlv(vex), N()));
-    auto divvh = normL2(elements(mesh), divv(v));
-    auto vn = normL2(markedfaces(mesh,1), inner(idv(v), N()) + g );
-    auto cvn = normL2(boundaryfaces(mesh), inner(curlv(v), N()));
+    auto divvh = normL2(elements(mesh), divv(a)+divv(u));
+    auto vn = normL2(markedfaces(mesh,1), inner(idv(a), N()) + inner(idv(u), N()) + g );
+    auto cvn = normL2(boundaryfaces(mesh), inner(curlv(a), N()) + inner(curlv(u), N()));
     auto diva = normL2(elements(mesh), divv(a));
     auto an = normL2(markedfaces(mesh,1), inner(idv(a), N()) + g );
     auto can = normL2(boundaryfaces(mesh), inner(curlv(a), N()));
