@@ -21,6 +21,7 @@ class SolverA
     typedef SolverA<space_ptrtype, ml_space_ptrtype> solvera_type;
     typedef typename boost::shared_ptr<solvera_type> solvera_ptrtype;
 
+
     mesh_ptrtype mesh;
     space_ptrtype Vh;
     ml_space_ptrtype Mh;
@@ -62,24 +63,21 @@ SolverA<T,T2>::solve()
 {
     a = RTh->element();
 
-    if( boption("solverns2.needA0") )
+    tic();
+    if( boption("solverns2.computeA0"))
     {
-        tic();
-        if( boption("solverns2.computeA0"))
-        {
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-                std::cout << " ---------- compute a0 ----------\n";
-            computeA0();
-        }
-        else
-        {
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-                std::cout << " ---------- load a0 ----------\n";
-            loadA0();
-        }
-        a += a0;
-        toc( "a0", ioption("solverns2.verbose") > 1);
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            std::cout << " ---------- compute a0 ----------\n";
+        computeA0();
     }
+    else
+    {
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            std::cout << " ---------- load a0 ----------\n";
+        loadA0();
+    }
+    a += a0;
+    toc( "a0", ioption("solverns2.verbose") > 1);
 
     if( boption("solverns2.needA1") )
     {

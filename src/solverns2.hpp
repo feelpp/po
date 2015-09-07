@@ -54,6 +54,15 @@ public:
     typedef boost::shared_ptr<vec_space_type> vec_space_ptrtype;
     typedef vec_space_type::element_type vec_element_type;
 
+    using solver_a_type = SolverA<vec_space_ptrtype, ml_space_ptrtype>;
+    using solver_a_ptrtype = boost::shared_ptr<solver_a_type>;
+
+    using solver_sp_type = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>;
+    using solver_sp_ptrtype = boost::shared_ptr<solver_sp_type>;
+
+    using exporter_type = Exporter<mesh_type>;
+    using exporter_ptrtype = boost::shared_ptr<exporter_type>;
+
     void solve();
 
 private:
@@ -74,14 +83,23 @@ private:
     vec_element_type vex;
     vec_element_type verr;
 
+    solver_a_ptrtype solverA;
+    solver_sp_ptrtype solverSP;
+
+    exporter_ptrtype e;
+
+    int iter;
+    double t;
+    double dt;
+
     double err;
 
     void load_mesh();
     void initSpaces();
     void setEigen();
-    void setA();
-    void solveSP();
-    void post();
+    void setA( double t );
+    void solveSP( double t );
+    void post( double t );
     void logInfo();
     void logMesh();
 };
@@ -90,59 +108,34 @@ void
 SolverNS2::solve()
 {
     tic();
-    tic();
 
     load_mesh();
-    toc("mesh", ioption("solverns2.verbose") > 1);
-    tic();
-
-    auto e = exporter( mesh );
 
     initSpaces();
-    a = RTh->element();
-    u = Vh->element();
-    v = Vh->element();
-    toc("spaces", ioption("solverns2.verbose") > 1);
-    logInfo();
 
-    if( boption("solverns2.needEigen") || boption("solverns2.needSP"))
+    setEigen();
+
+    solverA = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
+    solverSP = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh, RTh);
+    solverSP->setEigen(eigenModes);
+
+    e = exporter( mesh );
+
+    dt = doption( "solverns2.timeStep" );
+    for( t = doption("solverns2.startTime"), iter = 0;
+         t < doption("solverns2.finalTime");
+         iter++, t += dt
+         )
     {
         tic();
-        setEigen();
-        for( int i = 0; i < eigenModes.size(); i = i + 10)
-        {
-            e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(eigenModes[i]) );
-            e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(eigenModes[i]) );
-        }
-        toc("eigenmodes", ioption("solverns2.verbose") > 0);
+        setA( t );
+
+        solveSP( t );
+        post( t );
+
+        e->save();
+        toc("iteration", ioption("solverns2.verbose") > 1 );
     }
-
-    if( boption("solverns2.needA0") || boption("solverns2.needA1") || boption("solverns2.needA2") || boption("solverns2.needSP"))
-    {
-        tic();
-        setA();
-        e->add( "a", a);
-        toc("a", ioption("solverns2.verbose") > 0);
-    }
-
-    if( boption("solverns2.needSP"))
-    {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-            std::cout << " ---------- compute spectral problem ----------\n";
-
-        tic();
-        solveSP();
-        e->add("u", u);
-        toc("sp", ioption("solverns2.verbose") > 0);
-        tic();
-        post();
-        e->add("v", v);
-        e->add("vex", vex);
-        e->add("verr", verr);
-        toc("post", ioption("solverns2.verbose") > 0);
-    }
-
-    e->save();
 
     toc("total", ioption("solverns2.verbose") > 0);
     // Environment::saveTimers(ioption("solverns2.verbose") > 1);
@@ -151,6 +144,7 @@ SolverNS2::solve()
 void
 SolverNS2::load_mesh()
 {
+    tic();
     Feel::fs::path mypath(soption( _name="gmsh.filename" ));
     std::string mesh_name = ( boost::format( "%1%.msh" )
                               %mypath.stem().string() ).str();
@@ -179,52 +173,67 @@ SolverNS2::load_mesh()
     }
 
     logMesh();
+    toc("mesh", ioption("solverns2.verbose") > 1);
 }
 
 void
 SolverNS2::initSpaces()
 {
+    tic();
     Xh = eigen_space_type::New( mesh );
     Nh = Xh->template functionSpace<0>();
     Mh = ml_space_type::New( mesh );
     RTh = Mh->template functionSpace<0>();
     Sh = scalar_space_type::New( mesh );
     Vh = vec_space_type::New( mesh );
+
+    a = RTh->element();
+    u = Vh->element();
+    v = Vh->element();
+
+    logInfo();
+    toc("spaces", ioption("solverns2.verbose") > 1);
 }
 
 void
 SolverNS2::setEigen()
 {
+    tic();
     auto solverEigen = SolverEigenNS2<eigen_space_ptrtype, scalar_space_ptrtype>::build(mesh, Xh, Sh);
     eigenModes = solverEigen->solve();
+    toc("eigenmodes", ioption("solverns2.verbose") > 0);
 }
 
 void
-SolverNS2::setA()
+SolverNS2::setA( double t )
 {
-    auto solvera = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
-    a = solvera->solve();
+    tic();
+    a = solverA->solve();
+    e->step(t)->add( "a", a);
+    toc("a", ioption("solverns2.verbose") > 0);
 }
 
 void
-SolverNS2::solveSP()
+SolverNS2::solveSP( double t)
 {
-    auto solversp = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh, RTh);
-    solversp->setA(a);
-    solversp->setEigen(eigenModes);
+    tic();
+    solverSP->setA(a);
 
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
         std::cout << " ---------- init R coeff ----------\n";
-    solversp->init();
+    solverSP->init();
 
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
         std::cout << " ---------- solve spectral problem ----------\n";
-    u = solversp->solve();
-}
+    u = solverSP->solve();
+    e->step(t)->add("u", u);
+    toc("sp", ioption("solverns2.verbose") > 1);
+ }
 
 void
-SolverNS2::post()
+SolverNS2::post( double t )
 {
+    tic();
     v = Vh->element();
     auto form2V = form2(_test=Vh, _trial=Vh);
     form2V = integrate(elements(mesh), inner(idt(v),id(v)));
@@ -288,6 +297,11 @@ SolverNS2::post()
                   << "||div u||   = " << divu << std::endl
                   << "||u.n||     = " << un << std::endl
                   << "||cu.n||    = " << cun << std::endl;
+
+    e->step(t)->add("v", v);
+    e->step(t)->add("vex", vex);
+    e->step(t)->add("verr", verr);
+    toc("post", ioption("solverns2.verbose") > 1);
 }
 
 void

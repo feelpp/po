@@ -22,12 +22,11 @@ makeOptions()
     myappOptions.add_options()
         ( "solverns2.verbose", po::value<int>()->default_value( 0 ), "level of verbosity" )
 
-        ( "solverns2.needEigen", po::value<bool>()->default_value( true ), "need eigenmodes" )
         ( "solverns2.markerList", po::value<std::vector<std::string> >()->multitoken(), "list of markers of the boundary" )
         ( "solverns2.nbMode", po::value<int>()->default_value( 1 ), "number of modes to load" )
         ( "solverns2.print", po::value<bool>()->default_value( false ), "print matrices" )
+        ( "solverns2.exportEigen", po::value<bool>()->default_value( false ), "export eigen modes" )
 
-        ( "solverns2.needA0", po::value<bool>()->default_value( false ), "need relief a0" )
         ( "solverns2.radius", po::value<double>()->default_value( 0.5 ), "cylinder's radius" )
         ( "solverns2.speed", po::value<double>()->default_value( 1 ), "average speed" )
         ( "solverns2.alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
@@ -38,7 +37,6 @@ makeOptions()
         ( "solverns2.needA2", po::value<bool>()->default_value( false ), "need relief a2" )
         ( "solverns2.alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
 
-        ( "solverns2.needSP", po::value<bool>()->default_value( true ), "need to run the spectral problem" )
         ( "solverns2.nu", po::value<double>()->default_value( 1 ), "viscosity" )
         ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
 
@@ -56,6 +54,10 @@ makeOptions()
         // if loadMesh = false, all compute options must be true !!!!
 
         ( "solverns2.stokes", po::value<bool>()->default_value( true ), "compute Stokes if true, else compute Navier-Stokes" )
+
+        ( "solverns2.startTime", po::value<double>()->default_value( 0.0 ), "start time" )
+        ( "solverns2.timeStep", po::value<double>()->default_value( 0.1 ), "time step" )
+        ( "solverns2.finalTime", po::value<double>()->default_value( 1.0 ), "final time" )
 
         ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,2*(1-4*(x*x + y*y))}:x:y"), "v exacte" )
 

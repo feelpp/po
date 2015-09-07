@@ -56,6 +56,10 @@ class SolverEigenNS2
 
     typedef std::vector<element_type> eigen0_type;
 
+    using exporter_type = Exporter<mesh_type>;
+    using exporter_ptrtype = boost::shared_ptr<exporter_type>;
+
+
     mesh_ptrtype mesh;
     space_ptrtype Xh;
     space_edge_ptrtype Nh;
@@ -78,6 +82,8 @@ class SolverEigenNS2
     eigen0_type modes0;
 
     double tol = 1.e-3;
+
+    exporter_ptrtype e;
 
     void setForms();
     void setInfo();
@@ -146,6 +152,17 @@ SolverEigenNS2<T1,T2>::solve()
 
         load();
         toc( "loadEigen", ioption("solverns2.verbose") > 1);
+    }
+
+    if( boption( "solverns2.exportEigen") )
+    {
+        e = exporter( _mesh=mesh, _name="eigen" );
+        for( int i = 0; i < modes.size(); i += 10)
+        {
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(modes[i]) );
+            e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(modes[i]) );
+        }
+        e->save();
     }
 
     if( boption("solverns2.testEigs") )
