@@ -36,4 +36,4 @@ feelpp_add_application( po_stokesmixed SRCS stokesmixed.cpp CFG po_stokesmixed.c
 feelpp_add_application( AAA SRCS AAA.cpp DEFS FEELPP_DIM=3 CFG AAA.cfg )
 feelpp_add_application( BBB SRCS BBB.cpp DEFS FEELPP_DIM=3 CFG BBB.cfg )
 feelpp_add_application( CylinderStokes SRCS CylinderStokes.cpp DEFS FEELPP_DIM=3 CFG CylinderStokes.cfg )
-feelpp_add_application( CylStokes SRCS CylStokes.cpp DEFS FEELPP_DIM=3 CFG CylStokes.cfg )
+#feelpp_add_application( CylStokes SRCS CylStokes.cpp DEFS FEELPP_DIM=3 CFG CylStokes.cfg )

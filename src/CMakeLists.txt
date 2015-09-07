@@ -23,4 +23,4 @@
 #
 feelpp_add_application( po_app SRCS main.cpp solverns2.hpp solvereigenns2.hpp solvera.hpp solverspectralproblem.hpp CFG po_app.cfg GEO mesh/sphere.geo mesh/cylinderAdim.geo )
 add_subdirectory( test )
-add_subdirectory( ben )
+#add_subdirectory( ben )
