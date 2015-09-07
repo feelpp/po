@@ -118,6 +118,7 @@ SolverNS2::solve()
     solverA = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
     solverSP = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh, RTh);
     solverSP->setEigen(eigenModes);
+    solverSP->initRijk();
 
     e = exporter( mesh );
 
@@ -199,8 +200,10 @@ void
 SolverNS2::setEigen()
 {
     tic();
+
     auto solverEigen = SolverEigenNS2<eigen_space_ptrtype, scalar_space_ptrtype>::build(mesh, Xh, Sh);
     eigenModes = solverEigen->solve();
+
     toc("eigenmodes", ioption("solverns2.verbose") > 0);
 }
 
@@ -208,8 +211,10 @@ void
 SolverNS2::setA( double t )
 {
     tic();
-    a = solverA->solve();
+
+    a = solverA->solve( t );
     e->step(t)->add( "a", a);
+
     toc("a", ioption("solverns2.verbose") > 0);
 }
 
@@ -217,16 +222,13 @@ void
 SolverNS2::solveSP( double t)
 {
     tic();
-    solverSP->setA(a);
 
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-        std::cout << " ---------- init R coeff ----------\n";
+    solverSP->setA(a);
     solverSP->init();
 
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
-        std::cout << " ---------- solve spectral problem ----------\n";
-    u = solverSP->solve();
+    u = solverSP->solve( t );
     e->step(t)->add("u", u);
+
     toc("sp", ioption("solverns2.verbose") > 1);
  }
 
@@ -234,6 +236,7 @@ void
 SolverNS2::post( double t )
 {
     tic();
+
     v = Vh->element();
     auto form2V = form2(_test=Vh, _trial=Vh);
     form2V = integrate(elements(mesh), inner(idt(v),id(v)));
@@ -241,7 +244,10 @@ SolverNS2::post( double t )
     form1V = integrate( elements(mesh), inner(idv(a) + idv(u), id(v)));
     form2V.solve(_rhs=form1V, _solution=v);
 
-    vex = Vh->element(expr<3,1>(soption("solverns2.v_ex")));
+    auto vex_expr = expr<3,1>(soption("solverns2.v_ex"));
+    vex_expr.setParameterValues({{"t",t}});
+    vex = Vh->element(vex_expr);
+
     auto uex = Vh->element();
     uex = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(vex) - idv(a));
     verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(u) + idv(a) - idv(vex));
@@ -261,15 +267,21 @@ SolverNS2::post( double t )
         s.close();
     }
 
+    e->step(t)->add("v", v);
+    e->step(t)->add("vex", vex);
+    e->step(t)->add("verr", verr);
 
 
     auto g_s = soption("solverns2.alpha0");
     auto vars = Symbols{ "x", "y", "radius", "speed" };
     auto g_e = parse( g_s, vars );
     auto g = expr( g_e, vars );
-    g.setParameterValues( {
+    g.setParameterValues(
+        {
             { "radius", doption( "solverns2.radius" ) },
-                { "speed", doption( "solverns2.speed" ) } } );
+            { "speed", doption( "solverns2.speed" ) },
+            { "t", t }
+        } );
 
     auto divvex = normL2(elements(mesh), divv(vex));
     auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
@@ -298,9 +310,6 @@ SolverNS2::post( double t )
                   << "||u.n||     = " << un << std::endl
                   << "||cu.n||    = " << cun << std::endl;
 
-    e->step(t)->add("v", v);
-    e->step(t)->add("vex", vex);
-    e->step(t)->add("verr", verr);
     toc("post", ioption("solverns2.verbose") > 1);
 }
 

@@ -32,16 +32,16 @@ class SolverA
     rt_element_type a1;
     rt_element_type a2;
 
-    void computeA0();
+    void computeA0( double t );
     void loadA0();
-    void computeA1();
+    void computeA1( double t );
     void loadA1();
-    void computeA2();
+    void computeA2( double t );
     void loadA2();
 
 public:
     static solvera_ptrtype build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml_space_ptrtype& Mh);
-    rt_element_type solve();
+    rt_element_type solve( double t);
 
 };
 
@@ -59,7 +59,7 @@ SolverA<T,T2>::build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml
 
 template<typename T, typename T2>
 typename SolverA<T,T2>::rt_element_type
-SolverA<T,T2>::solve()
+SolverA<T,T2>::solve( double t )
 {
     a = RTh->element();
 
@@ -68,7 +68,7 @@ SolverA<T,T2>::solve()
     {
         if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
             std::cout << " ---------- compute a0 ----------\n";
-        computeA0();
+        computeA0( t );
     }
     else
     {
@@ -86,7 +86,7 @@ SolverA<T,T2>::solve()
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
                 std::cout << " ---------- compute a1 ----------\n";
-            computeA1();
+            computeA1( t );
         }
         else
         {
@@ -105,7 +105,7 @@ SolverA<T,T2>::solve()
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
                 std::cout << " ---------- compute a2 ----------\n";
-            computeA2();
+            computeA2( t );
         }
         else
         {
@@ -122,7 +122,7 @@ SolverA<T,T2>::solve()
 
 template<typename T, typename T2>
 void
-SolverA<T,T2>::computeA0()
+SolverA<T,T2>::computeA0( double t )
 {
     // [option]
     auto g_s = soption("solverns2.alpha0");
@@ -131,7 +131,8 @@ SolverA<T,T2>::computeA0()
     auto g = expr( g_e, vars );
     g.setParameterValues( {
             { "radius", doption( "solverns2.radius" ) },
-                { "speed", doption( "solverns2.speed" ) } } );
+            { "speed", doption( "solverns2.speed" ) },
+            { "t", t} } );
     auto alpha0  = vec( cst(0.), cst(0.), g);
     //auto f = div(alpha0);
     // [option]
@@ -189,7 +190,7 @@ SolverA<T,T2>::loadA0()
 
 template<typename T, typename T2>
 void
-SolverA<T,T2>::computeA1()
+SolverA<T,T2>::computeA1( double t )
 {
 }
 
@@ -204,7 +205,7 @@ SolverA<T,T2>::loadA1()
 
 template<typename T, typename T2>
 void
-SolverA<T,T2>::computeA2()
+SolverA<T,T2>::computeA2( double t )
 {
 }
 
