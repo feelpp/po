@@ -73,7 +73,7 @@ before_install:
 install:
 - cd -
 #- mkdir opt && cd opt && ../configure -f
-- mkdir opt; cd opt; cmake -DFEELPP_ENABLE_SYSTEM_EIGEN3=ON -DFEELPP_ENABLE_NLOPT=OFF -DCMAKE_CXX_FLAGS="-O0 -DNDEBUG" ../ 
+- mkdir opt; cd opt; cmake -DFEELPP_ENABLE_SYSTEM_EIGEN3=ON -DFEELPP_ENABLE_NLOPT=OFF -DCMAKE_CXX_FLAGS="-O0 -DNDEBUG" -DCMAKE_BUILD_TYPE=Release ../ 
 script:
 - make VERBOSE=1 
 branches:
