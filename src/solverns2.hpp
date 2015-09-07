@@ -156,22 +156,24 @@ SolverNS2::load_mesh()
                               %mypath.stem().string() ).str();
 
 
-    if( boption("solverns2.computeEigen")
-        && boption("solverns2.computeA0")
-        && boption("solverns2.computeA1")
-        && boption("solverns2.computeA2")
-        && boption("solverns2.computeRijk")
-        && boption("solverns2.computeRiak")
-        && boption("solverns2.computeRaik")
-        && boption("solverns2.computeRfk") )
+    // if we need to load something, we need to use the same mesh
+    if( !boption("solverns2.computeEigen")
+        || !boption("solverns2.computeA0")
+        || !boption("solverns2.computeA1")
+        || !boption("solverns2.computeA2")
+        || !boption("solverns2.computeRijk")
+        || !boption("solverns2.computeRiak")
+        || !boption("solverns2.computeRaik")
+        || !boption("solverns2.computeRfk") )
     {
         mesh = loadMesh( _mesh=new mesh_type,
-                         _rebuild_partitions=(mypath.extension() == ".msh"),
+                         _filename=mesh_name,
                          _update=MESH_CHECK|MESH_UPDATE_FACES|MESH_UPDATE_EDGES|MESH_PROPAGATE_MARKERS
                          );
-    } else {
+    } // else we can create a new mesh or load one with the correct number of partitions
+    else {
         mesh = loadMesh( _mesh=new mesh_type,
-                         _filename=mesh_name,
+                         _rebuild_partitions=(mypath.extension() == ".msh"),
                          _update=MESH_CHECK|MESH_UPDATE_FACES|MESH_UPDATE_EDGES|MESH_PROPAGATE_MARKERS
                          );
     }
