@@ -64,8 +64,8 @@ class SolverSpectralProblem
 
     void initRaik();
     void initRiak();
-    void initRfk();
-    void initRpk();
+    void initRfk( double t );
+    void initRpk( double t );
 
 
 public:
@@ -77,7 +77,7 @@ public:
     void setA(const rt_element_type& a);
     void setEigen(const eigenmodes_type& modes);
     void initRijk();
-    void init();
+    void init( double t );
     vec_element_type solve(double t);
 };
 
@@ -122,7 +122,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setEigen(const eigenmodes_type& modes)
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::init()
+SolverSpectralProblem<F,F2,F3,F4,E>::init( double t )
 {
     j = MatrixXd(M,M);
     f = VectorXd(M);
@@ -142,8 +142,8 @@ SolverSpectralProblem<F,F2,F3,F4,E>::init()
         initRaik();
         initRiak();
     }
-    initRpk();
-    initRfk();
+    initRpk( t );
+    initRfk( t );
 
     c = VectorXd::Ones(M);
 }
@@ -346,7 +346,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::initRfk()
+SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
@@ -355,6 +355,8 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk()
     Rfk = VectorXd(M);
 
     auto ff = expr<3,1>(soption("solverns2.f"));
+    ff.setParameterValues( {{"t",t}} );
+
     auto w = Nh->element();
     auto rfkForm = form1( _test=Nh );
     rfkForm = integrate( elements(mesh), trans(ff)*id(w));
@@ -402,7 +404,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk()
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::initRpk()
+SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
@@ -411,6 +413,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk()
     Rpk = VectorXd(M);
 
     auto a2 = expr(soption("solverns2.alpha2"));
+    a2.setParameterValues( {{"t",t}} );
 
     auto w = Sh->element();
     auto rpkForm = form1( _test=Sh );

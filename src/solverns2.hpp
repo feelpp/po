@@ -224,7 +224,7 @@ SolverNS2::solveSP( double t)
     tic();
 
     solverSP->setA(a);
-    solverSP->init();
+    solverSP->init( t );
 
     u = solverSP->solve( t );
     e->step(t)->add("u", u);
