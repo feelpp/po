@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
 ###  TEMPLATE.txt.tpl; coding: utf-8 ---
 
 #  Author(s): Christophe Prud'homme <prudhomme@unistra.fr>
@@ -22,21 +21,4 @@ cmake_minimum_required(VERSION 2.8)
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-project(po)
-
-if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} )
-  cmake_minimum_required(VERSION 2.8)
-
-  FIND_PATH(FEELPP_CMAKE_MODULES FindFeel++.cmake PATH $ENV{FEELPP_DIR}/share/feel/cmake/modules /usr/share/feel/cmake/modules/ /usr/local/share/feel/cmake/modules/ )
-  
-  if ( FEELPP_CMAKE_MODULES )
-    set(CMAKE_MODULE_PATH ${FEELPP_CMAKE_MODULES})
-  else()
-    message(FATAL_ERROR "Feel++ does not seem to have been installed on this platform")
-  endif()
-  Find_Package(Feel++)
-endif()
-
-add_subdirectory( src )
-add_subdirectory( offline )
-add_subdirectory( online )
+feelpp_add_application( po_online SRCS main.cpp solverns2.hpp solvera.hpp solverspectralproblem.hpp CFG po_online.cfg )
