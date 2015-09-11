@@ -66,36 +66,36 @@ SolverA<T,T2>::solve( double t )
     tic();
     if( boption("solverns2.computeA0"))
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
             std::cout << " ---------- compute a0 ----------\n";
         computeA0( t );
     }
     else
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
             std::cout << " ---------- load a0 ----------\n";
         loadA0();
     }
     a += a0;
-    toc( "a0", ioption("solverns2.verbose") > 1);
+    toc( "a0", ioption("solverns2.verbose") > 2);
 
     if( boption("solverns2.needA1") )
     {
         tic();
         if( boption("solverns2.computeA1"))
         {
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << " ---------- compute a1 ----------\n";
             computeA1( t );
         }
         else
         {
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << " ---------- load a1 ----------\n";
             loadA1();
         }
         a += a1;
-        toc( "a1", ioption("solverns2.verbose") > 1);
+        toc( "a1", ioption("solverns2.verbose") > 2);
     }
 
     if( boption("solverns2.needA2") )
@@ -103,18 +103,18 @@ SolverA<T,T2>::solve( double t )
         tic();
         if( boption("solverns2.computeA2"))
         {
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << " ---------- compute a2 ----------\n";
             computeA2( t );
         }
         else
         {
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << " ---------- load a2 ----------\n";
             loadA2();
         }
         a += a2;
-        toc( "a2", ioption("solverns2.verbose") > 1);
+        toc( "a2", ioption("solverns2.verbose") > 2);
     }
 
     return a;
@@ -125,16 +125,12 @@ void
 SolverA<T,T2>::computeA0( double t )
 {
     // [option]
-    auto g_s = soption("solverns2.alpha0");
-    auto vars = Symbols{ "x", "y", "radius", "speed" };
-    auto g_e = parse( g_s, vars );
-    auto g = expr( g_e, vars );
+    auto g = expr(soption("solverns2.alpha0"));
     g.setParameterValues( {
             { "radius", doption( "solverns2.radius" ) },
             { "speed", doption( "solverns2.speed" ) },
             { "t", t} } );
     auto alpha0  = vec( cst(0.), cst(0.), g);
-    //auto f = div(alpha0);
     // [option]
 
     auto U = Mh->element();
@@ -174,8 +170,9 @@ SolverA<T,T2>::computeA0( double t )
         s.open( "convergence_a.dat", std::ios::out | std::ios::app);
         s << "hsize" << "\t" << "nDof" << "\t" << "div" << "\t" << "an" << std::endl;
         s << doption("gmsh.hsize") << "\t" << RTh->nDof() << "\t" << diva << "\t" << an << std::endl;
-        std::cout << "diva = " << diva << std::endl
-                  << "an = " << an << std::endl;
+        if( ioption("solverns2.verbose") > 2)
+            std::cout << "diva = " << diva << std::endl
+                      << "an = " << an << std::endl;
     }
 }
 

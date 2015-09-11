@@ -1,5 +1,5 @@
 #include <Eigen/Dense>
-
+#include <feel/feeldiscr/expansion.hpp>
 #include <boost/mpi/timer.hpp>
 
 using namespace Feel;
@@ -71,14 +71,14 @@ class SolverSpectralProblem
 public:
     VectorXd c;
     VectorXd cNm1;
-    vec_element_type u;
+    ned_element_type u;
 
     static solverspectralproblem_ptrtype build(const mesh_ptrtype& mesh, const vec_space_ptrtype& Vh, const ned_space_ptrtype& Nh, const scalar_space_ptrtype& Sh, const rt_space_ptrtype& RThh);
     void setA(const rt_element_type& a);
     void setEigen(const eigenmodes_type& modes);
     void initRijk();
     void init( double t );
-    vec_element_type solve(double t);
+    ned_element_type solve(double t);
 };
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
@@ -91,6 +91,12 @@ SolverSpectralProblem<F,F2,F3,F4,E>::build(const mesh_ptrtype& mesh, const vec_s
     ap->Nh = Nh;
     ap->Sh = Sh;
     ap->RTh = RTh;
+
+    double r = doption( "solverns2.radius" );
+    double s = doption( "solverns2.speed" );
+    double n = doption( "solverns2.nu" );
+    ap->Re = 2*r*s/n;
+
     return ap;
 }
 
@@ -118,25 +124,14 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setEigen(const eigenmodes_type& modes)
         g[i] = std::get<1>(tuple);
         psi[i++] = std::get<2>(tuple);
     }
+
+    c = VectorXd::Ones(M);
 }
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
 void
 SolverSpectralProblem<F,F2,F3,F4,E>::init( double t )
 {
-    j = MatrixXd(M,M);
-    f = VectorXd(M);
-
-    double r = doption( "solverns2.radius" );
-    double s = doption( "solverns2.speed" );
-    double n = doption( "solverns2.nu" );
-    Re = 2*r*s/n;
-    u = Vh->element();
-
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
-        std::cout << "----- Initialization Spectral Problem -----" << std::endl
-                  << "----- Re = " << Re << " -----" << std::endl;
-
     if( ! boption("solverns2.stokes"))
     {
         initRaik();
@@ -144,8 +139,6 @@ SolverSpectralProblem<F,F2,F3,F4,E>::init( double t )
     }
     initRpk( t );
     initRfk( t );
-
-    c = VectorXd::Ones(M);
 }
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
@@ -153,7 +146,7 @@ void
 SolverSpectralProblem<F,F2,F3,F4,E>::initRijk()
 {
     tic();
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Rijk -----" << std::endl;
 
     Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
@@ -183,7 +176,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRijk()
 
                     if ( Environment::isMasterRank() )
                     {
-                        if( ioption("solverns2.verbose") > 2 )
+                        if( ioption("solverns2.verbose") > 3 )
                             std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
                         s << Rijk(k)(i,j) << std::endl;
                     }
@@ -225,7 +218,7 @@ void
 SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
 {
     tic();
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Raik -----" << std::endl;
 
     Raik = MatrixXd(M,M);
@@ -249,7 +242,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
 
                 if ( Environment::isMasterRank() )
                 {
-                    if( ioption("solverns2.verbose") > 2 )
+                    if( ioption("solverns2.verbose") > 3 )
                         std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
                     s << Raik(k,i) << std::endl;
                 }
@@ -274,7 +267,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
             {
                 s >> Raik(k,i);
                 Raik(i,k) = -Raik(k,i);
-                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
+                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                     std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
             }
             Raik(i,i) = 0;
@@ -289,7 +282,7 @@ void
 SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
 {
     tic();
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Riak -----" << std::endl;
 
     Riak = MatrixXd(M,M);
@@ -312,7 +305,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
 
                 if ( Environment::isMasterRank() )
                 {
-                    if( ioption("solverns2.verbose") > 2 )
+                    if( ioption("solverns2.verbose") > 3 )
                         std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
                     s << Riak(k,i) << std::endl;
                 }
@@ -335,7 +328,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
             for(int k = 0; k < M; k++)
             {
                 s >> Riak(k,i);
-                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
+                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                     std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
             }
         }
@@ -349,7 +342,7 @@ void
 SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
 {
     tic();
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Rfk -----" << std::endl;
 
     Rfk = VectorXd(M);
@@ -373,7 +366,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
 
             if ( Environment::isMasterRank() )
             {
-                if( ioption("solverns2.verbose") > 2)
+                if( ioption("solverns2.verbose") > 3)
                     std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
                 s << Rfk(k) << std::endl;
             }
@@ -393,7 +386,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
         for(int k = 0; k < M; k++)
         {
             s >> Rfk(k);
-            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
+            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3)
                 std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
         }
 
@@ -407,7 +400,7 @@ void
 SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
 {
     tic();
-    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Rpk -----" << std::endl;
 
     Rpk = VectorXd(M);
@@ -432,7 +425,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
 
             if ( Environment::isMasterRank())
             {
-                if( ioption("solverns2.verbose") > 2 )
+                if( ioption("solverns2.verbose") > 3 )
                     std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
                 s << Rpk(k) << std::endl;
             }
@@ -452,7 +445,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
         for(int k = 0; k < M; k++)
         {
             s >> Rpk(k);
-            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
+            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                 std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
         }
 
@@ -462,9 +455,11 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
 }
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
-typename SolverSpectralProblem<F,F2,F3,F4,E>::vec_element_type
+typename SolverSpectralProblem<F,F2,F3,F4,E>::ned_element_type
 SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
 {
+    j = MatrixXd(M,M);
+    f = VectorXd(M);
 
     if( boption("solverns2.stokes"))
     {
@@ -491,15 +486,14 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
     else
     {
         tic();
+        cNm1 = c;
+        c = VectorXd::Ones(M);
+
         // [NSInit]
-        if( t > doption("solverns2.startTime"))
-            cNm1 = c;
-        else
-            cNm1 = VectorXd::Zero(M);
         double dt = doption("solverns2.timeStep");
 
         VectorXd dc = VectorXd::Matrix(M);
-        double tol = 1.e-8;
+        double tol = doption("solverns2.newton.tol");
         // [NSInit]
         // [NSSys1]
         HouseholderQR<MatrixXd> qr(M,M);
@@ -508,7 +502,11 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
         int i=0;
         do{
             // [NSMatF]
-            f = c.cwiseProduct(lambda)/Re + Riak*c + Raik*c + Rpk - Rfk + c/dt - cNm1/dt;
+            f = c.cwiseProduct(lambda)/Re + Riak*c + Raik*c + Rpk - Rfk;
+
+            if( t > doption("solverns2.startTime") )
+                f += c/dt - cNm1/dt;
+
             for (int k = 0; k < M; k++)
                 f(k) += c.transpose()*Rijk(k)*c;
             // [NSMatF]
@@ -519,7 +517,8 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
             j += Riak;
             j += Raik;
             j += lambda.asDiagonal();
-            j += VectorXd::Constant(M, dt).asDiagonal();
+            if( t > doption("solverns2.startTime") )
+                j += VectorXd::Constant(M, 1./dt).asDiagonal();
             // [NSMatJ]
 
             // [NSSys2]
@@ -530,39 +529,26 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
             c += dc;
             // [NSAdd]
 
-            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
-                std::cout << "iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
+                std::cout << "Newton iteration : " << i << " norm(dc) = " << dc.norm() << std::endl;
 
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                 std::cout << c << std::endl;
 
             i++;
-        } while(i < 10 && dc.norm() > tol);
+        } while(i < ioption("solverns2.newton.maxIt") && dc.norm() > tol);
 
-        if(i==10)
+        if(i==ioption("solverns2.newton.maxIt"))
+        {
             std::cout << "Newton does not converge\n";
-
-        else{
-            for( i = 0; i < M; i++){
-                u += vf::project( _space=Vh, _range=elements(mesh),
-                                  _expr = c(i)*idv(g[i]) );
-            }
         }
         toc( "navier stokes", ioption("solverns2.verbose") > 1 );
     }
 
     tic();
-    auto lhs = form2(_test=Vh,_trial=Vh);
-    lhs = integrate(_range=elements(mesh), _expr=inner(idt(u),id(u)));
-    auto rhs = form1(_test=Vh);
-    for(int i=0; i<M; i++)
-    {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
-            std::cout << "c(" << i << ") = " << c(i) << std::endl;
-        rhs += integrate( _range=elements(mesh), _expr = c(i)*trans(idv(g[i]))*id(u) );
-    }
-    lhs.solve(_rhs=rhs, _solution=u);
-    toc( "compute u", ioption("solverns2.verbose") > 1 );
+    u = Nh->element();
+    u = expansion(g, c, c.size());
+    toc ( "compute u", ioption("solverns2.verbose") > 1 );
 
     return u;
 }

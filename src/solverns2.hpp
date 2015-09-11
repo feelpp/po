@@ -3,6 +3,7 @@
 #include <feel/feeldiscr/pch.hpp>
 #include <feel/feeldiscr/ned1h.hpp>
 #include <feel/feelpoly/raviartthomas.hpp>
+#include <feel/feeldiscr/operatorinterpolation.hpp>
 #include <feel/feelfilters/exporter.hpp>
 
 #include "solvereigenns2.hpp"
@@ -21,10 +22,15 @@ public:
 
     typedef Nedelec<0, NedelecKind::NED1> ned_fct_type;
     typedef Lagrange<0, Scalar> cst_fct_type;
+    typedef Lagrange<0, Vectorial> p0_fct_type;
     typedef Lagrange<1, Scalar> scalar1_fct_type;
     typedef Lagrange<2, Scalar> scalar2_fct_type;
     typedef Lagrange<2, Vectorial> vec_fct_type;
     typedef RaviartThomas<0> rt_fct_type;
+
+    using p0_basis_type = bases<p0_fct_type>;
+    using p0_space_type = FunctionSpace<mesh_type, p0_basis_type>;
+    using p0_space_ptrtype = boost::shared_ptr<p0_space_type>;
 
     typedef bases<ned_fct_type, scalar1_fct_type> eigen_basis_type;
     typedef FunctionSpace<mesh_type, eigen_basis_type> eigen_space_type;
@@ -74,11 +80,12 @@ private:
     rt_space_ptrtype RTh;
     scalar_space_ptrtype Sh;
     vec_space_ptrtype Vh;
+    p0_space_ptrtype P0;
 
     eigenmodes_type eigenModes;
     rt_element_type a;
 
-    vec_element_type u;
+    ned_element_type u;
     vec_element_type v;
     vec_element_type vex;
     vec_element_type verr;
@@ -120,7 +127,15 @@ SolverNS2::solve()
     solverSP->setEigen(eigenModes);
     solverSP->initRijk();
 
-    e = exporter( mesh );
+    auto Ih = I( _domainSpace=RTh, _imageSpace=P0);
+
+    t = doption("solverns2.startTime");
+    if( boption("solverns2.aSteady") )
+    {
+        setA( t );
+        solverSP->setA( a );
+        solverSP->init( t );
+    }
 
     dt = doption( "solverns2.timeStep" );
     for( t = doption("solverns2.startTime"), iter = 0;
@@ -128,14 +143,24 @@ SolverNS2::solve()
          iter++, t += dt
          )
     {
+        if( Environment::isMasterRank() && ioption("solverns2.verbose") > 0 )
+            std::cout << "iteration " << iter << " at time " << t << "s" << std::endl;
+
         tic();
-        setA( t );
+        if( !boption("solverns2.aSteady") )
+            setA( t );
+        e->step(t)->add("a", Ih(a));
 
         solveSP( t );
+        e->step(t)->add("u", u);
+
         post( t );
+        e->step(t)->add("v", v);
+        e->step(t)->add("vex", vex);
+        e->step(t)->add("verr", verr);
 
         e->save();
-        toc("iteration", ioption("solverns2.verbose") > 1 );
+        toc("iteration", ioption("solverns2.verbose") > 0 );
     }
 
     toc("total", ioption("solverns2.verbose") > 0);
@@ -173,6 +198,8 @@ SolverNS2::load_mesh()
                          );
     }
 
+    e = exporter( mesh );
+
     logMesh();
     toc("mesh", ioption("solverns2.verbose") > 1);
 }
@@ -187,9 +214,10 @@ SolverNS2::initSpaces()
     RTh = Mh->template functionSpace<0>();
     Sh = scalar_space_type::New( mesh );
     Vh = vec_space_type::New( mesh );
+    P0 = p0_space_type::New( mesh );
 
     a = RTh->element();
-    u = Vh->element();
+    u = Nh->element();
     v = Vh->element();
 
     logInfo();
@@ -204,7 +232,7 @@ SolverNS2::setEigen()
     auto solverEigen = SolverEigenNS2<eigen_space_ptrtype, scalar_space_ptrtype>::build(mesh, Xh, Sh);
     eigenModes = solverEigen->solve();
 
-    toc("eigenmodes", ioption("solverns2.verbose") > 0);
+    toc("eigenmodes", ioption("solverns2.verbose") > 1);
 }
 
 void
@@ -213,9 +241,8 @@ SolverNS2::setA( double t )
     tic();
 
     a = solverA->solve( t );
-    e->step(t)->add( "a", a);
 
-    toc("a", ioption("solverns2.verbose") > 0);
+    toc("a", ioption("solverns2.verbose") > 1);
 }
 
 void
@@ -223,11 +250,13 @@ SolverNS2::solveSP( double t)
 {
     tic();
 
-    solverSP->setA(a);
-    solverSP->init( t );
+    if( !boption("solverns2.aSteady") )
+    {
+        solverSP->setA(a);
+        solverSP->init( t );
+    }
 
     u = solverSP->solve( t );
-    e->step(t)->add("u", u);
 
     toc("sp", ioption("solverns2.verbose") > 1);
  }
@@ -267,48 +296,45 @@ SolverNS2::post( double t )
         s.close();
     }
 
-    e->step(t)->add("v", v);
-    e->step(t)->add("vex", vex);
-    e->step(t)->add("verr", verr);
 
+    // auto g_s = soption("solverns2.alpha0");
+    // auto vars = Symbols{ "x", "y", "radius", "speed" };
+    // auto g_e = parse( g_s, vars );
+    // auto g = expr( g_e, vars );
+    // auto g = expr(soption("solverns2.alpha0"));
+    // g.setParameterValues(
+    //     {
+    //         { "radius", doption( "solverns2.radius" ) },
+    //         { "speed", doption( "solverns2.speed" ) },
+    //         { "t", t }
+    //     } );
 
-    auto g_s = soption("solverns2.alpha0");
-    auto vars = Symbols{ "x", "y", "radius", "speed" };
-    auto g_e = parse( g_s, vars );
-    auto g = expr( g_e, vars );
-    g.setParameterValues(
-        {
-            { "radius", doption( "solverns2.radius" ) },
-            { "speed", doption( "solverns2.speed" ) },
-            { "t", t }
-        } );
+    // auto divvex = normL2(elements(mesh), divv(vex));
+    // auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
+    // auto cvexn = normL2(boundaryfaces(mesh), inner(curlv(vex), N()));
+    // auto divvh = normL2(elements(mesh), divv(a)+divv(u));
+    // auto vn = normL2(markedfaces(mesh,1), inner(idv(a), N()) + inner(idv(u), N()) + g );
+    // auto cvn = normL2(boundaryfaces(mesh), inner(curlv(a), N()) + inner(curlv(u), N()));
+    // auto diva = normL2(elements(mesh), divv(a));
+    // auto an = normL2(markedfaces(mesh,1), inner(idv(a), N()) + g );
+    // auto can = normL2(boundaryfaces(mesh), inner(curlv(a), N()));
+    // auto divu = normL2(elements(mesh), divv(u));
+    // auto un = normL2(boundaryfaces(mesh), inner(idv(uex), N()));
+    // auto cun = normL2(boundaryfaces(mesh), inner(curlv(uex), N()));
 
-    auto divvex = normL2(elements(mesh), divv(vex));
-    auto vexn = normL2(markedfaces(mesh,1), inner(idv(vex), N()) + g );
-    auto cvexn = normL2(boundaryfaces(mesh), inner(curlv(vex), N()));
-    auto divvh = normL2(elements(mesh), divv(a)+divv(u));
-    auto vn = normL2(markedfaces(mesh,1), inner(idv(a), N()) + inner(idv(u), N()) + g );
-    auto cvn = normL2(boundaryfaces(mesh), inner(curlv(a), N()) + inner(curlv(u), N()));
-    auto diva = normL2(elements(mesh), divv(a));
-    auto an = normL2(markedfaces(mesh,1), inner(idv(a), N()) + g );
-    auto can = normL2(boundaryfaces(mesh), inner(curlv(a), N()));
-    auto divu = normL2(elements(mesh), divv(u));
-    auto un = normL2(boundaryfaces(mesh), inner(idv(uex), N()));
-    auto cun = normL2(boundaryfaces(mesh), inner(curlv(uex), N()));
-
-    if( Environment::isMasterRank() )
-        std::cout << "||div vex|| = " << divvex << std::endl
-                  << "||vex.n-a0||= " << vexn << std::endl
-                  << "||cvex.n||  = " << cvexn << std::endl
-                  << "||div v||   = " << divvh << std::endl
-                  << "||v.n-a0||  = " << vn << std::endl
-                  << "||cv.n||    = " << cvn << std::endl
-                  << "||div a||   = " << diva << std::endl
-                  << "||a.n-a0||  = " << an << std::endl
-                  << "||ca.n||    = " << can << std::endl
-                  << "||div u||   = " << divu << std::endl
-                  << "||u.n||     = " << un << std::endl
-                  << "||cu.n||    = " << cun << std::endl;
+    // if( Environment::isMasterRank() )
+    //     std::cout << "||div vex|| = " << divvex << std::endl
+    //               << "||vex.n-a0||= " << vexn << std::endl
+    //               << "||cvex.n||  = " << cvexn << std::endl
+    //               << "||div v||   = " << divvh << std::endl
+    //               << "||v.n-a0||  = " << vn << std::endl
+    //               << "||cv.n||    = " << cvn << std::endl
+    //               << "||div a||   = " << diva << std::endl
+    //               << "||a.n-a0||  = " << an << std::endl
+    //               << "||ca.n||    = " << can << std::endl
+    //               << "||div u||   = " << divu << std::endl
+    //               << "||u.n||     = " << un << std::endl
+    //               << "||cu.n||    = " << cun << std::endl;
 
     toc("post", ioption("solverns2.verbose") > 1);
 }

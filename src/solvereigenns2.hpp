@@ -122,7 +122,7 @@ SolverEigenNS2<T1,T2>::solve()
 
     if( boption("solverns2.computeEigen"))
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
             std::cout << " ---------- compute eigenmodes ----------\n";
 
         setForms();
@@ -135,23 +135,23 @@ SolverEigenNS2<T1,T2>::solve()
         if( boption("solverns2.print") )
             print();
 
-        toc( "matrices", ioption("solverns2.verbose") > 1);
+        toc( "matrices", ioption("solverns2.verbose") > 2);
         tic();
 
         solveEigen();
-        toc( "eigs", ioption("solverns2.verbose") > 1);
+        toc( "eigs", ioption("solverns2.verbose") > 2);
         tic();
 
         save();
-        toc( "save", ioption("solverns2.verbose") > 1);
+        toc( "save", ioption("solverns2.verbose") > 2);
     }
     else
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
             std::cout << " ---------- load eigenmodes ----------\n";
 
         load();
-        toc( "loadEigen", ioption("solverns2.verbose") > 1);
+        toc( "loadEigen", ioption("solverns2.verbose") > 2);
     }
 
     if( boption( "solverns2.exportEigen") )
@@ -346,7 +346,9 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
                 if( indexeToRemove != boundaryIndexesToKeep.end() )
                     boundaryIndexesToKeep.erase(indexeToRemove);
 
-                std::cout << "#" << Environment::worldComm().globalRank() << " remove index : " << localDofToRemove << std::endl;
+                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3)
+                    std::cout << "#" << Environment::worldComm().globalRank()
+                              << " remove index : " << localDofToRemove << std::endl;
             }
         }
         else
@@ -425,10 +427,6 @@ template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::solveEigen()
 {
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
-                  << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
-
     auto zhmodes = eigs( _matrixA=aHat,
                          _matrixB=bHat,
                          _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
@@ -442,7 +440,7 @@ SolverEigenNS2<T1,T2>::solveEigen()
     modes0 = eigen0_type(zhmodes.size(), Nh->element());
     for( auto const& pair: zhmodes )
     {
-        if(Environment::isMasterRank())
+        if(Environment::isMasterRank() && ioption("solverns2.verbose") > 1)
             std::cout << i << " eigenvalue = " << boost::get<0>(pair.second) << std::endl;
 
         // zero eigenvalues discarded
@@ -484,10 +482,10 @@ SolverEigenNS2<T1,T2>::solveEigen()
         tmpVec3->close();
         modes0[i] = *tmpVec3;
 
-        i++;
-    }
+        i++;}
+
     LOG(INFO) << "number of converged eigenmodes : " << i;
-    if( Environment::isMasterRank() )
+    if( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
         std::cout << "number of converged eigenmodes : " << i << std::endl;
 
     modes.resize(i);

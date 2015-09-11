@@ -27,6 +27,8 @@ makeOptions()
         ( "solverns2.print", po::value<bool>()->default_value( false ), "print matrices" )
         ( "solverns2.exportEigen", po::value<bool>()->default_value( false ), "export eigen modes" )
 
+        ( "solverns2.aSteady", po::value<bool>()->default_value( false ), "is a steady or not" )
+
         ( "solverns2.radius", po::value<double>()->default_value( 0.5 ), "cylinder's radius" )
         ( "solverns2.speed", po::value<double>()->default_value( 1 ), "average speed" )
         ( "solverns2.alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
@@ -54,6 +56,8 @@ makeOptions()
         // if loadMesh = false, all compute options must be true !!!!
 
         ( "solverns2.stokes", po::value<bool>()->default_value( true ), "compute Stokes if true, else compute Navier-Stokes" )
+        ( "solverns2.newton.maxIt", po::value<int>()->default_value( 20 ), "maximum iteration of Newton" )
+        ( "solverns2.newton.tol", po::value<double>()->default_value( 1e-8 ), "tolerance for Newton" )
 
         ( "solverns2.startTime", po::value<double>()->default_value( 0.0 ), "start time" )
         ( "solverns2.timeStep", po::value<double>()->default_value( 0.1 ), "time step" )
