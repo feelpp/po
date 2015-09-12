@@ -121,9 +121,9 @@ SolverEigenNS2<T1,T2>::solve()
 {
     tic();
 
-    if( boption("solverns2.computeEigen"))
+    if( boption("eigen.compute"))
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
+        if ( Environment::isMasterRank() && ioption("offline.verbose") > 2)
             std::cout << " ---------- compute eigenmodes ----------\n";
 
         setForms();
@@ -133,30 +133,24 @@ SolverEigenNS2<T1,T2>::solve()
 
         setMatrices();
 
-        if( boption("solverns2.print") )
+        if( boption("eigen.print") )
             print();
 
-        toc( "matrices", ioption("solverns2.verbose") > 2);
-        tic();
-
         solveEigen();
-        toc( "eigs", ioption("solverns2.verbose") > 2);
-        tic();
 
         save();
-        toc( "save", ioption("solverns2.verbose") > 2);
     }
     else
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
+        if ( Environment::isMasterRank() && ioption("offline.verbose") > 2)
             std::cout << " ---------- load eigenmodes ----------\n";
 
         load();
-        toc( "loadEigen", ioption("solverns2.verbose") > 2);
     }
 
-    if( boption( "solverns2.exportEigen") )
+    if( boption( "eigen.export") )
     {
+        tic();
         e = exporter( _mesh=mesh, _name="eigen" );
         for( int i = 0; i < modes.size(); i += 10)
         {
@@ -164,9 +158,10 @@ SolverEigenNS2<T1,T2>::solve()
             e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(modes[i]) );
         }
         e->save();
+        toc("export", ioption("offline.verbose") > 2);
     }
 
-    if( boption("solverns2.testEigs") )
+    if( boption("eigen.test") )
         testEigs();
 
     return modes;
@@ -176,6 +171,7 @@ template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setForms()
 {
+    tic();
     // [forms]
     auto u = Nh->element();
     auto v = Nh->element();
@@ -194,13 +190,15 @@ SolverEigenNS2<T1,T2>::setForms()
     matB = b.matrixPtr();
     matB->close();
     // [forms]
+    toc("forms", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setInfo()
 {
-    std::vector<bool> doneNh( Nh->nLocalDof(), false );
+    tic();
+    std ::vector<bool> doneNh( Nh->nLocalDof(), false );
     std::vector<bool> doneLh( Lh->nLocalDof(), false );
     DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
     dof_edge_info = std::vector<DofEdgeInfo>( Nh->nLocalDof(), einfo_default );
@@ -314,14 +312,16 @@ SolverEigenNS2<T1,T2>::setInfo()
             doneNh[ index ] = true;
         }
     }
+    toc( "infos", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setDofsToRemove()
 {
+    tic();
     // [remove]
-    auto markers = Environment::vm()["solverns2.markerList"].as<std::vector<std::string> >();
+    auto markers = Environment::vm()["eigen.marker-list"].as<std::vector<std::string> >();
     auto s = markers.size();
     auto dofsToRemove = std::vector<int>();
 
@@ -347,7 +347,7 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
                 if( indexeToRemove != boundaryIndexesToKeep.end() )
                     boundaryIndexesToKeep.erase(indexeToRemove);
 
-                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3)
+                if( Environment::isMasterRank() && ioption("offline.verbose") > 3)
                     std::cout << "#" << Environment::worldComm().globalRank()
                               << " remove index : " << localDofToRemove << std::endl;
             }
@@ -360,12 +360,14 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
         }
     }
     // [remove]
+    toc( "remove", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setMatrices()
 {
+    tic();
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
@@ -422,12 +424,14 @@ SolverEigenNS2<T1,T2>::setMatrices()
     aHat->close();
     bHat->close();
     // [ptap]
+    toc("matrices", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::solveEigen()
 {
+    tic();
     auto zhmodes = eigs( _matrixA=aHat,
                          _matrixB=bHat,
                          _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
@@ -441,7 +445,7 @@ SolverEigenNS2<T1,T2>::solveEigen()
     modes0 = eigen0_type(zhmodes.size(), Nh->element());
     for( auto const& pair: zhmodes )
     {
-        if(Environment::isMasterRank() && ioption("solverns2.verbose") > 1)
+        if(Environment::isMasterRank() && ioption("offline.verbose") > 1)
             std::cout << i << " eigenvalue = " << boost::get<0>(pair.second) << std::endl;
 
         // zero eigenvalues discarded
@@ -486,10 +490,11 @@ SolverEigenNS2<T1,T2>::solveEigen()
         i++;}
 
     LOG(INFO) << "number of converged eigenmodes : " << i;
-    if( Environment::isMasterRank() && ioption("solverns2.verbose") > 1 )
+    if( Environment::isMasterRank() && ioption("offline.verbose") > 1 )
         std::cout << "number of converged eigenmodes : " << i << std::endl;
 
     modes.resize(i);
+    toc("solve", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
@@ -508,6 +513,7 @@ template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::save()
 {
+    tic();
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
         s.open ("lambda", std::fstream::out);
@@ -525,13 +531,15 @@ SolverEigenNS2<T1,T2>::save()
 
     if ( Environment::worldComm().isMasterRank() )
         s.close();
+    toc( "save", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::load()
 {
-    int nbMode = ioption("solverns2.nbMode");
+    tic();
+    int nbMode = ioption("eigen.nb-mode");
     modes = eigenmodes_type(nbMode, make_tuple(0, Nh->element(), Sh->element()));
 
     std::fstream s;
@@ -550,6 +558,7 @@ SolverEigenNS2<T1,T2>::load()
     }
 
     s.close();
+    toc("load", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>

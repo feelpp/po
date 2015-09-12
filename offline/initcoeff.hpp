@@ -65,7 +65,7 @@ InitCoeff<E>::initRijk()
 
     auto w = Nh->element();
 
-    if( boption("coeff.computeRijk") )
+    if( boption("coeff.compute") )
     {
         std::fstream s;
         if ( Environment::isMasterRank() )
@@ -103,7 +103,7 @@ InitCoeff<E>::initRijk()
         s.open ("rijk", std::fstream::in);
         if( !s.is_open() )
         {
-            std::cout << "Rijk not found\ntry to launch with --computeRijk=true" << std::endl;
+            std::cout << "Rijk not found\ntry to launch with --coeff.compute=true" << std::endl;
             exit(0);
         }
         for(int k = 0; k < M; k++)

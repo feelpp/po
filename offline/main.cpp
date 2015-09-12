@@ -26,16 +26,16 @@ makeOptions()
     myappOptions.add_options()
         ( "offline.verbose", po::value<int>()->default_value( 0 ), "level of verbosity" )
 
-        ( "eigen.markerList", po::value<std::vector<std::string> >()->multitoken(), "list of markers of the boundary" )
-        ( "eigen.nbMode", po::value<int>()->default_value( 1 ), "number of modes to load" )
+        ( "eigen.marker-list", po::value<std::vector<std::string> >()->multitoken(), "list of markers of the boundary" )
+        ( "eigen.nb-mode", po::value<int>()->default_value( 1 ), "number of modes to load" )
         ( "eigen.print", po::value<bool>()->default_value( false ), "print matrices" )
-        ( "eigen.exportEigen", po::value<bool>()->default_value( false ), "export eigen modes" )
-        ( "eigen.testEigen", po::value<bool>()->default_value( false ), "test eigenmodes" )
+        ( "eigen.export", po::value<bool>()->default_value( false ), "export eigen modes" )
+        ( "eigen.test", po::value<bool>()->default_value( false ), "test eigenmodes" )
 
         // if loadMesh = false, all compute options must be true !!!!
-        ( "offline.loadMesh", po::value<bool>()->default_value( true ), "load the mesh or create it" )
-        ( "eigen.computeEigen", po::value<bool>()->default_value( true ), "need to compute eigenmodes, else load them" )
-        ( "coeff.computeRijk", po::value<bool>()->default_value( false ), "compute or load Rijk" )
+        ( "offline.load-mesh", po::value<bool>()->default_value( true ), "load the mesh or create it" )
+        ( "eigen.compute", po::value<bool>()->default_value( true ), "need to compute eigenmodes, else load them" )
+        ( "coeff.compute", po::value<bool>()->default_value( true ), "compute or load Rijk" )
         // if loadMesh = false, all compute options must be true !!!!
         ;
     return myappOptions;
@@ -80,6 +80,7 @@ main( int argc, char **argv )
     auto eigenModes = solverEigen->solve();
 
     auto initCoeff = InitCoeff<decltype(eigenModes)>::build( eigenModes );
+    initCoeff->initRijk();
 
     return 0;
 }
