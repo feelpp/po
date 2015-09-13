@@ -47,6 +47,7 @@ InitCoeff<E>::build(const eigenmodes_type& modes)
         ap->g[i++] = std::get<1>(tuple);
 
     ap->Nh = ap->g[0].functionSpace();
+    ap->mesh = ap->Nh->mesh();
 
     return ap;
 }
