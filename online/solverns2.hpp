@@ -122,7 +122,7 @@ SolverNS2::solve()
     solverSP->setEigen();
     solverSP->setRijk();
 
-    auto Ih = I( _domainSpace=RTh, _imageSpace=P0);
+    // auto Ih = I( _domainSpace=RTh, _imageSpace=P0);
 
     t = doption("solverns2.startTime");
     if( boption("solverns2.aSteady") )
@@ -144,7 +144,7 @@ SolverNS2::solve()
         tic();
         if( !boption("solverns2.aSteady") )
             setA( t );
-        e->step(t)->add("a", Ih(a));
+        // e->step(t)->add("a", Ih(a));
 
         solveSP( t );
         e->step(t)->add("u", u);
@@ -321,14 +321,11 @@ SolverNS2::logInfo()
           << ":-: | :-:\n"
           << "geo | " << soption("gmsh.filename") << "\n"
           << "h | " << doption("gmsh.hsize") << "\n"
-          << "np | " << Environment::numberOfProcessors() << "\n";
-        if( boption("solverns2.computeEigen"))
-            s << "modes | " << ioption("solvereigen.nev") << "\n";
-        else
-            s << "modes | " << ioption("solverns2.nbMode") << "\n";
-        s << "alpha0 | " << soption("solverns2.alpha0") << "\n"
-          << "alpha2 | " << soption("solverns2.alpha2") << "\n";
-        s << "\n#Spaces\n"
+          << "np | " << Environment::numberOfProcessors() << "\n"
+          << "modes | " << ioption("solverns2.nb-mode") << "\n"
+          << "alpha0 | " << soption("solverns2.alpha0") << "\n"
+          << "alpha2 | " << soption("solverns2.alpha2") << "\n"
+          << "\n#Spaces\n"
           << "x | Nh | Vh | Sh\n"
           << ":-: | :-: | :-: | :-:\n"
           << "global dof | " << Nh->nDof() << " | " << Vh->nDof() << " | " << Sh->nDof() << "\n"

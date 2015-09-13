@@ -25,6 +25,7 @@ makeOptions()
     myappOptions.add_options()
         ( "solverns2.verbose", po::value<int>()->default_value( 0 ), "level of verbosity" )
         ( "solverns2.path", po::value<std::string>()->default_value( "." ), "path to mesh, base and Rijk coeff" )
+        ( "solverns2.nb-mode", po::value<int>()->default_value( 1 ), "number of modes to use" )
 
         ( "solverns2.aSteady", po::value<bool>()->default_value( false ), "is a steady or not" )
 

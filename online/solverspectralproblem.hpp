@@ -111,18 +111,22 @@ template<typename F, typename F2, typename F3, typename F4, typename E>
 void
 SolverSpectralProblem<F,F2,F3,F4,E>::setEigen()
 {
-    M = ioption("solverns2.nbMode");
+    tic();
+    M = ioption("solverns2.nb-mode");
     lambda = VectorXd(M);
 
-    g = eigenvec_type(M);
-    psi = psivec_type(M);
+    g = eigenvec_type(M, Nh->element());
+    psi = psivec_type(M, Sh->element());
 
     std::fstream s;
-    Feel::fs::path path(soption( _name="solverns2.path" ));
-    auto basePathG = path.append("mode").string();
-    auto basePathP = path.append("psi").string();
-    auto basePathL = path.append("lambda").string();
-    s.open (basePathL, std::fstream::in);
+    Feel::fs::path basePathG(soption( _name="solverns2.path" ));
+    basePathG.append("mode");
+    Feel::fs::path basePathP(soption( _name="solverns2.path" ));
+    basePathP.append("psi");
+    Feel::fs::path basePathL(soption( _name="solverns2.path" ));
+    basePathL.append("lambda");
+
+    s.open (basePathL.string(), std::fstream::in);
     if( !s.is_open() ){
         std::cout << "Eigen values not found" << std::endl;
         exit(0);
@@ -130,14 +134,15 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setEigen()
 
     for( int i = 0; i < M && s.good(); i++ ){
         s >> lambda(i);
-        std::string pathG = (boost::format("%1%-%2%") % basePathG % i).str();
+        std::string pathG = (boost::format("%1%-%2%") % basePathG.string() % i).str();
         g[i].load(_path=pathG);
-        std::string pathP = (boost::format("%1%-%2%") % basePathP % i).str();
+        std::string pathP = (boost::format("%1%-%2%") % basePathP.string() % i).str();
         psi[i].load(_path=pathP);
     }
     s.close();
 
     c = VectorXd::Ones(M);
+    toc( "eigen", ioption("solverns2.verbose") > 2);
 }
 
 template<typename F, typename F2, typename F3, typename F4, typename E>
@@ -166,7 +171,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setRijk()
         Rijk(k) = MatrixXd(M,M);
 
     std::fstream s;
-    s.open ("rijk", std::fstream::in);
+    Feel::fs::path path(soption( _name="solverns2.path" ));
+    auto filename = path.append("rijk").string();
+    s.open ( filename, std::fstream::in);
     if( !s.is_open() )
     {
             std::cout << "Rijk not found\ntry to launch with --computeRijk=true" << std::endl;
