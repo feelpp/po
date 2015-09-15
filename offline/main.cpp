@@ -68,9 +68,6 @@ main( int argc, char **argv )
                      _desc_lib=feel_options(),
                      _about=makeAbout() );
 
-    if( Environment::isMasterRank() )
-        std::cout << "Path : " << Feel::fs::current_path() << std::endl;
-
     auto mesh = loadMesh( _mesh=new mesh_type, _update=MESH_CHECK|MESH_UPDATE_FACES|MESH_UPDATE_EDGES|MESH_PROPAGATE_MARKERS );
     auto Xh = eigen_space_type::New( mesh );
     auto Nh = Xh->template functionSpace<0>();
@@ -81,6 +78,9 @@ main( int argc, char **argv )
 
     auto initCoeff = InitCoeff<decltype(eigenModes)>::build( eigenModes );
     initCoeff->initRijk();
+
+    if( Environment::isMasterRank() )
+        std::cout << "Path : " << Feel::fs::current_path() << std::endl;
 
     return 0;
 }

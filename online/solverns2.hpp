@@ -122,19 +122,19 @@ SolverNS2::solve()
     solverSP->setEigen();
     solverSP->setRijk();
 
-    // auto Ih = I( _domainSpace=RTh, _imageSpace=P0);
+    auto Ih = I( _domainSpace=RTh, _imageSpace=P0);
 
-    t = doption("solverns2.startTime");
-    if( boption("solverns2.aSteady") )
+    t = doption("solverns2.start-time");
+    if( boption("solverns2.a-steady") )
     {
         setA( t );
         solverSP->setA( a );
         solverSP->init( t );
     }
 
-    dt = doption( "solverns2.timeStep" );
-    for( t = doption("solverns2.startTime"), iter = 0;
-         t < doption("solverns2.finalTime");
+    dt = doption( "solverns2.time-step" );
+    for( t = doption("solverns2.start-time"), iter = 0;
+         t < doption("solverns2.final-time");
          iter++, t += dt
          )
     {
@@ -142,9 +142,9 @@ SolverNS2::solve()
             std::cout << "iteration " << iter << " at time " << t << "s" << std::endl;
 
         tic();
-        if( !boption("solverns2.aSteady") )
+        if( !boption("solverns2.a-steady") )
             setA( t );
-        // e->step(t)->add("a", Ih(a));
+        e->step(t)->add("a", Ih(a));
 
         solveSP( t );
         e->step(t)->add("u", u);
@@ -211,7 +211,7 @@ SolverNS2::solveSP( double t)
 {
     tic();
 
-    if( !boption("solverns2.aSteady") )
+    if( !boption("solverns2.a-steady") )
     {
         solverSP->setA(a);
         solverSP->init( t );
@@ -234,7 +234,7 @@ SolverNS2::post( double t )
     form1V = integrate( elements(mesh), inner(idv(a) + idv(u), id(v)));
     form2V.solve(_rhs=form1V, _solution=v);
 
-    auto vex_expr = expr<3,1>(soption("solverns2.v_ex"));
+    auto vex_expr = expr<3,1>(soption("solverns2.v-exact"));
     vex_expr.setParameterValues({{"t",t}});
     vex = Vh->element(vex_expr);
 
@@ -258,10 +258,6 @@ SolverNS2::post( double t )
     }
 
 
-    // auto g_s = soption("solverns2.alpha0");
-    // auto vars = Symbols{ "x", "y", "radius", "speed" };
-    // auto g_e = parse( g_s, vars );
-    // auto g = expr( g_e, vars );
     // auto g = expr(soption("solverns2.alpha0"));
     // g.setParameterValues(
     //     {

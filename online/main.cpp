@@ -27,41 +27,41 @@ makeOptions()
         ( "solverns2.path", po::value<std::string>()->default_value( "." ), "path to mesh, base and Rijk coeff" )
         ( "solverns2.nb-mode", po::value<int>()->default_value( 1 ), "number of modes to use" )
 
-        ( "solverns2.aSteady", po::value<bool>()->default_value( false ), "is a steady or not" )
+        ( "solverns2.a-steady", po::value<bool>()->default_value( false ), "is a steady or not" )
 
         ( "solverns2.radius", po::value<double>()->default_value( 0.5 ), "cylinder's radius" )
         ( "solverns2.speed", po::value<double>()->default_value( 1 ), "average speed" )
-        ( "solverns2.alpha0", po::value<std::string>()->default_value( "2. * speed * (1. - (x*x + y*y) / (radius * radius))" ), "alpha0, depends on x,y,radius,speed" )
+        ( "solverns2.alpha0", po::value<std::string>()->default_value( "2.*speed*(1.-(x*x+y*y)/(radius*radius)):x:y:radius:speed:t" ), "alpha0, depends on x,y,radius,speed" )
 
-        ( "solverns2.needA1", po::value<bool>()->default_value( false ), "need relief a1" )
+        ( "solverns2.need-a1", po::value<bool>()->default_value( false ), "need relief a1" )
         ( "solverns2.alpha1", po::value<std::string>()->default_value( "0." ), "alpha1, (0.)" )
 
-        ( "solverns2.needA2", po::value<bool>()->default_value( false ), "need relief a2" )
+        ( "solverns2.need-a2", po::value<bool>()->default_value( false ), "need relief a2" )
         ( "solverns2.alpha2", po::value<std::string>()->default_value( "4.*speed/(radius*radius)" ), "alpha2, depends on speed and radius" )
 
         ( "solverns2.nu", po::value<double>()->default_value( 1 ), "viscosity" )
-        ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,1}" ), "f" )
+        ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,0}" ), "f" )
 
         // if loadMesh = false, all compute options must be true !!!!
-        ( "solverns2.loadMesh", po::value<bool>()->default_value( true ), "load the mesh or create it" )
-        ( "solverns2.computeA0", po::value<bool>()->default_value( true ), "need to compute a0, else load it" )
-        ( "solverns2.computeA1", po::value<bool>()->default_value( true ), "need to compute a1, else load it" )
-        ( "solverns2.computeA2", po::value<bool>()->default_value( true ), "need to compute a2, else load it" )
-        ( "solverns2.computeRaik", po::value<bool>()->default_value( false ), "compute or load Raik" )
-        ( "solverns2.computeRiak", po::value<bool>()->default_value( true ), "compute or load Riak" )
-        ( "solverns2.computeRfk", po::value<bool>()->default_value( true ), "compute or load Rfk" )
-        ( "solverns2.computeRpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
+        ( "solverns2.load-mesh", po::value<bool>()->default_value( true ), "load the mesh or create it" )
+        ( "solverns2.compute-a0", po::value<bool>()->default_value( true ), "need to compute a0, else load it" )
+        ( "solverns2.compute-a1", po::value<bool>()->default_value( true ), "need to compute a1, else load it" )
+        ( "solverns2.compute-a2", po::value<bool>()->default_value( true ), "need to compute a2, else load it" )
+        ( "solverns2.compute-raik", po::value<bool>()->default_value( false ), "compute or load Raik" )
+        ( "solverns2.compute-riak", po::value<bool>()->default_value( true ), "compute or load Riak" )
+        ( "solverns2.compute-rfk", po::value<bool>()->default_value( true ), "compute or load Rfk" )
+        ( "solverns2.compute-rpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
         // if loadMesh = false, all compute options must be true !!!!
 
         ( "solverns2.stokes", po::value<bool>()->default_value( true ), "compute Stokes if true, else compute Navier-Stokes" )
-        ( "solverns2.newton.maxIt", po::value<int>()->default_value( 20 ), "maximum iteration of Newton" )
-        ( "solverns2.newton.tol", po::value<double>()->default_value( 1e-8 ), "tolerance for Newton" )
+        ( "solverns2.newton-max-it", po::value<int>()->default_value( 20 ), "maximum iteration of Newton" )
+        ( "solverns2.newton-tol", po::value<double>()->default_value( 1e-8 ), "tolerance for Newton" )
 
-        ( "solverns2.startTime", po::value<double>()->default_value( 0.0 ), "start time" )
-        ( "solverns2.timeStep", po::value<double>()->default_value( 0.1 ), "time step" )
-        ( "solverns2.finalTime", po::value<double>()->default_value( 1.0 ), "final time" )
+        ( "solverns2.start-time", po::value<double>()->default_value( 0.0 ), "start time" )
+        ( "solverns2.time-step", po::value<double>()->default_value( 0.1 ), "time step" )
+        ( "solverns2.final-time", po::value<double>()->default_value( 1.0 ), "final time" )
 
-        ( "solverns2.v_ex", po::value<std::string>()->default_value( "{0,0,2*(1-4*(x*x + y*y))}:x:y"), "v exacte" )
+        ( "solverns2.v-exact", po::value<std::string>()->default_value( "{0,0,2*(1-4*(x*x + y*y))}:x:y:t"), "v exacte" )
         ;
     return myappOptions;
 }

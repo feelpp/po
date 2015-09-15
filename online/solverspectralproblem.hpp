@@ -210,7 +210,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
     auto raikForm = form2( _trial=Nh, _test=Nh );
     raikForm = integrate( elements(mesh), inner( cross( curlv(a),id(w) ), idt(w)) );
 
-    if( boption("solverns2.computeRaik") )
+    if( boption("solverns2.compute-raik") )
     {
         std::fstream s;
         if ( Environment::isMasterRank() )
@@ -274,7 +274,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
     auto riakForm = form2( _test=Nh, _trial=Nh );
     riakForm = integrate( elements(mesh), inner( cross( curl(w),idv(a) ), idt(w)) );
 
-    if( boption("solverns2.computeRiak") )
+    if( boption("solverns2.compute-riak") )
     {
         std::fstream s;
         if ( Environment::isMasterRank() )
@@ -337,7 +337,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
     auto rfkForm = form1( _test=Nh );
     rfkForm = integrate( elements(mesh), trans(ff)*id(w));
 
-    if( boption("solverns2.computeRfk") )
+    if( boption("solverns2.compute-rfk") )
     {
         std::fstream s;
         if ( Environment::isMasterRank() )
@@ -396,7 +396,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
     rpkForm = integrate( markedfaces(mesh, 1), -a2*id(w));
     rpkForm += integrate( markedfaces(mesh, 2), a2*id(w));
 
-    if( boption("solverns2.computeRpk") )
+    if( boption("solverns2.compute-rpk") )
     {
         std::fstream s;
         if ( Environment::isMasterRank() )
@@ -473,10 +473,10 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
         c = VectorXd::Ones(M);
 
         // [NSInit]
-        double dt = doption("solverns2.timeStep");
+        double dt = doption("solverns2.time-step");
 
         VectorXd dc = VectorXd::Matrix(M);
-        double tol = doption("solverns2.newton.tol");
+        double tol = doption("solverns2.newton-tol");
         // [NSInit]
         // [NSSys1]
         HouseholderQR<MatrixXd> qr(M,M);
@@ -487,7 +487,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
             // [NSMatF]
             f = c.cwiseProduct(lambda)/Re + Riak*c + Raik*c + Rpk - Rfk;
 
-            if( t > doption("solverns2.startTime") )
+            if( t > doption("solverns2.start-time") )
                 f += c/dt - cNm1/dt;
 
             for (int k = 0; k < M; k++)
@@ -500,7 +500,7 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
             j += Riak;
             j += Raik;
             j += lambda.asDiagonal();
-            if( t > doption("solverns2.startTime") )
+            if( t > doption("solverns2.start-time") )
                 j += VectorXd::Constant(M, 1./dt).asDiagonal();
             // [NSMatJ]
 
@@ -519,9 +519,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
                 std::cout << c << std::endl;
 
             i++;
-        } while(i < ioption("solverns2.newton.maxIt") && dc.norm() > tol);
+        } while(i < ioption("solverns2.newton-max-it") && dc.norm() > tol);
 
-        if(i==ioption("solverns2.newton.maxIt"))
+        if(i==ioption("solverns2.newton-max-it"))
         {
             std::cout << "Newton does not converge\n";
         }

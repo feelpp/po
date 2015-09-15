@@ -64,7 +64,7 @@ SolverA<T,T2>::solve( double t )
     a = RTh->element();
 
     tic();
-    if( boption("solverns2.computeA0"))
+    if( boption("solverns2.compute-a0"))
     {
         if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
             std::cout << " ---------- compute a0 ----------\n";
@@ -79,10 +79,10 @@ SolverA<T,T2>::solve( double t )
     a += a0;
     toc( "a0", ioption("solverns2.verbose") > 2);
 
-    if( boption("solverns2.needA1") )
+    if( boption("solverns2.need-a1") )
     {
         tic();
-        if( boption("solverns2.computeA1"))
+        if( boption("solverns2.compute-a1"))
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << " ---------- compute a1 ----------\n";
@@ -98,10 +98,10 @@ SolverA<T,T2>::solve( double t )
         toc( "a1", ioption("solverns2.verbose") > 2);
     }
 
-    if( boption("solverns2.needA2") )
+    if( boption("solverns2.need-a2") )
     {
         tic();
-        if( boption("solverns2.computeA2"))
+        if( boption("solverns2.compute-a2"))
         {
             if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2)
                 std::cout << " ---------- compute a2 ----------\n";
