@@ -37,7 +37,6 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} )
   Find_Package(Feel++)
 endif()
 
-add_subdirectory( src )
 add_subdirectory( offline )
 add_subdirectory( online )
 add_subdirectory( test )
