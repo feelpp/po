@@ -26,17 +26,13 @@ makeOptions()
     myappOptions.add_options()
         ( "offline.verbose", po::value<int>()->default_value( 0 ), "level of verbosity" )
 
+        ( "eigen.compute", po::value<bool>()->default_value( true ), "need to compute eigenmodes, else load them" )
         ( "eigen.marker-list", po::value<std::vector<std::string> >()->multitoken(), "list of markers of the boundary" )
         ( "eigen.nb-mode", po::value<int>()->default_value( 1 ), "number of modes to load" )
+        ( "eigen.format", po::value<std::string>()->default_value( "hdf5" ), "format in which save eigenfunctions (hdf5, binary, text)" )
         ( "eigen.print", po::value<bool>()->default_value( false ), "print matrices" )
         ( "eigen.export", po::value<bool>()->default_value( false ), "export eigen modes" )
         ( "eigen.test", po::value<bool>()->default_value( false ), "test eigenmodes" )
-
-        // if loadMesh = false, all compute options must be true !!!!
-        ( "offline.load-mesh", po::value<bool>()->default_value( true ), "load the mesh or create it" )
-        ( "eigen.compute", po::value<bool>()->default_value( true ), "need to compute eigenmodes, else load them" )
-        ( "coeff.compute", po::value<bool>()->default_value( true ), "compute or load Rijk" )
-        // if loadMesh = false, all compute options must be true !!!!
         ;
     return myappOptions;
 }
@@ -68,6 +64,7 @@ main( int argc, char **argv )
                      _desc_lib=feel_options(),
                      _about=makeAbout() );
 
+    tic();
     auto mesh = loadMesh( _mesh=new mesh_type, _update=MESH_CHECK|MESH_UPDATE_FACES|MESH_UPDATE_EDGES|MESH_PROPAGATE_MARKERS );
     auto Xh = eigen_space_type::New( mesh );
     auto Nh = Xh->template functionSpace<0>();
@@ -78,6 +75,7 @@ main( int argc, char **argv )
 
     auto initCoeff = InitCoeff<decltype(eigenModes)>::build( eigenModes );
     initCoeff->initRijk();
+    toc("total", ioption("offline.verbose") > 0 );
 
     if( Environment::isMasterRank() )
         std::cout << "Path : " << Feel::fs::current_path() << std::endl;

@@ -160,6 +160,7 @@ SolverEigenNS2<T1,T2>::solve()
         e->save();
         toc("export", ioption("offline.verbose") > 2);
     }
+    toc("eigen", ioption("offline.verbose") > 1 );
 
     if( boption("eigen.test") )
         testEigs();
@@ -524,9 +525,9 @@ SolverEigenNS2<T1,T2>::save()
             s << std::get<0>(modes[i]) << std::endl;
 
         std::string path = (boost::format("mode-%1%")%i).str();
-        std::get<1>(modes[i]).save(_path=path);
+        std::get<1>(modes[i]).save(_path=path, _type=soption("eigen.format"));
         std::string pathP = (boost::format("psi-%1%")%i).str();
-        std::get<2>(modes[i]).save(_path=pathP);
+        std::get<2>(modes[i]).save(_path=pathP, _type=soption("eigen.format"));
     }
 
     if ( Environment::worldComm().isMasterRank() )
