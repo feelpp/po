@@ -135,9 +135,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setEigen()
     for( int i = 0; i < M && s.good(); i++ ){
         s >> lambda(i);
         std::string pathG = (boost::format("%1%-%2%") % basePathG.string() % i).str();
-        g[i].load(_path=pathG);
+        g[i].load(_path=pathG, _type=soption("solverns2.format"));
         std::string pathP = (boost::format("%1%-%2%") % basePathP.string() % i).str();
-        psi[i].load(_path=pathP);
+        psi[i].load(_path=pathP, _type=soption("solverns2.format"));
     }
     s.close();
 

@@ -26,7 +26,7 @@ makeOptions()
         ( "solverns2.verbose", po::value<int>()->default_value( 0 ), "level of verbosity" )
         ( "solverns2.path", po::value<std::string>()->default_value( "." ), "path to mesh, base and Rijk coeff" )
         ( "solverns2.nb-mode", po::value<int>()->default_value( 1 ), "number of modes to use" )
-
+        ( "solverns2.format", po::value<std::string>()->default_value( "hdf5" ), "format in which load eigenfunctions (hdf5 binary, text)" )
         ( "solverns2.a-steady", po::value<bool>()->default_value( false ), "is a steady or not" )
 
         ( "solverns2.radius", po::value<double>()->default_value( 0.5 ), "cylinder's radius" )
@@ -42,8 +42,6 @@ makeOptions()
         ( "solverns2.nu", po::value<double>()->default_value( 1 ), "viscosity" )
         ( "solverns2.f", po::value<std::string>()->default_value( "{0,0,0}" ), "f" )
 
-        // if loadMesh = false, all compute options must be true !!!!
-        ( "solverns2.load-mesh", po::value<bool>()->default_value( true ), "load the mesh or create it" )
         ( "solverns2.compute-a0", po::value<bool>()->default_value( true ), "need to compute a0, else load it" )
         ( "solverns2.compute-a1", po::value<bool>()->default_value( true ), "need to compute a1, else load it" )
         ( "solverns2.compute-a2", po::value<bool>()->default_value( true ), "need to compute a2, else load it" )
@@ -51,7 +49,6 @@ makeOptions()
         ( "solverns2.compute-riak", po::value<bool>()->default_value( true ), "compute or load Riak" )
         ( "solverns2.compute-rfk", po::value<bool>()->default_value( true ), "compute or load Rfk" )
         ( "solverns2.compute-rpk", po::value<bool>()->default_value( true ), "compute or load Rpk" )
-        // if loadMesh = false, all compute options must be true !!!!
 
         ( "solverns2.stokes", po::value<bool>()->default_value( true ), "compute Stokes if true, else compute Navier-Stokes" )
         ( "solverns2.newton-max-it", po::value<int>()->default_value( 20 ), "maximum iteration of Newton" )
