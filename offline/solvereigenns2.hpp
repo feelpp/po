@@ -322,7 +322,7 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
 {
     tic();
     // [remove]
-    auto markers = Environment::vm()["eigen.marker-list"].as<std::vector<std::string> >();
+    auto markers = vsoption("eigen.marker-list");
     auto s = markers.size();
     auto dofsToRemove = std::vector<int>();
 
@@ -433,13 +433,7 @@ void
 SolverEigenNS2<T1,T2>::solveEigen()
 {
     tic();
-    auto zhmodes = eigs( _matrixA=aHat,
-                         _matrixB=bHat,
-                         _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
-                         _problem=(EigenProblemType)EigenMap[soption("solvereigen.problem")],
-                         _transform=(SpectralTransformType)EigenMap[soption("solvereigen.transform")],
-                         _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")]
-                         );
+    auto zhmodes = eigs( _matrixA=aHat, _matrixB=bHat );
 
     int i = 0;
     modes = eigenmodes_type(zhmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
@@ -488,7 +482,8 @@ SolverEigenNS2<T1,T2>::solveEigen()
         tmpVec3->close();
         modes0[i] = *tmpVec3;
 
-        i++;}
+        i++;
+    }
 
     LOG(INFO) << "number of converged eigenmodes : " << i;
     if( Environment::isMasterRank() && ioption("offline.verbose") > 1 )

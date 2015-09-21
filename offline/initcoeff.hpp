@@ -66,61 +66,35 @@ InitCoeff<E>::initRijk()
 
     auto w = Nh->element();
 
-    if( boption("coeff.compute") )
+    std::fstream s;
+    if ( Environment::isMasterRank() )
+        s.open ("rijk", std::fstream::out);
+
+    // Rijk = - Rikj && Rijj = 0
+    for(int k = 0; k < M; k++)
     {
-        std::fstream s;
-        if ( Environment::isMasterRank() )
-            s.open ("rijk", std::fstream::out);
-
-        // Rijk = - Rikj && Rijj = 0
-        for(int k = 0; k < M; k++)
+        auto rijkForm = form2( _test=Nh, _trial=Nh );
+        rijkForm = integrate( elements(mesh),
+                              inner( cross( curl(w),idt(w) ), idv(g[k]) ));
+        for(int i = 0; i < M; i++)
         {
-            auto rijkForm = form2( _test=Nh, _trial=Nh );
-            rijkForm = integrate( elements(mesh),
-                                  inner( cross( curl(w),idt(w) ), idv(g[k]) ));
-            for(int i = 0; i < M; i++)
+            for(int j = 0; j < k; j++)
             {
-                for(int j = 0; j < k; j++)
-                {
-                    Rijk(k)(i,j) = rijkForm( g[i], g[j] );
-                    Rijk(j)(i,k) = -Rijk(k)(i,j);
+                Rijk(k)(i,j) = rijkForm( g[i], g[j] );
+                Rijk(j)(i,k) = -Rijk(k)(i,j);
 
-                    if ( Environment::isMasterRank() )
-                    {
-                        if( ioption("offline.verbose") > 3 )
-                            std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
-                        s << Rijk(k)(i,j) << std::endl;
-                    }
+                if ( Environment::isMasterRank() )
+                {
+                    if( ioption("offline.verbose") > 3 )
+                        std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
+                    s << Rijk(k)(i,j) << std::endl;
                 }
-                Rijk(k)(i,k) = 0;
             }
+            Rijk(k)(i,k) = 0;
         }
-        if ( Environment::isMasterRank() )
-            s.close();
     }
-    else
-    {
-        std::fstream s;
-        s.open ("rijk", std::fstream::in);
-        if( !s.is_open() )
-        {
-            std::cout << "Rijk not found\ntry to launch with --coeff.compute=true" << std::endl;
-            exit(0);
-        }
-        for(int k = 0; k < M; k++)
-        {
-            for(int i = 0; i < M; i++)
-            {
-                for(int j = 0; j < k; j++)
-                {
-                    s >> Rijk(k)(i,j);
-                    Rijk(j)(i,k) = -Rijk(k)(i,j);
-                }
-                Rijk(k)(i,k) = 0;
-            }
-        }
+    if ( Environment::isMasterRank() )
         s.close();
-    }
-    toc( "Rijk", ioption("offline.verbose") > 1);
 
+    toc( "Rijk", ioption("offline.verbose") > 1);
 }
