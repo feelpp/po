@@ -17,11 +17,13 @@ addons:
     - libopenmpi-dev
     - libglpk-dev
     - libxml2-dev
+    - libfftw3-dev    
     - bison
     - flex
     - doxygen
     - libeigen3-dev
     - imagemagick
+    - gcc-4.9
     sources:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.5
@@ -62,7 +64,7 @@ before_install:
   # download tarball
   - mkdir -p $HOME/software/install
   - cd $HOME/software/install
-  - wget https://feelpp.s3.eu-central-1.amazonaws.com/travis-builds/feelpp-ubuntu-precise-latest.tar.bz2
+  - wget https://feelpp.s3.eu-central-1.amazonaws.com/travis-builds/feelpp-linux-develop-latest.tar.bz2
   - tar xjf feelpp-ubuntu-precise-latest.tar.bz2
   - export BOOSTROOT=$HOME/software/install/boost; echo $BOOSTROOT
   - export GMSH_DIR=$HOME/software/install/gmsh-2.9.3; echo $GMSH_DIR
