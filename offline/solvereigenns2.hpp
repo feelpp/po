@@ -329,12 +329,21 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
     for( auto it = markers.begin(); it != markers.end(); ++it )
     {
         std::string m = *it;
+
         if( mesh->hasMarker(m) )
         {
             auto r = Lh->dof()->markerToDof( m );
-            auto localDof = r.first->second;
+            size_type globalDof;
             auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
-            auto globalDof = map[localDof];
+            if( r.first == r.second )
+            {
+                globalDof = SIZE_MAX;
+            }
+            else
+            {
+                auto localDof = r.first->second;
+                globalDof = map[localDof];
+            }
             int minGlobalDof;
 
             MPI_Allreduce( &globalDof, &minGlobalDof, 1, MPI_INT, MPI_MIN, Environment::worldComm());
