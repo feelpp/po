@@ -23,7 +23,7 @@ addons:
     - doxygen
     - libeigen3-dev
     - imagemagick
-    - g++-4.9      
+    - g++-4.9
     sources:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.5
@@ -37,11 +37,11 @@ matrix:
      addons: &clang35
         apt:
           sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.5
+          - ubuntu-toolchain-r-test
+          - llvm-toolchain-precise-3.5
           packages:
-            - *std_packages
-            - clang-3.5
+          - *std_packages
+          - clang-3.5
   
 before_install:
   - echo $TRAVIS_OS_NAME
