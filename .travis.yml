@@ -17,13 +17,13 @@ addons:
     - libopenmpi-dev
     - libglpk-dev
     - libxml2-dev
-    - libfftw3-dev    
+    - libfftw3-dev
     - bison
     - flex
     - doxygen
     - libeigen3-dev
     - imagemagick
-    - gcc-4.9
+    - g++-4.9      
     sources:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.5
@@ -77,7 +77,7 @@ install:
 #- mkdir opt && cd opt && ../configure -f
 - mkdir opt; cd opt; cmake -DFEELPP_ENABLE_SYSTEM_EIGEN3=ON -DFEELPP_ENABLE_NLOPT=OFF -DCMAKE_CXX_FLAGS="-O0 -DNDEBUG" -DCMAKE_BUILD_TYPE=Release ../ 
 script:
-- make feelpp_po_online feelpp_po_offline VERBOSE=1 
+- make feelpp_po_online VERBOSE=1
 branches:
   only:
   - master
@@ -86,6 +86,6 @@ cache:
 notifications:
   webhooks:
     urls:
-    - https://webhooks.gitter.im/e/4ef52e666deacb33e4a5
+    - https://webhooks.gitter.im/e/ff5d5cfbb652fac9f461
     on_success: always # options: [always|never|change] default: always
     on_failure: always # options: [always|never|change] default: always
