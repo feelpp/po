@@ -28,6 +28,8 @@ class InitCoeff
     int M;
     Matrix<MatrixXd, Dynamic, 1 > Rijk;
 
+    void write_binary_rijk(const char* filename);
+
 public:
     static initcoeff_ptrtype build(const eigenmodes_type& modes);
     void initRijk();
@@ -54,28 +56,41 @@ InitCoeff<E>::build(const eigenmodes_type& modes)
 
 template<typename E>
 void
+InitCoeff<E>::write_binary_rijk(const char* filename)
+{
+    if( Environment::isMasterRank() )
+    {
+        std::ofstream out(filename,ios::out | ios::binary | ios::trunc);
+        out.write((char*) (&M), sizeof(typename decltype(Rijk)::Index));
+        for( int k = 0; k < M; k++ )
+            out.write((char*) Rijk(k).data(), M*M*sizeof(typename decltype(Rijk)::Scalar::Scalar) );
+        out.close();
+    }
+}
+
+template<typename E>
+void
 InitCoeff<E>::initRijk()
 {
     tic();
-    if ( Environment::isMasterRank() && ioption("offline.verbose") > 2 )
+    if ( ioption("offline.verbose") > 2 && Environment::isMasterRank() )
         std::cout << "----- Rijk -----" << std::endl;
 
+    tic();
     Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
     for(int k = 0; k < M; k++)
         Rijk(k) = MatrixXd(M,M);
 
     auto w = Nh->element();
-
-    std::fstream s;
-    if ( Environment::isMasterRank() )
-        s.open ("rijk", std::fstream::out);
+    auto rijkForm = form2( _test=Nh, _trial=Nh );
 
     // Rijk = - Rikj && Rijj = 0
-    for(int k = 0; k < M; k++)
+    for (int k = 0; k < M; k++)
     {
-        auto rijkForm = form2( _test=Nh, _trial=Nh );
         rijkForm = integrate( elements(mesh),
                               inner( cross( curl(w),idt(w) ), idv(g[k]) ));
+        rijkForm.close();
+
         for(int i = 0; i < M; i++)
         {
             for(int j = 0; j < k; j++)
@@ -83,18 +98,17 @@ InitCoeff<E>::initRijk()
                 Rijk(k)(i,j) = rijkForm( g[i], g[j] );
                 Rijk(j)(i,k) = -Rijk(k)(i,j);
 
-                if ( Environment::isMasterRank() )
-                {
-                    if( ioption("offline.verbose") > 3 )
-                        std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
-                    s << Rijk(k)(i,j) << std::endl;
-                }
+                if ( ioption("offline.verbose") > 3 && Environment::isMasterRank() )
+                    std::cout << "Rijk(" << k << "," << i << "," << j << ") = " << Rijk(k)(i,j) << std::endl;
             }
             Rijk(k)(i,k) = 0;
         }
     }
-    if ( Environment::isMasterRank() )
-        s.close();
+    toc("calcul rijk", ioption("offline.verbose") > 2);
+
+    tic();
+    write_binary_rijk( "rijk" );
+    toc("write rijk", ioption("offline.verbose") > 1);
 
     toc( "Rijk", ioption("offline.verbose") > 1);
 }

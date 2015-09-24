@@ -557,9 +557,9 @@ SolverEigenNS2<T1,T2>::load()
     for( int i = 0; i < nbMode && s.good(); i++ ){
         s >> std::get<0>(modes[i]);
         std::string path = (boost::format("mode-%1%")%i).str();
-        std::get<1>(modes[i]).load(_path=path);
+        std::get<1>(modes[i]).load(_path=path, _type=soption("eigen.format"));
         std::string pathP = (boost::format("psi-%1%")%i).str();
-        std::get<2>(modes[i]).load(_path=pathP);
+        std::get<2>(modes[i]).load(_path=pathP, _type=soption("eigen.format"));
     }
 
     s.close();
