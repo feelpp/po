@@ -87,6 +87,6 @@ cache:
 notifications:
   webhooks:
     urls:
-    - https://webhooks.gitter.im/e/4ef52e666deacb33e4a5      
+      - https://webhooks.gitter.im/e/4ef52e666deacb33e4a5      
     on_success: always # options: [always|never|change] default: always
     on_failure: always # options: [always|never|change] default: always
