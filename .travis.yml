@@ -9,27 +9,26 @@ compiler:
 
 addons:
   apt:
-    packages: &std_packages
-    - expect
-    - gfortran
-    - cmake
-    - libtbb-dev
-    - libopenmpi-dev
-    - libglpk-dev
-    - libxml2-dev
-    - libfftw3-dev
-    - bison
-    - flex
-    - doxygen
-    - libeigen3-dev
-    - imagemagick
-    - g++-4.9
+    packages:
+    - &std_packages
+      - expect
+      - gfortran
+      - cmake
+      - libtbb-dev
+      - libopenmpi-dev
+      - libglpk-dev
+      - libxml2-dev
+      - libfftw3-dev
+      - bison
+      - flex
+      - doxygen
+      - libeigen3-dev
+      - imagemagick
+      - g++-4.9
+    - clang-3.5
     sources:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.5
-    packages:
-    - *std_packages
-    - clang-3.5
 
 matrix:
   include:
@@ -73,9 +72,8 @@ before_install:
   - export FEELPP_DIR=$HOME/software/install/feelpp; echo $FEELPP_DIR
 
 install:
-- cd -
-#- mkdir opt && cd opt && ../configure -f
-- mkdir opt; cd opt; cmake -DFEELPP_ENABLE_SYSTEM_EIGEN3=ON -DFEELPP_ENABLE_NLOPT=OFF -DCMAKE_CXX_FLAGS="-O0 -DNDEBUG" -DCMAKE_BUILD_TYPE=Release ../ 
+- cd $TRAVIS_BUILD_DIR
+- mkdir opt; cd opt; ../configure -f
 script:
 - make feelpp_po_online VERBOSE=1
 - make feelpp_po_offline VERBOSE=1
