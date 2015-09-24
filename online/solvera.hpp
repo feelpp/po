@@ -1,32 +1,28 @@
 using namespace Feel;
 
-template<typename FunctionSpaceType, typename FunctionSpaceType2>
+template<typename FunctionSpaceType>
 class SolverA
 {
     typedef double value_type;
     typedef Mesh<Simplex<3> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-    typedef FunctionSpaceType space_ptrtype;
-    typedef typename space_ptrtype::element_type space_type;
-    typedef typename space_type::element_type element_type;
-
-    typedef FunctionSpaceType2 ml_space_ptrtype;
+    typedef FunctionSpaceType ml_space_ptrtype;
     typedef typename ml_space_ptrtype::element_type ml_space_type;
 
     typedef typename ml_space_type::template sub_functionspace<0>::type rt_space_type;
     typedef boost::shared_ptr<rt_space_type> rt_space_ptrtype;
     typedef typename rt_space_type::element_type rt_element_type;
 
-    typedef SolverA<space_ptrtype, ml_space_ptrtype> solvera_type;
+    typedef SolverA<ml_space_ptrtype> solvera_type;
     typedef typename boost::shared_ptr<solvera_type> solvera_ptrtype;
 
 
     mesh_ptrtype mesh;
-    space_ptrtype Vh;
+
     ml_space_ptrtype Mh;
     rt_space_ptrtype RTh;
-    // scalar_space_ptrtype Sh;
+
     rt_element_type a;
     rt_element_type a0;
     rt_element_type a1;
@@ -40,26 +36,25 @@ class SolverA
     void loadA2();
 
 public:
-    static solvera_ptrtype build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml_space_ptrtype& Mh);
+    static solvera_ptrtype build(const mesh_ptrtype& mesh, const ml_space_ptrtype& Mh);
     rt_element_type solve( double t);
 
 };
 
-template<typename T, typename T2>
-typename SolverA<T,T2>::solvera_ptrtype
-SolverA<T,T2>::build(const mesh_ptrtype& mesh, const space_ptrtype& Vh, const ml_space_ptrtype& Mh)
+template<typename T>
+typename SolverA<T>::solvera_ptrtype
+SolverA<T>::build(const mesh_ptrtype& mesh, const ml_space_ptrtype& Mh)
 {
-    solvera_ptrtype solvera( new SolverA<T,T2> );
+    solvera_ptrtype solvera( new SolverA<T> );
     solvera->mesh = mesh;
-    solvera->Vh = Vh;
     solvera->Mh = Mh;
     solvera->RTh = Mh->template functionSpace<0>();
     return solvera;
 }
 
-template<typename T, typename T2>
-typename SolverA<T,T2>::rt_element_type
-SolverA<T,T2>::solve( double t )
+template<typename T>
+typename SolverA<T>::rt_element_type
+SolverA<T>::solve( double t )
 {
     a = RTh->element();
 
@@ -120,9 +115,9 @@ SolverA<T,T2>::solve( double t )
     return a;
 }
 
-template<typename T, typename T2>
+template<typename T>
 void
-SolverA<T,T2>::computeA0( double t )
+SolverA<T>::computeA0( double t )
 {
     // [option]
     auto g = expr(soption("solverns2.alpha0"));
@@ -161,54 +156,54 @@ SolverA<T,T2>::computeA0( double t )
     std::string path = "a0";
     a0.save(_path=path);
 
-    auto diva = normL2(elements(mesh), divv(a0));
-    auto an = normL2(markedfaces(mesh,1), inner(idv(a0), N()) + g );
+    // auto diva = normL2(elements(mesh), divv(a0));
+    // auto an = normL2(markedfaces(mesh,1), inner(idv(a0), N()) + g );
 
-    std::ofstream s;
-    if( Environment::isMasterRank() )
-    {
-        s.open( "convergence_a.dat", std::ios::out | std::ios::app);
-        s << "hsize" << "\t" << "nDof" << "\t" << "div" << "\t" << "an" << std::endl;
-        s << doption("gmsh.hsize") << "\t" << RTh->nDof() << "\t" << diva << "\t" << an << std::endl;
-        if( ioption("solverns2.verbose") > 2)
-            std::cout << "diva = " << diva << std::endl
-                      << "an = " << an << std::endl;
-    }
+    // std::ofstream s;
+    // if( Environment::isMasterRank() )
+    // {
+    //     s.open( "convergence_a.dat", std::ios::out | std::ios::app);
+    //     s << "hsize" << "\t" << "nDof" << "\t" << "div" << "\t" << "an" << std::endl;
+    //     s << doption("gmsh.hsize") << "\t" << RTh->nDof() << "\t" << diva << "\t" << an << std::endl;
+    //     if( ioption("solverns2.verbose") > 2)
+    //         std::cout << "diva = " << diva << std::endl
+    //                   << "an = " << an << std::endl;
+    // }
 }
 
-template<typename T, typename T2>
+template<typename T>
 void
-SolverA<T,T2>::loadA0()
+SolverA<T>::loadA0()
 {
     a0 = RTh->element();
     std::string path = "a0";
     a0.load(_path=path);
 }
 
-template<typename T, typename T2>
+template<typename T>
 void
-SolverA<T,T2>::computeA1( double t )
+SolverA<T>::computeA1( double t )
 {
 }
 
-template<typename T, typename T2>
+template<typename T>
 void
-SolverA<T,T2>::loadA1()
+SolverA<T>::loadA1()
 {
     a1 = RTh->element();
     std::string path = "a1";
     a1.load(_path=path);
 }
 
-template<typename T, typename T2>
+template<typename T>
 void
-SolverA<T,T2>::computeA2( double t )
+SolverA<T>::computeA2( double t )
 {
 }
 
-template<typename T, typename T2>
+template<typename T>
 void
-SolverA<T,T2>::loadA2()
+SolverA<T>::loadA2()
 {
     a2 = RTh->element();
     std::string path = "a2";

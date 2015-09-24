@@ -59,10 +59,10 @@ public:
     typedef boost::shared_ptr<vec_space_type> vec_space_ptrtype;
     typedef vec_space_type::element_type vec_element_type;
 
-    using solver_a_type = SolverA<vec_space_ptrtype, ml_space_ptrtype>;
+    using solver_a_type = SolverA<ml_space_ptrtype>;
     using solver_a_ptrtype = boost::shared_ptr<solver_a_type>;
 
-    using solver_sp_type = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>;
+    using solver_sp_type = SolverSpectralProblem<ned_space_ptrtype, scalar_space_ptrtype, rt_element_type>;
     using solver_sp_ptrtype = boost::shared_ptr<solver_sp_type>;
 
     using exporter_type = Exporter<mesh_type>;
@@ -117,8 +117,8 @@ SolverNS2::solve()
 
     initSpaces();
 
-    solverA = SolverA<vec_space_ptrtype, ml_space_ptrtype>::build(mesh, Vh, Mh);
-    solverSP = SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type>::build(mesh, Vh, Nh, Sh, RTh);
+    solverA = SolverA<ml_space_ptrtype>::build(mesh, Mh);
+    solverSP = SolverSpectralProblem<ned_space_ptrtype, scalar_space_ptrtype, rt_element_type>::build(mesh, Nh, Sh);
     solverSP->setEigen();
     solverSP->setRijk();
 
@@ -144,7 +144,7 @@ SolverNS2::solve()
         tic();
         if( !boption("solverns2.a-steady") )
             setA( t );
-        e->step(t)->add("a", Ih(a));
+        e->step(t)->add("a", a);
 
         solveSP( t );
         e->step(t)->add("u", u);
@@ -152,7 +152,7 @@ SolverNS2::solve()
         post( t );
         e->step(t)->add("v", v);
         e->step(t)->add("vex", vex);
-        e->step(t)->add("verr", verr);
+        // e->step(t)->add("verr", verr);
 
         e->save();
         toc("iteration", ioption("solverns2.verbose") > 0 );
@@ -238,17 +238,17 @@ SolverNS2::post( double t )
     vex_expr.setParameterValues({{"t",t}});
     vex = Vh->element(vex_expr);
 
-    auto uex = Vh->element();
-    uex = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(vex) - idv(a));
-    verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(u) + idv(a) - idv(vex));
+    // auto uex = Vh->element();
+    // uex = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(vex) - idv(a));
+    // verr = vf::project( _range=elements(mesh), _space=Vh, _expr=idv(u) + idv(a) - idv(vex));
     err = normL2(elements(mesh), idv(u)+idv(a) - idv(vex));
-    auto errU = normL2(elements(mesh), idv(u) - idv(uex));
+    // auto errU = normL2(elements(mesh), idv(u) - idv(uex));
 
     LOG(INFO) << "error(" << solverSP->M << ") : " << err;
     if(Environment::isMasterRank())
     {
         std::cout << "errorV(" << solverSP->M << ") : " << err << std::endl;
-        std::cout << "errorU(" << solverSP->M << ") : " << errU << std::endl;
+        // std::cout << "errorU(" << solverSP->M << ") : " << errU << std::endl;
         auto filename = (boost::format("%1%-info.md") %Environment::about().appName()).str();
         std::fstream s;
         s.open (filename, std::fstream::out|std::fstream::app);

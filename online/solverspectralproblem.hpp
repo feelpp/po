@@ -5,45 +5,32 @@
 using namespace Feel;
 using namespace Eigen;
 
-template<typename FunctionSpace, typename FunctionSpace2, typename FunctionSpace3, typename FunctionSpace4, typename EigenTuple>
+template<typename FunctionSpace, typename FunctionSpace2, typename AType>
 class SolverSpectralProblem
 {
     typedef double value_type;
     typedef Mesh<Simplex<3> > mesh_type;
     typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
 
-    typedef FunctionSpace vec_space_ptrtype;
-    typedef typename vec_space_ptrtype::element_type vec_space_type;
-    typedef typename vec_space_type::element_type vec_element_type;
+    using eigen_space_ptrtype = FunctionSpace;
+    using eigen_type = typename eigen_space_ptrtype::element_type::element_type;
+    using psi_space_ptrtype = FunctionSpace2;
+    using psi_type = typename psi_space_ptrtype::element_type::element_type;
+    using a_type = AType;
 
-    typedef FunctionSpace2 ned_space_ptrtype;
-    typedef typename ned_space_ptrtype::element_type ned_space_type;
-    typedef typename ned_space_type::element_type ned_element_type;
+    using solverspectralproblem_type = SolverSpectralProblem<eigen_space_ptrtype,psi_space_ptrtype, a_type>;
+    using solverspectralproblem_ptrtype = typename boost::shared_ptr<solverspectralproblem_type>;
 
-    typedef FunctionSpace3 scalar_space_ptrtype;
-    typedef typename scalar_space_ptrtype::element_type scalar_space_type;
-    typedef typename scalar_space_type::element_type scalar_element_type;
-
-    typedef FunctionSpace4 rt_space_ptrtype;
-    typedef typename rt_space_ptrtype::element_type rt_space_type;
-    typedef typename rt_space_type::element_type rt_element_type;
-
-    typedef EigenTuple eigentuple_type;
-
-    typedef SolverSpectralProblem<vec_space_ptrtype, ned_space_ptrtype, scalar_space_ptrtype, rt_space_ptrtype, eigentuple_type> solverspectralproblem_type;
-    typedef typename boost::shared_ptr<solverspectralproblem_type> solverspectralproblem_ptrtype;
-
-    typedef std::vector<eigentuple_type> eigenmodes_type;
-    typedef std::vector<ned_element_type> eigenvec_type;
-    typedef std::vector<scalar_element_type> psivec_type;
+    // using eigenmodes_type = std::vector<eigen_vec_type>;
+    using eigenvec_type = std::vector<eigen_type>;
+    using psivec_type = std::vector<psi_type>;
 
     mesh_ptrtype mesh;
-    vec_space_ptrtype Vh;
-    ned_space_ptrtype Nh;
-    scalar_space_ptrtype Sh;
-    rt_space_ptrtype RTh;
+    // vec_space_ptrtype Vh;
+    eigen_space_ptrtype Nh;
+    psi_space_ptrtype Sh;
 
-    rt_element_type a;
+    a_type a;
     eigenvec_type g;
     psivec_type psi;
     VectorXd lambda;
@@ -71,26 +58,24 @@ public:
     int M;
     VectorXd c;
     VectorXd cNm1;
-    ned_element_type u;
+    eigen_type u;
 
-    static solverspectralproblem_ptrtype build(const mesh_ptrtype& mesh, const vec_space_ptrtype& Vh, const ned_space_ptrtype& Nh, const scalar_space_ptrtype& Sh, const rt_space_ptrtype& RThh);
-    void setA(const rt_element_type& a);
+    static solverspectralproblem_ptrtype build(const mesh_ptrtype& mesh, const eigen_space_ptrtype& Nh, const psi_space_ptrtype& Sh );
+    void setA(const a_type& a);
     void setEigen();
     void setRijk();
     void init( double t );
-    ned_element_type solve(double t);
+    eigen_type solve(double t);
 };
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
-typename SolverSpectralProblem<F,F2,F3,F4,E>::solverspectralproblem_ptrtype
-SolverSpectralProblem<F,F2,F3,F4,E>::build(const mesh_ptrtype& mesh, const vec_space_ptrtype& Vh, const ned_space_ptrtype& Nh, const scalar_space_ptrtype& Sh, const rt_space_ptrtype& RTh)
+template<typename F1, typename F2, typename A1>
+typename SolverSpectralProblem<F1,F2,A1>::solverspectralproblem_ptrtype
+SolverSpectralProblem<F1,F2,A1>::build(const mesh_ptrtype& mesh, const eigen_space_ptrtype& Nh, const psi_space_ptrtype& Sh )
 {
-    solverspectralproblem_ptrtype ap( new SolverSpectralProblem<F,F2,F3,F4,E> );
+    solverspectralproblem_ptrtype ap( new SolverSpectralProblem<F1,F2,A1> );
     ap->mesh = mesh;
-    ap->Vh = Vh;
     ap->Nh = Nh;
     ap->Sh = Sh;
-    ap->RTh = RTh;
 
     double r = doption( "solverns2.radius" );
     double s = doption( "solverns2.speed" );
@@ -100,16 +85,16 @@ SolverSpectralProblem<F,F2,F3,F4,E>::build(const mesh_ptrtype& mesh, const vec_s
     return ap;
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::setA(const rt_element_type& a)
+SolverSpectralProblem<F1,F2,A1>::setA(const a_type& a)
 {
     this->a = a;
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::setEigen()
+SolverSpectralProblem<F1,F2,A1>::setEigen()
 {
     tic();
     M = ioption("solverns2.nb-mode");
@@ -145,9 +130,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setEigen()
     toc( "eigen", ioption("solverns2.verbose") > 2);
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::init( double t )
+SolverSpectralProblem<F1,F2,A1>::init( double t )
 {
     if( ! boption("solverns2.stokes"))
     {
@@ -158,9 +143,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::init( double t )
     initRfk( t );
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::setRijk()
+SolverSpectralProblem<F1,F2,A1>::setRijk()
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
@@ -170,35 +155,44 @@ SolverSpectralProblem<F,F2,F3,F4,E>::setRijk()
     for(int k = 0; k < M; k++)
         Rijk(k) = MatrixXd(M,M);
 
-    std::fstream s;
     Feel::fs::path path(soption( _name="solverns2.path" ));
     auto filename = path.append("rijk").string();
-    s.open ( filename, std::fstream::in);
-    if( !s.is_open() )
-    {
-            std::cout << "Rijk not found\ntry to launch with --computeRijk=true" << std::endl;
-            exit(0);
-    }
-    for(int k = 0; k < M; k++)
-    {
-        for(int i = 0; i < M; i++)
-        {
-            for(int j = 0; j < k; j++)
-            {
-                s >> Rijk(k)(i,j);
-                Rijk(j)(i,k) = -Rijk(k)(i,j);
-            }
-            Rijk(k)(i,k) = 0;
-        }
-    }
-    s.close();
+
+    std::ifstream in(filename,ios::in | std::ios::binary);
+    typename decltype(Rijk)::Index M=0;
+    in.read((char*) (&M),sizeof(decltype(M)));
+    for( int k = 0; k < M; k++ )
+        in.read( (char *) Rijk(k).data() , M*M*sizeof(double) );
+    in.close();
+
+
+    // std::fstream s;
+    // s.open ( filename, std::fstream::in);
+    // if( !s.is_open() )
+    // {
+    //         std::cout << "Rijk not found\ntry to launch with --computeRijk=true" << std::endl;
+    //         exit(0);
+    // }
+    // for(int k = 0; k < M; k++)
+    // {
+    //     for(int i = 0; i < M; i++)
+    //     {
+    //         for(int j = 0; j < k; j++)
+    //         {
+    //             s >> Rijk(k)(i,j);
+    //             Rijk(j)(i,k) = -Rijk(k)(i,j);
+    //         }
+    //         Rijk(k)(i,k) = 0;
+    //     }
+    // }
+    // s.close();
 
     toc( "Rijk", ioption("solverns2.verbose") > 1);
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
+SolverSpectralProblem<F1,F2,A1>::initRaik()
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
@@ -223,12 +217,12 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
                 Raik(k,i) = raikForm(g[i], g[k]);
                 Raik(i,k) = -Raik(k,i);
 
-                if ( Environment::isMasterRank() )
-                {
-                    if( ioption("solverns2.verbose") > 3 )
-                        std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
-                    s << Raik(k,i) << std::endl;
-                }
+                // if ( Environment::isMasterRank() )
+                // {
+                //     if( ioption("solverns2.verbose") > 3 )
+                //         std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
+                //     s << Raik(k,i) << std::endl;
+                // }
             }
             Raik(i,i) = 0;
         }
@@ -260,9 +254,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRaik()
     toc( "Raik", ioption("solverns2.verbose") > 1);
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
+SolverSpectralProblem<F1,F2,A1>::initRiak()
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
@@ -286,12 +280,12 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
             {
                 Riak(k,i) = riakForm( g[i], g[k] );
 
-                if ( Environment::isMasterRank() )
-                {
-                    if( ioption("solverns2.verbose") > 3 )
-                        std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
-                    s << Riak(k,i) << std::endl;
-                }
+                // if ( Environment::isMasterRank() )
+                // {
+                //     if( ioption("solverns2.verbose") > 3 )
+                //         std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
+                //     s << Riak(k,i) << std::endl;
+                // }
             }
         }
         if ( Environment::isMasterRank() )
@@ -320,9 +314,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRiak()
     toc( "Riak", ioption("solverns2.verbose") > 1);
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
+SolverSpectralProblem<F1,F2,A1>::initRfk( double t )
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
@@ -347,12 +341,12 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
         {
             Rfk(k) = rfkForm( g[k]);
 
-            if ( Environment::isMasterRank() )
-            {
-                if( ioption("solverns2.verbose") > 3)
-                    std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
-                s << Rfk(k) << std::endl;
-            }
+            // if ( Environment::isMasterRank() )
+            // {
+            //     if( ioption("solverns2.verbose") > 3)
+            //         std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
+            //     s << Rfk(k) << std::endl;
+            // }
         }
         if ( Environment::isMasterRank() )
             s.close();
@@ -378,9 +372,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRfk( double t )
     toc( "Rfk", ioption("solverns2.verbose") > 1);
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
+template<typename F1, typename F2, typename A1>
 void
-SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
+SolverSpectralProblem<F1,F2,A1>::initRpk( double t )
 {
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
@@ -406,12 +400,12 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
         {
             Rpk(k) = rpkForm(psi[k]);
 
-            if ( Environment::isMasterRank())
-            {
-                if( ioption("solverns2.verbose") > 3 )
-                    std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
-                s << Rpk(k) << std::endl;
-            }
+            // if ( Environment::isMasterRank())
+            // {
+            //     if( ioption("solverns2.verbose") > 3 )
+            //         std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
+            //     s << Rpk(k) << std::endl;
+            // }
         }
         if ( Environment::isMasterRank() )
             s.close();
@@ -437,9 +431,9 @@ SolverSpectralProblem<F,F2,F3,F4,E>::initRpk( double t )
     toc( "Rpk", ioption("solverns2.verbose") > 1);
 }
 
-template<typename F, typename F2, typename F3, typename F4, typename E>
-typename SolverSpectralProblem<F,F2,F3,F4,E>::ned_element_type
-SolverSpectralProblem<F,F2,F3,F4,E>::solve(double t)
+template<typename F1, typename F2, typename A1>
+typename SolverSpectralProblem<F1,F2,A1>::eigen_type
+SolverSpectralProblem<F1,F2,A1>::solve(double t)
 {
     j = MatrixXd(M,M);
     f = VectorXd(M);
