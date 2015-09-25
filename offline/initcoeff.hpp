@@ -60,7 +60,7 @@ InitCoeff<E>::write_binary_rijk(const char* filename)
 {
     if( Environment::isMasterRank() )
     {
-        std::ofstream out(filename,ios::out | ios::binary | ios::trunc);
+        std::ofstream out(filename,std::ios::out | std::ios::binary | std::ios::trunc);
         out.write((char*) (&M), sizeof(typename decltype(Rijk)::Index));
         for( int k = 0; k < M; k++ )
             out.write((char*) Rijk(k).data(), M*M*sizeof(typename decltype(Rijk)::Scalar::Scalar) );

@@ -158,7 +158,7 @@ SolverSpectralProblem<F1,F2,A1>::setRijk()
     Feel::fs::path path(soption( _name="solverns2.path" ));
     auto filename = path.append("rijk").string();
 
-    std::ifstream in(filename,ios::in | std::ios::binary);
+    std::ifstream in(filename,std::ios::in | std::ios::binary);
     typename decltype(Rijk)::Index M=0;
     in.read((char*) (&M),sizeof(decltype(M)));
     for( int k = 0; k < M; k++ )
