@@ -17,6 +17,8 @@ class SolverA
     typedef SolverA<ml_space_ptrtype> solvera_type;
     typedef typename boost::shared_ptr<solvera_type> solvera_ptrtype;
 
+    using bilinear_form_type = typename Feel::meta::BilinearForm<ml_space_type, ml_space_type>::type;
+    using linear_form_type = typename Feel::meta::LinearForm<ml_space_type>::type;
 
     mesh_ptrtype mesh;
 
@@ -24,10 +26,16 @@ class SolverA
     rt_space_ptrtype RTh;
 
     rt_element_type a;
+
     rt_element_type a0;
+    bilinear_form_type a0Form2;
+    bilinear_form_type a0Form2BC;
+    linear_form_type a0Form1;
+
     rt_element_type a1;
     rt_element_type a2;
 
+    void initA0();
     void computeA0( double t );
     void loadA0();
     void computeA1( double t );
@@ -38,7 +46,6 @@ class SolverA
 public:
     static solvera_ptrtype build(const mesh_ptrtype& mesh, const ml_space_ptrtype& Mh);
     rt_element_type solve( double t);
-
 };
 
 template<typename T>
@@ -46,9 +53,14 @@ typename SolverA<T>::solvera_ptrtype
 SolverA<T>::build(const mesh_ptrtype& mesh, const ml_space_ptrtype& Mh)
 {
     solvera_ptrtype solvera( new SolverA<T> );
+
     solvera->mesh = mesh;
+
     solvera->Mh = Mh;
     solvera->RTh = Mh->template functionSpace<0>();
+
+    solvera->initA0();
+
     return solvera;
 }
 
@@ -117,6 +129,30 @@ SolverA<T>::solve( double t )
 
 template<typename T>
 void
+SolverA<T>::initA0()
+{
+    auto U = Mh->element();
+    auto V = Mh->element();
+    auto u = U.template element<0>() ;
+    auto p = U.template element<1>() ;
+    auto v = V.template element<0>() ;
+    auto q = V.template element<1>() ;
+
+    a0Form2 = form2( _test=Mh, _trial=Mh );
+    a0Form2BC = form2( _test=Mh, _trial=Mh );
+    a0Form1 = form1( _test=Mh );
+    a0Form2 = integrate( elements(mesh),
+                         -trans(idt(u))*id(v)
+                         -idt(p)*div(v)
+                         -divt(u)*id(q)
+                         -cst(0.5)*(trans(idt(u)) - gradt(p))*(-id(v)+trans(grad(q)))
+                         -cst(0.5)*(divt(u)*div(v))
+                         -cst(0.5)*(trans(curlt(u))*curl(v))
+                         );
+}
+
+template<typename T>
+void
 SolverA<T>::computeA0( double t )
 {
     // [option]
@@ -129,26 +165,14 @@ SolverA<T>::computeA0( double t )
     // [option]
 
     auto U = Mh->element();
-    auto V = Mh->element();
     auto u = U.template element<0>() ;
-    auto p = U.template element<1>() ;
-    auto v = V.template element<0>() ;
-    auto q = V.template element<1>() ;
 
     // [bilinearA]
-    auto l = form1( _test=Mh );
-    auto a = form2( _trial=Mh, _test=Mh );
-    a = integrate( elements(mesh),
-                   -trans(idt(u))*id(v)
-                   -idt(p)*div(v)
-                   -divt(u)*id(q)
-                   -cst(0.5)*(trans(idt(u)) - gradt(p))*(-id(v)+trans(grad(q)))
-                   -cst(0.5)*(divt(u)*div(v))
-                   -cst(0.5)*(trans(curlt(u))*curl(v))
-                   );
-    a += on( _range=boundaryfaces(mesh), _rhs=l, _element=u, _expr=alpha0);
+    a0Form1.zero();
+    a0Form2BC = a0Form2;
+    a0Form2BC += on( _range=boundaryfaces(mesh), _rhs=a0Form1, _element=u, _expr=alpha0);
 
-    a.solve( _name="a0", _rhs=l, _solution=U );
+    a0Form2BC.solve( _name="a0", _rhs=a0Form1, _solution=U );
 
     a0 = RTh->element();
     a0 = u;
