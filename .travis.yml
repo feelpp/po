@@ -9,25 +9,26 @@ compiler:
 
 addons:
   apt:
-    packages: &std_packages
-    - expect
-    - gfortran
-    - cmake
-    - libtbb-dev
-    - libopenmpi-dev
-    - libglpk-dev
-    - libxml2-dev
-    - bison
-    - flex
-    - doxygen
-    - libeigen3-dev
-    - imagemagick
+    packages:
+    - &std_packages
+      - expect
+      - gfortran
+      - cmake
+      - libtbb-dev
+      - libopenmpi-dev
+      - libglpk-dev
+      - libxml2-dev
+      - libfftw3-dev
+      - bison
+      - flex
+      - doxygen
+      - libeigen3-dev
+      - imagemagick
+      - g++-4.9
+    - clang-3.5
     sources:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.5
-    packages:
-    - *std_packages
-    - clang-3.5
 
 matrix:
   include:
@@ -35,11 +36,11 @@ matrix:
      addons: &clang35
         apt:
           sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.5
+          - ubuntu-toolchain-r-test
+          - llvm-toolchain-precise-3.5
           packages:
-            - *std_packages
-            - clang-3.5
+          - *std_packages
+          - clang-3.5
   
 before_install:
   - echo $TRAVIS_OS_NAME
@@ -62,8 +63,8 @@ before_install:
   # download tarball
   - mkdir -p $HOME/software/install
   - cd $HOME/software/install
-  - wget https://feelpp.s3.eu-central-1.amazonaws.com/travis-builds/feelpp-ubuntu-precise-latest.tar.bz2
-  - tar xjf feelpp-ubuntu-precise-latest.tar.bz2
+  - wget https://feelpp.s3.eu-central-1.amazonaws.com/travis-builds/feelpp-linux-develop-latest.tar.bz2
+  - tar xjf feelpp-linux-develop-latest.tar.bz2
   - export BOOSTROOT=$HOME/software/install/boost; echo $BOOSTROOT
   - export GMSH_DIR=$HOME/software/install/gmsh-2.9.3; echo $GMSH_DIR
   - export PETSC_DIR=$HOME/software/install/petsc-3.6.0; echo $PETSC_DIR
@@ -71,11 +72,11 @@ before_install:
   - export FEELPP_DIR=$HOME/software/install/feelpp; echo $FEELPP_DIR
 
 install:
-- cd -
-#- mkdir opt && cd opt && ../configure -f
-- mkdir opt; cd opt; cmake -DFEELPP_ENABLE_SYSTEM_EIGEN3=ON -DFEELPP_ENABLE_NLOPT=OFF -DCMAKE_CXX_FLAGS="-O0 -DNDEBUG" -DCMAKE_BUILD_TYPE=Release ../ 
+- cd $TRAVIS_BUILD_DIR
+- mkdir opt; cd opt; ../configure -f
 script:
-- make feelpp_po_online feelpp_po_offline VERBOSE=1 
+- make feelpp_po_online VERBOSE=1
+- make feelpp_po_offline VERBOSE=1
 branches:
   only:
   - master
@@ -84,6 +85,6 @@ cache:
 notifications:
   webhooks:
     urls:
-    - https://webhooks.gitter.im/e/4ef52e666deacb33e4a5
+      - https://webhooks.gitter.im/e/4ef52e666deacb33e4a5      
     on_success: always # options: [always|never|change] default: always
     on_failure: always # options: [always|never|change] default: always
