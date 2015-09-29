@@ -20,11 +20,13 @@ typedef Lagrange<3,Scalar> LagrP3;
 typedef Lagrange<2,Vectorial> LagrVecP2;
 typedef RaviartThomas<0> RaTh0;
 typedef bases<LagrP1,LagrP0> BaseP1P0;
+typedef bases<LagrP2,LagrP1> BaseP2P1;
 typedef bases<LagrP3,LagrP2> BaseP3P2;
 typedef bases<LagrVecP2> BaseVP2;
 typedef bases<LagrVecP2,LagrP0> BaseVP2P0;
 typedef bases<RaTh0,LagrP1> BaseRT0P1;
 typedef FunctionSpace<MeshDim,BaseP1P0> FESpaceP1P0;
+typedef FunctionSpace<MeshDim,BaseP2P1> FESpaceP2P1;
 typedef FunctionSpace<MeshDim,BaseP3P2> FESpaceP3P2;
 typedef FunctionSpace<MeshDim,BaseVP2> FESpaceVP2;
 typedef FunctionSpace<MeshDim,BaseVP2P0> FESpaceVP2P0;
@@ -115,10 +117,14 @@ int main(int argc, char** argv)
     auto alpha2 = expr( soption( "functions.g" ) );
     //auto alpha1 = expr( soption( "functions.i" ) );
     auto alpha0 = expr( soption( "functions.h" ) );
+    auto alfa2 = vec( cst( 0. ), cst( 0. ), alpha2 );
+    //auto alfa1 = vec( cst( 0. ), cst( 0. ), alpha1 );
+    auto alfa0 = vec( cst( 0. ), cst( 0. ), alpha0 );
 
     // GENERAL PARAMETERS & CONVERGENCE DATA
     auto precis = 4;
-    auto delta = 0.5;
+    auto delta = cst( 0.5 );
+    auto null = vec( cst( 0. ), cst( 0. ), cst( 0. ) );
     auto valdivaa = normL2( _range=elements( Th ), _expr=cst( 0. ) );
     auto valdivasum = normL2( _range=elements( Th ), _expr=cst( 0. ) );
     auto valdivq0ksi2 = normL2( _range=elements( Th ), _expr=cst( 0. ) );
@@ -161,8 +167,8 @@ int main(int argc, char** argv)
             lq2 = integrate( _range=elements( Th ), _expr=inner( trans( gradv( psi2 ) ),id( WW ) ) );
             auto aq2 = form2( _trial=XhVP2, _test=XhVP2 );
             aq2 = integrate( _range=elements( Th ), _expr=inner( idt( Q2 ), id( WW ) ) );
-            aq2 += on( _range=markedfaces( Th, 1 ), _rhs=lq2, _element=Q2, _expr=vec( cst( 0. ), cst( 0. ), alpha2 ) );
-            aq2 += on( _range=markedfaces( Th, 2 ), _rhs=lq2, _element=Q2, _expr=vec( cst( 0. ), cst( 0. ), alpha2 ) );
+            aq2 += on( _range=markedfaces( Th, 1 ), _rhs=lq2, _element=Q2, _expr=alfa2 );
+            aq2 += on( _range=markedfaces( Th, 2 ), _rhs=lq2, _element=Q2, _expr=alfa2 );
             aq2.solve( _name="PBQ2", _rhs=lq2, _solution=Q2 );
             if( SCRWRT ) std::cout << "    Q2   SOLVED !!" << std::endl << "    [...]" << std::endl;
 
@@ -172,7 +178,7 @@ int main(int argc, char** argv)
             ak2 = integrate( _range=elements( Th ), _expr=inner( gradt( ksi2 ), grad( yyyy ) ) );
             ak2 += integrate( _range=elements( Th ), _expr=-divt( ksi2 )*id( pryyyy ) );
             ak2 += integrate( _range=elements( Th ), _expr=idt( prksi2 )*div( yyyy ) );
-            ak2 += on( _range=boundaryfaces( Th ), _rhs=lk2, _element=ksi2, _expr=vec( cst( 0. ), cst( 0. ), cst( 0. ) ) );
+            ak2 += on( _range=boundaryfaces( Th ), _rhs=lk2, _element=ksi2, _expr=null );
             ak2.solve( _name="PBksi2", _rhs=lk2, _solution=KSI2 );
             if( SCRWRT ) std::cout << "    KSI2 SOLVED !!" << std::endl << "    [...]" << std::endl;
         }
@@ -197,8 +203,8 @@ int main(int argc, char** argv)
             lq0 = integrate( _range=elements( Th ), _expr=inner( trans( gradv( psi0 ) ),id( WW ) ) );
             auto aq0 = form2( _trial=XhVP2, _test=XhVP2 );
             aq0 = integrate( _range=elements( Th ), _expr=inner( idt( Q0 ), id( WW ) ) );
-            aq0 += on( _range=markedfaces( Th, 1 ), _rhs=lq0, _element=Q0, _expr=vec( cst( 0. ), cst( 0. ), alpha0 ) );
-            aq0 += on( _range=markedfaces( Th, 2 ), _rhs=lq0, _element=Q0, _expr=vec( cst( 0. ), cst( 0. ), alpha0 ) );
+            aq0 += on( _range=markedfaces( Th, 1 ), _rhs=lq0, _element=Q0, _expr=alfa0 );
+            aq0 += on( _range=markedfaces( Th, 2 ), _rhs=lq0, _element=Q0, _expr=alfa0 );
             aq0.solve( _name="PBQ0", _rhs=lq0, _solution=Q0 );
             if( SCRWRT ) std::cout << "    Q0   SOLVED !!" << std::endl << "    [...]" << std::endl;
         }
@@ -250,8 +256,8 @@ int main(int argc, char** argv)
         if( STORE && (LPH2||LPH1||LPH0) )
         {
             auto e = exporter( Th );
-            if( LPH2 ) e->add( "psi2", psi2 );  e->add( "Q2", Q2 );  e->add( "ksi2", ksi2 );
-            if( LPH0 ) e->add( "psi0", psi0 );  e->add( "Q0", Q0 );
+            if( LPH2 ) { e->add( "psi2", psi2 );  e->add( "Q2", Q2 );  e->add( "ksi2", ksi2 ); }
+            if( LPH0 ) { e->add( "psi0", psi0 );  e->add( "Q0", Q0 ); }
             if( ASSY ) e->add( "AA", AA );
             e->save( );
             if( SCRWRT ) std::cout << std::endl << "    RESULTS HAVE BEEN STORED !! (PARAVIEW FORMAT)" << std::endl;
@@ -280,7 +286,7 @@ int main(int argc, char** argv)
             ak2 = integrate( _range=elements( Th ), _expr=inner( gradt( ksi2 ), grad( yyyy ) ) );
             ak2 += integrate( _range=elements( Th ), _expr=-divt( ksi2 )*id( pryyyy ) );
             ak2 += integrate( _range=elements( Th ), _expr=idt( prksi2 )*div( yyyy ) );
-            ak2 += on( _range=boundaryfaces( Th ), _rhs=lk2, _element=ksi2, _expr=vec( cst( 0. ), cst( 0. ), cst( 0. ) ) );
+            ak2 += on( _range=boundaryfaces( Th ), _rhs=lk2, _element=ksi2, _expr=null );
             ak2.solve( _name="PBksi2", _rhs=lk2, _solution=KSI2 );
             if( SCRWRT ) std::cout << "    KSI2 SOLVED !!" << std::endl << "    [...]" << std::endl;
         }
@@ -337,8 +343,8 @@ int main(int argc, char** argv)
         if( STORE && (LPH2||LPH1||LPH0) )
         {
             auto e = exporter( Th );
-            if( LPH2 ) e->add( "psi2", psi2 );  e->add( "ksi2", ksi2 );
-            if( LPH0 ) e->add( "psi0", psi0 );
+            if( LPH2 ) { e->add( "psi2", psi2 );  e->add( "ksi2", ksi2 ); }
+            if( LPH0 ) { e->add( "psi0", psi0 ); }
             if( ASSY ) e->add( "AA", AA );
             e->save( );
             if( SCRWRT ) std::cout << std::endl << "    RESULTS HAVE BEEN STORED !! (PARAVIEW FORMAT)" << std::endl;
@@ -357,20 +363,22 @@ int main(int argc, char** argv)
             aa2q2 = integrate( _range=elements( Th ), _expr=inner( idt( Q2nw ), id( zzzz ) ) );
             aa2q2 += integrate( _range=elements( Th ), _expr=idt( PSI2nw )*div( zzzz ) );
             aa2q2 += integrate( _range=elements( Th ), _expr=divt( Q2nw )*id( przzzz ) );
-            aa2q2 += integrate( _range=elements( Th ), _expr=-delta*inner( idt( Q2nw )-trans( gradt( PSI2nw ) ), id( zzzz )+trans( grad( przzzz ) ) ) );
-            aa2q2 += integrate( _range=elements( Th ), _expr=-delta*divt( Q2nw )*div( zzzz ) );
-            aa2q2 += on( _range=markedfaces( Th, 1 ), _rhs=la2q2, _element=Q2nw, _expr=vec( cst( 0. ), cst( 0. ), alpha2 ) );
-            aa2q2 += on( _range=markedfaces( Th, 2 ), _rhs=la2q2, _element=Q2nw, _expr=vec( cst( 0. ), cst( 0. ), alpha2 ) );
+            aa2q2 += integrate( _range=elements( Th ), _expr=idt( PSI2nw )*div( zzzz ) );
+            aa2q2 += integrate( _range=elements( Th ), _expr=-delta*( trans( idt( Q2nw ) )-gradt( PSI2nw ) )*( id( zzzz )+trans( grad( przzzz ) ) ) );
+            aa2q2 += integrate( _range=elements( Th ), _expr=-delta*( divt( Q2nw )*div( zzzz ) ) );
+            aa2q2 += integrate( _range=elements( Th ), _expr=-delta*( trans( curl( Q2nw ) )*curl( zzzz ) ) );
+            aa2q2 += on( _range=markedfaces( Th, 1 ), _rhs=la2q2, _element=Q2nw, _expr=alfa2 );
+            aa2q2 += on( _range=markedfaces( Th, 2 ), _rhs=la2q2, _element=Q2nw, _expr=alfa2 );
             aa2q2.solve( _name="PBQ2", _rhs=la2q2, _solution=QP2w );
             if( SCRWRT ) std::cout << "    Q2   SOLVED !!" << std::endl << "    [...]" << std::endl;
 
             auto lk2 = form1( _test=XhVP2P0 );
-            lk2 = integrate( _range=elements( Th ), _expr=-inner( trans( gradv( psi2 ) ), id( yyyy ) ) );
+            lk2 = integrate( _range=elements( Th ), _expr=-inner( trans( gradv( PSI2nw ) ), id( yyyy ) ) );
             auto ak2 = form2( _trial=XhVP2P0, _test=XhVP2P0 );
             ak2 = integrate( _range=elements( Th ), _expr=inner( gradt( ksi2 ), grad( yyyy ) ) );
             ak2 += integrate( _range=elements( Th ), _expr=-divt( ksi2 )*id( pryyyy ) );
             ak2 += integrate( _range=elements( Th ), _expr=idt( prksi2 )*div( yyyy ) );
-            ak2 += on( _range=boundaryfaces( Th ), _rhs=lk2, _element=ksi2, _expr=vec( cst( 0. ), cst( 0. ), cst( 0. ) ) );
+            ak2 += on( _range=boundaryfaces( Th ), _rhs=lk2, _element=ksi2, _expr=null );
             ak2.solve( _name="PBksi2", _rhs=lk2, _solution=KSI2 );
             if( SCRWRT ) std::cout << "    KSI2 SOLVED !!" << std::endl << "    [...]" << std::endl;
          }
@@ -387,10 +395,18 @@ int main(int argc, char** argv)
             aa0q0 = integrate( _range=elements( Th ), _expr=inner( idt( Q0nw ), id( zzzz ) ) );
             aa0q0 += integrate( _range=elements( Th ), _expr=idt( PSI0nw )*div( zzzz ) );
             aa0q0 += integrate( _range=elements( Th ), _expr=divt( Q0nw )*id( przzzz ) );
-            aa0q0 += integrate( _range=elements( Th ), _expr=-delta*inner( idt( Q0nw )-trans( gradt( PSI0nw ) ), id( zzzz )+trans( grad( przzzz ) ) ) );
-            aa0q0 += integrate( _range=elements( Th ), _expr=-delta*divt( Q0nw )*div( zzzz ) );
-            aa0q0 += on( _range=markedfaces( Th, 1 ), _rhs=la0q0, _element=Q0nw, _expr=vec( cst( 0. ), cst( 0. ), alpha0 ) );
-            aa0q0 += on( _range=markedfaces( Th, 2 ), _rhs=la0q0, _element=Q0nw, _expr=vec( cst( 0. ), cst( 0. ), alpha0 ) );
+            //aa0q0 += integrate( _range=elements( Th ), _expr=idt( PSI0nw )*div( zzzz ) );
+            //aa0q0 += integrate( _range=elements( Th ), _expr=-delta*( trans( idt( Q0nw ) )-gradt( PSI0nw ) )*( id( zzzz )+trans( grad( przzzz ) ) ) );
+            aa0q0 += integrate( _range=elements( Th ), _expr=-delta*inner( idt( Q0nw ), id( zzzz ) ) );
+            aa0q0 += integrate( _range=elements( Th ), _expr=-delta*inner( trans( idt( Q0nw ) ), grad( przzzz ) ) );
+            aa0q0 += integrate( _range=elements( Th ), _expr=delta*inner( trans( gradt( PSI0nw ) ), id( zzzz ) ) );
+            aa0q0 += integrate( _range=elements( Th ), _expr=delta*inner( gradt( PSI0nw ), grad( przzzz ) ) );
+            aa0q0 += integrate( _range=elements( Th ), _expr=-delta*( divt( Q0nw )*div( zzzz ) ) );
+            //aa0q0 += integrate( _range=elements( Th ), _expr=-delta*inner( curl( Q0nw ), curl( zzzz ) ) );
+            //aa0q0 += on( _range=markedfaces( Th, 1 ), _rhs=la0q0, _element=Q0nw, _expr=alfa0 );
+            //aa0q0 += on( _range=markedfaces( Th, 2 ), _rhs=la0q0, _element=Q0nw, _expr=alfa0 );
+            aa0q0 += on( _range=markedfaces( Th, 1 ), _rhs=la0q0, _element=Q0nw, _expr=vec( cst( 0.), cst( 0. ), alpha0 ) );
+            aa0q0 += on( _range=markedfaces( Th, 2 ), _rhs=la0q0, _element=Q0nw, _expr=vec( cst( 0.), cst( 0. ), alpha0 ) );
             aa0q0.solve( _name="PBQ0", _rhs=la0q0, _solution=QP0w );
             if( SCRWRT ) std::cout << "    Q0   SOLVED !!" << std::endl << "    [...]" << std::endl;
          }
@@ -402,7 +418,7 @@ int main(int argc, char** argv)
             laa = integrate( _range=elements( Th ), _expr=cst( 0. ) );
             if( LPH2 ) laa += integrate( _range=elements( Th ), _expr=inner( idv( ksi2 ), id( WW ) ) );
             if( LPH1 ) laa += integrate( _range=elements( Th ), _expr=cst( 0. ) );
-            if( LPH0 ) laa += integrate( _range=elements( Th ), _expr=inner( idv( Q0 ), id( WW ) ) );
+            if( LPH0 ) laa += integrate( _range=elements( Th ), _expr=inner( idv( Q0nw ), id( WW ) ) );
             auto aaa = form2( _trial=XhVP2, _test=XhVP2 );
             aaa = integrate( _range=elements( Th ), _expr=inner( idt( AA ), id( WW ) ) );
             aaa.solve( _name="PBAA", _rhs=laa, _solution=AA );
@@ -412,11 +428,11 @@ int main(int argc, char** argv)
         // Convergence Result Display
         if( CVDISP && (LPH2||LPH1||LPH0) )
         {
-            if( LPH2 ) valdivq2 = normL2( _range=elements( Th ), _expr=divv( Q2 ) );
+            if( LPH2 ) valdivq2 = normL2( _range=elements( Th ), _expr=divv( Q2nw ) );
             if( LPH2 ) valdivksi2 = normL2( _range=elements( Th ), _expr=divv( ksi2 ) );
-            if( LPH0 ) valdivq0 = normL2( _range=elements( Th ), _expr=divv( Q0 ) );
+            if( LPH0 ) valdivq0 = normL2( _range=elements( Th ), _expr=divv( Q0nw ) );
             if( LPH2 && LPH0 ) valdivq0ksi2 = valdivq0 + valdivksi2;
-            if( LPH2 && LPH0 ) valdivasum = normL2( _range=elements( Th ), _expr=divv( ksi2 ) + divv( Q0 ) );
+            if( LPH2 && LPH0 ) valdivasum = normL2( _range=elements( Th ), _expr=divv( ksi2 ) + divv( Q0nw ) );
             if( ASSY ) valdivaa = normL2( _range=elements( Th ), _expr=divv( AA ) );
             if( SCRWRT )
             {
@@ -442,8 +458,8 @@ int main(int argc, char** argv)
         if( STORE && (LPH2||LPH1||LPH0) )
         {
             auto e = exporter( Th );
-            if( LPH2 ) e->add( "psi2", psi2 );  e->add( "Q2", Q2 );  e->add( "ksi2", ksi2 );
-            if( LPH0 ) e->add( "psi0", psi0 );  e->add( "Q0", Q0 );
+            if( LPH2 ) { e->add( "psi2", PSI2nw );  e->add( "Q2", Q2nw );  e->add( "ksi2", ksi2 ); }
+            if( LPH0 ) { e->add( "psi0", PSI0nw );  e->add( "Q0", Q0nw ); }
             if( ASSY ) e->add( "AA", AA );
             e->save( );
             if( SCRWRT ) std::cout << std::endl << "    RESULTS HAVE BEEN STORED !! (PARAVIEW FORMAT)" << std::endl;
