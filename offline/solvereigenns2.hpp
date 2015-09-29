@@ -3,6 +3,7 @@
 #include <feel/feeldiscr/ned1h.hpp>
 #include <feel/feelvf/vf.hpp>
 #include <feel/feelalg/solvereigen.hpp>
+#include <feel/feelfilters/exporter.hpp>
 
 using namespace Feel;
 
@@ -56,6 +57,10 @@ class SolverEigenNS2
 
     typedef std::vector<element_type> eigen0_type;
 
+    using exporter_type = Exporter<mesh_type>;
+    using exporter_ptrtype = boost::shared_ptr<exporter_type>;
+
+
     mesh_ptrtype mesh;
     space_ptrtype Xh;
     space_edge_ptrtype Nh;
@@ -78,6 +83,8 @@ class SolverEigenNS2
     eigen0_type modes0;
 
     double tol = 1.e-3;
+
+    exporter_ptrtype e;
 
     void setForms();
     void setInfo();
@@ -114,9 +121,9 @@ SolverEigenNS2<T1,T2>::solve()
 {
     tic();
 
-    if( boption("solverns2.computeEigen"))
+    if( boption("eigen.compute"))
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+        if ( Environment::isMasterRank() && ioption("offline.verbose") > 2)
             std::cout << " ---------- compute eigenmodes ----------\n";
 
         setForms();
@@ -126,29 +133,36 @@ SolverEigenNS2<T1,T2>::solve()
 
         setMatrices();
 
-        if( boption("solverns2.print") )
+        if( boption("eigen.print") )
             print();
 
-        toc( "matrices", ioption("solverns2.verbose") > 1);
-        tic();
-
         solveEigen();
-        toc( "eigs", ioption("solverns2.verbose") > 1);
-        tic();
 
         save();
-        toc( "save", ioption("solverns2.verbose") > 1);
     }
     else
     {
-        if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 0)
+        if ( Environment::isMasterRank() && ioption("offline.verbose") > 2)
             std::cout << " ---------- load eigenmodes ----------\n";
 
         load();
-        toc( "loadEigen", ioption("solverns2.verbose") > 1);
     }
 
-    if( boption("solverns2.testEigs") )
+    if( boption( "eigen.export") )
+    {
+        tic();
+        e = exporter( _mesh=mesh, _name="eigen" );
+        for( int i = 0; i < modes.size(); i += 10)
+        {
+            e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(modes[i]) );
+            e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(modes[i]) );
+        }
+        e->save();
+        toc("export", ioption("offline.verbose") > 2);
+    }
+    toc("eigen", ioption("offline.verbose") > 1 );
+
+    if( boption("eigen.test") )
         testEigs();
 
     return modes;
@@ -158,6 +172,7 @@ template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setForms()
 {
+    tic();
     // [forms]
     auto u = Nh->element();
     auto v = Nh->element();
@@ -176,13 +191,15 @@ SolverEigenNS2<T1,T2>::setForms()
     matB = b.matrixPtr();
     matB->close();
     // [forms]
+    toc("forms", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setInfo()
 {
-    std::vector<bool> doneNh( Nh->nLocalDof(), false );
+    tic();
+    std ::vector<bool> doneNh( Nh->nLocalDof(), false );
     std::vector<bool> doneLh( Lh->nLocalDof(), false );
     DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
     dof_edge_info = std::vector<DofEdgeInfo>( Nh->nLocalDof(), einfo_default );
@@ -296,26 +313,37 @@ SolverEigenNS2<T1,T2>::setInfo()
             doneNh[ index ] = true;
         }
     }
+    toc( "infos", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setDofsToRemove()
 {
+    tic();
     // [remove]
-    auto markers = Environment::vm()["solverns2.markerList"].as<std::vector<std::string> >();
+    auto markers = vsoption("eigen.marker-list");
     auto s = markers.size();
     auto dofsToRemove = std::vector<int>();
 
     for( auto it = markers.begin(); it != markers.end(); ++it )
     {
         std::string m = *it;
+
         if( mesh->hasMarker(m) )
         {
             auto r = Lh->dof()->markerToDof( m );
-            auto localDof = r.first->second;
+            size_type globalDof;
             auto map = Lh->dof()->mapGlobalProcessToGlobalCluster();
-            auto globalDof = map[localDof];
+            if( r.first == r.second )
+            {
+                globalDof = SIZE_MAX;
+            }
+            else
+            {
+                auto localDof = r.first->second;
+                globalDof = map[localDof];
+            }
             int minGlobalDof;
 
             MPI_Allreduce( &globalDof, &minGlobalDof, 1, MPI_INT, MPI_MIN, Environment::worldComm());
@@ -329,7 +357,9 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
                 if( indexeToRemove != boundaryIndexesToKeep.end() )
                     boundaryIndexesToKeep.erase(indexeToRemove);
 
-                std::cout << "#" << Environment::worldComm().globalRank() << " remove index : " << localDofToRemove << std::endl;
+                if( Environment::isMasterRank() && ioption("offline.verbose") > 3)
+                    std::cout << "#" << Environment::worldComm().globalRank()
+                              << " remove index : " << localDofToRemove << std::endl;
             }
         }
         else
@@ -340,12 +370,14 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
         }
     }
     // [remove]
+    toc( "remove", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::setMatrices()
 {
+    tic();
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
@@ -402,30 +434,22 @@ SolverEigenNS2<T1,T2>::setMatrices()
     aHat->close();
     bHat->close();
     // [ptap]
+    toc("matrices", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::solveEigen()
 {
-    if ( Environment::worldComm().isMasterRank() )
-        std::cout << "Eigs : nev = " << ioption(_name="solvereigen.nev")
-                  << "\t ncv= " << ioption(_name="solvereigen.ncv") << std::endl;
-
-    auto zhmodes = eigs( _matrixA=aHat,
-                         _matrixB=bHat,
-                         _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
-                         _problem=(EigenProblemType)EigenMap[soption("solvereigen.problem")],
-                         _transform=(SpectralTransformType)EigenMap[soption("solvereigen.transform")],
-                         _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")]
-                         );
+    tic();
+    auto zhmodes = eigs( _matrixA=aHat, _matrixB=bHat );
 
     int i = 0;
     modes = eigenmodes_type(zhmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
     modes0 = eigen0_type(zhmodes.size(), Nh->element());
     for( auto const& pair: zhmodes )
     {
-        if(Environment::isMasterRank())
+        if(Environment::isMasterRank() && ioption("offline.verbose") > 1)
             std::cout << i << " eigenvalue = " << boost::get<0>(pair.second) << std::endl;
 
         // zero eigenvalues discarded
@@ -469,11 +493,13 @@ SolverEigenNS2<T1,T2>::solveEigen()
 
         i++;
     }
+
     LOG(INFO) << "number of converged eigenmodes : " << i;
-    if( Environment::isMasterRank() )
+    if( Environment::isMasterRank() && ioption("offline.verbose") > 1 )
         std::cout << "number of converged eigenmodes : " << i << std::endl;
 
     modes.resize(i);
+    toc("solve", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
@@ -492,6 +518,7 @@ template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::save()
 {
+    tic();
     std::fstream s;
     if ( Environment::worldComm().isMasterRank() )
         s.open ("lambda", std::fstream::out);
@@ -502,20 +529,22 @@ SolverEigenNS2<T1,T2>::save()
             s << std::get<0>(modes[i]) << std::endl;
 
         std::string path = (boost::format("mode-%1%")%i).str();
-        std::get<1>(modes[i]).save(_path=path);
+        std::get<1>(modes[i]).save(_path=path, _type=soption("eigen.format"));
         std::string pathP = (boost::format("psi-%1%")%i).str();
-        std::get<2>(modes[i]).save(_path=pathP);
+        std::get<2>(modes[i]).save(_path=pathP, _type=soption("eigen.format"));
     }
 
     if ( Environment::worldComm().isMasterRank() )
         s.close();
+    toc( "save", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>
 void
 SolverEigenNS2<T1,T2>::load()
 {
-    int nbMode = ioption("solverns2.nbMode");
+    tic();
+    int nbMode = ioption("eigen.nb-mode");
     modes = eigenmodes_type(nbMode, make_tuple(0, Nh->element(), Sh->element()));
 
     std::fstream s;
@@ -528,12 +557,13 @@ SolverEigenNS2<T1,T2>::load()
     for( int i = 0; i < nbMode && s.good(); i++ ){
         s >> std::get<0>(modes[i]);
         std::string path = (boost::format("mode-%1%")%i).str();
-        std::get<1>(modes[i]).load(_path=path);
+        std::get<1>(modes[i]).load(_path=path, _type=soption("eigen.format"));
         std::string pathP = (boost::format("psi-%1%")%i).str();
-        std::get<2>(modes[i]).load(_path=pathP);
+        std::get<2>(modes[i]).load(_path=pathP, _type=soption("eigen.format"));
     }
 
     s.close();
+    toc("load", ioption("offline.verbose") > 2);
 }
 
 template<typename T1, typename T2>

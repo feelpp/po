@@ -21,6 +21,4 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-feelpp_add_application( po_app SRCS main.cpp solverns2.hpp solvereigenns2.hpp solvera.hpp solverspectralproblem.hpp CFG po_app.cfg GEO mesh/sphere.geo mesh/cylinderAdim.geo )
-add_subdirectory( test )
-add_subdirectory( ben )
+feelpp_add_application( po_offline SRCS main.cpp solvereigenns2.hpp CFG po_offline.cfg GEO ../mesh/cylinderAdim.geo )
