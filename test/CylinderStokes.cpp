@@ -43,12 +43,13 @@ MakeOptions( )
         ( "alift.avar1", po::value<bool>()->default_value( true ), "Lap+Grad+Eq PB : 3steps" )
         ( "alift.avar2", po::value<bool>()->default_value( false ), "Lap+Grad PB : 2steps" )
         ( "alift.avar3", po::value<bool>()->default_value( false ), "Mixed PB" )
-        ( "alift.lph2", po::value<bool>()->default_value( true ), "Alpha 2 considered" )
+        ( "alift.lph2", po::value<bool>()->default_value( false ), "Alpha 2 considered" )
         ( "alift.lph1", po::value<bool>()->default_value( false ), "Alpha 1 considered" )
         ( "alift.lph0", po::value<bool>()->default_value( true ), "Alpha 0 considered" )
         ( "alift.assy", po::value<bool>()->default_value( true ), "A Lift Recombination" )
         ( "alift.cvdisp", po::value<bool>()->default_value( true ), "Convergence Display" )
-        ( "alift.store", po::value<bool>()->default_value( true ), "Storage" );
+        ( "alift.store", po::value<bool>()->default_value( true ), "Storage" )
+        ( "alift.flag", po::value<bool>()->default_value( false ), "Test Flag" );
     return PERSOoptions;
 }
 inline po::options_description
@@ -62,6 +63,24 @@ MakeLibOptions( )
     LIBoptions.add( backend_options( "PBQ0" ) );
     LIBoptions.add( backend_options( "PBAA" ) );
     return LIBoptions.add( feel_options( ) );
+}
+
+template<typename FuncSpac>
+typename FuncSpac::element_type::element_type
+PbLap( FuncSpac Xh, std::string UseCfgFuncName, std::string PbName )
+{
+    auto PSIX = Xh->element( );    auto psix = PSIX.template element<0>( );    auto prpsix = PSIX.template element<1>( );
+    auto XXXX = Xh->element( );    auto xxxx = PSIX.template element<0>( );    auto prxxxx = PSIX.template element<1>( );
+    auto alpha = expr( UseCfgFuncName );
+    auto l = form1( _test=Xh );
+    l = integrate( _range=markedfaces( Xh->mesh( ), 1 ), _expr=-alpha*id( xxxx ) );
+    l += integrate( _range=markedfaces( Xh->mesh( ), 2 ), _expr=alpha*id( xxxx ) );
+    auto a = form2( _trial=Xh, _test=Xh );
+    a = integrate( _range=elements( Xh->mesh( ) ), _expr=inner( gradt( psix ), grad( xxxx ) ) );
+    a += integrate( _range=elements( Xh->mesh( ) ), _expr=idt( psix )*id( xxxx ) );
+    a += integrate( _range=elements( Xh->mesh( ) ), _expr=id( xxxx )*idt( psix ) );
+    a.solve( _name=PbName, _rhs=l, _solution=PSIX );
+    return PSIX;
 }
 
 // MAIN PROGRAM
@@ -83,6 +102,7 @@ int main(int argc, char** argv)
     auto ASSY = boption( "alift.assy" );
     auto CVDISP = boption( "alift.cvdisp" );
     auto STORE = boption( "alift.store" );
+    auto FLAG = boption( "alift.flag" );
 
     // OPTIONS GUARDRAIL
     if( (AV1&&AV2&&AV3)||(AV1&&AV2&&!AV3)||(AV1&&!AV2&&AV3)||(!AV1&&AV2&&AV3)||(!AV1&&!AV2&&!AV3) ) { AV1=1; AV2 = 0; AV3 = 0; }
@@ -145,6 +165,7 @@ int main(int argc, char** argv)
         std::cout << "    VALUES   : " << LPH2 << "\t\t" << LPH1 << "\t\t" << LPH0 << std::endl;
         std::cout << "    -----------------------------------------------------" << std::endl;
         std::cout << std::endl << "    JOB IS CURRENTLY RUNNING..." << std::endl << std::endl;
+        std::cout << "    FLAG = " << FLAG << std::endl << std::endl;
     }
 
     // LIFT VARIANT 1
@@ -189,15 +210,24 @@ int main(int argc, char** argv)
         // Lift Alpha0
         if( LPH0 )
         {
-            auto la0 = form1( _test=XhP3P2 );
-            la0 = integrate( _range=markedfaces( Th, 1 ), _expr=-alpha0*id( xxxx ) );
-            la0 += integrate( _range=markedfaces( Th, 2 ), _expr=alpha0*id( xxxx ) );
-            auto aa0 = form2( _trial=XhP3P2, _test=XhP3P2 );
-            aa0 = integrate( _range=elements( Th ), _expr=inner( gradt( psi0 ),grad( xxxx ) ) );
-            aa0 += integrate( _range=elements( Th ), _expr=idt( psi0 )*id( prxxxx ) );
-            aa0 += integrate( _range=elements( Th ), _expr=id( xxxx )*idt( prpsi0 ) );
-            aa0.solve( _name="PBpsi0", _rhs=la0, _solution=PSI0 );
-            if( SCRWRT ) std::cout << "    PSI0 SOLVED !!" << std::endl << "    [...]" << std::endl;
+            if( !FLAG )
+            {
+                auto la0 = form1( _test=XhP3P2 );
+                la0 = integrate( _range=markedfaces( Th, 1 ), _expr=-alpha0*id( xxxx ) );
+                la0 += integrate( _range=markedfaces( Th, 2 ), _expr=alpha0*id( xxxx ) );
+                auto aa0 = form2( _trial=XhP3P2, _test=XhP3P2 );
+                aa0 = integrate( _range=elements( Th ), _expr=inner( gradt( psi0 ),grad( xxxx ) ) );
+                aa0 += integrate( _range=elements( Th ), _expr=idt( psi0 )*id( prxxxx ) );
+                aa0 += integrate( _range=elements( Th ), _expr=id( xxxx )*idt( prpsi0 ) );
+                aa0.solve( _name="PBpsi0", _rhs=la0, _solution=PSI0 );
+                if( SCRWRT ) std::cout << "    PSI0 SOLVED !!" << std::endl << "    [...]" << std::endl;
+            }
+
+            if( FLAG )
+            {
+                PSI0 = PbLap( XhP3P2, soption( "functions.h" ), "PBpsi0" );
+                if( SCRWRT ) std::cout << "    PSI0 SOLVED !!" << std::endl << "    [...]" << std::endl;
+            }
 
             auto lq0 = form1( _test=XhVP2 );
             lq0 = integrate( _range=elements( Th ), _expr=inner( trans( gradv( psi0 ) ),id( WW ) ) );
