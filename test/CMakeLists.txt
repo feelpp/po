@@ -38,4 +38,4 @@ feelpp_add_application( po_stokesmixed SRCS stokesmixed.cpp CFG po_stokesmixed.c
 feelpp_add_application( CylinderStokes SRCS CylinderStokes.cpp DEFS FEELPP_DIM=3 CFG CylinderStokes.cfg )
 #feelpp_add_application( template_example SRCS templateexample.cpp )
 #feelpp_add_application( CylStokes SRCS CylStokes.cpp DEFS FEELPP_DIM=3 CFG CylStokes.cfg )
-feelpp_add_application( TrainingTemplate SRCS TrainingTemplate.cpp )
+#feelpp_add_application( TrainingTemplate SRCS TrainingTemplate.cpp )
