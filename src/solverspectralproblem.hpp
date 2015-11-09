@@ -4,7 +4,7 @@
 using namespace Feel;
 using namespace Eigen;
 
-template<typename FunctionSpace1, typename FunctionSpace2>
+template<typename FunctionSpace1, typename FunctionSpace2, typename FunctionSpace3>
 class SolverSpectralProblem
 {
     typedef double value_type;
@@ -18,7 +18,11 @@ class SolverSpectralProblem
     typedef FunctionSpace2 space_ptrtype;
     typedef typename space_ptrtype::element_type space_type;
 
-    typedef SolverSpectralProblem<vec_space_ptrtype, space_ptrtype> solverspectralproblem_type;
+    typedef FunctionSpace3 rt_space_ptrtype;
+    typedef typename rt_space_ptrtype::element_type rt_space_type;
+    typedef typename rt_space_type::element_type rt_element_type;
+
+    typedef SolverSpectralProblem<vec_space_ptrtype, space_ptrtype, rt_space_ptrtype> solverspectralproblem_type;
     typedef typename boost::shared_ptr<solverspectralproblem_type> solverspectralproblem_ptrtype;
 
     typedef typename space_type::template sub_functionspace<0>::type space_edge_type;
@@ -36,7 +40,7 @@ class SolverSpectralProblem
     space_edge_ptrtype Nh;
     space_vertex_ptrtype Lh;
 
-    vec_element_type a;
+    rt_element_type a;
 
     sparse_matrix_ptrtype C;
     std::vector<size_type> indexesToKeep;
@@ -47,16 +51,16 @@ public:
     element_type u;
 
     static solverspectralproblem_ptrtype build(const mesh_ptrtype& mesh, const vec_space_ptrtype& Vh, const space_ptrtype& Xh);
-    void setA(const vec_element_type& a);
+    void setA(const rt_element_type& a);
     void setEigen(const sparse_matrix_ptrtype _C, const std::vector<size_type> _indexesToKeep);
     element_type solve();
 };
 
-template<typename F, typename E>
-typename SolverSpectralProblem<F,E>::solverspectralproblem_ptrtype
-SolverSpectralProblem<F,E>::build(const mesh_ptrtype& mesh, const vec_space_ptrtype& Vh, const space_ptrtype& Xh)
+template<typename F, typename E, typename G>
+typename SolverSpectralProblem<F,E,G>::solverspectralproblem_ptrtype
+SolverSpectralProblem<F,E,G>::build(const mesh_ptrtype& mesh, const vec_space_ptrtype& Vh, const space_ptrtype& Xh)
 {
-    solverspectralproblem_ptrtype ap( new SolverSpectralProblem<F,E> );
+    solverspectralproblem_ptrtype ap( new SolverSpectralProblem<F,E,G> );
     ap->mesh = mesh;
     ap->Vh = Vh;
     ap->Xh = Xh;
@@ -65,25 +69,25 @@ SolverSpectralProblem<F,E>::build(const mesh_ptrtype& mesh, const vec_space_ptrt
     return ap;
 }
 
-template<typename F, typename E>
+template<typename F, typename E, typename G>
 void
-SolverSpectralProblem<F,E>::setA(const vec_element_type& a)
+SolverSpectralProblem<F,E,G>::setA(const rt_element_type& a)
 {
     this->a = a;
 }
 
-template<typename F, typename E>
+template<typename F, typename E, typename G>
 void
-SolverSpectralProblem<F,E>::setEigen(const sparse_matrix_ptrtype _C, const std::vector<size_type> _indexesToKeep)
+SolverSpectralProblem<F,E,G>::setEigen(const sparse_matrix_ptrtype _C, const std::vector<size_type> _indexesToKeep)
 {
     this->C = _C;
     this->indexesToKeep = _indexesToKeep;
 }
 
 
-template<typename F, typename E>
-typename SolverSpectralProblem<F,E>::element_type
-SolverSpectralProblem<F,E>::solve()
+template<typename F, typename E, typename G>
+typename SolverSpectralProblem<F,E,G>::element_type
+SolverSpectralProblem<F,E,G>::solve()
 {
     boost::mpi::timer t;
     u = Nh->element();
@@ -209,37 +213,37 @@ SolverSpectralProblem<F,E>::solve()
     U = *tmpVec;
     u = U.template element<0>();
 
-    auto unG = form1(_test=Lh);
-    unG = integrate(boundaryfaces(mesh), trans(idv(u))*N()*id(p));
-    unG.close();
-    auto unG1 = form1(_test=Lh);
-    unG1 = integrate(markedfaces(mesh,1), trans(idv(u))*N()*id(p));
-    unG1.close();
-    auto unG2 = form1(_test=Lh);
-    unG2 = integrate(markedfaces(mesh,2), trans(idv(u))*N()*id(p));
-    unG2.close();
-    auto unG3 = form1(_test=Lh);
-    unG3 = integrate(markedfaces(mesh,3), trans(idv(u))*N()*id(p));
-    unG3.close();
+    // auto unG = form1(_test=Lh);
+    // unG = integrate(boundaryfaces(mesh), trans(idv(u))*N()*id(p));
+    // unG.close();
+    // auto unG1 = form1(_test=Lh);
+    // unG1 = integrate(markedfaces(mesh,1), trans(idv(u))*N()*id(p));
+    // unG1.close();
+    // auto unG2 = form1(_test=Lh);
+    // unG2 = integrate(markedfaces(mesh,2), trans(idv(u))*N()*id(p));
+    // unG2.close();
+    // auto unG3 = form1(_test=Lh);
+    // unG3 = integrate(markedfaces(mesh,3), trans(idv(u))*N()*id(p));
+    // unG3.close();
 
-    if( Environment::numberOfProcessors() == 1 )
-    {
-        unG.vectorPtr()->printMatlab("unG.m");
-        unG1.vectorPtr()->printMatlab("unG1.m");
-        unG2.vectorPtr()->printMatlab("unG2.m");
-        unG3.vectorPtr()->printMatlab("unG3.m");
-    }
+    // if( Environment::numberOfProcessors() == 1 )
+    // {
+    //     unG.vectorPtr()->printMatlab("unG.m");
+    //     unG1.vectorPtr()->printMatlab("unG1.m");
+    //     unG2.vectorPtr()->printMatlab("unG2.m");
+    //     unG3.vectorPtr()->printMatlab("unG3.m");
+    // }
 
-    auto du = normL2(elements(mesh), divv(u));
-    auto intun = integrate(boundaryfaces(mesh),
-                           trans(idv(u))*N()).evaluate()(0,0);
-    auto nu = normL2(boundaryfaces(mesh), trans(idv(u))*N());
-    auto cnu = normL2(boundaryfaces(mesh), trans(curlv(u))*N());
-    if( Environment::isMasterRank() )
-        std::cout << "||div u|| = " << du << std::endl
-                  << "||u . n|| = " << nu << std::endl
-                  << "int u.n   = " << intun <<  std::endl
-                  << "||cu. n|| = " << cnu << std::endl;
+    // auto du = normL2(elements(mesh), divv(u));
+    // auto intun = integrate(boundaryfaces(mesh),
+    //                        trans(idv(u))*N()).evaluate()(0,0);
+    // auto nu = normL2(boundaryfaces(mesh), trans(idv(u))*N());
+    // auto cnu = normL2(boundaryfaces(mesh), trans(curlv(u))*N());
+    // if( Environment::isMasterRank() )
+    //     std::cout << "||div u|| = " << du << std::endl
+    //               << "||u . n|| = " << nu << std::endl
+    //               << "int u.n   = " << intun <<  std::endl
+    //               << "||cu. n|| = " << cnu << std::endl;
 
     return u;
 }
