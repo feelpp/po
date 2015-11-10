@@ -97,9 +97,12 @@ SolverSpectralProblem<F,E,G>::solve()
     auto v = Nh->element();
     auto p = Lh->element();
 
+    double eps = doption("parameters.epsilon");
+
     // Block A
     auto a = form2( _test=Nh, _trial=Nh);
     a = integrate( _range=elements( mesh ), _expr=trans(curlt(v))*curl(v));
+    a += integrate( _range=boundaryelements( mesh ), _expr=eps*(trans(idt(u))*N())*(trans(id(v))*N()));
     auto matA = a.matrixPtr();
     matA->close();
     // Block B
@@ -138,7 +141,11 @@ SolverSpectralProblem<F,E,G>::solve()
     // Vector L = <alpha2,phi>_Gamma
     auto psi = Lh->element();
     auto alpha2 = expr(soption("solverns2.alpha2"));
-
+    alpha2.setParameterValues( {
+            { "radius", doption( "solverns2.radius" ) },
+            { "speed", doption( "solverns2.speed" ) } } );
+    if( Environment::isMasterRank())
+        std::cout << "alpha2 = " << alpha2 << std::endl;
     // vector in Nh x Lh
     auto ll = backend()->newVector( Xh );
     auto l = form1(_test=Xh, _vector=ll);
