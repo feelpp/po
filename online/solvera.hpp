@@ -138,17 +138,17 @@ SolverA<T>::initA0()
     auto v = V.template element<0>() ;
     auto q = V.template element<1>() ;
 
-    a0Form2 = form2( _test=Mh, _trial=Mh );
-    a0Form2BC = form2( _test=Mh, _trial=Mh );
-    a0Form1 = form1( _test=Mh );
-    a0Form2 = integrate( elements(mesh),
-                         -trans(idt(u))*id(v)
-                         -idt(p)*div(v)
-                         -divt(u)*id(q)
-                         -cst(0.5)*(trans(idt(u)) - gradt(p))*(-id(v)+trans(grad(q)))
-                         -cst(0.5)*(divt(u)*div(v))
-                         -cst(0.5)*(trans(curlt(u))*curl(v))
-                         );
+    auto a0Form2 = form2( _test=Mh, _trial=Mh );
+    auto a0Form2BC = form2( _test=Mh, _trial=Mh );
+    auto a0Form1 = form1( _test=Mh );
+    // a0Form2 = integrate( elements(mesh),
+    //                      -trans(idt(u))*id(v)
+    //                      -idt(p)*div(v)
+    //                      -divt(u)*id(q)
+    //                      -cst(0.5)*(trans(idt(u)) - gradt(p))*(-id(v)+trans(grad(q)))
+    //                      -cst(0.5)*(divt(u)*div(v))
+    //                      -cst(0.5)*(trans(curlt(u))*curl(v))
+    //                      );
 }
 
 template<typename T>
@@ -164,10 +164,27 @@ SolverA<T>::computeA0( double t )
     auto alpha0  = vec( cst(0.), cst(0.), g);
     // [option]
 
+    // auto U = Mh->element();
+    // auto u = U.template element<0>() ;
     auto U = Mh->element();
+    auto V = Mh->element();
     auto u = U.template element<0>() ;
+    auto p = U.template element<1>() ;
+    auto v = V.template element<0>() ;
+    auto q = V.template element<1>() ;
 
     // [bilinearA]
+    auto a0Form2 = form2( _test=Mh, _trial=Mh );
+    auto a0Form2BC = form2( _test=Mh, _trial=Mh );
+    auto a0Form1 = form1( _test=Mh );
+    a0Form2 = integrate( elements(mesh),
+                         -trans(idt(u))*id(v)
+                         -idt(p)*div(v)
+                         -divt(u)*id(q)
+                         -cst(0.5)*(trans(idt(u)) - gradt(p))*(-id(v)+trans(grad(q)))
+                         -cst(0.5)*(divt(u)*div(v))
+                         -cst(0.5)*(trans(curlt(u))*curl(v))
+                         );
     a0Form1.zero();
     a0Form2BC = a0Form2;
     a0Form2BC += on( _range=boundaryfaces(mesh), _rhs=a0Form1, _element=u, _expr=alpha0);

@@ -152,7 +152,7 @@ SolverEigenNS2<T1,T2>::solve()
     {
         tic();
         e = exporter( _mesh=mesh, _name="eigen" );
-        for( int i = 0; i < modes.size(); i += 10)
+        for( int i = 0; i < modes.size(); i++)
         {
             e->add( ( boost::format( "mode-%1%" ) % i ).str(), std::get<1>(modes[i]) );
             e->add( ( boost::format( "psi-%1%" ) % i ).str(), std::get<2>(modes[i]) );

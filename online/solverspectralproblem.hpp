@@ -383,7 +383,11 @@ SolverSpectralProblem<F1,F2,A1>::initRpk( double t )
     Rpk = VectorXd(M);
 
     auto a2 = expr(soption("solverns2.alpha2"));
-    a2.setParameterValues( {{"t",t}} );
+    a2.setParameterValues( {
+            {"t",t},
+            {"speed",doption("solverns2.speed")},
+            {"radius",doption("solverns2.radius")}
+        } );
 
     auto w = Sh->element();
     auto rpkForm = form1( _test=Sh );
