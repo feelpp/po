@@ -188,6 +188,7 @@ SolverEigenNS2<T1,T2>::setForms()
 
     auto b = form2( _test=Nh, _trial=Nh);
     b = integrate( elements(mesh), trans(idt( u ))*id( v ) );
+    b += integrate( boundaryfaces(mesh), gamma*(trans(idt(u))*N())*(trans(id(v))*N()) );
     matB = b.matrixPtr();
     matB->close();
     // [forms]
@@ -442,7 +443,11 @@ void
 SolverEigenNS2<T1,T2>::solveEigen()
 {
     tic();
-    auto zhmodes = eigs( _matrixA=aHat, _matrixB=bHat );
+    auto zhmodes = eigs( _matrixA=aHat, _matrixB=bHat,
+                         _solver=(EigenSolverType)EigenMap[soption("solvereigen.solver")],
+                         _problem=(EigenProblemType)EigenMap[soption("solvereigen.problem")],
+                         _transform=(SpectralTransformType)EigenMap[soption("solvereigen.transform")],
+                         _spectrum=(PositionOfSpectrum)EigenMap[soption("solvereigen.spectrum")] );
 
     int i = 0;
     modes = eigenmodes_type(zhmodes.size(), std::make_tuple(0, Nh->element(), Sh->element()) );
