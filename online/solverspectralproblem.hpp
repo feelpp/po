@@ -78,6 +78,8 @@ SolverSpectralProblem<F1,F2,A1>::build(const mesh_ptrtype& mesh, const eigen_spa
     ap->Nh = Nh;
     ap->Sh = Sh;
 
+    M = ioption("solverns2.nb-mode");
+
     double r = doption( "solverns2.radius" );
     double s = doption( "solverns2.speed" );
     double n = doption( "solverns2.nu" );
@@ -98,7 +100,6 @@ void
 SolverSpectralProblem<F1,F2,A1>::setEigen()
 {
     tic();
-    M = ioption("solverns2.nb-mode");
     lambda = VectorXd(M);
 
     g = eigenvec_type(M, Nh->element());
@@ -161,9 +162,9 @@ SolverSpectralProblem<F1,F2,A1>::setRijk()
     in.read((char*) (&MMax),sizeof(typename decltype(Rijk)::Index));
     if( M > MMax)
     {
-        LOG(WARNING) << "Number of modes " << M << " is greater than size of the saved coefficients";
+        LOG(WARNING) << "Number of modes " << M << " is greater than size of the saved coefficients " << MMax;
         if( Environment::isMasterRank() )
-            std::cout << "WARNING : Number of modes " << M << " is greater than size of the saved coefficients" << std::endl;
+            std::cout << "WARNING : Number of modes " << M << " is greater than size of the saved coefficients " << MMax << std::endl;
     }
     Rijk = Matrix<MatrixXd, Dynamic, 1>(MMax,1);
     for(int k = 0; k < MMax; k++)
