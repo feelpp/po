@@ -78,7 +78,7 @@ SolverSpectralProblem<F1,F2,A1>::build(const mesh_ptrtype& mesh, const eigen_spa
     ap->Nh = Nh;
     ap->Sh = Sh;
 
-    M = ioption("solverns2.nb-mode");
+    ap->M = ioption("solverns2.nb-mode");
 
     double r = doption( "solverns2.radius" );
     double s = doption( "solverns2.speed" );
