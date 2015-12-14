@@ -119,8 +119,8 @@ SolverNS2::solve()
 
     solverA = SolverA<ml_space_ptrtype>::build(mesh, Mh);
     solverSP = SolverSpectralProblem<ned_space_ptrtype, scalar_space_ptrtype, rt_element_type>::build(mesh, Nh, Sh);
-    solverSP->setEigen();
     solverSP->setRijk();
+    solverSP->setEigen();
 
     auto Ih = I( _domainSpace=RTh, _imageSpace=P0);
 

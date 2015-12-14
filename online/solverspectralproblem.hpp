@@ -56,6 +56,7 @@ class SolverSpectralProblem
 
 public:
     int M;
+    int MMax;
     VectorXd c;
     VectorXd cNm1;
     eigen_type u;
@@ -151,41 +152,30 @@ SolverSpectralProblem<F1,F2,A1>::setRijk()
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Rijk -----" << std::endl;
 
-    Rijk = Matrix<MatrixXd, Dynamic, 1>(M,1);
-    for(int k = 0; k < M; k++)
-        Rijk(k) = MatrixXd(M,M);
-
     Feel::fs::path path(soption( _name="solverns2.path" ));
     auto filename = path.append("rijk").string();
 
     std::ifstream in(filename,std::ios::in | std::ios::binary);
-    typename decltype(Rijk)::Index M=0;
-    in.read((char*) (&M),sizeof(decltype(M)));
-    for( int k = 0; k < M; k++ )
-        in.read( (char *) Rijk(k).data() , M*M*sizeof(double) );
+
+    // load all the modes in Rijk
+    in.read((char*) (&MMax),sizeof(typename decltype(Rijk)::Index));
+    if( M > MMax)
+    {
+        LOG(WARNING) << "Number of modes " << M << " is greater than size of the saved coefficients";
+        if( Environment::isMasterRank() )
+            std::cout << "WARNING : Number of modes " << M << " is greater than size of the saved coefficients" << std::endl;
+    }
+    Rijk = Matrix<MatrixXd, Dynamic, 1>(MMax,1);
+    for(int k = 0; k < MMax; k++)
+        Rijk(k) = MatrixXd(MMax,MMax);
+
+    for( int k = 0; k < MMax; k++ )
+        in.read( (char *) Rijk(k).data() , MMax*MMax*sizeof(typename decltype(Rijk)::Scalar::Scalar) );
     in.close();
 
-
-    // std::fstream s;
-    // s.open ( filename, std::fstream::in);
-    // if( !s.is_open() )
-    // {
-    //         std::cout << "Rijk not found\ntry to launch with --computeRijk=true" << std::endl;
-    //         exit(0);
-    // }
-    // for(int k = 0; k < M; k++)
-    // {
-    //     for(int i = 0; i < M; i++)
-    //     {
-    //         for(int j = 0; j < k; j++)
-    //         {
-    //             s >> Rijk(k)(i,j);
-    //             Rijk(j)(i,k) = -Rijk(k)(i,j);
-    //         }
-    //         Rijk(k)(i,k) = 0;
-    //     }
-    // }
-    // s.close();
+    for( int k = 0; k< MMax; k++ )
+        Rijk(k).conservativeResize(M,M);
+    Rijk.conservativeResize(M,Eigen::NoChange);
 
     toc( "Rijk", ioption("solverns2.verbose") > 1);
 }
@@ -198,17 +188,13 @@ SolverSpectralProblem<F1,F2,A1>::initRaik()
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Raik -----" << std::endl;
 
-    Raik = MatrixXd(M,M);
-
     auto w = Nh->element();
     auto raikForm = form2( _trial=Nh, _test=Nh );
     raikForm = integrate( elements(mesh), inner( cross( curlv(a),id(w) ), idt(w)) );
 
     if( boption("solverns2.compute-raik") )
     {
-        std::fstream s;
-        if ( Environment::isMasterRank() )
-            s.open ("raik", std::fstream::out);
+        Raik = MatrixXd(M,M);
 
         for(int i = 0; i< M ; i++)
         {
@@ -217,39 +203,33 @@ SolverSpectralProblem<F1,F2,A1>::initRaik()
                 Raik(k,i) = raikForm(g[i], g[k]);
                 Raik(i,k) = -Raik(k,i);
 
-                // if ( Environment::isMasterRank() )
-                // {
-                //     if( ioption("solverns2.verbose") > 3 )
-                //         std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
-                //     s << Raik(k,i) << std::endl;
-                // }
-            }
-            Raik(i,i) = 0;
-        }
-        if ( Environment::isMasterRank() )
-            s.close();
-    }
-    else
-    {
-        std::fstream s;
-        s.open ("raik", std::fstream::in);
-        if( !s.is_open() )
-        {
-            std::cout << "Raik not found\ntry to launch with --computeRaik=true" << std::endl;
-            exit(0);
-        }
-        for(int i = 0; i< M ; i++)
-        {
-            for(int k = 0; k < i; k++)
-            {
-                s >> Raik(k,i);
-                Raik(i,k) = -Raik(k,i);
-                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
+                if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                     std::cout << "Raik(" << k << "," << i << ") = " << Raik(k,i) << std::endl;
             }
             Raik(i,i) = 0;
         }
-        s.close();
+
+        if( Environment::isMasterRank() )
+        {
+            std::ofstream out("raik",std::ios::out | std::ios::binary | std::ios::trunc);
+            out.write((char*) Raik.data(), M*M*sizeof(typename decltype(Raik)::Scalar) );
+            out.close();
+        }
+    }
+    else
+    {
+        Raik = MatrixXd(MMax,MMax);
+
+        std::ifstream in("raik",std::ios::in | std::ios::binary);
+        if( !in.is_open() )
+        {
+            std::cout << "Raik not found\ntry to launch with --solverns2.compute-raik=true" << std::endl;
+            exit(0);
+        }
+        in.read( (char *) Raik.data() , MMax*MMax*sizeof(double) );
+        in.close();
+
+        Raik.conservativeResize(M,M);
     }
     toc( "Raik", ioption("solverns2.verbose") > 1);
 }
@@ -262,17 +242,13 @@ SolverSpectralProblem<F1,F2,A1>::initRiak()
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Riak -----" << std::endl;
 
-    Riak = MatrixXd(M,M);
-
     auto w = Nh->element();
     auto riakForm = form2( _test=Nh, _trial=Nh );
     riakForm = integrate( elements(mesh), inner( cross( curl(w),idv(a) ), idt(w)) );
 
     if( boption("solverns2.compute-riak") )
     {
-        std::fstream s;
-        if ( Environment::isMasterRank() )
-            s.open ("riak", std::fstream::out);
+        Riak = MatrixXd(M,M);
 
         for(int i = 0; i< M ; i++)
         {
@@ -280,36 +256,31 @@ SolverSpectralProblem<F1,F2,A1>::initRiak()
             {
                 Riak(k,i) = riakForm( g[i], g[k] );
 
-                // if ( Environment::isMasterRank() )
-                // {
-                //     if( ioption("solverns2.verbose") > 3 )
-                //         std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
-                //     s << Riak(k,i) << std::endl;
-                // }
-            }
-        }
-        if ( Environment::isMasterRank() )
-            s.close();
-    }
-    else
-    {
-        std::fstream s;
-        s.open ("riak", std::fstream::in);
-        if( !s.is_open() )
-        {
-            std::cout << "Riak not found\ntry to launch with --computeRiak=true" << std::endl;
-            exit(0);
-        }
-        for(int i = 0; i< M ; i++)
-        {
-            for(int k = 0; k < M; k++)
-            {
-                s >> Riak(k,i);
-                if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
+                if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
                     std::cout << "Riak(" << k << "," << i << ") = " << Riak(k,i) << std::endl;
             }
         }
-        s.close();
+        if( Environment::isMasterRank() )
+        {
+            std::ofstream out("riak",std::ios::out | std::ios::binary | std::ios::trunc);
+            out.write((char*) Riak.data(), M*M*sizeof(typename decltype(Riak)::Scalar) );
+            out.close();
+        }
+    }
+    else
+    {
+        Riak = MatrixXd(MMax,MMax);
+
+        std::ifstream in("riak",std::ios::in | std::ios::binary);
+        if( !in.is_open() )
+        {
+            std::cout << "Riak not found\ntry to launch with --solverns2.compute-riak=true" << std::endl;
+            exit(0);
+        }
+        in.read( (char *) Riak.data() , MMax*MMax*sizeof(double) );
+        in.close();
+
+        Riak.conservativeResize(M,M);
     }
     toc( "Riak", ioption("solverns2.verbose") > 1);
 }
@@ -322,8 +293,6 @@ SolverSpectralProblem<F1,F2,A1>::initRfk( double t )
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Rfk -----" << std::endl;
 
-    Rfk = VectorXd(M);
-
     auto ff = expr<3,1>(soption("solverns2.f"));
     ff.setParameterValues( {{"t",t}} );
 
@@ -333,41 +302,36 @@ SolverSpectralProblem<F1,F2,A1>::initRfk( double t )
 
     if( boption("solverns2.compute-rfk") )
     {
-        std::fstream s;
-        if ( Environment::isMasterRank() )
-            s.open ("rfk", std::fstream::out);
+        Rfk = VectorXd(M);
 
         for(int k = 0; k < M; k++)
         {
             Rfk(k) = rfkForm( g[k]);
 
-            // if ( Environment::isMasterRank() )
-            // {
-            //     if( ioption("solverns2.verbose") > 3)
-            //         std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
-            //     s << Rfk(k) << std::endl;
-            // }
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
+                std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
         }
-        if ( Environment::isMasterRank() )
-            s.close();
+        if( Environment::isMasterRank() )
+        {
+            std::ofstream out("rfk",std::ios::out | std::ios::binary | std::ios::trunc);
+            out.write((char*) Rfk.data(), M*sizeof(typename decltype(Rfk)::Scalar) );
+            out.close();
+        }
     }
     else
     {
-        std::fstream s;
-        s.open ("rfk", std::fstream::in);
-        if( !s.is_open() )
+        Rfk = VectorXd(MMax);
+
+        std::ifstream in("rfk",std::ios::in | std::ios::binary);
+        if( !in.is_open() )
         {
-            std::cout << "Rfk not found\ntry to launch with --computeRfk=true" << std::endl;
+            std::cout << "Rfk not found\ntry to launch with --solverns2.compute-rfk=true" << std::endl;
             exit(0);
         }
-        for(int k = 0; k < M; k++)
-        {
-            s >> Rfk(k);
-            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3)
-                std::cout << "Rfk(" << k << ") = " << Rfk(k) << std::endl;
-        }
+        in.read( (char *) Rfk.data() , MMax*sizeof(double) );
+        in.close();
 
-        s.close();
+        Rfk.conservativeResize(M);
     }
     toc( "Rfk", ioption("solverns2.verbose") > 1);
 }
@@ -379,8 +343,6 @@ SolverSpectralProblem<F1,F2,A1>::initRpk( double t )
     tic();
     if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 2 )
         std::cout << "----- Rpk -----" << std::endl;
-
-    Rpk = VectorXd(M);
 
     auto a2 = expr(soption("solverns2.alpha2"));
     a2.setParameterValues( {
@@ -396,41 +358,36 @@ SolverSpectralProblem<F1,F2,A1>::initRpk( double t )
 
     if( boption("solverns2.compute-rpk") )
     {
-        std::fstream s;
-        if ( Environment::isMasterRank() )
-            s.open ("rpk", std::fstream::out);
+        Rpk = VectorXd(M);
 
         for(int k = 0; k < M; k++)
         {
             Rpk(k) = rpkForm(psi[k]);
 
-            // if ( Environment::isMasterRank())
-            // {
-            //     if( ioption("solverns2.verbose") > 3 )
-            //         std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
-            //     s << Rpk(k) << std::endl;
-            // }
+            if ( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
+                std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
         }
-        if ( Environment::isMasterRank() )
-            s.close();
+        if( Environment::isMasterRank() )
+        {
+            std::ofstream out("rpk",std::ios::out | std::ios::binary | std::ios::trunc);
+            out.write((char*) Rpk.data(), M*sizeof(typename decltype(Rpk)::Scalar) );
+            out.close();
+        }
     }
     else
     {
-        std::fstream s;
-        s.open ("rpk", std::fstream::in);
-        if( !s.is_open() )
+        Rpk = VectorXd(MMax);
+
+        std::ifstream in("rpk",std::ios::in | std::ios::binary);
+        if( !in.is_open() )
         {
-            std::cout << "Rpk not found\ntry to launch with --computeRpk=true" << std::endl;
+            std::cout << "Rpk not found\ntry to launch with --solverns2.compute-rpk=true" << std::endl;
             exit(0);
         }
-        for(int k = 0; k < M; k++)
-        {
-            s >> Rpk(k);
-            if( Environment::isMasterRank() && ioption("solverns2.verbose") > 3 )
-                std::cout << "Rpk(" << k << ") = " << Rpk(k) << std::endl;
-        }
+        in.read( (char *) Rpk.data() , MMax*sizeof(double) );
+        in.close();
 
-        s.close();
+        Rpk.conservativeResize(M);
     }
     toc( "Rpk", ioption("solverns2.verbose") > 1);
 }
@@ -483,7 +440,7 @@ SolverSpectralProblem<F1,F2,A1>::solve(double t)
         int i=0;
         do{
             // [NSMatF]
-            f = c.cwiseProduct(lambda)/Re + Riak*c + Raik*c + Rpk - Rfk;
+            f = c.cwiseProduct(lambda/Re) + Riak*c + Raik*c + Rpk/Re - Rfk;
 
             if( t > doption("solverns2.start-time") )
                 f += c/dt - cNm1/dt;
@@ -497,7 +454,7 @@ SolverSpectralProblem<F1,F2,A1>::solve(double t)
                 j.row(k) = c.transpose()*Rijk(k).transpose() + c.transpose()*Rijk(k);
             j += Riak;
             j += Raik;
-            j += lambda.asDiagonal();
+            j += (lambda/Re).asDiagonal();
             if( t > doption("solverns2.start-time") )
                 j += VectorXd::Constant(M, 1./dt).asDiagonal();
             // [NSMatJ]
@@ -521,7 +478,9 @@ SolverSpectralProblem<F1,F2,A1>::solve(double t)
 
         if(i==ioption("solverns2.newton-max-it"))
         {
-            std::cout << "Newton does not converge\n";
+            LOG(WARNING) << "Newton did not converge";
+            if(Environment::isMasterRank())
+                std::cout << "WARNING : Newton did not converge" << std::endl;
         }
         toc( "navier stokes", ioption("solverns2.verbose") > 1 );
     }
