@@ -189,7 +189,7 @@ SolverA<T>::computeA0( double t )
     a0Form2BC = a0Form2;
     a0Form2BC += on( _range=boundaryfaces(mesh), _rhs=a0Form1, _element=u, _expr=alpha0);
 
-    a0Form2BC.solve( _name="a0", _rhs=a0Form1, _solution=U );
+    a0Form2BC.solveb( _backend=backend(_name="a0"), _rhs=a0Form1, _solution=U );
 
     a0 = RTh->element();
     a0 = u;

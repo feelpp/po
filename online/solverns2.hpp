@@ -232,7 +232,7 @@ SolverNS2::post( double t )
     form2V = integrate(elements(mesh), inner(idt(v),id(v)));
     auto form1V = form1(_test=Vh);
     form1V = integrate( elements(mesh), inner(idv(a) + idv(u), id(v)));
-    form2V.solve(_rhs=form1V, _solution=v);
+    form2V.solveb(_backend=backend("post"), _rhs=form1V, _solution=v);
 
     auto vex_expr = expr<3,1>(soption("solverns2.v-exact"));
     vex_expr.setParameterValues({{"t",t}});

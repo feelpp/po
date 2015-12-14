@@ -67,8 +67,9 @@ po::options_description
 makeLibOptions()
 {
     po::options_description libOptions( "Lib options" );
-    libOptions.add( backend_options( "a0" ) ).add( backend_options( "grada0" ) );
+    libOptions.add( backend_options( "a0" ) );//.add( backend_options( "grada0" ) );
     libOptions.add( backend_options( "a2" ) );
+    libOptions.add( backend_options( "post" ) );
     return libOptions.add( feel_options() );
 }
 
