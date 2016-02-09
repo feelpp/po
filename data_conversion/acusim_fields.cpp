@@ -92,7 +92,7 @@ loadAcusimFields( std::string const& filename, std::map<size_type,size_type> con
 
 int main( int argc, char** argv )
 {
-    po::options_description opts ( "Convertion of Acusim fields P1");
+    po::options_description opts ( "Conversion of Acusim fields P1");
     opts.add_options()
         ( "input.mesh.filename", po::value<std::string>()->default_value(""), "input.mesh.filename" )
         ( "input.acusim.nodes", po::value<std::string>()->default_value(""), "acusim nodes filename" )
@@ -105,7 +105,7 @@ int main( int argc, char** argv )
 
     Environment env( _argc=argc, _argv=argv,
                      _desc=opts,
-                     _about=about( _name="convertion_acusim_fields" ,
+                     _about=about( _name="conversion_acusim_fields" ,
                                    _author="Feel++ Consortium",
                                    _email="feelpp-devel@feelpp.org" ) );
 

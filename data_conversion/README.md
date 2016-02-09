@@ -1,6 +1,6 @@
 
 
-## Etape 1 : convertion du maillage AcusimRawMesh et partitionement
+## Etape 1 : conversion du maillage AcusimRawMesh et partitionement
 Compiler ce programme (se trouvant dans feelpp/applications/mesh/ )
 ```
 make feelpp_mesh_partitioner
@@ -29,10 +29,10 @@ Chaque maillage est constititué de 2 fichier (.json, .h5). Le premier est une d
 Pour feel++, il faudra ensuite donner le nom du fichier .json (via ```--gmsh.filename=mymesh_p4.json``` par exemple). 
 
 
-## Etape 2 : convertion des résultats d'Acusim (vitesse P1 et pression P1)
-Compiler ce programme (se trouvant dans feelpp/research/po/data_convertion/ )
+## Etape 2 : conversion des résultats d'Acusim (vitesse P1 et pression P1)
+Compiler ce programme (se trouvant dans feelpp/research/po/data_conversion/ )
 ```
-make feelpp_convertion_acusim_fields 
+make feelpp_conversion_acusim_fields 
 ```
 Ensuite l'utilsateur devra fournir le .json crée dans l'étape précédente, le fichier de noeud .crb et
 une liste de fichier de vitesse et pression (.out en ASCII).
@@ -55,10 +55,17 @@ do-export.visu-format=0
 ```
 
 Attention, il faut lancer ce code avec un nombre de processus égale au partitionnement. Par exemple, si on choisit le fichier .json avec 8 paritions,
-il faut lancer ce code sur 8 proc ( via par exemple ```mpirun -np 8 ./feelpp_convertion_acusim_fields --config-file myfile.cfg``` )
+il faut lancer ce code sur 8 proc ( via par exemple ```mpirun -np 8 ./feelpp_conversion_acusim_fields --config-file myfile.cfg``` )
 
 L'option ```do-export.feel-format``` permet de dire qu'il faut sauvegarder les champs au format HDF5 (et relisable par feel++ par la suite).
 L'option ```do-export.visu-format``` permet de dire qu'il faut sauvegarder les champs au format ensightgold (et relisable par Paraview ou HyperView ( mais pas par feel++ ).
 
 
 
+
+
+| Tables   |      Are      |  Cool |
+| -------- | ------------- | ----- |
+| col 1 is |  left-aligned | $1600 |
+| col 2 is |    centered   |   $12 |
+| col 3 is | right-aligned |    $1 |
