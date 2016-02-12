@@ -86,6 +86,10 @@ loadAcusimFields( std::string const& filename, std::map<size_type,size_type> con
             }
         }
     }
+
+    if ( space->extendedDofTable() )
+        sync( field );
+
     if ( Environment::isMasterRank() )
         std::cout << "loadAcusimFields : " << filename << " finish\n";
 }
@@ -109,22 +113,8 @@ int main( int argc, char** argv )
                                    _author="Feel++ Consortium",
                                    _email="feelpp-devel@feelpp.org" ) );
 
-    typedef Mesh<Simplex<3>> mesh_type;
-    typedef boost::shared_ptr<mesh_type> mesh_ptrtype;
-
-    size_type updateComponentsMesh = MESH_UPDATE_ELEMENTS_ADJACENCY|MESH_NO_UPDATE_MEASURES;
-    //size_type updateComponentsMesh = MESH_UPDATE_FACES_MINIMAL;
-    //size_type updateComponentsMesh = MESH_UPDATE_FACES_MINIMAL|MESH_UPDATE_EDGES;
-
     std::string meshFilename = soption("input.mesh.filename");
     CHECK( fs::exists( meshFilename ) ) << "mesh file does not exists : " << meshFilename;
-    auto mesh = loadMesh(_mesh=new mesh_type,
-                         _filename=meshFilename,
-                         _update=updateComponentsMesh );
-
-    if ( Environment::isMasterRank() )
-        std::cout << "loadMesh done" << std::endl;
-
 
     std::vector<std::string> filenameFieldsPressure;
     if ( Environment::vm().count("input.acusim.pressure"))
@@ -138,7 +128,6 @@ int main( int argc, char** argv )
     for ( std::string const& filename : filenameFieldsVelocity )
         CHECK( fs::exists( filename ) ) << "velocity file does not exists : " << filename;
 
-
     int nFieldPressure = filenameFieldsPressure.size();
     int nFieldVelocity = filenameFieldsVelocity.size();
 
@@ -151,9 +140,36 @@ int main( int argc, char** argv )
 
     std::string filenameNodes = soption(_name="input.acusim.nodes");
     CHECK( fs::exists( filenameNodes ) ) << "acusim nodes filename does not exists : " << filenameNodes;
+
+
+    typedef Mesh<Simplex<3>> mesh_type;
+    //size_type updateComponentsMesh = MESH_UPDATE_ELEMENTS_ADJACENCY|MESH_NO_UPDATE_MEASURES;
+    size_type updateComponentsMesh = MESH_UPDATE_FACES_MINIMAL;
+    //size_type updateComponentsMesh = MESH_UPDATE_FACES_MINIMAL|MESH_UPDATE_EDGES;
+    tic();
+    auto mesh = loadMesh(_mesh=new mesh_type,
+                         _filename=meshFilename,
+                         _update=updateComponentsMesh );
+    if ( Environment::isMasterRank() )
+        std::cout << "loadMesh done" << std::endl;
+    toc("loadMesh",FLAGS_v>0);
+
+    if (Environment::isMasterRank() && FLAGS_v >= 1)
+    {
+        auto mem  = Environment::logMemoryUsage("memory usage after load mesh");
+        std::cout << "resident memory on master rank after load mesh : " << mem.memory_usage/1.e9  << "GBytes\n";
+    }
+
+
+    tic();
     std::map<size_type,size_type> pointsMap;
     loadPointsMeshMap( filenameNodes, pointsMap );
-
+    toc("loadPointsMeshMap",FLAGS_v>0);
+    if (Environment::isMasterRank() && FLAGS_v >= 1)
+    {
+        auto mem  = Environment::logMemoryUsage("memory usage after loadPointsMeshMap");
+        std::cout << "resident memory on master rank after call loadPointsMeshMap : " << mem.memory_usage/1.e9  << "GBytes\n";
+    }
 
     typedef FunctionSpace<mesh_type,bases<Lagrange<1, Vectorial,Continuous> > > space_velocity_type;
     typedef boost::shared_ptr<space_velocity_type> space_velocity_ptrtype;
@@ -162,18 +178,47 @@ int main( int argc, char** argv )
 
     space_velocity_ptrtype VhVelocity;
     space_pressure_ptrtype VhPressure;
-
+    bool useExtendedDofTable = boption(_name="do-export.visu-format") && ( soption(_name="exporter.format") == "ensightgold" );
     if ( nFieldVelocity > 0 )
     {
-        VhVelocity = space_velocity_type::New( _mesh=mesh );
+        tic();
+        VhVelocity = space_velocity_type::New( _mesh=mesh, _extended_doftable=std::vector<bool>(1,useExtendedDofTable) );
+        toc("create velocity space",FLAGS_v>0);
+        if (Environment::isMasterRank() && FLAGS_v >= 1)
+        {
+            auto mem  = Environment::logMemoryUsage("memory usage after velocity space");
+            std::cout << "resident memory on master rank after create velocty space : " << mem.memory_usage/1.e9  << "GBytes\n";
+        }
         if ( nFieldPressure > 0 )
+        {
+            tic();
             VhPressure = VhVelocity->compSpace();
+            toc("create pressure space",FLAGS_v>0);
+            if (Environment::isMasterRank() && FLAGS_v >= 1)
+            {
+                auto mem  = Environment::logMemoryUsage("memory usage after pressure space");
+                std::cout << "resident memory on master rank after create pressure space : " << mem.memory_usage/1.e9  << "GBytes\n";
+            }
+        }
     }
     else if ( nFieldPressure > 0 )
     {
-        VhPressure = space_pressure_type::New( _mesh=mesh );
+        tic();
+        VhPressure = space_pressure_type::New( _mesh=mesh,_extended_doftable=std::vector<bool>(1,useExtendedDofTable) );
+        toc("create pressure space",FLAGS_v>0);
+        if (Environment::isMasterRank() && FLAGS_v >= 1)
+        {
+            auto mem  = Environment::logMemoryUsage("memory usage after pressure space");
+            std::cout << "resident memory on master rank after create pressure space : " << mem.memory_usage/1.e9  << "GBytes\n";
+        }
     }
-
+    if ( Environment::worldComm().isMasterRank() )
+    {
+        if ( VhVelocity )
+            std::cout << "nDof in velocity space " << VhVelocity->nDof() << "\n";
+        if ( VhPressure )
+            std::cout << "nDof in pressure space " << VhPressure->nDof() << "\n";
+    }
 
     std::vector<typename space_pressure_type::element_ptrtype> fieldsPressure( nFieldPressure );
     for (int k=0;k<nFieldPressure;++k)
@@ -226,15 +271,26 @@ int main( int argc, char** argv )
         if ( Environment::isMasterRank() )
             std::cout << "save accusim fields in visu-format : " << pathExporter << "\n";
         auto e = exporter( _mesh=mesh,_name=nameExporter,_path=pathExporter );
-        for (int k=0;k<nFieldPressure;++k)
+#if 1
+        if ( VhVelocity )
         {
-            std::string nameExport = fs::path(filenameFieldsPressure[k]).stem().string();
-            e->add( "pressure_"+nameExport, *fieldsPressure[k] );
+            e->defaultTimeSet()->M_vector_p1 = VhVelocity;
         }
+        else if ( VhPressure )
+        {
+            e->defaultTimeSet()->M_scalar_p1 = boost::make_shared< decltype(e->defaultTimeSet()->M_scalar_p1)::element_type>();
+            e->defaultTimeSet()->M_scalar_p1->shallowCopy( VhPressure );
+        }
+#endif
         for (int k=0;k<nFieldVelocity;++k)
         {
             std::string nameExport = fs::path(filenameFieldsVelocity[k]).stem().string();
             e->add( "velocity_"+nameExport, *fieldsVelocity[k] );
+        }
+        for (int k=0;k<nFieldPressure;++k)
+        {
+            std::string nameExport = fs::path(filenameFieldsPressure[k]).stem().string();
+            e->add( "pressure_"+nameExport, *fieldsPressure[k] );
         }
         e->save();
     }
