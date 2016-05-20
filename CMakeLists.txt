@@ -42,6 +42,8 @@ message(STATUS "[feelpp/po] PO_H3DREADER_LIBRARY: ${PO_H3DREADER_LIB}")
 find_library( PO_H3DWRITER_LIB NAMES h3dwriter PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/h3d/bin/linux64 NO_DEFAULT_PATH )
 message(STATUS "[feelpp/po] PO_H3DWRITER_LIBRARY: ${PO_H3DWRITER_LIB}")
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/h3d/include)
+
 #set(FEELPP_LIBRARIES "${PO_H3DWRITER_LIB} ${PO_H3DREADER_LIB} ${FEELPP_LIBRARIES}")
 
 add_subdirectory( lib/h3d/examples )
