@@ -2,19 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include "acusim.h"
-//#include "adb.h"
+#include "acusim.h"
+#include "adb.h"
 #include "h3dpublic_export.h"
 #include <fstream>
 #include <cmath>
 #include <sstream>
-//#include "nrutil.h"
-
-//using Real = double;
-typedef double Real;
-
-#define SIGN( a, b ) a?a:b
-#define SQR( a ) std::sqrt( a )
+#include "nrutil.h"
 
 using namespace std;
 Real** T;
