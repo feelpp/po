@@ -67,7 +67,7 @@ class SolverEigenNS2
     space_vertex_ptrtype Lh;
     scalar_space_ptrtype Sh;
 
-    std::vector<DofEdgeInfo> dof_edge_info;
+    std::map<size_type, DofEdgeInfo> dof_edge_info;
     std::vector<size_type> interiorIndexesToKeep;
     std::vector<size_type> boundaryIndexesToKeep;
     std::vector<size_type> indexesToKeep;
@@ -202,8 +202,7 @@ SolverEigenNS2<T1,T2>::setInfo()
     tic();
     std ::vector<bool> doneNh( Nh->nLocalDof(), false );
     std::vector<bool> doneLh( Lh->nLocalDof(), false );
-    DofEdgeInfo einfo_default {1,-1,EDGE_INTERIOR,invalid_size_type_value,invalid_size_type_value};
-    dof_edge_info = std::vector<DofEdgeInfo>( Nh->nLocalDof(), einfo_default );
+    dof_edge_info = std::map<size_type, DofEdgeInfo>();
     interiorIndexesToKeep = std::vector<size_type>();
     boundaryIndexesToKeep = std::vector<size_type>();
 
@@ -227,8 +226,9 @@ SolverEigenNS2<T1,T2>::setInfo()
             auto perm = elt.edgePermutation( edgeLocalId );
             // [perm]
 
-            dof_edge_info[index].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
-            dof_edge_info[index].sign2 = -dof_edge_info[index].sign1;
+            auto containerIndex = this->Xh->dof()->dofIdToContainerId(0, index);
+            dof_edge_info[containerIndex].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
+            dof_edge_info[containerIndex].sign2 = -dof_edge_info[containerIndex].sign1;
 
             // [points]
             auto i1 = elt.eToP(edgeLocalId, 0);
@@ -259,55 +259,55 @@ SolverEigenNS2<T1,T2>::setInfo()
                 // we keep their indexes to extract the columns
                 if( !doneLh[ dofid1 ] )
                 {
-                    boundaryIndexesToKeep.push_back( dofid1 + Nh->nLocalDofWithGhost() );
+                    boundaryIndexesToKeep.push_back( this->Xh->dof()->dofIdToContainerId(1, dofid1) );
                     doneLh[ dofid1 ] = true;
                 }
                 if( !doneLh[ dofid2 ] )
                 {
-                    boundaryIndexesToKeep.push_back( dofid2 + Nh->nLocalDofWithGhost() );
+                    boundaryIndexesToKeep.push_back( this->Xh->dof()->dofIdToContainerId(1, dofid2) );
                     doneLh[ dofid2 ] = true;
                 }
 
-                dof_edge_info[index].type = EDGE_BOUNDARY;
-                dof_edge_info[index].dof_vertex_id1 = dofid1 + Nh->nLocalDofWithGhost();
-                dof_edge_info[index].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
+                dof_edge_info[containerIndex].type = EDGE_BOUNDARY;
+                dof_edge_info[containerIndex].dof_vertex_id1 = this->Xh->dof()->dofIdToContainerId(1, dofid1);
+                dof_edge_info[containerIndex].dof_vertex_id2 = this->Xh->dof()->dofIdToContainerId(1, dofid2);
             }
             if ( !edge.isOnBoundary() )
             {
                 // if the edge is not on the boundary, we keep its index
                 // to extract the column
-                interiorIndexesToKeep.push_back(index);
+                interiorIndexesToKeep.push_back(containerIndex );
 
                 //both points touch the boundary
                 if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
                 {
-                    dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_3;
-                    dof_edge_info[index].dof_vertex_id1 = dofid1 + Nh->nLocalDofWithGhost();
-                    dof_edge_info[index].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
+                    dof_edge_info[containerIndex].type = EDGE_BOUNDARY_VERTEX_3;
+                    dof_edge_info[containerIndex].dof_vertex_id1 = this->Xh->dof()->dofIdToContainerId(1, dofid1);
+                    dof_edge_info[containerIndex].dof_vertex_id2 = this->Xh->dof()->dofIdToContainerId(1, dofid2);
                     CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // the starting point touch the boundary
                 else if ( pt1.isOnBoundary()  )
                 {
-                    dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_1;
-                    dof_edge_info[index].dof_vertex_id1 = dofid1 + Nh->nLocalDofWithGhost();
-                    dof_edge_info[index].dof_vertex_id2 = invalid_size_type_value;
+                    dof_edge_info[containerIndex].type = EDGE_BOUNDARY_VERTEX_1;
+                    dof_edge_info[containerIndex].dof_vertex_id1 = this->Xh->dof()->dofIdToContainerId(1, dofid1);
+                    dof_edge_info[containerIndex].dof_vertex_id2 = invalid_size_type_value;
                     CHECK( dofid1 != invalid_size_type_value ) << "Invalid dof vertex id1";
                 }
                 // the ending point touch the boundary
                 else if ( pt2.isOnBoundary()  )
                 {
-                    dof_edge_info[index].type = EDGE_BOUNDARY_VERTEX_2;
-                    dof_edge_info[index].dof_vertex_id1 = invalid_size_type_value;
-                    dof_edge_info[index].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
+                    dof_edge_info[containerIndex].type = EDGE_BOUNDARY_VERTEX_2;
+                    dof_edge_info[containerIndex].dof_vertex_id2 = this->Xh->dof()->dofIdToContainerId(1, dofid2);
+                    dof_edge_info[containerIndex].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // the edge doesn't touch the boundary
                 else {
-                    dof_edge_info[index].type = EDGE_INTERIOR;
-                    dof_edge_info[index].dof_vertex_id1 = invalid_size_type_value;
-                    dof_edge_info[index].dof_vertex_id2 = invalid_size_type_value;
+                    dof_edge_info[containerIndex].type = EDGE_INTERIOR;
+                    dof_edge_info[containerIndex].dof_vertex_id1 = invalid_size_type_value;
+                    dof_edge_info[containerIndex].dof_vertex_id2 = invalid_size_type_value;
                 }
             }
 
@@ -354,7 +354,7 @@ SolverEigenNS2<T1,T2>::setDofsToRemove()
             {
                 auto localDofToRemove = itToRemove - map.begin();
                 auto indexeToRemove = std::find(boundaryIndexesToKeep.begin(),boundaryIndexesToKeep.end(),
-                                                localDofToRemove + Nh->nLocalDofWithGhost());
+                                                this->Xh->dof()->dofIdToContainerId(1, localDofToRemove) );
                 if( indexeToRemove != boundaryIndexesToKeep.end() )
                     boundaryIndexesToKeep.erase(indexeToRemove);
 
@@ -382,7 +382,8 @@ SolverEigenNS2<T1,T2>::setMatrices()
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
 
-    for( int i = 0; i < Nh->nLocalDof(); ++i )
+    auto dofContainer = Nh->dof()->dofIdToContainerId(0);
+    for( auto const& i : dofContainer )
     {
         cTilde->set(i,i,1);
 
@@ -414,8 +415,7 @@ SolverEigenNS2<T1,T2>::setMatrices()
     // [fill]
 
     // [submatrix]
-    std::vector<size_type> rows( Nh->nLocalDof() );
-    std::iota( rows.begin(), rows.end(), 0 );
+    auto rows = cTilde->mapRow().dofIdToContainerId( 0 );
 
     indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
@@ -428,8 +428,8 @@ SolverEigenNS2<T1,T2>::setMatrices()
     // [submatrix]
 
     // [ptap]
-    aHat = backend()->newMatrix(C->mapColPtr(), C->mapColPtr() );
-    bHat = backend()->newMatrix(C->mapColPtr(), C->mapColPtr() );
+    aHat = backend()->newMatrix();
+    bHat = backend()->newMatrix();
     backend()->PtAP( matA, C, aHat );
     backend()->PtAP( matB, C, bHat );
     aHat->close();
