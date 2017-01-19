@@ -21,6 +21,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-feelpp_add_application( po_offline SRCS main.cpp solvereigenns2.hpp initcoeff.hpp INSTALL )
+feelpp_add_application( offline SRCS main.cpp solvereigenns2.hpp initcoeff.hpp INSTALL )
 
 feelpp_add_testcase( cylinderAdim CATEGORY po )
