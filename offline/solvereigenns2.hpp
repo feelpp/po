@@ -75,6 +75,8 @@ class SolverEigenNS2
     sparse_matrix_ptrtype matA;
     sparse_matrix_ptrtype matB;
     sparse_matrix_ptrtype C;
+    sparse_matrix_ptrtype CPsi;
+    sparse_matrix_ptrtype CG0;
     sparse_matrix_ptrtype aHat;
     sparse_matrix_ptrtype bHat;
 
@@ -226,7 +228,7 @@ SolverEigenNS2<T1,T2>::setInfo()
             auto perm = elt.edgePermutation( edgeLocalId );
             // [perm]
 
-            auto containerIndex = this->Xh->dof()->dofIdToContainerId(0, index);
+            auto containerIndex = this->Nh->dof()->dofIdToContainerId(0, index);
             dof_edge_info[containerIndex].sign1 = (perm==edge_permutation_type::IDENTITY) ? -1 : 1;
             dof_edge_info[containerIndex].sign2 = -dof_edge_info[containerIndex].sign1;
 
@@ -276,7 +278,7 @@ SolverEigenNS2<T1,T2>::setInfo()
             {
                 // if the edge is not on the boundary, we keep its index
                 // to extract the column
-                interiorIndexesToKeep.push_back(containerIndex );
+                interiorIndexesToKeep.push_back( this->Xh->dof()->dofIdToContainerId(0, index) );
 
                 //both points touch the boundary
                 if ( pt1.isOnBoundary() && pt2.isOnBoundary() )
@@ -299,8 +301,8 @@ SolverEigenNS2<T1,T2>::setInfo()
                 else if ( pt2.isOnBoundary()  )
                 {
                     dof_edge_info[containerIndex].type = EDGE_BOUNDARY_VERTEX_2;
+                    dof_edge_info[containerIndex].dof_vertex_id1 = invalid_size_type_value;
                     dof_edge_info[containerIndex].dof_vertex_id2 = this->Xh->dof()->dofIdToContainerId(1, dofid2);
-                    dof_edge_info[containerIndex].dof_vertex_id2 = dofid2 + Nh->nLocalDofWithGhost();
                     CHECK( dofid2 != invalid_size_type_value ) << "Invalid dof vertex id2";
                 }
                 // the edge doesn't touch the boundary
@@ -381,11 +383,23 @@ SolverEigenNS2<T1,T2>::setMatrices()
     tic();
     // [fill]
     auto cTilde = backend()->newMatrix(_test=Nh, _trial=Xh);
+    auto cTildePsi = backend()->newMatrix(_test=Lh, _trial=Xh);
+    auto cTildeG0 = backend()->newMatrix(_test=Nh, _trial=Xh);
 
-    auto dofContainer = Nh->dof()->dofIdToContainerId(0);
-    for( auto const& i : dofContainer )
+    for( int k = 0; k < Lh->dof()->dofIdToContainerId(0).size(); ++k )
     {
-        cTilde->set(i,i,1);
+        size_type i = Lh->dof()->dofIdToContainerId(0, k);
+        size_type j = Xh->dof()->dofIdToContainerId(1, k);
+        cTildePsi->set(i,j,1);
+    }
+    cTildePsi->close();
+
+    for( int k = 0; k < Nh->dof()->dofIdToContainerId(0).size(); ++k )
+    {
+        size_type i = Nh->dof()->dofIdToContainerId(0, k);
+        size_type j = Xh->dof()->dofIdToContainerId(0, k);
+        cTilde->set(i,j,1);
+        cTildeG0->set(i,j,1);
 
         auto const& dei = dof_edge_info[i];
         switch( dei.type )
@@ -412,10 +426,12 @@ SolverEigenNS2<T1,T2>::setMatrices()
         }
     }
     cTilde->close();
+    cTildeG0->close();
     // [fill]
 
     // [submatrix]
     auto rows = cTilde->mapRow().dofIdToContainerId( 0 );
+    auto rowsPsi = cTildePsi->mapRow().dofIdToContainerId( 0 );
 
     indexesToKeep = interiorIndexesToKeep;
     indexesToKeep.insert(indexesToKeep.end(),
@@ -425,6 +441,12 @@ SolverEigenNS2<T1,T2>::setMatrices()
 
     C = cTilde->createSubMatrix(rows, indexesToKeep);
     C->close();
+
+    CPsi = cTildePsi->createSubMatrix(rowsPsi, indexesToKeep);
+    CPsi->close();
+
+    CG0 = cTildeG0->createSubMatrix(rows, indexesToKeep);
+    CG0->close();
     // [submatrix]
 
     // [ptap]
@@ -474,12 +496,7 @@ SolverEigenNS2<T1,T2>::solveEigen()
         // g = g0 + grad(psi)
         // decomposition : keep only beta coefficients (psi)
         auto tmpVec2 = backend()->newVector( Lh );
-        for(int i = 0; i < boundaryIndexesToKeep.size(); i++)
-        {
-            auto indexPtr = std::find(indexesToKeep.begin(), indexesToKeep.end(), boundaryIndexesToKeep[i]);
-            auto index = indexPtr - indexesToKeep.begin();
-            tmpVec2->set(boundaryIndexesToKeep[i] - Nh->nLocalDofWithGhost(), (*alphaHat)(index));
-        }
+        CPsi->multVector( alphaHat, tmpVec2);
         tmpVec2->close();
         auto tmp = Lh->element();
         tmp = *tmpVec2;
@@ -487,12 +504,7 @@ SolverEigenNS2<T1,T2>::solveEigen()
 
         // decomposition : keep only alpha coefficients (g0)
         auto tmpVec3 = backend()->newVector( Nh );
-        for(int i = 0; i < interiorIndexesToKeep.size(); i++)
-        {
-            auto indexPtr = std::find(indexesToKeep.begin(), indexesToKeep.end(), interiorIndexesToKeep[i]);
-            auto index = indexPtr - indexesToKeep.begin();
-            tmpVec3->set(interiorIndexesToKeep[i], (*alphaHat)(index));
-        }
+        CG0->multVector( alphaHat, tmpVec3 );
         tmpVec3->close();
         modes0[i] = *tmpVec3;
 
