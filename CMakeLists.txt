@@ -24,17 +24,18 @@ cmake_minimum_required(VERSION 2.8)
 #
 project(po)
 
-if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} )
-  cmake_minimum_required(VERSION 2.8)
+if ( ${CMAKE_MAJOR_VERSION} EQUAL 3 AND ${CMAKE_MINOR_VERSION} GREATER 3 )
+  message(STATUS "[feelpp] use OLD policy CMP0064" )
+  cmake_policy(SET CMP0064 OLD)
+endif()
 
-  FIND_PATH(FEELPP_CMAKE_MODULES FindFeel++.cmake PATH $ENV{FEELPP_DIR}/share/feel/cmake/modules /usr/share/feel/cmake/modules/ /usr/local/share/feel/cmake/modules/ )
-  
-  if ( FEELPP_CMAKE_MODULES )
-    set(CMAKE_MODULE_PATH ${FEELPP_CMAKE_MODULES})
-  else()
-    message(FATAL_ERROR "Feel++ does not seem to have been installed on this platform")
+# with this it is possible to compile applications/models from an installed
+# version of feel++. This is useful also for staged compilation for docker
+if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} )
+  find_package(Feel++ PATHS $ENV{FEELPP_DIR}/share/feel/cmake/modules /usr/share/feel/cmake/modules /usr/local/share/feel/cmake/modules )
+  if(NOT FEELPP_FOUND)
+      message(FATAL_ERROR "Feel++ was not found on your system. Make sure to install it and specify the FEELPP_DIR to reference the installation directory.")
   endif()
-  Find_Package(Feel++)
 endif()
 
 find_library( PO_H3DREADER_LIB NAMES h3dreader PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/h3d/bin/linux64 NO_DEFAULT_PATH )
