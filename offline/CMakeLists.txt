@@ -23,4 +23,4 @@
 #
 feelpp_add_application( offline SRCS main.cpp solvereigenns2.hpp initcoeff.hpp INSTALL )
 
-feelpp_add_testcase( cylinderAdim CATEGORY po )
+feelpp_add_testcase( cylinderAdim PREFIX offline CATEGORY po )

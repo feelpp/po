@@ -22,4 +22,4 @@
 #
 #
 feelpp_add_application( online SRCS main.cpp solverns2.hpp solvera.hpp solverspectralproblem.hpp INSTALL )
-feelpp_add_testcase( cylinderAdim CATEGORY po)
+feelpp_add_testcase( cylinderAdim PREFIX online CATEGORY po)
