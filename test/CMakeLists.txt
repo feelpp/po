@@ -21,6 +21,8 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
+set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
 feelpp_add_application( test SRCS test.cpp CFG po_test.cfg )
 feelpp_add_application( test_curl SRCS test_curl.cpp CFG po_test_curl.cfg )
 feelpp_add_application( test_grad SRCS test_grad.cpp CFG po_test_grad.cfg )
