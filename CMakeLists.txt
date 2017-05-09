@@ -42,4 +42,4 @@ add_subdirectory( lib/h3d/examples )
 add_subdirectory( offline )
 add_subdirectory( online )
 add_subdirectory( test )
-add_subdirectory( data_conversion )
+
