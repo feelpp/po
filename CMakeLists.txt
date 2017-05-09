@@ -32,20 +32,11 @@ endif()
 # with this it is possible to compile applications/models from an installed
 # version of feel++. This is useful also for staged compilation for docker
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} )
-  find_package(Feel++ PATHS $ENV{FEELPP_DIR}/share/feel/cmake/modules /usr/share/feel/cmake/modules /usr/local/share/feel/cmake/modules )
+  find_package(Feel++ PATHS $ENV{FEELPP_DIR}/share/feelpp/feel/cmake/modules /usr/share/feelpp/feel/cmake/modules /usr/local/share/feelpp/feel/cmake/modules )
   if(NOT FEELPP_FOUND)
       message(FATAL_ERROR "Feel++ was not found on your system. Make sure to install it and specify the FEELPP_DIR to reference the installation directory.")
   endif()
 endif()
-
-find_library( PO_H3DREADER_LIB NAMES h3dreader PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/h3d/bin/linux64 NO_DEFAULT_PATH )
-message(STATUS "[feelpp/po] PO_H3DREADER_LIBRARY: ${PO_H3DREADER_LIB}")
-find_library( PO_H3DWRITER_LIB NAMES h3dwriter PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/h3d/bin/linux64 NO_DEFAULT_PATH )
-message(STATUS "[feelpp/po] PO_H3DWRITER_LIBRARY: ${PO_H3DWRITER_LIB}")
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/h3d/include)
-
-#set(FEELPP_LIBRARIES "${PO_H3DWRITER_LIB} ${PO_H3DREADER_LIB} ${FEELPP_LIBRARIES}")
 
 add_subdirectory( lib/h3d/examples )
 add_subdirectory( offline )
