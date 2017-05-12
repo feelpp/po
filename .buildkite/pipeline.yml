@@ -3,6 +3,7 @@ steps:
    command: .buildkite/steps/build.sh
    agents:
      docker: true
+     ubuntu: "16.10"
    env:
      PROJECT: po
      CXX: clang++-3.9
@@ -14,6 +15,7 @@ steps:
    command: .buildkite/steps/release.sh
    agents:
      docker: true
+     ubuntu: "16.10"
    branches: develop master
    env:
      PROJECT: po
