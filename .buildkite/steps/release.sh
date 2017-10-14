@@ -22,6 +22,9 @@ chmod u+x tools/scripts/buildkite/release.sh
 chmod u+x tools/scripts/buildkite/list.sh
 chmod u+x tools/scripts/buildkite/common.sh
 
+export FEELPP_DIR=/usr/local
+source tools/scripts/buildkite/common.sh
+echo "cmake : ${FEELPP_CMAKE_DIR}"
 tools/scripts/buildkite/release.sh -t ${TARGET} -b ${BRANCH} -- ${PROJECT}
 
 
