@@ -1,22 +1,22 @@
 steps:
- - name: ':ubuntu: 16.10,clang++-3.9'
+ - name: ':ubuntu: 16.04,clang++-4.0'
    command: .buildkite/steps/build.sh
    agents:
      docker: true
-     ubuntu: "16.10"
+     ubuntu: "16.04"
    env:
      PROJECT: po
-     CXX: clang++-3.9
+     CXX: clang++-4.0
      BUILD_JOBS: 10
      FROM: feelpp/feelpp-toolboxes
-     TARGET: ubuntu:16.10
+     TARGET: ubuntu:16.04
      FEELPP_BRANCH: develop
- - name: ':rocket: :whale: deploy :ubuntu: 16.10,clang++-3.9'
+ - name: ':rocket: :whale: deploy :ubuntu: 16.04,clang++-4.0'
    command: .buildkite/steps/release.sh
    agents:
      docker: true
-     ubuntu: "16.10"
+     ubuntu: "16.04"
    branches: develop master
    env:
      PROJECT: po
-     TARGET: ubuntu:16.10
+     TARGET: ubuntu:16.04
