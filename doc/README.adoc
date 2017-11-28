@@ -1,5 +1,5 @@
 = Décomposition Modale Dynamique
-:stem: 
+:stem: latexmath
 
 [[rappel-proper-orthogonal-decomposition]]
 = Rappel : Proper Orthogonal Decomposition
@@ -13,7 +13,7 @@ L’approche « POD snapshot » proposée par Sirovich [1], est basée sur le 
 1.  Extraction des champs fluctuants :
 
 ____________________________________________________________________________________________________________________________________________________________
-latexmath:[P\left( t_{i},\overrightarrow{x} \right) = \overline{P}\left( \overrightarrow{x} \right) + P'\left( t_{i},\overrightarrow{x}\  \right)] Eq. 1
+stem:[P\left( t_{i},\overrightarrow{x} \right) = \overline{P}\left( \overrightarrow{x} \right) + P'\left( t_{i},\overrightarrow{x}\  \right)] Eq. 1
 ____________________________________________________________________________________________________________________________________________________________
 
 1.  Calcul de la matrice de corrélation R sur les champs fluctuants :
