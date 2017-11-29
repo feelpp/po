@@ -1,5 +1,5 @@
 = Décomposition Modale Dynamique
-:stem: latexmath
+[stem] latexmath
 
 [[rappel-proper-orthogonal-decomposition]]
 = Rappel : Proper Orthogonal Decomposition
