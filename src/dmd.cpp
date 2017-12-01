@@ -84,6 +84,10 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
     MatrixEigenDense<double> matrixPodFeel( nTimeStep,nTimeStep );
     auto & pod = matrixPodFeel.mat();
 
+    auto mem  = Environment::logMemoryUsage("memory usage after upate for use");
+     std::cout << "[Correlation::updateForUse] resident memory before matrix product:     " << mem.memory_usage/1.e9  << "GBytes\n";
+
+
     for ( int i=0;i<nTimeStep;++i )
     {
         myDb.load( timeSetIndex[i],fieldPod,ui );
@@ -125,6 +129,10 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
         if ( myDb.worldComm().isMasterRank() )
             std::cout << "("<<i<<","<<i<<")\n"<<std::flush;
     }
+
+    auto mem2  = Environment::logMemoryUsage("memory usage after upate for use");
+    std::cout << "[Correlation::updateForUse] resident memory after matrix product:     " << mem2.memory_usage/1.e9  << "GBytes\n";
+
 
     if ( myDb.worldComm().isMasterRank() )
     {
@@ -188,6 +196,9 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
              eigenVectors(k2,k1) = eigenVectors_ini(k2,k1Initial);
     }
     std::cout<<"eigenValues sorted=\n"<<eigenValues<<"\n";
+
+    auto mem3  = Environment::logMemoryUsage("memory usage after upate for use");
+    std::cout << "[Correlation::updateForUse] resident memory after eigen:     " << mem3.memory_usage/1.e9  << "GBytes\n";
 
 
     //Projection
@@ -263,6 +274,9 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
     }
 
 
+    auto mem4  = Environment::logMemoryUsage("memory usage after upate for use");
+    std::cout << "[Correlation::updateForUse] resident memory after 3D modes projection:     " << mem4.memory_usage/1.e9  << "GBytes\n";
+
 
     
     toc("Exporter");
@@ -334,7 +348,13 @@ int main(int argc, char**argv )
     CHECK( myDb.fieldInfo( fieldPod ).basisName() == "lagrange" ) << "only lagrange instantiated : " << myDb.fieldInfo( fieldPod ).basisName();
     CHECK( myDb.fieldInfo( fieldPod ).basisOrder() == 1 ) << "only order 1 instantiated : " << myDb.fieldInfo( fieldPod ).basisOrder();
 
+
+    auto mem  = Environment::logMemoryUsage("memory usage after upate for use");
+    std::cout << "[Mesh::updateForUse] resident memory before load mesh: " << mem.memory_usage/1.e9  << "GBytes\n";
+
     auto mesh = myDb.loadMesh( MESH_UPDATE_FACES_MINIMAL|MESH_NO_UPDATE_MEASURES );
+    auto mem2  = Environment::logMemoryUsage("memory usage after upate fo    r use");
+    std::cout << "[Mesh::updateForUse] resident memory before after mesh:     " << mem2.memory_usage/1.e9  << "GBytes\n";
 
 
     if ( myDb.isScalarField( fieldPod ) )
