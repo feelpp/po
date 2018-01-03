@@ -48,3 +48,65 @@ Afterwards just compile the applications you are interested in.
 ### Running Po
 
 Please see the wiki page.
+
+### Running DMD on Atlas with Slurm
+
+```#!/bin/bash
+
+# DMD on 48 CPU
+
+#SBATCH -p public
+# number of cores
+#SBATCH -n 48
+# Hyperthreading is enabled on atlas, if you do not want to use it
+# You must specify the following option
+#SBATCH --ntasks-per-core 1
+# min-max number of nodes
+#SBATCH -N 2
+# max time of exec (will be killed afterwards)
+##SBATCH -t 12:00:00
+# number of tasks per node
+##SBATCH --tasks-per-node 1
+# specify execution constraitns
+##SBATCH --constraint \"intel\"
+# min mem size
+##SBATCH --mem=16684
+# display info about cpu binding
+##SBATCH --cpu_bind=verbose
+# send a mail at the end of the exec
+#SBATCH --mail-type=END
+#SBATCH --mail-user=login@server.com
+
+export JOBS=48
+
+# data repository
+export SCRATCH_DIR=/data/scratch/$USER/cyl.$JOBS
+mkdir -p $SCRATCH_DIR
+
+source /etc/profile.d/modules.sh
+module load feelpp.profile
+
+# ACUSIM parent directory
+export FROM_DIR=/data/plasticomnium/Cylindre_long/20171205_cyl
+
+# move to installation directory
+cd ~/opt/po/src
+
+# run the conversion steps
+# --idir: input directory (ACUSIM data)
+# --runId: ACUSIM run Id (defaults to 1)
+# --odir: feelpp data directory
+# --iname: simulation data name
+# --fields: fields to export
+# --DoConversion: ??? but required for some reason
+mpirun --bind-to core -x LD_LIBRARY_PATH ./feelpp_po_converter --idir $FROM_DIR --runId=1 --odir $SCRATCH_DIR/db --iname cyl --fields pressure --DoConversion=1 > $SCRATCH_DIR/stdout_conversion_1.log
+mpirun --bind-to core -x LD_LIBRARY_PATH ./feelpp_po_converter --idir $FROM_DIR --runId=1 --odir $SCRATCH_DIR/db --iname cyl --fields pressure --DoConversion=0 > $SCRATCH_DIR/stdout_conversion_0.log
+# run the DMD step
+# --ifile: feelpp db file
+# --directory: ensight export directory
+# --field: field to process
+# --scalar-product: product to use, defaults to L2
+# --time-initial: must be large enough for the behavior to be linear
+# --export-modes: DMD modes to export
+# --v: feelpp verbose option
+mpirun --bind-to core -x LD_LIBRARY_PATH ./feelpp_po_dmd --ifile $SCRATCH_DIR/db/mydb.dbfeelpp.json --directory $SCRATCH_DIR --field pressure --scalar-product L2 --time-initial=0.01 --export-modes=32 --v 1 > $SCRATCH_DIR/dmd_$JOBS.log```
