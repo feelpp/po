@@ -90,13 +90,16 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
     for ( int i=0;i<nTimeStep;++i )
     {
+	tic();
         myDb.load( timeSetIndex[i],fieldPod,ui );
 	//ui = ui - Um ;
-
+	toc("Loaded Ui");
         for ( int j=0;j<i;++j )
         {
+	    tic();
             myDb.load( timeSetIndex[j],fieldPod,uj );
 	    //uj = uj - Um ;
+	    toc("Loaded Uj");
 
             if ( useScalarProductL2 )
             {
@@ -136,6 +139,7 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
     if ( myDb.worldComm().isMasterRank() )
     {
+	    tic();
         //std::cout << "\npod=\n" << pod << "\n";
         std::ofstream file("pod.txt");
         if (file.is_open())
@@ -144,6 +148,7 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
             file.close();
         }
         matrixPodFeel.printMatlab( "pod.m" );
+	toc("Exporting POD matrix");
     }
 
     //Linearization
@@ -264,13 +269,26 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
          }
 
+	 std::string real_path = "/data/scratch/atlas_abonnet/phi_real";
+	 real_path += i;
+	 std::string imag_path = "/data/scratch/atlas_abonnet/phi_imag";
+	 imag_path += i;
+	 
+	 tic();
+	 PHI_real.save( _path=real_path, _type="hdf5" );
+	 PHI_imag.save( _path=imag_path, _type="hdf5" );
+	 toc("HDF5 save");
 
-
+	 tic();
+	 tic();
          // Writing result (ensight as default value)
          e->step( i )-> add( "PHI_real", PHI_real );
 	 e->step( i )-> add( "PHI_imag", PHI_imag );
-
+	 toc("Ensight add");
+	 tic();
 	 e->save();
+	 toc("Ensight save");
+	 toc("Ensight export");
     }
 
 
