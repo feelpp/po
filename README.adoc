@@ -1,11 +1,10 @@
-https://gitter.im/feelpp/po?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge[image:https://badges.gitter.im/Join%20Chat.svg[Join
-the chat at https://gitter.im/feelpp/po]]
-
 [[po-project]]
 = PO Project
+:toc: left
 
 
-This is the PO project
+This is the PO project.
+Join discussions on Slask link:https://join.slack.com/t/feelpp/shared_invite/enQtMjE0MTcyNDIwNzU2LTk5ODA3OTM4ZGFkODk0NDI2ZDgwZjc1YjY1NjgzYWNkYTU5ODc4OGVlMGRmNzk0ODhhMWU5NDA3NDg5MTUzM2I[here].
 
 [[build-status]]
 == Build Status
