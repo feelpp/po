@@ -208,7 +208,7 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
     //Projection
     if ( myDb.worldComm().isMasterRank() )
-        std::cout<<"Modes projection and normalization"<<endl;
+        std::cout<<"Modes projection and normalization"<<std::endl;
 
     tic();
     std::string geoExportType = "static";
