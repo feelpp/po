@@ -1,57 +1,78 @@
-[![Join the chat at https://gitter.im/feelpp/po](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/feelpp/po?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+https://gitter.im/feelpp/po?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge[image:https://badges.gitter.im/Join%20Chat.svg[Join
+the chat at https://gitter.im/feelpp/po]]
 
-PO Project
-============
+[[po-project]]
+= PO Project
+
 
 This is the PO project
 
-## Build Status
+[[build-status]]
+== Build Status
+
 
 here is the Travis build status of po:
-[![Build Status](https://magnum.travis-ci.com/feelpp/po.png?token=Bxps8gX6edMDEv345qns&branch=master)](https://magnum.travis-ci.com/feelpp/po)
+https://magnum.travis-ci.com/feelpp/po[image:https://magnum.travis-ci.com/feelpp/po.png?token=Bxps8gX6edMDEv345qns&branch=master[Build
+Status]]
+
+[[branches]]
+== Branches
 
 
+Po follows the git flow framework. The default branch is now develop on
+github and the master branch is used for stable releases.
 
-## Branches
-
-Po follows the git flow framework. The default branch is now develop on github and 
-the master branch is used for stable releases.
-
-* master : use the method describe in the report
+* `master` : use the method describe in the report
+* `develop` is the development branch
 * compZ : use only one component
 * strongBC : apply strongly the boundary condition in the cylinder
-* g0 : find a basis of H¹_0 and find the corresponding basis P_sigma(g_0)
+* g0 : find a basis of H¹_0 and find the corresponding basis
+P_sigma(g_0)
 * darcy : use the Raviart-Thomas elements to compute psi0
 
-## Mailing lists
+[[mailing-lists]]
+=== Mailing lists
 
- - po@cemosis.fr  (discussions)
- - po-commits@cemosis.fr (git commits)
 
-## Programming environment
+* po@cemosis.fr (discussions)
 
-It is assumed that you have cloned Feel++ (``` git clone http://github.com/feelpp/feelpp.git```).
+[[programming-environment]]
+== Programming environment
 
-### Cloning Po
+It is assumed that you have cloned Feel++
+(`git clone http://github.com/feelpp/feelpp.git`).
 
-Then issue the following commands in order to clone the po repository in feelpp/ research
-```
+[[cloning-po]]
+=== Cloning Po
+
+
+Then issue the following commands in order to clone the po repository in
+feelpp/ research
+
+....
 cd research
 git clone http://github.com/feelpp/po.git
-```
+....
 
-### Compiling Po
+[[compiling-po]]
+=== Compiling Po
 
-Just do the ```cmake``` Feel++ procedure with the option ```-DFEELPP_ENABLE_RESEARCH_PO=ON```and it will configure Po and generate the necessary Makefiles.
-Afterwards just compile the applications you are interested in.
+Just do the `cmake` Feel++ procedure with the option
+`-DFEELPP_ENABLE_RESEARCH_PO=ON`and it will configure Po and generate
+the necessary Makefiles. Afterwards just compile the applications you
+are interested in.
 
-### Running Po
+[[running-po]]
+=== Running Po
 
 Please see the wiki page.
 
-### Running DMD on Atlas with Slurm
+[[running-dmd-on-atlas-with-slurm]]
+=== Running DMD on Atlas with Slurm
 
-```#!/bin/bash
+[source,sh]
+----
+#!/bin/bash
 
 # DMD on 48 CPU
 
@@ -109,4 +130,5 @@ mpirun --bind-to core -x LD_LIBRARY_PATH ./feelpp_po_converter --idir $FROM_DIR 
 # --time-initial: must be large enough for the behavior to be linear
 # --export-modes: DMD modes to export
 # --v: feelpp verbose option
-mpirun --bind-to core -x LD_LIBRARY_PATH ./feelpp_po_dmd --ifile $SCRATCH_DIR/db/mydb.dbfeelpp.json --directory $SCRATCH_DIR --field pressure --scalar-product L2 --time-initial=0.01 --export-modes=32 --v 1 > $SCRATCH_DIR/dmd_$JOBS.log```
+mpirun --bind-to core -x LD_LIBRARY_PATH ./feelpp_po_dmd --ifile $SCRATCH_DIR/db/mydb.dbfeelpp.json --directory $SCRATCH_DIR --field pressure --scalar-product L2 --time-initial=0.01 --export-modes=32 --v 1 > $SCRATCH_DIR/dmd_$JOBS.log
+----
