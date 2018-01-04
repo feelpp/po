@@ -269,10 +269,8 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
         }
 
-        std::string real_path = "/data/scratch/atlas_abonnet/phi_real";
-        real_path += i;
-        std::string imag_path = "/data/scratch/atlas_abonnet/phi_imag";
-        imag_path += i;
+        fs::path real_path = fs::current_path() / "phi_real" / std::to_string(i);
+        fs::path imag_path = fs::current_path() / "phi_imag" / std::to_string(i);
 	 
         tic();
         PHI_real.save( _path=real_path, _type="hdf5" );
