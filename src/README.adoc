@@ -6,7 +6,7 @@
 
 == Database conversion : from Acusim to Feel{plus}{plus}
 
-The goal of the executable `feelpp_databases_converter_acusim` is to convert a database  
+The goal of the executable `feelpp_databases_converter_acusim` is to convert a database
 built from the Acusim software into a Feel{plus}{plus}  database. The input directory (`idir`) is
 is the base directory of Acusim database. Inside this one, we must have a subdirectory called
 work directory (`acusim.work-dir`) and generally named `ACUSIM.DIR`.
@@ -45,7 +45,7 @@ stem:[u_i] the a function at a time index i and stem:[u_i^k] the value of this f
 Two kinds of scalar product are available in this application :
 
  - `L2` : stem:[ m(i,j)= \int_\Omega u_i \cdot u_j ]
- - `euclidian` : stem:[ m(i,j)=\sum_{k=0}^{N_{dof}} u_i^k u_j^k ] 
+ - `euclidian` : stem:[ m(i,j)=\sum_{k=0}^{N_{dof}} u_i^k u_j^k ]
 
 By default, the POD matrix is built on all time steps registered in database. The user can select a portion of temporal range
 by adding the options `time-initial` and `time-final`. The outputs are saved in disk in the directory defined by `directory` option.

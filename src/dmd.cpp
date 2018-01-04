@@ -47,25 +47,25 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
     // Time average fields computation
     /*if ( myDb.worldComm().isMasterRank() )
-       std::cout<<"Time average computation"<<endl;
+     std::cout<<"Time average computation"<<endl;
 
-    double invNstep = 1/((double) nTimeStep) ;
-    auto Um = space->element();
+     double invNstep = 1/((double) nTimeStep) ;
+     auto Um = space->element();
 
-    for ( int i=0;i<nTimeStep;++i )
-    {
-        if (i==0)
-        {
-             myDb.load( timeSetIndex[i],fieldPod,ui );
-             Um = invNstep * ui ;
-        }
-        else
-        {
-             myDb.load( timeSetIndex[i],fieldPod,ui ) ;
-	     Um = Um + invNstep * ui ;
-        }
-    }
-*/
+     for ( int i=0;i<nTimeStep;++i )
+     {
+     if (i==0)
+     {
+     myDb.load( timeSetIndex[i],fieldPod,ui );
+     Um = invNstep * ui ;
+     }
+     else
+     {
+     myDb.load( timeSetIndex[i],fieldPod,ui ) ;
+     Um = Um + invNstep * ui ;
+     }
+     }
+     */
 
     if ( myDb.worldComm().isMasterRank() )
         std::cout << "start build matrix pod of size : " << nTimeStep << "," << nTimeStep << "\n";
@@ -85,21 +85,21 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
     auto & pod = matrixPodFeel.mat();
 
     auto mem  = Environment::logMemoryUsage("memory usage after upate for use");
-     std::cout << "[Correlation::updateForUse] resident memory before matrix product:     " << mem.memory_usage/1.e9  << "GBytes\n";
+    std::cout << "[Correlation::updateForUse] resident memory before matrix product:     " << mem.memory_usage/1.e9  << "GBytes\n";
 
 
     for ( int i=0;i<nTimeStep;++i )
     {
-	tic();
+        tic();
         myDb.load( timeSetIndex[i],fieldPod,ui );
-	//ui = ui - Um ;
-	toc("Loaded Ui");
+        //ui = ui - Um ;
+        toc("Loaded Ui");
         for ( int j=0;j<i;++j )
         {
-	    tic();
+            tic();
             myDb.load( timeSetIndex[j],fieldPod,uj );
-	    //uj = uj - Um ;
-	    toc("Loaded Uj");
+            //uj = uj - Um ;
+            toc("Loaded Uj");
 
             if ( useScalarProductL2 )
             {
@@ -148,7 +148,7 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
             file.close();
         }
         matrixPodFeel.printMatlab( "pod.m" );
-	toc("Exporting POD matrix");
+        toc("Exporting POD matrix");
     }
 
     //Linearization
@@ -195,10 +195,10 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
     for (int k1=0;k1<nEigenValues;++k1)
     {
-         int k1Initial = eigenValuesSortedWithInitialId[k1].second;
-         eigenValues(k1) = eigenValues_ini[k1Initial];
-         for (int k2=0;k2<nEigenValues;++k2)
-             eigenVectors(k2,k1) = eigenVectors_ini(k2,k1Initial);
+        int k1Initial = eigenValuesSortedWithInitialId[k1].second;
+        eigenValues(k1) = eigenValues_ini[k1Initial];
+        for (int k2=0;k2<nEigenValues;++k2)
+            eigenVectors(k2,k1) = eigenVectors_ini(k2,k1Initial);
     }
     std::cout<<"eigenValues sorted=\n"<<eigenValues<<"\n";
 
@@ -208,7 +208,7 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
 
     //Projection
     if ( myDb.worldComm().isMasterRank() )
-       std::cout<<"Modes projection and normalization"<<endl;
+        std::cout<<"Modes projection and normalization"<<endl;
 
     tic();
     std::string geoExportType = "static";
@@ -221,74 +221,74 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
     int nModes ;
     if ((nOutModes>nEigenValues) || (nOutModes == 0 ))
     {
-         nModes = nEigenValues ;
+        nModes = nEigenValues ;
     } else
     {
-         nModes = nOutModes ;
+        nModes = nOutModes ;
     } 
 
     auto pi = M_PI ;
     for ( int i=0;i<nModes;++i )
     {
 
-         auto PHI_real = space->element();
-         auto PHI_imag = space->element();
+        auto PHI_real = space->element();
+        auto PHI_imag = space->element();
 
-	 double f ;
-	 double signe ;
-	 if (eigenValues(nEigenValues -1 -i ).imag()==0)
-	 {
-             signe = 1 ;
-	     f = ( log(eigenValues(nEigenValues -1 -i )).imag() ) / ( 2*pi*dt ) ;
-	 } else {
-	     signe = eigenValues(nEigenValues -1 -i ).imag()/abs(eigenValues(nEigenValues -1 -i ).imag()) ;
-	     f = ( log(eigenValues(nEigenValues -1 -i )).imag() ) / ( 2*pi*dt ) ;
-         }
-	 double G = ( log(eigenValues(nEigenValues -1 -i )).real() ) / dt ;
+        double f ;
+        double signe ;
+        if (eigenValues(nEigenValues -1 -i ).imag()==0)
+        {
+            signe = 1 ;
+            f = ( log(eigenValues(nEigenValues -1 -i )).imag() ) / ( 2*pi*dt ) ;
+        } else {
+            signe = eigenValues(nEigenValues -1 -i ).imag()/abs(eigenValues(nEigenValues -1 -i ).imag()) ;
+            f = ( log(eigenValues(nEigenValues -1 -i )).imag() ) / ( 2*pi*dt ) ;
+        }
+        double G = ( log(eigenValues(nEigenValues -1 -i )).real() ) / dt ;
 
-         // Mode i computation
-         if ( myDb.worldComm().isMasterRank() )
-             std::cout << "Mode " << i << "; eigenValues=" << eigenValues(nEigenValues -1 - i) <<"sign"<<signe<<" frequency=" << f << "Hz;  Growth rate=" << G <<"\n";
+        // Mode i computation
+        if ( myDb.worldComm().isMasterRank() )
+            std::cout << "Mode " << i << "; eigenValues=" << eigenValues(nEigenValues -1 - i) <<"sign"<<signe<<" frequency=" << f << "Hz;  Growth rate=" << G <<"\n";
 
-         for ( int j=0;j<nTimeStep;++j )
-         {
-             auto a = eigenVectors(j,nTimeStep -1 - i);
-             myDb.load( timeSetIndex[j],fieldPod,uj );
+        for ( int j=0;j<nTimeStep;++j )
+        {
+            auto a = eigenVectors(j,nTimeStep -1 - i);
+            myDb.load( timeSetIndex[j],fieldPod,uj );
 
 
-             if ( j==0 )
-             {
+            if ( j==0 )
+            {
                 PHI_real = (a.real()*uj);
                 PHI_imag = (a.imag()*uj);
-             }
-             else
-             {
+            }
+            else
+            {
                 PHI_real = PHI_real + a.real()*uj;
                 PHI_imag = PHI_imag + a.imag()*uj;
-             }
+            }
 
-         }
+        }
 
-	 std::string real_path = "/data/scratch/atlas_abonnet/phi_real";
-	 real_path += i;
-	 std::string imag_path = "/data/scratch/atlas_abonnet/phi_imag";
-	 imag_path += i;
+        std::string real_path = "/data/scratch/atlas_abonnet/phi_real";
+        real_path += i;
+        std::string imag_path = "/data/scratch/atlas_abonnet/phi_imag";
+        imag_path += i;
 	 
-	 tic();
-	 PHI_real.save( _path=real_path, _type="hdf5" );
-	 PHI_imag.save( _path=imag_path, _type="hdf5" );
-	 toc("HDF5 save");
+        tic();
+        PHI_real.save( _path=real_path, _type="hdf5" );
+        PHI_imag.save( _path=imag_path, _type="hdf5" );
+        toc("HDF5 save");
 
-	 tic();
-	 tic();
-         // Writing result (ensight as default value)
-         e->step( i )-> add( "PHI_real", PHI_real );
-	 e->step( i )-> add( "PHI_imag", PHI_imag );
-	 toc("Ensight add");
-	 tic();
-	 e->save();
-	 toc("Ensight save");
-	 toc("Ensight export");
+        tic();
+        tic();
+        // Writing result (ensight as default value)
+        e->step( i )-> add( "PHI_real", PHI_real );
+        e->step( i )-> add( "PHI_imag", PHI_imag );
+        toc("Ensight add");
+        tic();
+        e->save();
+        toc("Ensight save");
+        toc("Ensight export");
     }
 
 
