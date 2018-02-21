@@ -241,7 +241,7 @@ runPOD( DatabaseType & myDb, boost::shared_ptr<SpaceType> const& space, std::str
             signe = 1 ;
             f = ( log(eigenValues(nEigenValues -1 -i )).imag() ) / ( 2*pi*dt ) ;
         } else {
-            signe = eigenValues(nEigenValues -1 -i ).imag()/abs(eigenValues(nEigenValues -1 -i ).imag()) ;
+            signe = eigenValues(nEigenValues -1 -i ).imag()/std::abs(eigenValues(nEigenValues -1 -i ).imag()) ;
             f = ( log(eigenValues(nEigenValues -1 -i )).imag() ) / ( 2*pi*dt ) ;
         }
         double G = ( log(eigenValues(nEigenValues -1 -i )).real() ) / dt ;
